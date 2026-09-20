@@ -63,6 +63,11 @@
 # a `_catAliases` helper that narrows what `cat.aliases` declares as optional,
 # and a non-empty tuple from `_getAliasFromIndice`. `ms` and `semver` got local
 # declarations rather than @types packages, the didyoumean.d.ts precedent.
+# Step 12 K3, part 2 (2026-09-20): lib/service/storage/7/elasticsearch.ts and
+# its esWrapper, which closes K3 and the ES layer. The ES8 levers ported as
+# written down; what ES7 had on top was untyped helper signatures (19 of them)
+# and a bulk body built as a bare `[]`. Its esWrapper had had none of the
+# error-path work — `formatESError` taking `unknown` was 39 of the 197 alone.
 
 bin/copy-binaries.ts
 index.ts
@@ -189,6 +194,7 @@ lib/model/security/rights.ts
 lib/model/storage/apiKey.ts
 lib/model/storage/baseModel.ts
 lib/service/service.ts
+lib/service/storage/7/elasticsearch.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/elasticsearch.ts
 lib/service/storage/8/esWrapper.ts

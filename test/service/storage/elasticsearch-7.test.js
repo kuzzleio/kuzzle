@@ -466,6 +466,12 @@ describe("Test: ElasticSearch service", () => {
       }
     });
 
+    it("should reject when neither an index nor targets are given", () => {
+      return should(
+        elasticsearch.client.search({ searchBody }),
+      ).be.rejectedWith({ id: "services.storage.missing_argument" });
+    });
+
     it("should be able to search documents", async () => {
       elasticsearch.client._client.search.resolves({
         body: {
@@ -751,6 +757,13 @@ describe("Test: ElasticSearch service", () => {
       });
     });
 
+    it("should answer an empty result without calling ES on an empty id list", async () => {
+      const result = await elasticsearch.client.mGet(index, collection, []);
+
+      should(result).eql({ errors: [], items: [] });
+      should(elasticsearch.client._client.mget).not.be.called();
+    });
+
     it("should return a rejected promise if client.mget fails", () => {
       elasticsearch.client._client.mget.rejects(esClientError);
 
@@ -795,6 +808,13 @@ describe("Test: ElasticSearch service", () => {
           errors: ["bar"],
         });
       });
+    });
+
+    it("should answer an empty result without calling ES on an empty id list", async () => {
+      const result = await elasticsearch.client.mExists(index, collection, []);
+
+      should(result).eql({ errors: [], items: [] });
+      should(elasticsearch.client._client.mget).not.be.called();
     });
 
     it("should return a rejected promise if client.mget fails", () => {
@@ -2192,6 +2212,115 @@ describe("Test: ElasticSearch service", () => {
     });
   });
 
+  describe("#_mExecute", () => {
+    let esRequest;
+    let documents;
+
+    beforeEach(() => {
+      esRequest = { index: alias, body: [], refresh: undefined };
+      documents = [
+        { _id: "liia", _source: { city: "Kathmandu" } },
+        { _id: "mehry", _source: { city: "Ho Chi Minh City" } },
+      ];
+    });
+
+    it("should split the bulk answer into successes and partial errors", async () => {
+      elasticsearch.client._client.bulk.resolves({
+        body: {
+          items: [
+            {
+              index: {
+                _id: "liia",
+                _version: 1,
+                result: "created",
+                status: 201,
+              },
+            },
+            { index: { _id: "mehry", status: 404 } },
+          ],
+        },
+      });
+
+      const result = await elasticsearch.client._mExecute(esRequest, documents);
+
+      should(result.items).match([
+        {
+          _id: "liia",
+          _source: { city: "Kathmandu" },
+          _version: 1,
+          created: true,
+          status: 201,
+        },
+      ]);
+      should(result.errors).match([
+        {
+          document: { _id: "mehry", body: { city: "Ho Chi Minh City" } },
+          reason: "document not found",
+          status: 404,
+        },
+      ]);
+    });
+
+    it("should report the reason Elasticsearch gave for a non-404 rejection", async () => {
+      elasticsearch.client._client.bulk.resolves({
+        body: {
+          items: [
+            {
+              index: {
+                _id: "liia",
+                error: { reason: "mapping is strict" },
+                status: 400,
+              },
+            },
+          ],
+        },
+      });
+
+      const result = await elasticsearch.client._mExecute(esRequest, [
+        documents[0],
+      ]);
+
+      should(result.items).be.empty();
+      should(result.errors).match([
+        { document: documents[0], reason: "mapping is strict", status: 400 },
+      ]);
+    });
+
+    it("should skip an answer row that has no matching document", async () => {
+      elasticsearch.client._client.bulk.resolves({
+        body: {
+          items: [
+            {
+              index: {
+                _id: "liia",
+                _version: 1,
+                result: "created",
+                status: 201,
+              },
+            },
+            {},
+            { index: { _id: "ghost", status: 201 } },
+          ],
+        },
+      });
+
+      const result = await elasticsearch.client._mExecute(esRequest, [
+        documents[0],
+      ]);
+
+      should(result.items).have.length(1);
+      should(result.items[0]).match({ _id: "liia" });
+      should(result.errors).be.empty();
+    });
+
+    it("should not call ES when there is no document to write", async () => {
+      const result = await elasticsearch.client._mExecute(esRequest, []);
+
+      should(elasticsearch.client._client.bulk).not.be.called();
+      should(result).eql({ errors: [], items: [] });
+    });
+  });
+
   describe("#createIndex", () => {
     beforeEach(() => {
       elasticsearch.client._client.cat.aliases.resolves({
@@ -3327,6 +3456,24 @@ describe("Test: ElasticSearch service", () => {
           errors: [],
         });
       });
+    });
+
+    it("should skip an answer row that carries no action", () => {
+      elasticsearch.client._client.bulk.resolves({
+        body: {
+          errors: false,
+          items: [{}, { index: { status: 201, _id: 1 } }],
+        },
+      });
+
+      return elasticsearch.client
+        .import(index, collection, documents)
+        .then((result) => {
+          should(result).match({
+            errors: [],
+            items: [{ index: { status: 201, _id: 1 } }],
+          });
+        });
     });
 
     it("should inject additional options to esRequest", () => {
@@ -4686,6 +4833,36 @@ describe("Test: ElasticSearch service", () => {
 
         should(result).match(mExecuteResult);
       });
+    });
+
+    it("should reject a document the mget answer is too short to cover", () => {
+      elasticsearch.client._client.mget.resolves({
+        body: { docs: [{ _id: "mehry", found: true }] },
+      });
+
+      return elasticsearch.client
+        .mReplace(index, collection, documents)
+        .then(() => {
+          should(elasticsearch.client._mExecute).be.calledWithMatch(
+            {
+              body: [
+                { index: { _id: "mehry", _index: alias } },
+                { city: "Kathmandu", ...kuzzleMeta },
+              ],
+            },
+            [{ _id: "mehry", _source: { city: "Kathmandu", ...kuzzleMeta } }],
+            [
+              {
+                document: {
+                  _id: "liia",
+                  body: { _kuzzle_info: undefined, city: "Ho Chi Minh City" },
+                },
+                reason: "document not found",
+                status: 404,
+              },
+            ],
+          );
+        });
     });
 
     it("should add not found documents to rejected", () => {

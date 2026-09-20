@@ -21,17 +21,22 @@
 
 import _ from "lodash";
 
-import type { ApiResponse, RequestParams } from "sdk-es7";
+import type { RequestParams } from "sdk-es7";
 import { Client } from "sdk-es7";
 import type { Index, IndicesCreate } from "sdk-es7/api/requestParams";
 import type { TypeMapping } from "sdk-es7/api/types";
 import type {
+  AliasToTargets,
+  CatAliasRecord,
   InfoResult,
   JSONObject,
   KImportError,
+  KImportResult,
+  KMExecuteResult,
   KRequestBody,
   KRequestParams,
 } from "../../../types/storage/7/Elasticsearch";
+import type { ValidatedTarget } from "../../../types/Target";
 
 import assert from "assert";
 
@@ -51,6 +56,12 @@ import { QueryTranslator } from "../commons/queryTranslator";
 import ESWrapper from "./esWrapper";
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
+
+/**
+ * An ES7 bulk request body: a flat list alternating an action line and its
+ * payload. The empty literal on its own inferred `never[]`.
+ */
+type BulkBody = JSONObject[];
 
 const ROOT_MAPPING_PROPERTIES = [
   "properties",
@@ -87,10 +98,14 @@ let esState = esStateEnum.NONE;
  * @constructor
  */
 export class ES7 {
-  public _client: Client;
+  /**
+   * Built by `init()`, and read nowhere before it — the `null` the constructor
+   * used to write was never observed. See TD-62.
+   */
+  public _client!: Client;
   public _scope: storeScopeEnum;
   public _indexPrefix: string;
-  public _esWrapper: ESWrapper;
+  public _esWrapper!: ESWrapper;
   public _esVersion: any;
   public _translator: QueryTranslator;
   public searchBodyKeys: string[];
@@ -110,8 +125,6 @@ export class ES7 {
     this._indexPrefix =
       scope === storeScopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
 
-    this._client = null;
-    this._esWrapper = null;
     this._esVersion = null;
     this._translator = new QueryTranslator();
 
@@ -185,16 +198,17 @@ export class ES7 {
       body: { version },
     } = await this._client.info();
 
-    if (
-      version &&
-      !semver.satisfies(semver.coerce(version.number), ">= 7.0.0")
-    ) {
-      throw kerror.get(
-        "services",
-        "storage",
-        "version_mismatch",
-        version.number,
-      );
+    if (version) {
+      const coerced = semver.coerce(version.number);
+
+      if (coerced === null || !semver.satisfies(coerced, ">= 7.0.0")) {
+        throw kerror.get(
+          "services",
+          "storage",
+          "version_mismatch",
+          version.number,
+        );
+      }
     }
 
     this._esVersion = version;
@@ -206,7 +220,7 @@ export class ES7 {
    * @param {Object} filters - Set of valid Koncorde filters
    * @returns {Object} Equivalent Elasticsearch query
    */
-  translateKoncordeFilters(filters) {
+  translateKoncordeFilters(filters: JSONObject) {
     return this._translator.translate(filters);
   }
 
@@ -255,10 +269,13 @@ export class ES7 {
     };
 
     const { body } = await this._client.indices.stats(esRequest);
-    const indexes = {};
+    const indexes: Record<
+      string,
+      { collections: JSONObject[]; name: string; size: number }
+    > = {};
     let size = 0;
 
-    for (const [indice, indiceInfo] of Object.entries(body.indices)) {
+    for (const [indice, indiceInfo] of Object.entries(body.indices ?? {})) {
       const infos = indiceInfo as any;
       // Ignore non-Kuzzle indices
       if (
@@ -280,19 +297,18 @@ export class ES7 {
         continue;
       }
 
-      if (!indexes[indexName]) {
-        indexes[indexName] = {
-          collections: [],
-          name: indexName,
-          size: 0,
-        };
-      }
-      indexes[indexName].collections.push({
+      const indexStats = (indexes[indexName] ??= {
+        collections: [],
+        name: indexName,
+        size: 0,
+      });
+
+      indexStats.collections.push({
         documentCount: infos.total.docs.count,
         name: collectionName,
         size: infos.total.store.size_in_bytes,
       });
-      indexes[indexName].size += infos.total.store.size_in_bytes;
+      indexStats.size += infos.total.store.size_in_bytes;
       size += infos.total.store.size_in_bytes;
     }
 
@@ -325,7 +341,7 @@ export class ES7 {
     this.logger.debug("Scroll: %o", esRequest);
 
     if (_scrollTTL) {
-      const scrollDuration = ms(_scrollTTL);
+      const scrollDuration = ms(_scrollTTL) ?? 0;
 
       if (scrollDuration > this.maxScrollDuration) {
         throw kerror.get(
@@ -425,6 +441,10 @@ export class ES7 {
 
       esIndexes = Array.from(indexes).join(",");
     } else {
+      if (index === undefined) {
+        throw kerror.get("services", "storage", "missing_argument", "index");
+      }
+
       esIndexes = this._getAlias(index, collection);
     }
 
@@ -438,7 +458,7 @@ export class ES7 {
     };
 
     if (scroll) {
-      const scrollDuration = ms(scroll);
+      const scrollDuration = ms(scroll) ?? 0;
 
       if (scrollDuration > this.maxScrollDuration) {
         throw kerror.get(
@@ -491,8 +511,8 @@ export class ES7 {
    * @param {*} targets
    * @returns
    */
-  _mapTargetsToAlias(targets) {
-    const aliasToTargets = {};
+  _mapTargetsToAlias(targets: ValidatedTarget[]) {
+    const aliasToTargets: AliasToTargets = {};
 
     for (const target of targets) {
       for (const targetCollection of target.collections) {
@@ -510,8 +530,8 @@ export class ES7 {
   }
 
   async _formatSearchResult(body: any, searchInfo: any = {}) {
-    let aliasToTargets = {};
-    const aliasCache = new Map();
+    let aliasToTargets: AliasToTargets = {};
+    const aliasCache = new Map<string, string[]>();
 
     if (searchInfo.targets) {
       /**
@@ -522,7 +542,7 @@ export class ES7 {
       aliasToTargets = this._mapTargetsToAlias(searchInfo.targets);
     }
 
-    const formatHit = async (hit) => {
+    const formatHit = async (hit: JSONObject) => {
       let index = searchInfo.index;
       let collection = searchInfo.collection;
 
@@ -544,10 +564,16 @@ export class ES7 {
          * find the first alias that exists in the map of aliases associated
          * to the targets.
          */
-        const alias = aliases.find((_alias) => aliasToTargets[_alias]);
         // Retrieve index and collection information based on the matching alias
-        index = aliasToTargets[alias].index;
-        collection = aliasToTargets[alias].collection;
+        for (const _alias of aliases) {
+          const target = aliasToTargets[_alias];
+
+          if (target) {
+            index = target.index;
+            collection = target.collection;
+            break;
+          }
+        }
       }
 
       return {
@@ -560,12 +586,12 @@ export class ES7 {
       };
     };
 
-    async function formatInnerHits(innerHits) {
+    async function formatInnerHits(innerHits: JSONObject | undefined) {
       if (!innerHits) {
         return undefined;
       }
 
-      const formattedInnerHits = {};
+      const formattedInnerHits: JSONObject = {};
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
           (innerHit as any).hits.hits,
@@ -599,7 +625,7 @@ export class ES7 {
    *
    * @returns {Promise.<{ _id, _version, _source }>}
    */
-  async get(index, collection, id) {
+  async get(index: string, collection: string, id: string) {
     const esRequest = {
       id,
       index: this._getAlias(index, collection),
@@ -640,7 +666,7 @@ export class ES7 {
    */
   async mGet(index: string, collection: string, ids: string[]) {
     if (ids.length === 0) {
-      return { errors: [], item: [] };
+      return { errors: [], items: [] };
     }
 
     const esRequest = {
@@ -728,7 +754,7 @@ export class ES7 {
     }: {
       id?: string;
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
       injectKuzzleMeta?: boolean;
     } = {},
   ) {
@@ -782,17 +808,17 @@ export class ES7 {
    * @returns {Promise.<Object>} { _id, _version, _source, created }
    */
   async createOrReplace(
-    index,
-    collection,
-    id,
-    content,
+    index: string,
+    collection: string,
+    id: string,
+    content: JSONObject,
     {
       refresh,
       userId = null,
       injectKuzzleMeta = true,
     }: {
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
       injectKuzzleMeta?: boolean;
     } = {},
   ) {
@@ -855,7 +881,7 @@ export class ES7 {
       injectKuzzleMeta = true,
     }: {
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
     } = {},
@@ -921,7 +947,7 @@ export class ES7 {
     }: {
       defaultValues?: JSONObject;
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
     } = {},
@@ -995,7 +1021,7 @@ export class ES7 {
       injectKuzzleMeta = true,
     }: {
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
       injectKuzzleMeta?: boolean;
     } = {},
   ) {
@@ -1143,10 +1169,12 @@ export class ES7 {
       return {
         deleted: body.deleted,
         documents,
-        failures: body.failures.map(({ shardId, reason }) => ({
-          reason,
-          shardId,
-        })),
+        failures: (body.failures ?? []).map(
+          ({ shardId, reason }: JSONObject) => ({
+            reason,
+            shardId,
+          }),
+        ),
         total: body.total,
       };
     } catch (error) {
@@ -1175,7 +1203,7 @@ export class ES7 {
       userId = null,
     }: {
       refresh?: boolean | "wait_for";
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
@@ -1245,7 +1273,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       size?: number;
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     try {
@@ -1303,15 +1331,19 @@ export class ES7 {
       refresh?: boolean;
     } = {},
   ) {
+    // `body` is optional on the request params, so the script is written
+    // through the local the request holds by reference rather than read back
+    // off the request.
+    const requestBody: KRequestBody<JSONObject> = {
+      query: this._sanitizeSearchBody({ query }).query,
+    };
     const esRequest: RequestParams.UpdateByQuery<KRequestBody<JSONObject>> = {
-      body: {
-        query: this._sanitizeSearchBody({ query }).query,
-      },
+      body: requestBody,
       index: this._getAlias(index, collection),
       refresh,
     };
 
-    const script = {
+    const script: { params: JSONObject; source: string } = {
       params: {},
       source: "",
     };
@@ -1324,7 +1356,7 @@ export class ES7 {
     }
 
     if (script.source !== "") {
-      esRequest.body.script = script;
+      requestBody.script = script;
     }
 
     this.logger.debug("Bulk Update by query: %o", esRequest);
@@ -1337,8 +1369,10 @@ export class ES7 {
       throw this._esWrapper.formatESError(error);
     }
 
-    if (response.body.failures.length) {
-      const errors = response.body.failures.map(({ shardId, reason }) => ({
+    const failures: JSONObject[] = response.body.failures ?? [];
+
+    if (failures.length) {
+      const errors = failures.map(({ shardId, reason }) => ({
         reason,
         shardId,
       }));
@@ -1395,13 +1429,13 @@ export class ES7 {
     }
 
     const client = this._client;
-    let results = [];
+    let results: JSONObject[] = [];
 
     let processed = 0;
-    let scrollId = null;
+    let scrollId: string | undefined;
 
     try {
-      results = await new Bluebird((resolve, reject) => {
+      results = await new Bluebird<JSONObject[]>((resolve, reject) => {
         this._client.search(
           esRequest,
           async function getMoreUntilDone(
@@ -1456,10 +1490,10 @@ export class ES7 {
   async createIndex(index: string) {
     this._assertValidIndexAndCollection(index);
 
-    let body: ApiResponse<Record<string, any>>["body"];
+    let body: CatAliasRecord[];
 
     try {
-      body = (await this._client.cat.aliases({ format: "json" })).body;
+      body = await this._catAliases();
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -1531,14 +1565,15 @@ export class ES7 {
       await mutex.unlock();
     }
 
-    const esRequest: RequestParams.IndicesCreate<KRequestBody<JSONObject>> = {
-      body: {
-        aliases: {
-          [this._getAlias(index, collection)]: {},
-        },
-        mappings: {},
-        settings,
+    const requestBody: KRequestBody<JSONObject> = {
+      aliases: {
+        [this._getAlias(index, collection)]: {},
       },
+      mappings: {},
+      settings,
+    };
+    const esRequest: RequestParams.IndicesCreate<KRequestBody<JSONObject>> = {
+      body: requestBody,
       index: await this._getAvailableIndice(index, collection),
       wait_for_active_shards: await this._getWaitForActiveShards(),
     };
@@ -1552,7 +1587,7 @@ export class ES7 {
 
     this._checkMappings(mappings);
 
-    esRequest.body.mappings = {
+    requestBody.mappings = {
       _meta: mappings._meta || this._config.commonMapping._meta,
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
@@ -1561,12 +1596,12 @@ export class ES7 {
       ),
     };
 
-    esRequest.body.settings.number_of_replicas =
-      esRequest.body.settings.number_of_replicas ||
+    settings.number_of_replicas =
+      settings.number_of_replicas ||
       this._config.defaultSettings.number_of_replicas;
 
-    esRequest.body.settings.number_of_shards =
-      esRequest.body.settings.number_of_shards ||
+    settings.number_of_shards =
+      settings.number_of_shards ||
       this._config.defaultSettings.number_of_shards;
 
     try {
@@ -1731,7 +1766,7 @@ export class ES7 {
    * @param indexSettings the index settings
    * @returns {{index: *}} a new index settings with only allowed settings.
    */
-  getAllowedIndexSettings(indexSettings) {
+  getAllowedIndexSettings(indexSettings: JSONObject) {
     return {
       index: _.omit(indexSettings.index, [
         "creation_date",
@@ -1833,7 +1868,11 @@ export class ES7 {
    *
    * @returns {Promise}
    */
-  async updateSettings(index, collection, settings = {}) {
+  async updateSettings(
+    index: string,
+    collection: string,
+    settings: JSONObject = {},
+  ) {
     const esRequest = {
       index: this._getAlias(index, collection),
     };
@@ -1917,7 +1956,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: string;
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
@@ -1955,7 +1994,7 @@ export class ES7 {
 
     const body = response.body;
 
-    const result = {
+    const result: KImportResult = {
       errors: [],
       items: [],
     };
@@ -1967,10 +2006,15 @@ export class ES7 {
      *
      * bulk body can contain more than 10K elements
      */
-    for (let i = 0; i < body.items.length; i++) {
-      const row = body.items[i];
-      const action = Object.keys(row)[0];
-      const item = row[action];
+    for (const row of body.items) {
+      // Elasticsearch answers exactly one action per row; a row carrying none
+      // describes no document, so there is nothing to report on it.
+      const [action = ""] = Object.keys(row);
+      const item: JSONObject | undefined = Object.values<JSONObject>(row)[0];
+
+      if (item === undefined) {
+        continue;
+      }
 
       if (item.status >= 400) {
         const error: KImportError = {
@@ -1981,11 +2025,15 @@ export class ES7 {
         // update action contain body in "doc" field
         // the delete action is not followed by an action payload
         if (action === "update") {
-          error._source = documents[idx + 1].doc;
-          error._source._kuzzle_info = undefined;
+          const source: JSONObject = documents[idx + 1]?.doc ?? {};
+
+          source._kuzzle_info = undefined;
+          error._source = source;
         } else if (action !== "delete") {
-          error._source = documents[idx + 1];
-          error._source._kuzzle_info = undefined;
+          const source: JSONObject = documents[idx + 1] ?? {};
+
+          source._kuzzle_info = undefined;
+          error._source = source;
         }
 
         // ES response does not systematicaly include an error object
@@ -2023,11 +2071,11 @@ export class ES7 {
    *
    * @returns {Promise.<Array>} Collection names
    */
-  async listCollections(index, { includeHidden = false } = {}) {
-    let body;
+  async listCollections(index: string, { includeHidden = false } = {}) {
+    let body: CatAliasRecord[];
 
     try {
-      ({ body } = await this._client.cat.aliases({ format: "json" }));
+      body = await this._catAliases();
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -2045,10 +2093,10 @@ export class ES7 {
    * @returns {Promise.<Array>} Index names
    */
   async listIndexes() {
-    let body: ApiResponse<any, unknown>["body"];
+    let body: CatAliasRecord[];
 
     try {
-      ({ body } = await this._client.cat.aliases({ format: "json" }));
+      body = await this._catAliases();
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -2066,10 +2114,10 @@ export class ES7 {
    * @returns {Object.<String, String[]>} Object<index, collections>
    */
   async getSchema() {
-    let body: ApiResponse<any, unknown>["body"];
+    let body: CatAliasRecord[];
 
     try {
-      ({ body } = await this._client.cat.aliases({ format: "json" }));
+      body = await this._catAliases();
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -2093,10 +2141,10 @@ export class ES7 {
    * @returns {Promise.<Object[]>} [ { alias, index, collection, indice } ]
    */
   async listAliases() {
-    let body;
+    let body: CatAliasRecord[];
 
     try {
-      ({ body } = await this._client.cat.aliases({ format: "json" }));
+      body = await this._catAliases();
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -2124,7 +2172,7 @@ export class ES7 {
    *
    * @returns {Promise}
    */
-  async deleteCollection(index: string, collection: string): Promise<void> {
+  async deleteCollection(index: string, collection: string): Promise<null> {
     const indice = await this._getIndice(index, collection);
     const esRequest: RequestParams.IndicesDelete = {
       index: indice,
@@ -2163,9 +2211,9 @@ export class ES7 {
     const deleted = new Set();
 
     try {
-      const { body } = await this._client.cat.aliases({ format: "json" });
+      const body = await this._catAliases();
 
-      const esRequest = body.reduce(
+      const esRequest = body.reduce<{ index: string[] }>(
         (request, { alias, index: indice }) => {
           const index = this._extractIndex(alias);
 
@@ -2205,7 +2253,7 @@ export class ES7 {
    *
    * @returns {Promise}
    */
-  async deleteIndex(index: string): Promise<void> {
+  async deleteIndex(index: string): Promise<null> {
     await this.deleteIndexes([index]);
 
     return null;
@@ -2281,7 +2329,7 @@ export class ES7 {
    */
   async mExists(index: string, collection: string, ids: string[]) {
     if (ids.length === 0) {
-      return { errors: [], item: [] };
+      return { errors: [], items: [] };
     }
 
     const esRequest: RequestParams.Mget = {
@@ -2352,12 +2400,12 @@ export class ES7 {
    *
    * @returns {Promise.<boolean>}
    */
-  async _hasHiddenCollection(index) {
+  async _hasHiddenCollection(index: string) {
     const collections = await this.listCollections(index, {
       includeHidden: true,
     });
 
-    return collections.some((col) => col === HIDDEN_COLLECTION);
+    return collections.some((col: string) => col === HIDDEN_COLLECTION);
   }
 
   /**
@@ -2383,7 +2431,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: string;
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection),
@@ -2408,7 +2456,7 @@ export class ES7 {
         : { body: { docs: [] } };
 
     const existingDocuments = body.docs;
-    const esRequest = {
+    const esRequest: { body: BulkBody; index: string } & JSONObject = {
       body: [],
       index: alias,
       refresh,
@@ -2421,9 +2469,9 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0, idx = 0; i < extractedDocuments.length; i++) {
-      const document = extractedDocuments[i];
+    let idx = 0;
 
+    for (const document of extractedDocuments) {
       // Documents are retrieved in the same order than we got them from user
       if (typeof document._id === "string" && existingDocuments[idx]) {
         if (existingDocuments[idx].found) {
@@ -2498,7 +2546,7 @@ export class ES7 {
     }
 
     const alias = this._getAlias(index, collection);
-    const esRequest = {
+    const esRequest: { body: BulkBody; index: string } & JSONObject = {
       body: [],
       index: alias,
       refresh,
@@ -2516,14 +2564,14 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
+    for (const extractedDocument of extractedDocuments) {
       esRequest.body.push({
         index: {
-          _id: extractedDocuments[i]._id,
+          _id: extractedDocument._id,
           _index: alias,
         },
       });
-      esRequest.body.push(extractedDocuments[i]._source);
+      esRequest.body.push(extractedDocument._source);
     }
     /* end critical code section */
 
@@ -2550,15 +2598,20 @@ export class ES7 {
     collection: string,
     documents: JSONObject[],
     {
-      refresh = undefined,
+      refresh,
       retryOnConflict = 0,
-      timeout = undefined,
+      timeout,
       userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      retryOnConflict?: number;
+      timeout?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
-      esRequest = {
+      esRequest: { body: BulkBody; index: string } & JSONObject = {
         body: [],
         index: alias,
         refresh,
@@ -2580,9 +2633,7 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
-      const extractedDocument = extractedDocuments[i];
-
+    for (const extractedDocument of extractedDocuments) {
       if (typeof extractedDocument._id === "string") {
         esRequest.body.push({
           update: {
@@ -2654,11 +2705,11 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       retryOnConflict?: number;
       timeout?: string;
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
-    const esRequest = {
+    const esRequest: { body: BulkBody } & JSONObject = {
       body: [],
       refresh,
       timeout,
@@ -2695,11 +2746,11 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
+    for (const extractedDocument of extractedDocuments) {
       esRequest.body.push(
         {
           update: {
-            _id: extractedDocuments[i]._id,
+            _id: extractedDocument._id,
             _index: alias,
             _source: true,
             retry_on_conflict:
@@ -2707,8 +2758,8 @@ export class ES7 {
           },
         },
         {
-          doc: extractedDocuments[i]._source.changes,
-          upsert: extractedDocuments[i]._source.default,
+          doc: extractedDocument._source.changes,
+          upsert: extractedDocument._source.default,
         },
       );
       // _source: true
@@ -2761,7 +2812,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: string;
-      userId?: string;
+      userId?: string | null;
     } = {},
   ) {
     const alias = this._getAlias(index, collection),
@@ -2789,7 +2840,7 @@ export class ES7 {
     });
 
     const existingDocuments = body.docs;
-    const esRequest = {
+    const esRequest: { body: BulkBody } & JSONObject = {
       body: [],
       refresh,
       timeout,
@@ -2801,9 +2852,7 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
-      const document = extractedDocuments[i];
-
+    for (const [i, document] of extractedDocuments.entries()) {
       // Documents are retrieved in the same order than we got them from user
       if (existingDocuments[i]?.found) {
         esRequest.body.push({
@@ -2854,7 +2903,7 @@ export class ES7 {
       timeout?: number;
     } = {},
   ) {
-    const query = { ids: { values: [] } };
+    const query: { ids: { values: string[] } } = { ids: { values: [] } };
     const validIds = [];
     const partialErrors = [];
 
@@ -2888,8 +2937,7 @@ export class ES7 {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < validIds.length; i++) {
-      const validId = validIds[i];
+    for (const validId of validIds) {
       const item = items[idx];
 
       if (item && item._id === validId) {
@@ -2931,56 +2979,63 @@ export class ES7 {
     documents: JSONObject[],
     partialErrors: JSONObject[] = [],
     { limits = true, source = true } = {},
-  ) {
+  ): Promise<KMExecuteResult> {
     assertWellFormedRefresh(esRequest);
 
     if (this._hasExceededLimit(limits, documents)) {
       return kerror.reject("services", "storage", "write_limit_exceeded");
     }
 
-    let response = { body: { items: [] } };
+    let items: JSONObject[] = [];
 
     if (documents.length > 0) {
       try {
-        response = await this._client.bulk(esRequest);
+        ({
+          body: { items },
+        } = await this._client.bulk(esRequest));
       } catch (error) {
         throw this._esWrapper.formatESError(error);
       }
     }
 
-    const body = response.body;
-    const successes = [];
+    const successes: JSONObject[] = [];
 
     /**
      * @warning Critical code section
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < body.items.length; i++) {
-      const item = body.items[i];
-      const result = item[Object.keys(item)[0]];
+    for (const [i, item] of items.entries()) {
+      const result: JSONObject | undefined = Object.values<JSONObject>(item)[0];
+      const document = documents[i];
+
+      // An answer carries exactly one result per document sent; a row without
+      // its counterpart is one neither branch below could describe.
+      if (result === undefined || document === undefined) {
+        continue;
+      }
 
       if (result.status >= 400) {
         if (result.status === 404) {
           partialErrors.push({
             document: {
-              _id: documents[i]._id,
-              body: documents[i]._source,
+              _id: document._id,
+              body: document._source,
             },
             reason: "document not found",
             status: result.status,
           });
         } else {
           partialErrors.push({
-            document: documents[i],
-            reason: result.error.reason,
+            document,
+            reason: result.error?.reason,
             status: result.status,
           });
         }
       } else {
         successes.push({
           _id: result._id,
-          _source: source ? documents[i]._source : undefined,
+          _source: source ? document._source : undefined,
           _version: result._version,
           created: result.result === "created",
           get: result.get,
@@ -3014,18 +3069,16 @@ export class ES7 {
     metadata: JSONObject,
     { prepareMGet = false, requireId = false, prepareMUpsert = false } = {},
   ) {
-    const rejected = [];
-    const extractedDocuments = [];
-    const documentsToGet = [];
+    const rejected: JSONObject[] = [];
+    const extractedDocuments: JSONObject[] = [];
+    const documentsToGet: JSONObject[] = [];
 
     /**
      * @warning Critical code section
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < documents.length; i++) {
-      const document = documents[i];
-
+    for (const document of documents) {
       if (!isPlainObject(document.body) && !prepareMUpsert) {
         rejected.push({
           document,
@@ -3085,7 +3138,7 @@ export class ES7 {
     extractedDocuments: JSONObject[],
     documentsToGet: JSONObject[],
   ) {
-    let extractedDocument;
+    let extractedDocument: JSONObject;
 
     if (prepareMUpsert) {
       if (document.changes !== undefined && document.changes !== null) {
@@ -3131,7 +3184,7 @@ export class ES7 {
    * @param {Object} mapping
    * @throws
    */
-  _checkMappings(mapping: JSONObject, path = [], check = true) {
+  _checkMappings(mapping: JSONObject, path: string[] = [], check = true) {
     const properties = Object.keys(mapping);
     const mappingProperties =
       path.length === 0
@@ -3170,14 +3223,14 @@ export class ES7 {
    *
    * @returns {String} Alias name (eg: '@&nepali.liia')
    */
-  _getAlias(index, collection) {
+  _getAlias(index: string, collection?: string) {
     return `${ALIAS_PREFIX}${this._indexPrefix}${index}${NAME_SEPARATOR}${collection}`;
   }
 
   /**
    * Given an alias name, returns the associated index name.
    */
-  async _checkIfAliasExists(aliasName) {
+  async _checkIfAliasExists(aliasName: string) {
     const { body } = await this._client.indices.existsAlias({
       name: aliasName,
     });
@@ -3196,12 +3249,10 @@ export class ES7 {
    */
   async _getIndice(index: string, collection: string): Promise<string> {
     const alias = `${ALIAS_PREFIX}${this._indexPrefix}${index}${NAME_SEPARATOR}${collection}`;
-    const { body } = await this._client.cat.aliases({
-      format: "json",
-      name: alias,
-    });
+    const body = await this._catAliases(alias);
+    const [record] = body;
 
-    if (body.length < 1) {
+    if (record === undefined) {
       throw kerror.get("services", "storage", "unknown_index_collection");
     } else if (body.length > 1) {
       throw kerror.get(
@@ -3213,7 +3264,7 @@ export class ES7 {
       );
     }
 
-    return body[0].index;
+    return record.index;
   }
 
   /**
@@ -3284,17 +3335,38 @@ export class ES7 {
    * @returns {String} Alias name (eg: '@&nepali.liia')
    * @throws If there is not exactly one alias associated that is prefixed with @
    */
-  async _getAliasFromIndice(indice: string) {
+  /**
+   * `cat.aliases` answers untyped rows whose `alias` and `index` the client
+   * declares as optional. Defaulting them once here is what lets every caller
+   * index into an alias without repeating the check — and an empty alias fails
+   * the index-prefix test every caller applies, which is what a row without one
+   * used to throw on.
+   */
+  async _catAliases(name?: string): Promise<CatAliasRecord[]> {
+    const { body } = await this._client.cat.aliases(
+      name === undefined ? { format: "json" } : { format: "json", name },
+    );
+
+    return body.map(({ alias, index }: JSONObject) => ({
+      alias: alias ?? "",
+      index: index ?? "",
+    }));
+  }
+
+  async _getAliasFromIndice(indice: string): Promise<[string, ...string[]]> {
     const { body } = await this._client.indices.getAlias({ index: indice });
-    const aliases = Object.keys(body[indice].aliases).filter((alias) =>
+    const indiceAliases = body[indice]?.aliases ?? {};
+    const [first, ...others] = Object.keys(indiceAliases).filter((alias) =>
       alias.startsWith(ALIAS_PREFIX),
     );
 
-    if (aliases.length < 1) {
+    // The non-empty tuple is what lets every caller read aliases[0] without a
+    // guard the throw below already made redundant.
+    if (first === undefined) {
       throw kerror.get("services", "storage", "unknown_index_collection");
     }
 
-    return aliases;
+    return [first, ...others];
   }
 
   /**
@@ -3307,7 +3379,9 @@ export class ES7 {
   async generateMissingAliases() {
     try {
       const { body } = await this._client.cat.indices({ format: "json" });
-      const indices = body.map(({ index: indice }) => indice);
+      const indices: string[] = body.flatMap(({ index: indice }: JSONObject) =>
+        indice === undefined ? [] : [indice],
+      );
       const aliases = await this.listAliases();
 
       const indicesWithoutAlias = indices.filter(
@@ -3316,7 +3390,9 @@ export class ES7 {
           !aliases.some((alias) => alias.indice === indice),
       );
 
-      const esRequest = { body: { actions: [] } };
+      const esRequest: { body: { actions: JSONObject[] } } = {
+        body: { actions: [] },
+      };
       for (const indice of indicesWithoutAlias) {
         esRequest.body.actions.push({
           add: { alias: `${ALIAS_PREFIX}${indice}`, index: indice },
@@ -3337,7 +3413,10 @@ export class ES7 {
    * @param {String} index
    * @param {String} collection
    */
-  _assertValidIndexAndCollection(index, collection = null) {
+  _assertValidIndexAndCollection(
+    index: string,
+    collection: string | null = null,
+  ) {
     if (!this.isIndexNameValid(index)) {
       throw kerror.get("services", "storage", "invalid_index_name", index);
     }
@@ -3359,7 +3438,7 @@ export class ES7 {
    *
    * @returns {String} Index name
    */
-  _extractIndex(alias) {
+  _extractIndex(alias: string) {
     return alias.substr(
       INDEX_PREFIX_POSITION_IN_ALIAS + 1,
       alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1,
@@ -3373,7 +3452,7 @@ export class ES7 {
    *
    * @returns {String} Collection name
    */
-  _extractCollection(alias) {
+  _extractCollection(alias: string) {
     const separatorPos = alias.indexOf(NAME_SEPARATOR);
 
     return alias.substr(separatorPos + 1, alias.length);
@@ -3388,10 +3467,12 @@ export class ES7 {
    * @returns {Object.<String, String[]>} Indexes as key and an array of their collections as value
    */
   _extractSchema(aliases: string[], { includeHidden = false } = {}) {
-    const schema = {};
+    const schema: Record<string, string[]> = {};
 
     for (const alias of aliases) {
-      const [indexName, collectionName] = alias
+      // `split` always yields a first element; the defaults are what make that
+      // readable to the compiler.
+      const [indexName = "", collectionName = ""] = alias
         .slice(INDEX_PREFIX_POSITION_IN_ALIAS + 1)
         .split(NAME_SEPARATOR);
 
@@ -3399,12 +3480,10 @@ export class ES7 {
         alias[INDEX_PREFIX_POSITION_IN_ALIAS] === this._indexPrefix &&
         (collectionName !== HIDDEN_COLLECTION || includeHidden)
       ) {
-        if (!schema[indexName]) {
-          schema[indexName] = [];
-        }
+        const collections = (schema[indexName] ??= []);
 
-        if (!schema[indexName].includes(collectionName)) {
-          schema[indexName].push(collectionName);
+        if (!collections.includes(collectionName)) {
+          collections.push(collectionName);
         }
       }
     }
@@ -3418,7 +3497,7 @@ export class ES7 {
    *
    * @param {String} index Index name
    */
-  async _createHiddenCollection(index) {
+  async _createHiddenCollection(index: string) {
     const mutex = new Mutex(`hiddenCollection/${index}`);
 
     try {
@@ -3522,7 +3601,7 @@ export class ES7 {
    *
    * @param {Object} searchBody - ES search body (with query, aggregations, sort, etc)
    */
-  _sanitizeSearchBody(searchBody) {
+  _sanitizeSearchBody(searchBody: JSONObject = {}) {
     // Only allow a whitelist of top level properties
     for (const key of Object.keys(searchBody)) {
       if (searchBody[key] !== undefined && !this.searchBodyKeys.includes(key)) {
@@ -3549,7 +3628,7 @@ export class ES7 {
    *
    * @param {Object} object
    */
-  _scriptCheck(object) {
+  _scriptCheck(object: JSONObject) {
     for (const [key, value] of Object.entries(object)) {
       if (this.scriptKeys.includes(key)) {
         for (const scriptArg of Object.keys(value)) {
@@ -3575,7 +3654,7 @@ export class ES7 {
    * @param  {string}  name
    * @returns {Boolean}
    */
-  isCollectionNameValid(name) {
+  isCollectionNameValid(name: string) {
     return _isObjectNameValid(name);
   }
 
@@ -3584,7 +3663,7 @@ export class ES7 {
    * @param  {string}  name
    * @returns {Boolean}
    */
-  isIndexNameValid(name) {
+  isIndexNameValid(name: string) {
     return _isObjectNameValid(name);
   }
 
@@ -3608,7 +3687,7 @@ export class ES7 {
    *
    * @returns {Number} milliseconds
    */
-  _loadMsConfig(key) {
+  _loadMsConfig(key: string) {
     const configValue = _.get(this._config, key);
 
     assert(
@@ -3630,7 +3709,7 @@ export class ES7 {
    * Returns true if one of the mappings dynamic property changes value from
    * false to true
    */
-  _dynamicChanges(previousMappings, newMappings) {
+  _dynamicChanges(previousMappings: JSONObject, newMappings: JSONObject) {
     const previousValues = findDynamic(previousMappings);
 
     for (const [path, previousValue] of Object.entries(previousValues)) {
@@ -3686,7 +3765,7 @@ export class ES7 {
   /**
    * Checks if the dynamic properties are correct
    */
-  _checkDynamicProperty(mappings) {
+  _checkDynamicProperty(mappings: JSONObject) {
     const dynamicProperties = findDynamic(mappings);
     for (const [path, value] of Object.entries(dynamicProperties)) {
       // Prevent common mistake
@@ -3729,9 +3808,8 @@ export class ES7 {
     let lastAction = "";
     const actionNames = ["index", "create", "update", "delete"];
 
-    for (let i = 0; i < esRequest.body.length; i++) {
-      const item = esRequest.body[i];
-      const action = Object.keys(item)[0];
+    for (const item of esRequest.body) {
+      const action = Object.keys(item)[0] ?? "";
 
       if (actionNames.indexOf(action) !== -1) {
         lastAction = action;
@@ -3774,7 +3852,11 @@ export class ES7 {
  *   "properties.user.properties.address.dynamic": "strict"
  * }
  */
-function findDynamic(mappings, path = [], results = {}) {
+function findDynamic(
+  mappings: JSONObject,
+  path: string[] = [],
+  results: JSONObject = {},
+) {
   if (mappings.dynamic !== undefined) {
     results[path.concat("dynamic").join(".")] = mappings.dynamic;
   }
@@ -3794,7 +3876,7 @@ function findDynamic(mappings, path = [], results = {}) {
  * @param {Object} esRequest
  * @throws
  */
-function assertNoRouting(esRequest) {
+function assertNoRouting(esRequest: JSONObject) {
   if (esRequest.body._routing) {
     throw kerror.get("services", "storage", "no_routing");
   }
@@ -3806,7 +3888,7 @@ function assertNoRouting(esRequest) {
  * @param {Object} esRequest
  * @throws
  */
-function assertWellFormedRefresh(esRequest) {
+function assertWellFormedRefresh(esRequest: JSONObject) {
   if (!["wait_for", "false", false, undefined].includes(esRequest.refresh)) {
     throw kerror.get(
       "services",
@@ -3818,7 +3900,7 @@ function assertWellFormedRefresh(esRequest) {
   }
 }
 
-function getKuid(userId: string): string | null {
+function getKuid(userId: string | null | undefined): string | null {
   if (!userId) {
     return null;
   }
@@ -3858,11 +3940,11 @@ function _isObjectNameValid(name: string): boolean {
     return false;
   }
 
-  let valid = true;
-
-  for (let i = 0; valid && i < FORBIDDEN_CHARS.length; i++) {
-    valid = !name.includes(FORBIDDEN_CHARS[i]);
+  for (const forbiddenChar of FORBIDDEN_CHARS) {
+    if (name.includes(forbiddenChar)) {
+      return false;
+    }
   }
 
-  return valid;
+  return true;
 }

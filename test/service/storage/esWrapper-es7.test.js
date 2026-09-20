@@ -18,6 +18,16 @@ describe("Test: ElasticSearch Wrapper", () => {
   });
 
   describe("#formatESError", () => {
+    // `catch` answers `unknown`, so a rejected client promise can carry
+    // something that is not an Error at all. Everything below it reads an
+    // Error's shape; this is the normalisation that lets it.
+    it("should accept a thrown value that is not an Error", () => {
+      const formatted = esWrapper.formatESError("a bare string");
+
+      should(formatted).be.instanceOf(ExternalServiceError);
+      should(formatted.id).be.eql("services.storage.unexpected_error");
+    });
+
     it("should convert any unknown error to a ExternalServiceError instance", () => {
       const error = new Error("test");
       error.meta = {
