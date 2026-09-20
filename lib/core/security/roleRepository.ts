@@ -323,8 +323,10 @@ class RoleRepository extends ObjectRepository<Role> {
    * @throws {NotFoundError} If the corresponding role doesn't exist
    */
   async load(id: string): Promise<Role> {
-    if (this.roles.has(id)) {
-      return this.roles.get(id);
+    const cached = this.roles.get(id);
+
+    if (cached !== undefined) {
+      return cached;
     }
 
     const role = await this.loadOneFromDatabase(id);
@@ -339,9 +341,17 @@ class RoleRepository extends ObjectRepository<Role> {
    */
   async loadOneFromDatabase(id: string): Promise<Role> {
     try {
-      return await super.loadOneFromDatabase(id);
+      const role = await super.loadOneFromDatabase(id);
+
+      // The base resolves `null` for a document with no `_id`; a role always
+      // has one, and its absence is the same "not found" as a 404.
+      if (role === null) {
+        throw kerror.get("security", "role", "not_found", id);
+      }
+
+      return role;
     } catch (err) {
-      if (err.status === 404) {
+      if (err instanceof Error && "status" in err && err.status === 404) {
         throw kerror.get("security", "role", "not_found", id);
       }
       throw err;
@@ -423,18 +433,28 @@ class RoleRepository extends ObjectRepository<Role> {
         return;
       }
 
+      const roleControllerRights = role.controllers[roleController];
+
+      if (roleControllerRights === undefined) {
+        return;
+      }
+
       if (roleController === "*") {
-        Object.keys(role.controllers["*"].actions).forEach((action) => {
+        Object.keys(roleControllerRights.actions ?? {}).forEach((action) => {
           if (action !== "*") {
             throw roleRightsError.get("unknown_action", role._id, action, "*");
           }
         });
       } else {
         const controller = global.kuzzle.funnel.controllers.get(roleController);
-        const actions = Object.keys(role.controllers[roleController].actions);
+        const actions = Object.keys(roleControllerRights.actions ?? {});
 
         actions.forEach((action) => {
-          if (action !== "*" && !controller._isAction(action)) {
+          if (
+            action !== "*" &&
+            controller !== undefined &&
+            !controller._isAction(action)
+          ) {
             throw roleRightsError.get(
               "unknown_action",
               role._id,
@@ -443,7 +463,7 @@ class RoleRepository extends ObjectRepository<Role> {
               // `_actions` is a Set. didyoumean@1.2.1 walks `list.length`,
               // which a Set does not have, so this suggestion had always been
               // empty — the new declaration for the module is what said so.
-              didYouMean(action, Array.from(controller._actions)),
+              didYouMean(action, Array.from(controller?._actions ?? [])),
             );
           }
         });
@@ -532,7 +552,9 @@ class RoleRepository extends ObjectRepository<Role> {
     { force, forceWarn }: { force: boolean; forceWarn: boolean },
   ): void {
     const plugins = global.kuzzle.pluginsManager;
-    const roleActions = Object.keys(role.controllers[roleController].actions);
+    const roleActions = Object.keys(
+      role.controllers[roleController]?.actions ?? {},
+    );
 
     for (const action of roleActions) {
       if (action === "*" || plugins.isAction(roleController, action)) {

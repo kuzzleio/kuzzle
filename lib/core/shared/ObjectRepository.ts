@@ -55,7 +55,13 @@ interface TruncatePart {
   total: number;
 }
 
-export class ObjectRepository<TObject extends { _id: string }> {
+/**
+ * `_id` is nullable because the models are: `User`, `Profile` and `Token` are
+ * all constructed empty and get their id on the way out of the store
+ * (ADR-0001, TD-62). The repository only ever reads it off an object it
+ * loaded, which has one.
+ */
+export class ObjectRepository<TObject extends { _id: string | null }> {
   protected ttl: number;
   protected index: string;
 
@@ -288,11 +294,11 @@ export class ObjectRepository<TObject extends { _id: string }> {
     const promises = [];
 
     if (this.cacheDb !== cacheDbEnum.NONE) {
-      promises.push(this.deleteFromCache(object._id, options));
+      promises.push(this.deleteFromCache(this.idOf(object), options));
     }
 
     if (this.store) {
-      promises.push(this.deleteFromDatabase(object._id, options));
+      promises.push(this.deleteFromDatabase(this.idOf(object), options));
     }
 
     await Promise.all(promises);
@@ -316,7 +322,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
     object: TObject,
     options: { key?: string; ttl?: number } = {},
   ): Promise<TObject> {
-    const key = options.key || this.getCacheKey(object._id);
+    const key = options.key || this.getCacheKey(this.idOf(object));
     const value = JSON.stringify(this.serializeToCache(object));
     const ttl = options.ttl ?? this.ttl;
 
@@ -373,7 +379,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
    */
   async expireFromCache(object: TObject, options: { key?: string } = {}) {
-    const key = options.key || this.getCacheKey(object._id);
+    const key = options.key || this.getCacheKey(this.idOf(object));
 
     await global.kuzzle.ask(`core:cache:${this.cacheDb}:expire`, key, -1);
   }
@@ -406,6 +412,24 @@ export class ObjectRepository<TObject extends { _id: string }> {
   /**
    * @param {string} id
    */
+  /**
+   * The id of an object being written, removed or expired.
+   *
+   * A model carries `null` until it has been stored (ADR-0001, TD-62), and
+   * every path that calls this already holds one that has. Building a cache
+   * key out of a `null` would silently address `repos/<index>/<collection>/null`,
+   * which is the failure this replaces.
+   *
+   * @throws {PreconditionError} when the object has no id
+   */
+  protected idOf(object: { _id: string | null }): string {
+    if (object._id === null) {
+      throw kerror.get("services", "storage", "missing_argument", "_id");
+    }
+
+    return object._id;
+  }
+
   getCacheKey(id: string): string {
     return `repos/${this.index}/${this.collection}/${id}`;
   }
@@ -505,11 +529,13 @@ export class ObjectRepository<TObject extends { _id: string }> {
           ? ["admin", "default", "anonymous"]
           : [];
 
-      if (protectedObjects.indexOf(object._id) !== -1) {
+      const id = this.idOf(object);
+
+      if (protectedObjects.indexOf(id) !== -1) {
         return 0;
       }
 
-      const loaded = await this.load(object._id);
+      const loaded = await this.load(id);
 
       if (loaded === null) {
         return 0;

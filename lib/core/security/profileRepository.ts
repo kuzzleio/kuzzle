@@ -29,11 +29,30 @@ import { Profile } from "../../model/security/profile";
 import { ObjectRepository } from "../shared/ObjectRepository";
 
 /** @internal */
+/**
+ * The two sibling repositories this one reaches through, the same shape
+ * `UserRepository` declares for its own side of the module.
+ */
+interface SecurityModule {
+  role: { loadRoles(ids: string[]): Promise<unknown[]> };
+  user: {
+    scroll(scrollId: string, ttl?: string): Promise<JSONObject>;
+    search(query: JSONObject, options?: JSONObject): Promise<JSONObject>;
+    update(
+      id: string | null,
+      profileIds: string[],
+      content: JSONObject,
+      options: JSONObject,
+    ): Promise<unknown>;
+  };
+}
+
+/** @internal */
 type CreateOrReplaceOptions = {
   method?: string;
   refresh?: string;
   strict?: boolean;
-  userId?: string;
+  userId?: string | null;
 };
 
 /** @internal */
@@ -57,12 +76,12 @@ type UpdateOptions = {
  * @extends ObjectRepository
  */
 export class ProfileRepository extends ObjectRepository<Profile> {
-  private module: any;
+  private module: SecurityModule;
 
   /**
    * @constructor
    */
-  constructor(securityModule) {
+  constructor(securityModule: SecurityModule) {
     super({ store: global.kuzzle.internalIndex });
 
     this.module = securityModule;
@@ -252,9 +271,17 @@ export class ProfileRepository extends ObjectRepository<Profile> {
    */
   async loadOneFromDatabase(id: string): Promise<Profile> {
     try {
-      return await super.loadOneFromDatabase(id);
+      const profile = await super.loadOneFromDatabase(id);
+
+      // The base resolves `null` for a document with no `_id`; for a profile
+      // that is the same "not found" as a 404.
+      if (profile === null) {
+        throw kerror.get("security", "profile", "not_found", id);
+      }
+
+      return profile;
     } catch (err) {
-      if (err.status === 404) {
+      if (err instanceof Error && "status" in err && err.status === 404) {
         throw kerror.get("security", "profile", "not_found", id);
       }
       throw err;
@@ -385,7 +412,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     profile: Profile,
     { refresh = "false", onAssignedUsers = "fail", userId = "-1" } = {},
   ) {
-    if (["admin", "default", "anonymous"].includes(profile._id)) {
+    if (["admin", "default", "anonymous"].includes(this.idOf(profile))) {
       throw kerror.get("security", "profile", "cannot_delete");
     }
 
@@ -407,7 +434,9 @@ export class ProfileRepository extends ObjectRepository<Profile> {
         batch.length = 0;
 
         for (const user of userPage.hits) {
-          user.profileIds = user.profileIds.filter((e) => e !== profile._id);
+          user.profileIds = user.profileIds.filter(
+            (e: string) => e !== profile._id,
+          );
 
           if (user.profileIds.length === 0) {
             user.profileIds.push("anonymous");
@@ -440,9 +469,11 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       }
     }
 
-    await this.deleteFromDatabase(profile._id, { refresh });
+    const profileId = this.idOf(profile);
 
-    await this.deleteFromCache(profile._id);
+    await this.deleteFromDatabase(profileId, { refresh });
+
+    await this.deleteFromCache(profileId);
   }
 
   /**
@@ -500,7 +531,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       retryOnConflict,
     });
 
-    const updatedProfile = await this.loadOneFromDatabase(profile._id);
+    const updatedProfile = await this.loadOneFromDatabase(this.idOf(profile));
     await this.persistToCache(updatedProfile);
 
     // Recompute optimized policies based on new policies
@@ -535,7 +566,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     const roles = await this.module.role.loadRoles(policiesRoles);
 
     // Fail if not all roles are found
-    if (roles.some((r) => r === null)) {
+    if (roles.some((r: unknown) => r === null)) {
       throw kerror.get("security", "profile", "cannot_hydrate");
     }
 

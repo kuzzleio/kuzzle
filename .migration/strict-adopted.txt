@@ -77,6 +77,11 @@
 # hangs off a `children` map — the root is the only node missing type/path/
 # depth/mandatory/multivalued/typeOptions, and the walkers never see it — and
 # `Object.entries` wherever a map was walked by key and then indexed.
+# Step 12 K4, part 3 (2026-09-20): TD-62's `lib/model/security` half and the
+# three repositories it relocates into. K1 measured the relocation at +18 and
+# reverted; it is +19 here, and clearing it costs the six files below. The base
+# class's `TObject extends { _id: string }` had to widen with the models, and
+# `ObjectRepository.idOf` is the one place that now refuses a write with no id.
 
 bin/copy-binaries.ts
 index.ts
@@ -149,7 +154,10 @@ lib/core/realtime/notifier.ts
 lib/core/realtime/room.ts
 lib/core/realtime/subscription.ts
 lib/core/security/index.ts
+lib/core/security/profileRepository.ts
+lib/core/security/roleRepository.ts
 lib/core/security/securityLoader.ts
+lib/core/security/userRepository.ts
 lib/core/shared/KoncordeWrapper.ts
 lib/core/shared/ObjectRepository.ts
 lib/core/shared/sdk/embeddedSdk.ts
@@ -202,7 +210,11 @@ lib/kuzzle/index.ts
 lib/kuzzle/internalIndexHandler.ts
 lib/kuzzle/kuzzleStateEnum.ts
 lib/kuzzle/vault.ts
+lib/model/security/profile.ts
 lib/model/security/rights.ts
+lib/model/security/role.ts
+lib/model/security/token.ts
+lib/model/security/user.ts
 lib/model/storage/apiKey.ts
 lib/model/storage/baseModel.ts
 lib/service/service.ts

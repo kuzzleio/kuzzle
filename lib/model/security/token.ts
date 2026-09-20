@@ -24,13 +24,17 @@ export interface TokenContent {
    * Token ID (also Redis key)
    *
    * @example `${userId}#${jwt}`
+   *
+   * The five nullable members are nullable because `Token` — which implements
+   * this — writes `null` for whatever its input did not carry (ADR-0001,
+   * TD-62). As an input shape they are still simply optional.
    */
-  _id?: string;
-  expiresAt?: number;
-  ttl?: number;
-  userId?: string;
+  _id?: string | null;
+  expiresAt?: number | null;
+  ttl?: number | null;
+  userId?: string | null;
   connectionIds?: string[];
-  jwt?: string;
+  jwt?: string | null;
   refreshed?: boolean;
   singleUse?: boolean;
 }
@@ -39,11 +43,17 @@ export interface TokenContent {
  * Represents a token that identify an user.
  */
 export class Token implements TokenContent {
-  _id: string;
-  expiresAt: number;
-  ttl: number;
-  userId: string;
-  jwt: string;
+  /**
+   * All five are `| null` because the constructor writes `null` for anything
+   * its `TokenContent` did not carry, and a `Token` is routinely built empty —
+   * `Token.Anonymous()` and the repository's cache miss both do it. The
+   * declarations used to say otherwise (ADR-0001, TD-62).
+   */
+  _id: string | null;
+  expiresAt: number | null;
+  ttl: number | null;
+  userId: string | null;
+  jwt: string | null;
   refreshed: boolean;
   singleUse: boolean;
 
