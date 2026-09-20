@@ -426,16 +426,7 @@ export class ES8 {
     let esIndexes: any;
 
     if (targets && targets.length > 0) {
-      const indexes = new Set();
-      for (const target of targets) {
-        for (const targetCollection of target.collections) {
-          const alias = this._getAlias(target.index, targetCollection);
-
-          indexes.add(alias);
-        }
-      }
-
-      esIndexes = Array.from(indexes).join(",");
+      esIndexes = this._targetsToIndexes(targets);
     } else {
       if (index === undefined) {
         throw kerror.get("services", "storage", "missing_argument", "index");
@@ -500,6 +491,23 @@ export class ES8 {
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
+  }
+
+  /**
+   * The comma-separated alias list a multi-target search is run against.
+   *
+   * @param targets - targets already through `assertTargetsAreValid`
+   */
+  _targetsToIndexes(targets: ValidatedTarget[]): string {
+    const indexes = new Set<string>();
+
+    for (const target of targets) {
+      for (const targetCollection of target.collections) {
+        indexes.add(this._getAlias(target.index, targetCollection));
+      }
+    }
+
+    return Array.from(indexes).join(",");
   }
 
   /**
@@ -2039,35 +2047,9 @@ export class ES8 {
       }
 
       if (item.status >= 400) {
-        const error: KImportError = {
-          _id: item._id,
-          status: item.status,
-        };
-
-        // update action contain body in "doc" field
-        // the delete action is not followed by an action payload
-        if (action === "update") {
-          const source: JSONObject = documents[idx + 1]?.doc ?? {};
-
-          source._kuzzle_info = undefined;
-          error._source = source;
-        } else if (action !== "delete") {
-          const source: JSONObject = documents[idx + 1] ?? {};
-
-          source._kuzzle_info = undefined;
-          error._source = source;
-        }
-
-        // ES response does not systematicaly include an error object
-        // (e.g. delete action with 404 status)
-        if (item.error) {
-          error.error = {
-            reason: item.error.reason ?? "",
-            type: item.error.type,
-          };
-        }
-
-        result.errors.push({ [action]: error });
+        result.errors.push({
+          [action]: this._importError(action, item, documents[idx + 1]),
+        });
       } else {
         result.items.push({
           [action]: {
@@ -2083,6 +2065,45 @@ export class ES8 {
     /* end critical code section */
 
     return result;
+  }
+
+  /**
+   * The error entry `import` reports for one rejected bulk row.
+   *
+   * @param action - the bulk action Elasticsearch echoed back
+   * @param item - that action's answer
+   * @param payload - the action's payload, absent for a delete
+   */
+  _importError(
+    action: string,
+    item: JSONObject,
+    payload: JSONObject | undefined,
+  ): KImportError {
+    const error: KImportError = {
+      _id: item._id,
+      status: item.status,
+    };
+
+    // update action contain body in "doc" field
+    // the delete action is not followed by an action payload
+    if (action !== "delete") {
+      const source: JSONObject =
+        (action === "update" ? payload?.doc : payload) ?? {};
+
+      source._kuzzle_info = undefined;
+      error._source = source;
+    }
+
+    // ES response does not systematicaly include an error object
+    // (e.g. delete action with 404 status)
+    if (item.error) {
+      error.error = {
+        reason: item.error.reason ?? "",
+        type: item.error.type,
+      };
+    }
+
+    return error;
   }
 
   /**
@@ -3043,22 +3064,7 @@ export class ES8 {
       }
 
       if (result.status >= 400) {
-        if (result.status === 404) {
-          partialErrors.push({
-            document: {
-              _id: document._id,
-              body: document._source,
-            },
-            reason: "document not found",
-            status: result.status,
-          });
-        } else {
-          partialErrors.push({
-            document,
-            reason: result.error?.reason,
-            status: result.status,
-          });
-        }
+        partialErrors.push(this._mExecuteRejection(result, document));
       } else {
         successes.push({
           _id: result._id,
@@ -3076,6 +3082,31 @@ export class ES8 {
     return {
       errors: partialErrors, // @todo rename items to documents
       items: successes,
+    };
+  }
+
+  /**
+   * The partial-error entry `_mExecute` reports for one rejected bulk row.
+   *
+   * A 404 answers no reason of its own, and reports the document by id and
+   * body rather than whole, which is what the m* callers read back.
+   */
+  _mExecuteRejection(result: JSONObject, document: JSONObject): JSONObject {
+    if (result.status === 404) {
+      return {
+        document: {
+          _id: document._id,
+          body: document._source,
+        },
+        reason: "document not found",
+        status: result.status,
+      };
+    }
+
+    return {
+      document,
+      reason: result.error?.reason,
+      status: result.status,
     };
   }
 
