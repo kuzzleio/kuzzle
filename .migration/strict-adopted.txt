@@ -68,6 +68,15 @@
 # written down; what ES7 had on top was untyped helper signatures (19 of them)
 # and a bulk body built as a bare `[]`. Its esWrapper had had none of the
 # error-path work — `formatESError` taking `unknown` was 39 of the 197 alone.
+# Step 12 K4, part 1 (2026-09-20): the two base classes, done first because a
+# base class's fix can clear its subclasses'. Measured after: it cleared none —
+# store.ts's 23 were all its own `Reflect.set` members, and ObjectRepository's
+# were its untyped search/truncate path. The subclasses' errors are their own.
+# Step 12 K4, part 2 (2026-09-20): lib/core/validation/validation.ts, the
+# heaviest file left (95). Two levers: a `CuratedFieldSpecification` for what
+# hangs off a `children` map — the root is the only node missing type/path/
+# depth/mandatory/multivalued/typeOptions, and the walkers never see it — and
+# `Object.entries` wherever a map was walked by key and then indexed.
 
 bin/copy-binaries.ts
 index.ts
@@ -142,9 +151,11 @@ lib/core/realtime/subscription.ts
 lib/core/security/index.ts
 lib/core/security/securityLoader.ts
 lib/core/shared/KoncordeWrapper.ts
+lib/core/shared/ObjectRepository.ts
 lib/core/shared/sdk/embeddedSdk.ts
 lib/core/shared/sdk/funnelProtocol.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+lib/core/shared/store.ts
 lib/core/statistics/statistics.ts
 lib/core/storage/clientAdapter.ts
 lib/core/storage/indexCache.ts
@@ -166,6 +177,7 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
+lib/core/validation/validation.ts
 lib/kerror/errors/badRequestError.ts
 lib/kerror/errors/externalServiceError.ts
 lib/kerror/errors/forbiddenError.ts

@@ -35,10 +35,35 @@ interface ObjectRepositoryOptions {
   store?: { index: string } | null;
 }
 
+/**
+ * What `formatSearchResults` builds out of a raw store answer, and what
+ * `truncate`'s recursion reads back.
+ */
+export interface RepositorySearchResult<TObject> {
+  aggregations?: JSONObject;
+  hits: TObject[];
+  scrollId?: string;
+  total: number;
+}
+
+/**
+ * One page of a `truncate` walk, handed to the next recursive call.
+ */
+interface TruncatePart {
+  fetched: number;
+  scrollId: string;
+  total: number;
+}
+
 export class ObjectRepository<TObject extends { _id: string }> {
   protected ttl: number;
   protected index: string;
-  protected collection: string;
+
+  /**
+   * Set by every subclass's own constructor — the `= null` this used to carry
+   * was never read (ADR-0001, TD-62).
+   */
+  protected collection!: string;
   protected ObjectConstructor: any;
   protected store: any;
   protected cacheDb: cacheDbEnum;
@@ -48,7 +73,6 @@ export class ObjectRepository<TObject extends { _id: string }> {
     store = null,
   }: ObjectRepositoryOptions = {}) {
     this.ttl = global.kuzzle.config.repositories.common.cacheTTL;
-    this.collection = null;
     this.ObjectConstructor = null;
     this.store = store;
     this.index = store ? store.index : global.kuzzle.internalIndex.index;
@@ -65,7 +89,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
     try {
       response = await this.store.get(this.collection, id);
     } catch (error) {
-      if (error.status === 404) {
+      if (error instanceof Error && "status" in error && error.status === 404) {
         throw kerror.get("services", "storage", "not_found", id);
       }
 
@@ -117,7 +141,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} [options] - optional search arguments (from, size, scroll)
    * @returns {Promise}
    */
-  async search(searchBody, options = {}) {
+  async search(
+    searchBody: JSONObject,
+    options: JSONObject = {},
+  ): Promise<RepositorySearchResult<TObject>> {
     const response = await this.store.search(
       this.collection,
       searchBody,
@@ -163,7 +190,12 @@ export class ObjectRepository<TObject extends { _id: string }> {
 
       return await this.fromDTO({ ...JSON.parse(response) });
     } catch (err) {
-      throw kerror.get("services", "cache", "read_failed", err.message);
+      throw kerror.get(
+        "services",
+        "cache",
+        "read_failed",
+        err instanceof Error ? err.message : String(err),
+      );
     }
   }
 
@@ -404,7 +436,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} part
    * @returns {Promise<integer>} total deleted objects
    */
-  async truncate(options) {
+  async truncate(options: JSONObject): Promise<number> {
     // Allows safe overrides, as _truncate is called recursively
     return this._truncate(options);
   }
@@ -412,7 +444,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
   /**
    * Do not override this: this function calls itself.
    */
-  private async _truncate(options, part = null) {
+  private async _truncate(
+    options: JSONObject,
+    part: TruncatePart | null = null,
+  ): Promise<number> {
     if (part === null) {
       const objects = await this.search(
         {},
@@ -420,7 +455,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
       );
       const deleted = await this.truncatePart(objects, options);
 
-      if (objects.hits.length < objects.total) {
+      // A page that holds back hits always answers a scroll id; without one
+      // there is no next page to walk, and calling `scroll(undefined)` is how
+      // that used to be discovered.
+      if (objects.hits.length < objects.total && objects.scrollId) {
         const total = await this._truncate(options, {
           fetched: objects.hits.length,
           scrollId: objects.scrollId,
@@ -438,7 +476,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
 
     part.fetched += objects.hits.length;
 
-    if (part.fetched < part.total) {
+    if (part.fetched < part.total && objects.scrollId) {
       part.scrollId = objects.scrollId;
 
       const total = await this._truncate(options, part);
@@ -453,10 +491,13 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} options
    * @returns {Promise<integer>} count of deleted objects
    */
-  private async truncatePart(objects, options) {
-    const promises = [];
+  private async truncatePart(
+    objects: RepositorySearchResult<TObject>,
+    options: JSONObject,
+  ): Promise<number> {
+    const promises: Array<Promise<number>> = [];
 
-    const processObject = async (object) => {
+    const processObject = async (object: TObject): Promise<number> => {
       // profile and role repositories have protected objects, we can't delete
       // them
       const protectedObjects =
@@ -469,6 +510,11 @@ export class ObjectRepository<TObject extends { _id: string }> {
       }
 
       const loaded = await this.load(object._id);
+
+      if (loaded === null) {
+        return 0;
+      }
+
       await this.delete(loaded, options);
 
       return 1;
@@ -489,8 +535,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @returns {Promise<object>}
    * @private
    */
-  private async formatSearchResults(raw) {
-    const result = {
+  private async formatSearchResults(
+    raw: JSONObject,
+  ): Promise<RepositorySearchResult<TObject>> {
+    const result: RepositorySearchResult<TObject> = {
       aggregations: raw.aggregations,
       hits: [],
       scrollId: raw.scrollId,

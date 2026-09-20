@@ -27,36 +27,84 @@ import { Mutex } from "../../util/mutex";
 import type { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
+ * The store methods that are nothing but an ask on a
+ * `core:storage:<scope>:<suffix>` event taking the index as its first
+ * argument, mapped to that suffix.
+ *
+ * The constructor's loop is driven by this map, so the 23 `core:storage:` event
+ * strings are written once rather than once per method. `multiSearch` and
+ * `scroll` are deliberately absent: they are the two that do not take the
+ * index, and the constructor assigns them by hand.
+ */
+const INDEXED_ASK_SUFFIXES = {
+  count: "document:count",
+  create: "document:create",
+  createCollection: "collection:create",
+  createOrReplace: "document:createOrReplace",
+  delete: "document:delete",
+  deleteByQuery: "document:deleteByQuery",
+  deleteCollection: "collection:delete",
+  deleteFields: "document:deleteFields",
+  deleteIndex: "index:delete",
+  exists: "document:exist",
+  get: "document:get",
+  getMapping: "mappings:get",
+  getSettings: "collection:settings:get",
+  mExecute: "document:mExecute",
+  mGet: "document:mGet",
+  refreshCollection: "collection:refresh",
+  replace: "document:replace",
+  search: "document:search",
+  truncateCollection: "collection:truncate",
+  update: "document:update",
+  updateByQuery: "document:updateByQuery",
+  updateCollection: "collection:update",
+  updateMapping: "mappings:update",
+} as const;
+
+type StoreAskMethod = (...args: any[]) => Promise<any>;
+
+/**
  * Wrapper around the document store.
  * Once instantiated, this class can only access the index passed in the
  * constructor
  */
 export class Store {
-  public count: (...args: any[]) => Promise<any>;
-  public create: (...args: any[]) => Promise<any>;
-  public createCollection: (...args: any[]) => Promise<any>;
-  public createOrReplace: (...args: any[]) => Promise<any>;
-  public delete: (...args: any[]) => Promise<any>;
-  public deleteByQuery: (...args: any[]) => Promise<any>;
-  public deleteCollection: (...args: any[]) => Promise<any>;
-  public deleteFields: (...args: any[]) => Promise<any>;
-  public deleteIndex: (...args: any[]) => Promise<any>;
-  public exists: (...args: any[]) => Promise<any>;
-  public get: (...args: any[]) => Promise<any>;
-  public getMapping: (...args: any[]) => Promise<any>;
-  public getSettings: (...args: any[]) => Promise<any>;
-  public mExecute: (...args: any[]) => Promise<any>;
-  public mGet: (...args: any[]) => Promise<any>;
-  public multiSearch: (...args: any[]) => Promise<any>;
-  public refreshCollection: (...args: any[]) => Promise<any>;
-  public replace: (...args: any[]) => Promise<any>;
-  public search: (...args: any[]) => Promise<any>;
-  public scroll: (...args: any[]) => Promise<any>;
-  public truncateCollection: (...args: any[]) => Promise<any>;
-  public update: (...args: any[]) => Promise<any>;
-  public updateByQuery: (...args: any[]) => Promise<any>;
-  public updateCollection: (...args: any[]) => Promise<any>;
-  public updateMapping: (...args: any[]) => Promise<any>;
+  /**
+   * Every member below up to `updateMapping` is written by the constructor
+   * through `Reflect.set` over `INDEXED_ASK_SUFFIXES`, which no annotation
+   * makes visible to the compiler — hence the definite-assignment assertions.
+   * Adding a name here without adding it there yields `undefined is not a
+   * function` at the first call, which is what the shared suffix map exists to
+   * make unlikely.
+   */
+  public count!: StoreAskMethod;
+  public create!: StoreAskMethod;
+  public createCollection!: StoreAskMethod;
+  public createOrReplace!: StoreAskMethod;
+  public delete!: StoreAskMethod;
+  public deleteByQuery!: StoreAskMethod;
+  public deleteCollection!: StoreAskMethod;
+  public deleteFields!: StoreAskMethod;
+  public deleteIndex!: StoreAskMethod;
+  public exists!: StoreAskMethod;
+  public get!: StoreAskMethod;
+  public getMapping!: StoreAskMethod;
+  public getSettings!: StoreAskMethod;
+  public mExecute!: StoreAskMethod;
+  public mGet!: StoreAskMethod;
+  public refreshCollection!: StoreAskMethod;
+  public replace!: StoreAskMethod;
+  public search!: StoreAskMethod;
+  public truncateCollection!: StoreAskMethod;
+  public update!: StoreAskMethod;
+  public updateByQuery!: StoreAskMethod;
+  public updateCollection!: StoreAskMethod;
+  public updateMapping!: StoreAskMethod;
+
+  // The two that do NOT take the index, and are therefore assigned directly.
+  public multiSearch: StoreAskMethod;
+  public scroll: StoreAskMethod;
 
   public index: string;
   public scope: storeScopeEnum;
@@ -73,33 +121,9 @@ export class Store {
     this.index = index;
     this.scope = scope;
 
-    const methodsMapping: Record<string, string> = {
-      count: `core:storage:${scope}:document:count`,
-      create: `core:storage:${scope}:document:create`,
-      createCollection: `core:storage:${scope}:collection:create`,
-      createOrReplace: `core:storage:${scope}:document:createOrReplace`,
-      delete: `core:storage:${scope}:document:delete`,
-      deleteByQuery: `core:storage:${scope}:document:deleteByQuery`,
-      deleteCollection: `core:storage:${scope}:collection:delete`,
-      deleteFields: `core:storage:${scope}:document:deleteFields`,
-      deleteIndex: `core:storage:${scope}:index:delete`,
-      exists: `core:storage:${scope}:document:exist`,
-      get: `core:storage:${scope}:document:get`,
-      getMapping: `core:storage:${scope}:mappings:get`,
-      getSettings: `core:storage:${scope}:collection:settings:get`,
-      mExecute: `core:storage:${scope}:document:mExecute`,
-      mGet: `core:storage:${scope}:document:mGet`,
-      refreshCollection: `core:storage:${scope}:collection:refresh`,
-      replace: `core:storage:${scope}:document:replace`,
-      search: `core:storage:${scope}:document:search`,
-      truncateCollection: `core:storage:${scope}:collection:truncate`,
-      update: `core:storage:${scope}:document:update`,
-      updateByQuery: `core:storage:${scope}:document:updateByQuery`,
-      updateCollection: `core:storage:${scope}:collection:update`,
-      updateMapping: `core:storage:${scope}:mappings:update`,
-    };
+    for (const [method, suffix] of Object.entries(INDEXED_ASK_SUFFIXES)) {
+      const event = `core:storage:${scope}:${suffix}`;
 
-    for (const [method, event] of Object.entries(methodsMapping)) {
       // `method` is a runtime key over the mapping above, so a plain
       // `this[method] = ...` cannot be typed without an index signature that
       // would swallow every real member — the trade-off TD-28 settled with

@@ -631,9 +631,13 @@ class RoleRepository extends ObjectRepository<Role> {
   /**
    * @override
    */
-  async truncate(opts: JSONObject) {
+  async truncate(opts: JSONObject): Promise<number> {
     try {
-      await super.truncate(opts);
+      // `return await`, not `await` then fall through: the base answers the
+      // number of deleted roles and this override used to drop it, which is
+      // why `admin:resetSecurity` reported `deletedRoles: undefined` next to
+      // two real counts.
+      return await super.truncate(opts);
     } finally {
       this.invalidate();
     }

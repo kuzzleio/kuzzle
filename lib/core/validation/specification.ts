@@ -83,8 +83,47 @@ export interface StructuredFieldSpecification {
   description?: string;
   multivalued?: MultivaluedSpecification;
   typeOptions?: TypeOptions;
-  children?: Record<string, StructuredFieldSpecification>;
+  children?: Record<string, CuratedFieldSpecification>;
 }
+
+/**
+ * A node hanging off some `children` map: always a curated field, never the
+ * root. Everything the root is missing is present here, because it is
+ * `curateFieldSpecification` that puts it there —
+ *
+ * - `type` is checked by `curateFieldSpecificationFormat` before anything else;
+ * - `mandatory` and `multivalued.value` are filled by its `defaultsDeep`;
+ * - `typeOptions` defaults to `{}` and is then replaced by whatever the owning
+ *   type's `validateFieldSpecification` answers;
+ * - `path` and `depth` are set by `curateCollectionSpecification` on the way
+ *   into the tree.
+ *
+ * Splitting this out is what lets the walkers stop asking whether each of them
+ * is there: they only ever receive children, and a child is always curated.
+ */
+export interface CuratedFieldSpecification extends StructuredFieldSpecification {
+  root?: false;
+  type: string;
+  path: string[];
+  depth: number;
+  mandatory: boolean;
+  multivalued: MultivaluedSpecification;
+  typeOptions: TypeOptions;
+  children?: Record<string, CuratedFieldSpecification>;
+}
+
+/**
+ * A field once `curateFieldSpecification` is done with it, and before the tree
+ * gives it its place: everything a curated field carries except `path` and
+ * `depth`, which `structureCollectionValidation` assigns from the field's key.
+ */
+export type UnplacedCuratedField = Omit<
+  CuratedFieldSpecification,
+  "path" | "depth"
+> & {
+  path?: string[];
+  depth?: number;
+};
 
 /** A collection's specification, as submitted. */
 export interface CollectionSpecification {
