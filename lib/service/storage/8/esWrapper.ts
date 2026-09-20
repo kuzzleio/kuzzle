@@ -21,6 +21,8 @@
 
 /* eslint sort-keys: 0 */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import get from "lodash/get";
 import type { Client } from "sdk-es8";
@@ -34,12 +36,26 @@ import { wrap } from "../../../kerror";
 const debug = createDebug("kuzzle:services:storage:ESCommon");
 const kerror = wrap("services", "storage");
 
+/**
+ * What the Elasticsearch client throws: an Error, carrying the server's
+ * response on `meta` for the ones that came back from the cluster. `catch`
+ * hands callers `unknown`, and this is the shape every reader below assumes.
+ */
+type ThrownESError = Error & { meta?: JSONObject; body?: JSONObject };
+
+/**
+ * One that came back from the cluster rather than from the client itself, so
+ * its `meta` is present — which is what `formatESError` checks before handing
+ * it to the handlers below.
+ */
+type ThrownESResponseError = ThrownESError & { meta: JSONObject };
+
 interface ESErrorMapping {
   regex: RegExp;
   subcode?: string;
   subCode?: string;
   getPlaceholders: (
-    esError: JSONObject,
+    esError: ThrownESError,
     matches: RegExpMatchArray,
   ) => Array<string | undefined>;
 }
@@ -152,9 +168,9 @@ const errorMessagesMapping: ESErrorMapping[] = [
     subcode: "strict_mapping_rejection",
     getPlaceholders: (esError, matches) => {
       // "/%26index.collection/_doc"
-      const esPath = esError.meta.meta.request.params.path;
+      const esPath: string = get(esError, "meta.meta.request.params.path", "");
       // keep only "index"
-      const index = esPath.split(".")[0].split("%26")[1];
+      const index = esPath.split(".")[0]?.split("%26")[1];
       // keep only "collection"
       const collection = esPath.substr(esPath.indexOf(".") + 1).split("/")[0];
 
@@ -187,22 +203,34 @@ class ESWrapper {
    *
    * @param error
    */
-  formatESError(error: JSONObject): KuzzleError {
+  formatESError(error: unknown): KuzzleError {
     if (error instanceof KuzzleError) {
       return error;
     }
 
+    // `catch` answers `unknown`, and a rejected client promise can in principle
+    // carry anything. Everything below reads an Error's shape, so that is what
+    // it gets — without asserting that whatever arrived already was one.
+    // `inspect`, not `String`: a thrown object stringifies to "[object
+    // Object]", which is the one thing the message must not say.
+    const esError: ThrownESError =
+      error instanceof Error ? error : new Error(inspect(error));
+
     global.kuzzle.emit("services:storage:error", {
-      message: `Elasticsearch Client error: ${error.message}`,
+      message: `Elasticsearch Client error: ${esError.message}`,
       // /!\ not all ES error classes have a "meta" property
-      meta: error.meta || null,
-      stack: error.stack,
+      meta: esError.meta || null,
+      stack: esError.stack,
     });
 
     if (error instanceof esErrors.NoLivingConnectionsError) {
       throw kerror.get("not_connected");
     }
-    const message = get(error, "meta.body.error.reason", error.message);
+    const message: string = get(
+      esError,
+      "meta.body.error.reason",
+      esError.message,
+    );
 
     // Try to match a known elasticsearch error
     for (const betterError of errorMessagesMapping) {
@@ -211,51 +239,67 @@ class ESWrapper {
       if (matches) {
         return kerror.get(
           betterError.subcode,
-          ...betterError.getPlaceholders(error, matches),
+          ...betterError.getPlaceholders(esError, matches),
         );
       }
     }
 
     // Try to match using error codes
-    if (error.meta) {
-      switch (error.meta.statusCode) {
+    if (esError.meta) {
+      // `meta` is what tells a cluster response from a client-side failure, so
+      // the three handlers below are declared to require it rather than
+      // re-checking it four times each.
+      const responseError: ThrownESResponseError = {
+        ...esError,
+        meta: esError.meta,
+      };
+
+      switch (esError.meta.statusCode) {
         case 400:
-          return this._handleBadRequestError(error, message);
+          return this._handleBadRequestError(responseError, message);
         case 404:
-          return this._handleNotFoundError(error, message);
+          return this._handleNotFoundError(responseError, message);
         case 409:
-          return this._handleConflictError(error, message);
+          return this._handleConflictError(responseError, message);
         default:
           break;
       }
     }
 
-    return this._handleUnknownError(error, message);
+    return this._handleUnknownError(esError, message);
   }
 
-  reject(error: JSONObject): Promise<never> {
+  reject(error: unknown): Promise<never> {
     return Bluebird.reject(this.formatESError(error));
   }
 
-  _handleConflictError(error: JSONObject, message: string): KuzzleError {
+  _handleConflictError(
+    error: ThrownESResponseError,
+    message: string,
+  ): KuzzleError {
     debug('unhandled "Conflict" elasticsearch error: %a', error);
 
     return kerror.get("unexpected_error", message);
   }
 
-  _handleNotFoundError(error: JSONObject, message: string): KuzzleError {
+  _handleNotFoundError(
+    error: ThrownESResponseError,
+    message: string,
+  ): KuzzleError {
     let errorMessage = message;
 
-    if (!error.body._index) {
+    const indice: string | undefined = get(error, "body._index");
+
+    if (!indice) {
       return kerror.get("unexpected_not_found", errorMessage);
     }
 
     // _index= "&nyc-open-data.yellow-taxi"
-    const index = error.body._index.split(".")[0].slice(1);
-    const collection = error.body._index.split(".")[1];
+    const index = indice.split(".")[0]?.slice(1);
+    const collection = indice.split(".")[1];
 
     // 404 on a GET document
-    if (error.body.found === false) {
+    if (error.body?.found === false) {
       return kerror.get("not_found", error.body._id, index, collection);
     }
 
@@ -267,7 +311,7 @@ class ESWrapper {
     if (error.meta.body?.error) {
       errorMessage = error.meta.body.error
         ? `${error.meta.body.error.reason}: ${error.meta.body.error["resource.id"]}`
-        : `${error.message}: ${error.body._id}`;
+        : `${error.message}: ${error.body?._id}`;
     }
 
     debug('unhandled "NotFound" elasticsearch error: %a', error);
@@ -275,7 +319,10 @@ class ESWrapper {
     return kerror.get("unexpected_not_found", errorMessage);
   }
 
-  _handleBadRequestError(error: JSONObject, message: string): KuzzleError {
+  _handleBadRequestError(
+    error: ThrownESResponseError,
+    message: string,
+  ): KuzzleError {
     let errorMessage = message;
 
     if (error.meta.body?.error) {
@@ -301,7 +348,7 @@ class ESWrapper {
     return kerror.get("unexpected_bad_request", errorMessage);
   }
 
-  _handleUnknownError(error: JSONObject, message: string): KuzzleError {
+  _handleUnknownError(error: ThrownESError, message: string): KuzzleError {
     debug(
       "unhandled elasticsearch error (unhandled type: %s): %o",
       get(error, "error.meta.statusCode", "<no status code>"),

@@ -1,6 +1,6 @@
 # Step 12 — Sprint 9: the strict flip
 
-**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · K3 [#2802](https://github.com/kuzzleio/kuzzle/pull/2802) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -74,8 +74,8 @@ Ordered so that each one is independently mergeable and the flip is last. Nothin
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **K0** ✅ | [TD-53](../type-debt-register.md#td-53) — make `KuzzleConfiguration` a real shape instead of `Partial<…>` ([#2756](https://github.com/kuzzleio/kuzzle/issues/2756)) — **cleared 106**, see _What K0 found_    |    ~83 | It is the one blocker that is _someone else's_ to fix: every config reader in the repo waits on it, it is spread thin (83 errors over many files), and it already blocks a named file from adoption — `idCardHandler.ts`, [step 11](11-sprint-8-cluster.md#idcardhandlerts-is-not-adopted-and-the-reason-is-worth-stating). First, because everything after it re-measures. |
 | **K1** ✅ | The files at ≤ 5 errors, in layer-sized batches — **cleared 132 errors and adopted 56 files**, see _What K1 found_                                                                                            |    153 | 54% of the remaining files for 9% of the errors. Adopting them shrinks `--count`'s output to the files that actually need thought, and it is the cheapest way to make the ratchet's list stop being a survey.                                                                                                                                                               |
-| **K2**    | `lib/api/request/*` — `kuzzleRequest`, `requestContext`, `requestResponse`, `requestInput`                                                                                                                    |    133 | One object, four files, and it is **public API surface** (`KuzzleRequest` is re-exported). Its types are what every controller and every plugin sees, so fixing it changes error counts everywhere else — do it before the controllers, not after.                                                                                                                          |
-| **K3**    | The two `elasticsearch.ts`                                                                                                                                                                                    |    433 | 26% of the debt in two files, and [TD-62](../type-debt-register.md#td-62) says 32 of its 56 lying `null` declarations live here. Same file twice (ES 7 and ES 8), so the second is largely the first's diff. Its own PR because its size will dominate any review it shares.                                                                                                |
+| **K2** ✅ | `lib/api/request/*` — `kuzzleRequest`, `requestContext`, `requestResponse`, `requestInput`                                                                                                                    |    133 | One object, four files, and it is **public API surface** (`KuzzleRequest` is re-exported). Its types are what every controller and every plugin sees, so fixing it changes error counts everywhere else — do it before the controllers, not after.                                                                                                                          |
+| **K3** ✅ | The two `elasticsearch.ts` — **cleared 430 errors and adopted both**, see _What K3 found_                                                                                                                     |    433 | 26% of the debt in two files, and [TD-62](../type-debt-register.md#td-62) says 32 of its 56 lying `null` declarations live here. Same file twice (ES 7 and ES 8), so the second is largely the first's diff. Its own PR because its size will dominate any review it shares.                                                                                                |
 | **K4**    | `lib/core` mid-weights — `validation`, `httpwsProtocol`, `pluginsManager`, `plugin`, `tokenRepository`, `store`, `ObjectRepository`, `hotelClerk`                                                             |   ~334 | The layer with the most files and the most history. `ObjectRepository` and `store` are base classes — expect their fixes to clear errors in subclasses, so measure after, not before.                                                                                                                                                                                       |
 | **K5**    | The rest: `funnel`, the controllers, `kerror`, `kuzzle`, `cluster`'s 85, `service/cache`, `queryTranslator`                                                                                                   |   ~530 | Whatever K0–K4 has not already retired. Re-slice on the count that exists then; this row is a bucket, not a plan.                                                                                                                                                                                                                                                           |
 | **K6**    | **The flip**: `strict: true` in `tsconfig.json`, `allowJs` removed, `tsconfig.strict.json` + `strict-check.sh` + `strict-adopted.txt` deleted, `npm run test:strict` and the `pr-preflight` reminders retired |      0 | Mechanical, and only correct when `--count` is empty. The build-payload diff is part of this PR.                                                                                                                                                                                                                                                                            |
@@ -212,3 +212,81 @@ contend with the [deps-bump PRs](../type-debt-register.md). Both got a local
 `.d.ts` covering the surface `lib/` actually uses, the way `dumpme.d.ts`
 already did — and writing `didyoumean`'s is what surfaced the `Set` defect
 above.
+
+## What K2 found
+
+**1 435 → 1 302 errors, 54 → 50 files, 201 → 205 adopted**, and **zero collateral**: no file outside `lib/api/request` changed its count, which for the public request API is the result worth reporting.
+
+### 121 of the 133 were one convention
+
+Every accessor in these four classes is backed by a string key with a **zero-width space** appended — `const _input = "input\u200b"` — so that `console.log(request)` prints `input` where the real property is `input​`. It is deliberate, ten years old, and commented as such. The compiler cannot check `this[_input]` when the class never declares that key.
+
+The keys are now **declared as class members**, keyed by the same constants. Nothing changes at runtime. That was chosen over `private _input` and over `#input`, both of which move the runtime key and change what a plugin author sees when inspecting a request — see the [decision register, 2026-09-19](../ADR-0001-migration-typescript.md#decision-register). **Removing the masquerade is still available as its own decision; it is not something a typing slice should do on the way past.**
+
+### Three defects
+
+- **`RequestResponse.deprecations` had never worked.** Its setter assigns through to `KuzzleRequest.deprecations`, which had a getter and **no setter** — in a module, which is strict mode, that is a `TypeError`. Nothing in the tree exercised it, so the throw was never seen.
+- **`RequestResponse.error` accepted `null` and could not honour it.** `setError` throws an `InternalError` on anything that is not an `Error`, so `response.error = null` never cleared anything; `clearError()` does.
+- **`RequestInput.triggerEvents` was initialised to `null`** while its getter declared `boolean | undefined` and its setter normalised to `undefined`.
+
+### Stating a public return type beats widening it
+
+`getIndex`, `getCollection` and `getId` answer `string` for every caller except the one shape that can return null — `{ required: false }`, `{ ifMissing: "ignore" }` — which is now an **overload**. Only `documentController` passes `required: false`, so the union reaches exactly the call site that can observe it. The same reasoning made `assertObject` generic over what it is handed rather than widening its result to a bare record.
+
+---
+
+## What K3 found
+
+✅ **Landed.** Branch `feat/step-12-k3-elasticsearch`, [#2802](https://github.com/kuzzleio/kuzzle/pull/2802). Both services are adopted, so the ratchet guards them.
+
+| File                                     | At K3's start |   Now |
+| ---------------------------------------- | ------------: | ----: |
+| `lib/service/storage/8/elasticsearch.ts` |           233 | **0** |
+| `lib/service/storage/7/elasticsearch.ts` |           197 | **0** |
+| `lib/service/storage/7/esWrapper.ts`     |   0 (adopted) | **0** |
+| `lib/service/storage/8/esWrapper.ts`     |   0 (adopted) | **0** |
+
+Repo-wide: strict **1 302 → 871**, `implicit-any` **386 → 212**, adopted **205 → 207**, unadopted **50 → 48**, `casts` unchanged at 84. 3 091 mocha and 261 vitest green, build and error-codes green.
+
+### Four levers, and they carried both files
+
+1. **`ESWrapper.formatESError` takes `unknown`.** `catch` answers `unknown` and the wrapper was declared `JSONObject`: that mismatch alone was **39** of each file's errors, at the call sites rather than in the wrapper. It normalises once (`error instanceof Error ? error : new Error(inspect(error))` — `inspect`, not `String`, because a thrown object stringifies to `[object Object]`), and the handlers say what they need: `meta` is what distinguishes a cluster response from a client-side failure, so the three that read it require it instead of re-checking it four times each.
+2. **Anything optional on a request type is written through the local the request holds by reference**, never read back off the request. `operations`, `document`, `doc`, `upsert`, `settings` and ES7's whole `body` are each declared optional, so reading them back was `| undefined` however they had been initialised.
+3. **Narrow once, at the helper, not at every call site.** `_catAliases` answers the two fields `cat.aliases` declares optional and Elasticsearch always fills, replacing six duplicated fetch-and-wrap blocks; `_getAliasFromIndice` answers a non-empty tuple `[string, ...string[]]`, so callers read `aliases[0]` without a guard its own `throw` had already made redundant.
+4. **Name the envelope the method builds.** `AliasToTargets`, `CatAliasRecord`, `KMExecuteResult`, `KImportResult`, `KuzzleInfo` and ES7's `BulkBody` replace the `{}` and `[]` literals that inferred `{}` and `never[]` and then rejected every push into them.
+
+**Fourteen index loops became `for…of`** across the two files (three keep the index through `entries()`). The `@warning Critical code section` comments stay: the traversal is identical, minus an indexed read that had to be trusted.
+
+### Five defects, two of which only the specs could catch
+
+- **`mCreateOrReplace` reset `esRequest.operations = []`** after construction and before anything had been pushed. Dead code as written — but once the array was shared by reference it silently discarded every operation, and the mocha suite said so on the first run. _A refactor that turns dead code into live code is the dangerous kind._
+- **`mReplace` read `"error" in doc` before `doc?.found`**, so an mget answer shorter than its request threw on the `in`. It now has the spec K3 first left it without.
+- **`deleteByQuery` built `max_docs: size` and then assigned `undefined` to it** — the one shape [TD-56](../type-debt-register.md#td-56)'s gate checks over the whole program, adopted or not. It is built once now, and `refresh` with it: that property was being assigned onto an object already spread into the search above.
+- **`mGet` and `mExists` answered `{ errors, item: [] }` on the empty-ids shortcut**, in both services. Every caller destructures `items`, so every one of them got `undefined` — a four-way typo the compiler saw the moment the return type stopped being inferred from a single branch.
+- **`KImportError.status` was declared `string`** while the bulk response echoes an HTTP status code. Nothing ever compared it, so nothing ever complained.
+
+### `ms` and `semver` got local declarations, not `@types` packages
+
+Both files import them, and both were implicitly `any`. K1 set the precedent (`didyoumean.d.ts`, `dumpme.d.ts`): a dependency change is not a typing slice's to make. `lib/types/ms.d.ts` and `lib/types/semver.d.ts` declare only what Kuzzle calls — an unused declaration is a claim nothing checks.
+
+Declaring them honestly surfaced two silent holes: `semver.coerce` answers `null` for a version string it cannot parse, and `ms` answers `undefined` for a duration it cannot read. Both were being fed straight into `semver.satisfies` and a `>` comparison.
+
+### ES7 was the twin, and the diff was the helper signatures
+
+The levers ported as written down. What ES7 had on top was **nineteen untyped helper signatures** — `_getAlias`, `_extractIndex`, `_sanitizeSearchBody`, `findDynamic`, `assertNoRouting` and the rest, all of which their ES8 counterparts already carried — and the bulk-body `never[]`. That is where `implicit-any`'s 306 → 212 comes from; ES8's own share was 386 → 306.
+
+**Doing ES8 to zero first was the right order.** ES7 went 197 → 0 in one pass with no re-derivation and no test failures, against ES8's six red specs on the `_catAliases` change alone.
+
+### One thing the ES8 specs caught that the types could not
+
+`_catAliases` first dropped rows whose `alias` or `index` was missing, on the reasoning that Elasticsearch always fills both. Six specs failed at once: the fixtures answer `[{ alias: "@&nepali.mehry" }]`, with no `index`. The helper now defaults both to `""` instead of dropping the row — and an empty alias fails the index-prefix test every caller already applies, which is what a row without one used to throw on. _A narrowing that discards data is a behaviour change wearing a type's clothes._
+
+### The gate's last condition was not a defect, and the exception is recorded
+
+With both services strict-clean, SonarCloud's `new_duplicated_lines_density` read **36.7% against a 5% threshold** — because taking the twins to zero re-scores their pre-existing ≈57% duplication as new code. Nothing inside the slice moves that: it is the files' own density, present whether one twin is touched or both.
+
+The two files join `sonar.cpd.exclusions`, where their own `esWrapper.ts` pair already sits for the same reason ([TD-16](../type-debt-register.md#td-16): one adapter per Elasticsearch major, deduplication a declared non-goal). That takes [TD-23](../type-debt-register.md#td-23)'s list **4 → 6** — a deliberate exception to its "may only shrink" rule, argued and costed in that entry rather than slipped in as a comment. **CPD is now off for the two largest files in `lib/`**, and the register is the only thing that will flag it later.
+
+Everything else the gate found was real and is fixed: six `S3776` (the guards K3 added pushed `search`, `import` and `_mExecute` one or two points over the complexity threshold, in both files — three extractions each side) and two minor violations in ES7. The two red functional shards were Docker Hub answering `502` to a `docker pull`.
+
+[TD-62](../type-debt-register.md#td-62) closes with this slice for the storage layer: the 32 lying `null` declarations that lived in these two files are gone. The 24 in `lib/model/security` remain, and belong to K4.
