@@ -4,5 +4,7 @@
 
 lib/api/controllers/memoryStorageController.ts
 lib/api/httpRoutes.ts
+lib/service/storage/7/elasticsearch.ts
 lib/service/storage/7/esWrapper.ts
+lib/service/storage/8/elasticsearch.ts
 lib/service/storage/8/esWrapper.ts

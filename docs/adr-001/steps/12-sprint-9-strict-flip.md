@@ -281,4 +281,12 @@ The levers ported as written down. What ES7 had on top was **nineteen untyped he
 
 `_catAliases` first dropped rows whose `alias` or `index` was missing, on the reasoning that Elasticsearch always fills both. Six specs failed at once: the fixtures answer `[{ alias: "@&nepali.mehry" }]`, with no `index`. The helper now defaults both to `""` instead of dropping the row — and an empty alias fails the index-prefix test every caller already applies, which is what a row without one used to throw on. _A narrowing that discards data is a behaviour change wearing a type's clothes._
 
+### The gate's last condition was not a defect, and the exception is recorded
+
+With both services strict-clean, SonarCloud's `new_duplicated_lines_density` read **36.7% against a 5% threshold** — because taking the twins to zero re-scores their pre-existing ≈57% duplication as new code. Nothing inside the slice moves that: it is the files' own density, present whether one twin is touched or both.
+
+The two files join `sonar.cpd.exclusions`, where their own `esWrapper.ts` pair already sits for the same reason ([TD-16](../type-debt-register.md#td-16): one adapter per Elasticsearch major, deduplication a declared non-goal). That takes [TD-23](../type-debt-register.md#td-23)'s list **4 → 6** — a deliberate exception to its "may only shrink" rule, argued and costed in that entry rather than slipped in as a comment. **CPD is now off for the two largest files in `lib/`**, and the register is the only thing that will flag it later.
+
+Everything else the gate found was real and is fixed: six `S3776` (the guards K3 added pushed `search`, `import` and `_mExecute` one or two points over the complexity threshold, in both files — three extractions each side) and two minor violations in ES7. The two red functional shards were Docker Hub answering `502` to a `docker pull`.
+
 [TD-62](../type-debt-register.md#td-62) closes with this slice for the storage layer: the 32 lying `null` declarations that lived in these two files are gone. The 24 in `lib/model/security` remain, and belong to K4.
