@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import type { JSONObject } from "kuzzle-sdk";
 import isNil from "lodash/isNil";
 
 import type { KuzzleRequest } from "../api/request";
@@ -89,9 +90,22 @@ export function assertBodyHasNotAttribute(
 }
 
 /**
+ * A request whose body this module has checked. `input.body` is
+ * `JSONObject | null` on every request — a GET carries none — and the
+ * controllers read it straight after asserting it, dozens of times per file.
+ * The assertion signature is what carries that check to those reads instead
+ * of each one restating it.
+ */
+export type RequestWithBody = KuzzleRequest & {
+  input: KuzzleRequest["input"] & { body: JSONObject };
+};
+
+/**
  * Note: Assumes content exists
  */
-export function assertHasBody(request: KuzzleRequest): void {
+export function assertHasBody(
+  request: KuzzleRequest,
+): asserts request is RequestWithBody {
   if (isNil(request.input.body)) {
     throw assertionError.get("body_required");
   }

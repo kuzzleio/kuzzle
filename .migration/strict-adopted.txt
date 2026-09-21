@@ -99,6 +99,7 @@ lib/api/controllers/clusterController.ts
 lib/api/controllers/debugController.ts
 lib/api/controllers/index.ts
 lib/api/controllers/indexController.ts
+lib/api/controllers/memoryStorageController.ts
 lib/api/controllers/realtimeController.ts
 lib/api/httpRoutes.ts
 lib/api/openapi/OpenApiManager.ts

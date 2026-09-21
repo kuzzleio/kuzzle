@@ -60,7 +60,7 @@ type CommandArgumentPath = string[];
  * How to pull one argument out of a request, when the bare path is not enough.
  */
 interface CommandArgumentSpec {
-  path?: CommandArgumentPath;
+  path: CommandArgumentPath;
   /** Concat the value into the argument list instead of pushing it. */
   merge?: boolean;
   /** Omit the argument when it is absent, instead of throwing. */
@@ -169,6 +169,16 @@ const scanCountProperty = {
   },
 };
 
+/**
+ * The table entry for a command this module handles itself: one that takes no
+ * argument at all, or one an `extractArgumentsFromRequestFor*` function reads.
+ *
+ * Named rather than a bare `null` in the literal: with the table inferred
+ * through `satisfies`, `noImplicitAny` reads a lone `null` property as `any`
+ * — ten of them, which is what the implicit-any ratchet counts.
+ */
+const NO_MAPPING: CommandArguments = null;
+
 const zrangebyscoreOptionsProperty = {
   skip: true,
   merge: true,
@@ -184,7 +194,13 @@ const zrangebyscoreLimitProperty = {
 };
 
 function initMapping() {
-  mapping = {
+  // `satisfies`, not an annotation: the table is checked against
+  // `RedisCommandMapping` — which is what contextually types the `map`
+  // closures below — while keeping its literal type, so the aliases at the
+  // bottom read entries the compiler knows are there. Annotated, every
+  // `mapping.mget` was `CommandArguments | undefined` and sixteen aliases
+  // could not be assigned from one.
+  const table = {
     append: {
       key: ["resource", "_id"],
       value: ["body", "value"],
@@ -205,7 +221,7 @@ function initMapping() {
       start: { skip: true, path: ["args", "start"] },
       end: { skip: true, path: ["args", "end"] },
     },
-    dbsize: null,
+    dbsize: NO_MAPPING,
     decrby: {
       key: ["resource", "_id"],
       value: ["body", "value"],
@@ -221,7 +237,7 @@ function initMapping() {
       key: ["resource", "_id"],
       timestamp: ["body", "timestamp"],
     },
-    flushdb: null,
+    flushdb: NO_MAPPING,
     geoadd: {
       key: { path: ["resource", "_id"] },
       points: {
@@ -463,13 +479,13 @@ function initMapping() {
       key: ["resource", "_id"],
       sources: { skip: true, merge: true, path: ["body", "sources"] },
     },
-    ping: null,
+    ping: NO_MAPPING,
     psetex: {
       key: ["resource", "_id"],
       milliseconds: ["body", "milliseconds"],
       value: ["body", "value"],
     },
-    randomkey: null,
+    randomkey: NO_MAPPING,
     rename: {
       key: ["resource", "_id"],
       newkey: ["body", "newkey"],
@@ -504,7 +520,7 @@ function initMapping() {
       key: ["resource", "_id"],
       keys: { merge: true, path: ["body", "keys"] },
     },
-    set: null, // handled by extractArgumentsFromRequestForSet
+    set: NO_MAPPING, // handled by extractArgumentsFromRequestForSet
     setex: {
       key: ["resource", "_id"],
       seconds: ["body", "seconds"],
@@ -527,7 +543,7 @@ function initMapping() {
       destination: ["body", "destination"],
       member: ["body", "member"],
     },
-    sort: null, // handled by extractArgumentsFromRequestForSort
+    sort: NO_MAPPING, // handled by extractArgumentsFromRequestForSort
     spop: {
       key: ["resource", "_id"],
       count: { skip: true, path: ["body", "count"] },
@@ -557,11 +573,11 @@ function initMapping() {
       destination: ["body", "destination"],
       keys: { merge: true, path: ["body", "keys"] },
     },
-    time: null,
+    time: NO_MAPPING,
     touch: {
       keys: { merge: true, path: ["body", "keys"] },
     },
-    zadd: null, // handled by extractArgumentsFromRequestForZAdd
+    zadd: NO_MAPPING, // handled by extractArgumentsFromRequestForZAdd
     zcount: {
       key: ["resource", "_id"],
       min: ["args", "min"],
@@ -572,7 +588,7 @@ function initMapping() {
       value: ["body", "value"],
       member: ["body", "member"],
     },
-    zinterstore: null, // handled by extractArgumentsFromRequestForZInterstore
+    zinterstore: NO_MAPPING, // handled by extractArgumentsFromRequestForZInterstore
     zlexcount: {
       key: ["resource", "_id"],
       min: ["args", "min"],
@@ -648,8 +664,10 @@ function initMapping() {
       key: ["resource", "_id"],
       member: ["args", "member"],
     },
-    zunionstore: null, // handled by extractArgumentsFromRequestForZInterstore
-  };
+    zunionstore: NO_MAPPING, // handled by extractArgumentsFromRequestForZInterstore
+  } satisfies RedisCommandMapping;
+
+  mapping = table;
 
   // unique argument key
   mapping.decr =
@@ -681,19 +699,19 @@ function initMapping() {
         value: ["body", "value"],
       };
 
-  mapping.pfcount = mapping.sinter = mapping.mget;
+  mapping.pfcount = mapping.sinter = table.mget;
 
-  mapping.incrby = mapping.incrbyfloat = mapping.decrby;
-  mapping.geopos = mapping.geohash;
-  mapping.hget = mapping.hexists;
-  mapping.hsetnx = mapping.hset;
-  mapping.msetnx = mapping.mset;
-  mapping.rpush = mapping.lpush;
-  mapping.hincrbyfloat = mapping.hincrby;
-  mapping.zrevrange = mapping.zrange;
-  mapping.zscore = mapping.zrank = mapping.zrevrank;
-  mapping.hscan = mapping.zscan = mapping.sscan;
-  mapping.exists = mapping.mget;
+  mapping.incrby = mapping.incrbyfloat = table.decrby;
+  mapping.geopos = table.geohash;
+  mapping.hget = table.hexists;
+  mapping.hsetnx = table.hset;
+  mapping.msetnx = table.mset;
+  mapping.rpush = table.lpush;
+  mapping.hincrbyfloat = table.hincrby;
+  mapping.zrevrange = table.zrange;
+  mapping.zscore = mapping.zrank = table.zrevrank;
+  mapping.hscan = mapping.zscan = table.sscan;
+  mapping.exists = table.mget;
 }
 
 /**
@@ -727,7 +745,12 @@ function extractArgumentsFromRequest(
     return extractArgumentsFromRequestForMExecute(request);
   }
 
-  if (!mapping[command]) {
+  const commandArguments = mapping[command];
+
+  // One lookup, and the `null` entries — the commands that take no argument —
+  // are the same answer as an unknown command. The table was read twice, the
+  // second time without the guard the first had just applied.
+  if (!commandArguments) {
     return [];
   }
 
@@ -735,10 +758,7 @@ function extractArgumentsFromRequest(
     request.input.body = {};
   }
 
-  const commandArguments = mapping[command];
-
-  Object.keys(commandArguments).forEach((key) => {
-    const data = commandArguments[key];
+  for (const [key, data] of Object.entries(commandArguments)) {
     const path = Array.isArray(data) ? data : data.path;
     const toMerge = !Array.isArray(data) && data.merge === true;
     const map = !Array.isArray(data) && data.map;
@@ -754,7 +774,7 @@ function extractArgumentsFromRequest(
 
     if (value === undefined) {
       if (skip) {
-        return;
+        continue;
       }
       throw kerror.get("missing_argument", key);
     }
@@ -770,7 +790,7 @@ function extractArgumentsFromRequest(
         args.push(value);
       }
     }
-  });
+  }
 
   return args;
 }
