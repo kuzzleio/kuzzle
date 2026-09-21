@@ -1,5 +1,15 @@
 "use strict";
 
+// `requireModule: ["ts-node/register"]` below type-checks the step definitions as it
+// loads them, and ts-node reads `tsconfig.json` unless told otherwise. Since the strict
+// flip (docs/adr-001/steps/12-sprint-9-strict-flip.md, K6) that file is the PRODUCTION
+// program — `strict: true`, and `features/` not even in its `include`. Pointing ts-node
+// at the test program is what keeps the step definitions compiling under the same
+// settings they were written for; without it every functional shard dies at load time
+// on a strict error in a step definition, with Kuzzle itself perfectly healthy.
+process.env.TS_NODE_PROJECT =
+  process.env.TS_NODE_PROJECT || require("path").join(__dirname, "tsconfig.tests.json");
+
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const defaultConfig = {
   failFast: true,

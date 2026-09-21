@@ -3,9 +3,7 @@
 # Run the local checks most likely to fail in CI before pushing:
 #   - lint (matches the `lint` job in pull_request.workflow.yaml)
 #   - error codes documentation (matches the `error-codes-check` job)
-#   - the migration ratchets + strict (matches the `migration-ratchets` job)
-#   - a reminder to adopt a converted file into strict once it is clean
-#   - a reminder to report the strict count a conversion leaves behind
+#   - the migration ratchets + the test type-check (matches `migration-ratchets`)
 #   - a heuristic reminder about test/doc coverage (CONTRIBUTING.md)
 #
 # Requires local Node.js/npm (same as `npm run test:lint` would).
@@ -51,13 +49,17 @@ else
 fi
 
 echo
-echo "==> Migration ratchets & strict (npm run ratchet, npm run test:strict)"
+echo "==> Migration ratchets & test type-check (npm run ratchet, npm run typecheck:tests)"
 # The E1 gotcha: a conversion that leaves the .js tracked passes locally but
 # fails the js ratchet in CI. Cheap to catch here.
-if npm run ratchet && npm run test:strict; then
-  echo "[OK] ratchets & strict"
+#
+# There is no strict step any more: `strict` is on in tsconfig.json since step 12
+# (K6), so production code that does not pass it does not build. What needs its
+# own check is the test program, which the build no longer compiles.
+if npm run ratchet && npm run typecheck:tests; then
+  echo "[OK] ratchets & test type-check"
 else
-  echo "[FAIL] ratchets & strict"
+  echo "[FAIL] ratchets & test type-check"
   status=1
 fi
 
@@ -93,92 +95,6 @@ else
   echo "[OK] no lib/ changes"
 fi
 
-
-echo
-echo "==> Strict adoption reminder (ADR-0001: adopt a converted file once it is clean)"
-candidates="$(bash scripts/strict-check.sh --candidates 2>/dev/null | grep -vE '^#' || true)"
-unadopted=""
-for f in $(echo "$changed" | grep -E '^lib/.*\.ts$' || true); do
-  if echo "$candidates" | grep -qxF "$f"; then
-    unadopted="$unadopted$f"$'\n'
-  fi
-done
-if [ -n "$unadopted" ]; then
-  echo "[WARN] these changed files pass strict but are not in .migration/strict-adopted.txt:"
-  printf '%s' "$unadopted" | sed 's/^/    /'
-  echo "       Add them there in this PR so the ratchet guards them from now on."
-else
-  echo "[OK] no changed file is strict-clean-but-unadopted"
-fi
-
-echo "==> Strict-count reminder for conversions (ADR-0001: a conversion reports the count it leaves behind)"
-# A conversion shows up as a rename: lib/x.js -> lib/x.ts. If the result is not
-# adopted into strict, the PR owes a per-file error count and a reading of it —
-# which errors are guards the runtime can reach (bugs) rather than types it
-# already guarantees. Sprints 6 and 7 left 246 unreported (TD-54, #2757).
-# Read from the same three sources as the coverage reminder above, plus
-# untracked files: a conversion is usually checked BEFORE it is committed, and
-# `"$base_ref"...HEAD` sees committed history only. Run on sprint 8 J1's two
-# conversions before committing them, this printed "no .js -> .ts conversion in
-# this branch"; committing the same tree made it print both. See TD-66 (#2774).
-#
-# Untracked matters on top of TD-66's three: a freshly written `x.ts` that has
-# not been `git add`ed appears in no `git diff` at all, which is exactly the
-# state a conversion is in when its author runs preflight.
-#
-# Two spellings of the same event: a rename git detected, and an add of x.ts
-# next to a delete of x.js that it did not (a conversion that rewrites enough
-# of the file falls under the similarity threshold).
-collect_conversions() {
-  # $@ : the `git diff` range arguments (none = working tree)
-  git diff --find-renames --diff-filter=R --name-status "$@" 2>/dev/null \
-    | awk -F'\t' '$2 ~ /\.js$/ && $3 ~ /^(lib|index)/ && $3 ~ /\.ts$/ { print $3 }'
-  git diff --no-renames --name-status "$@" 2>/dev/null \
-    | awk -F'\t' '$1 == "A" && $2 ~ /^(lib|index)/ && $2 ~ /\.ts$/ { added[$2] = 1 }
-                  $1 == "D" && $2 ~ /\.js$/ { sub(/\.js$/, ".ts", $2); deleted[$2] = 1 }
-                  END { for (f in added) if (f in deleted) print f }'
-}
-
-converted="$( {
-  if [ -n "$base_ref" ]; then
-    collect_conversions "$base_ref"...HEAD
-  fi
-  collect_conversions
-  collect_conversions --cached
-
-  # An untracked x.ts whose x.js sibling is gone from disk but exists in HEAD.
-  # Tested against HEAD rather than the index on purpose: the delete may be
-  # unstaged, staged (`git rm`) or already committed, and only HEAD is true in
-  # all three.
-  git ls-files --others --exclude-standard 2>/dev/null \
-    | grep -E '^(lib|index).*\.ts$' \
-    | while read -r ts; do
-        js="${ts%.ts}.js"
-
-        if ! [ -e "$js" ] && git cat-file -e "HEAD:$js" > /dev/null 2>&1; then
-          printf '%s\n' "$ts"
-        fi
-      done
-} | sort -u || true)"
-
-adopted_list="$(grep -vE '^[[:space:]]*(#|$)' .migration/strict-adopted.txt 2>/dev/null || true)"
-unreported=""
-for f in $converted; do
-  printf '%s\n' "$adopted_list" | grep -qxF "$f" || unreported="$unreported$f"$'\n'
-done
-
-if [ -z "$converted" ]; then
-  echo "[OK] no .js -> .ts conversion in this branch"
-elif [ -z "$unreported" ]; then
-  echo "[OK] every file converted here is in .migration/strict-adopted.txt"
-else
-  echo "[WARN] converted but not adopted into strict — report these counts in the PR body:"
-  # shellcheck disable=SC2086
-  bash scripts/strict-check.sh --count $(printf '%s' "$unreported") 2>/dev/null | sed 's/^/    /'
-  echo "       For each file, say which of those errors are guards the runtime can"
-  echo "       reach — those are bugs, not typing chores. A conversion that compiles"
-  echo "       is not a conversion that checks. (ADR-0001, TD-54)"
-fi
 
 echo
 if [ "$status" -eq 0 ]; then

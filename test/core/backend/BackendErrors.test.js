@@ -4,7 +4,7 @@ const should = require("should");
 const mockrequire = require("mock-require");
 
 const KuzzleMock = require("../../mocks/kuzzle.mock");
-const { BadRequestError } = require("../../..");
+const { BadRequestError } = require("../../../index");
 
 describe("BackendErrors", () => {
   let app;

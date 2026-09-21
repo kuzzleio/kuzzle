@@ -82,7 +82,7 @@ jobs:
         shell: bash
 
   migration-ratchets:
-    name: TS migration - ratchets & strict
+    name: TS migration - ratchets & test type-check
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -101,17 +101,22 @@ jobs:
         run: npm ci
         shell: bash
 
-      # Ratchets: the .js / mocha / explicit-any / implicit-any counts may only
-      # decrease. See docs/adr-001/steps/01-sprint-0-tooling.md, step 06 and
-      # scripts/ratchet.sh.
-      - name: Migration ratchets (js / mocha / any / implicit-any / casts / cpd-exclusions)
+      # Ratchets: the .js / mocha / explicit-any / cast counts may only decrease.
+      # See docs/adr-001/steps/01-sprint-0-tooling.md, step 06 and scripts/ratchet.sh.
+      # The `implicit-any` ratchet retired with the strict flip (step 12, K6):
+      # `strict` in tsconfig.json subsumes `noImplicitAny` for lib/, and the build
+      # now fails on what that ratchet used to count.
+      - name: Migration ratchets (js / mocha / any / casts / cpd-exclusions)
         run: npm run ratchet
         shell: bash
 
-      # Strict type-check: fails only on files listed in
-      # .migration/strict-adopted.txt (see scripts/strict-check.sh).
-      - name: Strict type-check (adopted files)
-        run: npm run test:strict
+      # `strict` lives in tsconfig.json since step 12 (K6), so the production
+      # type-check IS the build, gated by the `build` job below. What that program
+      # no longer covers is the test code: `strict` applies to a whole program, so
+      # the specs have their own (tsconfig.tests.json, strict off, allowJs on) and
+      # it is checked here — exactly the checking they had before the flip.
+      - name: Type-check the test programs
+        run: npm run typecheck:tests
         shell: bash
 
   # The build and its payload gate used to live inside `sonarqube`, which is

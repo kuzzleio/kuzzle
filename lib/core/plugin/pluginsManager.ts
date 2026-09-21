@@ -1524,8 +1524,8 @@ async function resolveKuid(
  *
  * The name resolving to nothing callable is unreachable — all four call sites
  * establish it first — and the previous annotation said so by answering
- * `undefined`, deferring the choice to the day this file joined
- * `strict-adopted` (TD-54, #2757). That is this slice: the branch throws, so
+ * `undefined`, deferring the choice to the day this file had to pass strict
+ * (TD-54, #2757). That is this slice: the branch throws, so
  * the three callers that would each have had to guard a value that cannot
  * exist do not, and the one thing that could produce it — a plugin whose
  * member stopped being a function between the check and the bind — says so

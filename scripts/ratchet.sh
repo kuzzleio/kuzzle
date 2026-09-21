@@ -9,8 +9,8 @@
 # unrecorded improvement — so the baseline always mirrors reality).
 #
 # Usage:
-#   scripts/ratchet.sh <js|mocha|any|implicit-any|casts|cpd-exclusions> [--update]
-#   npm run ratchet                  # all six, check mode
+#   scripts/ratchet.sh <js|mocha|any|casts|cpd-exclusions> [--update]
+#   npm run ratchet                  # all five, check mode
 #   npm run ratchet:js -- --update   # record the current js count as the new baseline
 #
 set -euo pipefail
@@ -100,51 +100,16 @@ case "$metric" in
   any)
     # 'as unknown as' is counted too: it is the escape hatch a conversion reaches
     # for once ': any' is forbidden, so leaving it out would just move the debt.
+    #
+    # There used to be a sibling 'implicit-any' ratchet counting the TS7xxx
+    # diagnostics tsc reports under a `noImplicitAny`-only program. It retired with
+    # the strict flip (step 12, K6): `strict` in tsconfig.json subsumes
+    # `noImplicitAny`, and the build itself now fails on an inferred any in lib/,
+    # which is a harder floor than a count that may only decrease.
     label="': any' / 'as any' / 'as unknown as' lines in lib/**/*.ts"
     baseline_file=".migration/any-baseline.txt"
     current="$(grep -rE ': any|as any|as unknown as' lib --include='*.ts' 2>/dev/null | wc -l | tr -d ' ')"
     hint="Type explicitly instead of 'any' (prefer 'unknown' + narrowing if dynamic)."
-    ;;
-  implicit-any)
-    # The 'any' ratchet only sees WRITTEN any. This one sees INFERRED any: the
-    # TS7xxx diagnostics tsc reports on lib/ + index.ts under 'noImplicitAny'
-    # (strict off, to isolate the signal — see tsconfig.implicit.json). An
-    # un-annotated parameter is free for the 'any' ratchet but costs here.
-    label="implicit-any (TS7xxx) diagnostics in lib/ + index.ts"
-    baseline_file=".migration/implicit-any-baseline.txt"
-    #
-    # Fail CLOSED. A tsc that never compiled anything — a missing compiler, a
-    # malformed tsconfig, an OOM kill, a half-installed node_modules — still
-    # prints something, and none of it matches 'error TS7xxx'. Without the
-    # check below, `grep -c` answers 0, the `|| true` swallows the failure, and
-    # the ratchet reports "0 < baseline" as PROGRESS, telling the caller to
-    # write 0 into the baseline and disarm the ratchet for good.
-    #
-    # This is TD-44 (#2731) in a sibling script: `strict-check.sh` read an empty
-    # tsc log as "all adopted files pass" for the same reason, and the fix there
-    # is the discriminator used here — a run that checked anything and is
-    # unhappy says so on a `path(line,col): error TSxxxx` line. 0 is a legitimate
-    # answer one day, so the test is "did tsc run", never "is the count small".
-    ia_log="$(mktemp)"
-    npx tsc -p tsconfig.implicit.json --noEmit > "$ia_log" 2>&1 && ia_status=0 || ia_status=$?
-
-    # A tsc that ran says one of exactly two things: nothing at all (a clean
-    # compile under --noEmit), or `path(line,col): error TSxxxx` lines. Anything
-    # else means it did not check this project, whatever it exited with — and
-    # the exit code alone is not enough: with no local typescript installed,
-    # `npx tsc` prints "This is not the tsc command you are looking for" and
-    # exits **0**, which is the case that actually happened (#2793).
-    if [ -s "$ia_log" ] && ! grep -qE '^[^ ].*\([0-9]+,[0-9]+\): error TS' "$ia_log"; then
-      echo "❌ 'implicit-any': tsc exited $ia_status but reported no file diagnostic," >&2
-      echo "   so it did not check anything. First lines of its output:" >&2
-      sed -n '1,20p' "$ia_log" >&2
-      rm -f "$ia_log"
-      exit 2
-    fi
-
-    current="$(grep -cE 'error TS7[0-9]{3}' "$ia_log" || true)"
-    rm -f "$ia_log"
-    hint="Annotate the parameter/variable instead of letting it infer to any."
     ;;
   casts)
     # The 'any' ratchet counts the hatches it was told about — ': any', 'as any',
@@ -160,9 +125,12 @@ case "$metric" in
     label="type assertions in lib/**/*.ts"
     baseline_file=".migration/casts-baseline.txt"
     #
-    # Fail CLOSED, same reasoning as 'implicit-any' above: `tail -n 1` of a
-    # crashed script is a stack trace line, not a count. The counter must exit
-    # 0 and its last line must be a number.
+    # Fail CLOSED: `tail -n 1` of a crashed script is a stack trace line, not a
+    # count, and a ratchet that reads it as 0 reports "below baseline" — i.e. it
+    # tells the caller to disarm itself. The counter must exit 0 AND its last line
+    # must be a number. Same defect class as TD-44 (#2731), and as the `npx tsc`
+    # that prints "This is not the tsc command you are looking for" and exits 0
+    # (#2793), which is what this guard actually caught.
     casts_out="$(npx tsx scripts/count-casts.ts 2>&1)" && casts_status=0 || casts_status=$?
     current="$(printf '%s\n' "$casts_out" | tail -n 1)"
 
@@ -176,7 +144,7 @@ case "$metric" in
     hint="Narrow instead of asserting (type guard, 'satisfies', or fix the source type)."
     ;;
   *)
-    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any|casts|cpd-exclusions> [--update]" >&2
+    echo "usage: scripts/ratchet.sh <js|mocha|any|casts|cpd-exclusions> [--update]" >&2
     exit 2
     ;;
 esac
