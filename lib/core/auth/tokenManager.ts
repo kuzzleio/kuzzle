@@ -37,9 +37,12 @@ interface ISortedArray<T> {
  */
 class ManagedToken extends Token {
   /**
-   * Unique string to identify the token and sort it by expiration date
+   * Unique string to identify the token and sort it by expiration date.
+   *
+   * Assigned by `add`, which builds its managed tokens with `Object.assign`
+   * rather than through this constructor — see ADR-0001, TD-62.
    */
-  idx: string;
+  idx!: string;
 
   /**
    * Set of connection ID that use this token.
@@ -78,12 +81,13 @@ const TIMEOUT_MAX = Math.pow(2, 31) - 1;
  */
 export class TokenManager {
   private tokens: ISortedArray<ManagedToken>;
-  private anonymousUserId: string = null;
+  /** Read from the anonymous user by `init()`, and not before. */
+  private anonymousUserId!: string;
   /**
    * Map<connectionId, ManagedToken>
    */
   private tokensByConnection = new Map<string, ManagedToken>();
-  private timer: NodeJS.Timeout = null;
+  private timer: NodeJS.Timeout | null = null;
 
   private readonly logger = global.kuzzle.log.child("auth:tokenManager");
 
@@ -101,7 +105,7 @@ export class TokenManager {
      * the loop will verify the same token over and over again because the token cannot be removed from the queue
      * and the other tokens will never be verifier.
      */
-    this.tokens = new SortedArray([], (a, b) => {
+    this.tokens = new SortedArray<ManagedToken>([], (a, b) => {
       if (a.idx === b.idx) {
         return 0;
       }
@@ -131,12 +135,24 @@ export class TokenManager {
     });
   }
 
+  /**
+   * The managed token filed under `idx`, or undefined when none is.
+   *
+   * `search` answers a position or `-1`, and indexing `array` with it is
+   * `| undefined` for every position under `noUncheckedIndexedAccess` — so the
+   * callers test one value rather than a position and then an element.
+   */
+  private find(idx: string): ManagedToken | undefined {
+    const pos = this.tokens.search({ idx });
+
+    return pos === -1 ? undefined : this.tokens.array[pos];
+  }
+
   runTimer() {
-    if (this.tokens.array.length > 0) {
-      const delay = Math.min(
-        this.tokens.array[0].expiresAt - Date.now(),
-        TIMEOUT_MAX,
-      );
+    const next = this.tokens.array[0];
+
+    if (next !== undefined) {
+      const delay = Math.min((next.expiresAt ?? 0) - Date.now(), TIMEOUT_MAX);
 
       if (this.timer) {
         clearTimeout(this.timer);
@@ -170,15 +186,15 @@ export class TokenManager {
       this.removeConnectionLinkedToToken(connectionId, currentToken);
     }
 
-    const pos = this.tokens.search({ idx });
-    if (pos === -1) {
+    const managedToken = this.find(idx);
+
+    if (managedToken === undefined) {
       this.add(token, new Set([connectionId]));
 
       this.logger.trace(
         `connection "${connectionId}" from user "${token.userId}" linked to a new token`,
       );
     } else {
-      const managedToken = this.tokens.array[pos];
       managedToken.connectionIds.add(connectionId);
 
       this.tokensByConnection.set(connectionId, managedToken);
@@ -211,16 +227,16 @@ export class TokenManager {
     }
 
     const idx = ManagedToken.indexFor(token);
-    const pos = this.tokens.search({ idx });
+    const managedToken = this.find(idx);
 
-    if (pos === -1) {
+    if (managedToken === undefined) {
       this.logger.trace(
         `tried to unlink connection "${connectionId}" with no token associated`,
       );
       return;
     }
 
-    this.removeConnectionLinkedToToken(connectionId, this.tokens.array[pos]);
+    this.removeConnectionLinkedToToken(connectionId, managedToken);
 
     const currentToken = this.tokensByConnection.get(connectionId);
     if (currentToken && currentToken._id === token._id) {
@@ -268,10 +284,9 @@ export class TokenManager {
 
     const idx = ManagedToken.indexFor(token);
     const searchResult = this.tokens.search({ idx });
+    const managedToken = this.tokens.array[searchResult];
 
-    if (searchResult > -1) {
-      const managedToken = this.tokens.array[searchResult];
-
+    if (managedToken !== undefined) {
       for (const connectionId of managedToken.connectionIds) {
         this.tokensByConnection.delete(connectionId);
         await global.kuzzle.ask(
@@ -305,8 +320,10 @@ export class TokenManager {
     // within the same second) but, oh, well... it costs nothing to fix a
     // potentially very, very, very hard to debug random problem before it
     // occurs
-    if (pos > -1 && oldToken._id !== newToken._id) {
-      const connectionIds = this.tokens.array[pos].connectionIds;
+    const managedToken = pos === -1 ? undefined : this.tokens.array[pos];
+
+    if (managedToken !== undefined && oldToken._id !== newToken._id) {
+      const connectionIds = managedToken.connectionIds;
 
       this.add(newToken, connectionIds);
 
@@ -319,14 +336,16 @@ export class TokenManager {
 
   async checkTokensValidity() {
     const arr = this.tokens.array;
+    const first = arr[0];
 
     // API key can never expire (-1)
     if (
-      arr.length > 0 &&
-      arr[0].expiresAt > 0 &&
-      arr[0].expiresAt < Date.now()
+      first !== undefined &&
+      first.expiresAt !== null &&
+      first.expiresAt > 0 &&
+      first.expiresAt < Date.now()
     ) {
-      const managedToken = arr[0];
+      const managedToken = first;
 
       arr.shift();
 
@@ -387,7 +406,7 @@ export class TokenManager {
     }
     this.tokens.insert(orderedToken);
 
-    if (this.tokens.array[0].idx === orderedToken.idx) {
+    if (this.tokens.array[0]?.idx === orderedToken.idx) {
       this.runTimer();
     }
 

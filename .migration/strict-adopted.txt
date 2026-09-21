@@ -82,6 +82,11 @@
 # reverted; it is +19 here, and clearing it costs the six files below. The base
 # class's `TObject extends { _id: string }` had to widen with the models, and
 # `ObjectRepository.idOf` is the one place that now refuses a write with no id.
+# Step 12 K4, part 4 (2026-09-20): the token pair. `jsonwebtoken` and
+# `sorted-array` get local declarations, the ms/semver precedent from K3.
+# tokenManager's `search` + `array[pos]` two-step became one `find(idx)`:
+# indexing answers `| undefined` for every position, so testing the element
+# instead of the position removes the second check rather than adding one.
 
 bin/copy-binaries.ts
 index.ts
@@ -112,6 +117,7 @@ lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts
 lib/core/auth/passportResponse.ts
 lib/core/auth/passportWrapper.ts
+lib/core/auth/tokenManager.ts
 lib/core/backend/applicationManager.ts
 lib/core/backend/backendCluster.ts
 lib/core/backend/backendConfig.ts
@@ -157,6 +163,7 @@ lib/core/security/index.ts
 lib/core/security/profileRepository.ts
 lib/core/security/roleRepository.ts
 lib/core/security/securityLoader.ts
+lib/core/security/tokenRepository.ts
 lib/core/security/userRepository.ts
 lib/core/shared/KoncordeWrapper.ts
 lib/core/shared/ObjectRepository.ts
