@@ -206,6 +206,8 @@ lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
 lib/core/validation/validation.ts
+lib/kerror/codes/index.ts
+lib/kerror/index.ts
 lib/kerror/errors/badRequestError.ts
 lib/kerror/errors/externalServiceError.ts
 lib/kerror/errors/forbiddenError.ts

@@ -63,7 +63,13 @@ export class KuzzleError extends Error {
   /**
    * Placeholders used to construct the error message.
    */
-  public props: string[] | undefined;
+  /**
+   * The placeholders that were substituted into the message. `kerror.get`
+   * takes them from its caller, which may hand it anything — an id, a count,
+   * the value that failed a type check — so `string[]` described only the
+   * common case.
+   */
+  public props: unknown[] | undefined;
 
   /**
    * `message` admits `undefined` because callers really do omit it:
