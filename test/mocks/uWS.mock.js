@@ -24,6 +24,7 @@ class MockHttpRequest {
     this._qs = qs;
     this._headers = headers;
     this.response = {
+      removeHeader: sinon.stub(),
       setHeader: sinon.stub(),
       status: "200 OK",
     };

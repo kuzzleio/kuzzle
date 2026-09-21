@@ -88,8 +88,11 @@ class MqttProtocol extends Protocol<MqttConfig> {
     };
   }
 
-  async init(entryPoint: NetworkEntryPoint): Promise<boolean> {
-    await super.init(null, entryPoint);
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
+  /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
+  async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
+  async init(...args: Protocol.InitArgs): Promise<boolean> {
+    await super.init(Protocol.entryPointOf(args));
 
     if (this.config.enabled === false) {
       return false;

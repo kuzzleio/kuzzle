@@ -34,9 +34,13 @@ export interface KuzzleSocketData {
   internal: {
     debugSession?: boolean;
   };
-  /** Rate-limiting bookkeeping, written on the socket by the WS protocol. */
-  last?: number;
-  count?: number;
+  /**
+   * Rate-limiting bookkeeping. Seeded by `wsOnUpgradeHandler` along with the
+   * rest of this data, so the limiter can read `count` in the branch that did
+   * not just write it — which is what it always did.
+   */
+  last: number;
+  count: number;
 }
 
 /** A WebSocket carrying Kuzzle's own upgrade data. */

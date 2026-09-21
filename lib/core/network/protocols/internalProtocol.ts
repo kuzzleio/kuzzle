@@ -55,8 +55,11 @@ class InternalProtocol extends Protocol {
     this.channels = new Set();
   }
 
-  async init(entryPoint: NetworkEntryPoint): Promise<boolean> {
-    await super.init(null, entryPoint);
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
+  /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
+  async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
+  async init(...args: Protocol.InitArgs): Promise<boolean> {
+    await super.init(Protocol.entryPointOf(args));
 
     debug("initializing InternalProtocol");
 

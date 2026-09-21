@@ -147,6 +147,8 @@ lib/core/network/httpRouter/routeTypes.ts
 lib/core/network/networkEntryPoint.ts
 lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
+lib/core/network/protocols/httpwsProtocol.ts
+lib/core/network/protocols/internalProtocol.ts
 lib/core/network/protocols/protocol.ts
 lib/core/network/router.ts
 lib/core/plugin/plugin.ts
