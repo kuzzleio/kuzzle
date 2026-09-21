@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** — · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -119,7 +119,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **L0** ✅  | **The three specs that already had a vitest counterpart** — measured by coverage rather than by line count, completed where the coverage said so, then deleted; see _What L0 found_                                                                                                                                  |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
-| **L1b** ⬜ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
+| **L1b** 🟨 | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `core/realtime` (10) · **b3** the rest of `core/` (8) · **b4** `service/` + `util` (4); see _What L1b1 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2**     | The clean specs at **201–1 000 lines**, by layer                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3**     | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
@@ -319,3 +319,68 @@ git diff origin/2-dev --name-only -- lib/   # must print nothing
 ```
 
 _A test-porting slice that changes a production file has either found something it must state, or picked something up it must drop._
+
+---
+
+## What L1b1 found
+
+**`mocha` 118 → 110**, 8 specs ported, vitest **494 → 542 tests** across **52 → 60 files**. Every `it` accounted for: the eight Mocha specs held **38** tests and the eight vitest ones hold **48** — one-for-one plus ten the Mocha specs did not have.
+
+L1b was cut as "the 30 specs ≤ 200 lines that depend on `test/mocks/kuzzle.mock.js`", and that measurement held: re-counted on `2-dev` after L1, it is still exactly **30 specs / 3 459 lines**. It is the first slice in this step whose axis survived contact, and the reason is that it was cut from a measurement of the whole remaining population rather than from a shape:
+
+| Remaining Mocha specs, by idiom              | Specs |  Lines |
+| -------------------------------------------- | ----: | -----: |
+| KuzzleMock + (`mock-require` or `rewire`)     |    41 | 30 056 |
+| KuzzleMock + sinon only                       |    41 | 16 869 |
+| KuzzleMock only                                |    19 |  6 006 |
+| Neither                                       |    17 |  5 930 |
+| **Total**                                     | **118** | **58 861** |
+
+L1b1 is the `api/` eighth of it: `funnel` × 5, `debugController`, `indexController`, `OpenApiManager`.
+
+### The fixture is the deliverable, not the assertions
+
+The translation was mechanical — L1's codemod handles `should` → `expect` and `sinon` → `vi`. What each spec cost was **one question per subject: what does it actually read from `global.kuzzle`?** The answers are small and they are the point:
+
+| Spec                          | What the subject actually needs                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| `funnel.metrics`              | `log.child()` — nothing else. The shared fixture already provides it, so `stubKuzzle()` is bare. |
+| `funnel.performDocumentAlias` | `pipe`, and it must **return** its documents: the result feeds `DocumentExtractor.insert`.      |
+| `funnel.init`                 | `onAsk`, `pipe`, `pluginsManager.getStrategyMethod`, `ask` (the anonymous user), and **nine config keys** — this is what thirteen controller constructors add up to. |
+| `indexController`             | `ask`. That is all: every action is one storage-engine event.                                   |
+| `debugController`             | `ask` + `config.security.debug.native_debug_protocol`.                                          |
+| `OpenApiManager`              | `onAsk`. It reads no config at all.                                                             |
+
+`funnel.init`'s fixture is the one that looks large, and it is the argument for the exercise rather than against it: the nine config keys were always required — KuzzleMock supplied them silently, so nothing said that constructing the API reads `limits`, `http`, `internal`, `plugins`, `security`, `server`, `services` and `version`.
+
+### Two mocks turned out to mock the subject, and one of them was dead
+
+`test/mocks/mockAssertions.js` stubs six `assert*` methods on the controller under test. `indexController` **calls none of them** — the spec had been carrying it for nothing, and mocking the subject's own surface is precisely why that went unnoticed. Not ported, not replaced.
+
+`test/mocks/controller.mock.js` is used by two specs and provides two classes, one of which is unused here. Inlined as a 10-line class in the one spec that needs it, so the controller under the funnel is readable beside the assertions.
+
+_A mock of the subject cannot be ported, only re-decided._ Neither of these is a `global.kuzzle` fixture, so neither was in L1b's stated scope — they were found by porting, like the KuzzleMock dependency itself was found by L1.
+
+### `tsc` caught two more signature defects, exactly where L1 said it would
+
+- **`indexController.stats()` takes no argument** and the Mocha spec passed it a request (TS2554). Silent in JavaScript.
+- **`lib/api/controllers` is `export =` an object literal**, which TS2497 refuses to reference from an ES import. The barrel is unusable from the test program; each controller module is `export =` a class and imports fine. `funnel.init`'s spec imports the twelve individually.
+
+This is the third slice in which the test program's type-check found a defect no runner could see. It is the concrete return on [step 12](12-sprint-9-strict-flip.md)'s second program.
+
+### ⚠️ The mirror convention cannot express "many specs, one subject"
+
+`prepare-coverage.ts` assigns `tests/<path>.test.ts` to `lib/<path>.ts` ([its `specTarget`](../../../.ci/scripts/prepare-coverage.ts)). Two consequences turned up here:
+
+1. **`test/api/OpenApiManager.test.js` was mis-filed**: the subject is `lib/api/openapi/OpenApiManager.ts`. Under Mocha that is harmless; under the mirror it means the spec would run, pass and **count for nothing**. The port moves it to `tests/api/openapi/`.
+2. **The five `funnel` specs cannot satisfy the mirror.** `tests/api/funnel/metrics.test.ts` resolves to `lib/api/funnel/metrics.ts`, which does not exist, so `specTarget` returns `null` and `lib/api/funnel.ts` stays attributed to the **mocha** report — which is the correct outcome while three funnel specs (`checkRights`, `execute`, `processRequest`) are still in Mocha. Merging the five into `tests/api/funnel.test.ts` now would claim the subject for vitest and discard those three specs' coverage of it.
+
+**The decision taken:** keep one file per concern, unmirrored, until the last Mocha spec for a subject is ported — then merge them into the mirrored file in that same PR. Whichever slice ports `processRequest` owns that merge for `funnel`.
+
+⚠️ **An unmirrored spec is silently unowned.** `specTarget` returning `null` is not reported anywhere, so a typo in a spec's path is indistinguishable from a deliberate split. Worth a check that lists unmirrored specs — not a fix for this slice, but L7 should not shrink `tsconfig.tests.json` without one.
+
+### `settle` is now a helper, because four specs in this slice need it
+
+[L1](#what-l1-found) wrote `settle` inside `waterfall.test.ts` to replace Mocha's `done`. Of L1b's 30 specs, **4 use `done`** (22 call sites), so it moved to `tests/helpers/settle.ts` and the waterfall spec imports it.
+
+One of the four is ported here, and the port improves on what `done` gave: `executePluginRequest`'s dump path runs inside a `setImmediate`, and the Mocha spec waited **50 ms** for it. Queueing behind the same macrotask (`new Promise(resolve => setImmediate(resolve))`) asserts the same thing with no sleep to be too short on a loaded machine.

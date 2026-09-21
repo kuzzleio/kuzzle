@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import waterfall from "../../../lib/kuzzle/event/waterfall";
+import { settle } from "../../helpers/settle";
 
 /**
  * `waterfall` reports through a callback invoked with an explicit `this`, and
@@ -8,14 +9,7 @@ import waterfall from "../../../lib/kuzzle/event/waterfall";
  * `this.done()` from the callback. vitest has no `done`, so each test returns
  * a promise instead and `context` keeps only what the subject is given: the
  * receiver the callback is called with.
- *
- * `settle` is what preserves the one property the `done` form had for free —
- * a test that never calls back **fails** rather than passing silently — since
- * a promise that is never settled is a timeout, not a success.
  */
-const settle = <T>(
-  run: (resolve: (value: T) => void, reject: (error: unknown) => void) => void,
-) => new Promise<T>(run);
 
 describe("#kuzzle/event/waterfall", () => {
   it("chains callbacks and passes the result along", () =>
