@@ -22,6 +22,7 @@
 import type { JSONObject } from "kuzzle-sdk";
 
 import * as kerror from "../../kerror";
+import { KuzzleError } from "../../kerror/errors";
 import { isPlainObject } from "../../util/safeObject";
 import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
@@ -211,7 +212,8 @@ class CollectionController extends NativeController {
         "validation",
         "assert",
         "invalid_specifications",
-        errors.join("\n\t- "),
+        // `validateFormat` answers errors only when it answers invalid.
+        (errors ?? []).join("\n\t- "),
       );
     }
 
@@ -244,7 +246,7 @@ class CollectionController extends NativeController {
     try {
       await global.kuzzle.internalIndex.delete("validations", specificationsId);
     } catch (error) {
-      if (error.status === 404) {
+      if (error instanceof KuzzleError && error.status === 404) {
         return {
           acknowledged: true,
         };
@@ -334,11 +336,11 @@ class CollectionController extends NativeController {
       );
     }
 
-    let collections = [];
+    let collections: Array<{ name: string; type: string }> = [];
 
     if (type === "realtime" || type === "all") {
       const list = await this.ask("core:realtime:collections:get", index);
-      collections = list.map((name) => ({ name, type: "realtime" }));
+      collections = list.map((name: string) => ({ name, type: "realtime" }));
     }
 
     if (type !== "realtime") {
@@ -348,7 +350,7 @@ class CollectionController extends NativeController {
       );
 
       collections = collections.concat(
-        publicCollections.map((name) => ({ name, type: "stored" })),
+        publicCollections.map((name: string) => ({ name, type: "stored" })),
       );
     }
 
@@ -465,16 +467,20 @@ class CollectionController extends NativeController {
    * @param {Object} response
    * @returns {Object} { collections, from, size }
    */
-  _paginateCollections(from, size, response) {
+  _paginateCollections(
+    from: unknown,
+    size: unknown,
+    response: JSONObject,
+  ): JSONObject {
     if (from || size) {
       if (from) {
-        response.from = Number.parseInt(from);
+        response.from = Number.parseInt(String(from));
       } else {
         response.from = 0;
       }
 
       if (size) {
-        response.size = Number.parseInt(size);
+        response.size = Number.parseInt(String(size));
 
         response.collections = response.collections.slice(
           response.from,
@@ -493,7 +499,7 @@ class CollectionController extends NativeController {
    * @param  {Object} mapping - raw ES mapping
    * @returns {Object}
    */
-  _filterMappingResponse(mapping) {
+  _filterMappingResponse(mapping: JSONObject) {
     return {
       _meta: mapping._meta,
       dynamic: mapping.dynamic,

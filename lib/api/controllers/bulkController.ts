@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import type { JSONObject } from "kuzzle-sdk";
+
 import * as actionEnum from "../../core/realtime/actionEnum";
 import * as kerror from "../../kerror";
 import type { KuzzleRequest } from "../request";
@@ -149,7 +151,7 @@ class BulkController extends NativeController {
       );
     }
 
-    const successes = items.map((item) => ({
+    const successes = items.map((item: JSONObject) => ({
       _id: item._id,
       _source: item._source,
       _version: item._version,
