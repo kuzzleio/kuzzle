@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -127,7 +127,25 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
-The seven work slices partition the 148 specs and the 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**.
+### Re-measured on `2-dev` after L1b (2026-09-21, `089ef8160`)
+
+The table above is the plan as it stood at 148 specs. L1b closed at **84 specs / 53 920 lines**, and it did not consume its slices cleanly: b2 and b2b each pulled two specs out of L2 to close a mirror, and b4 pulled the two `esWrapper` specs. **What is actually left:**
+
+| Class                              | Specs |  Lines | Slice                                    |
+| ---------------------------------- | ----: | -----: | ---------------------------------------- |
+| Clean, ≤ 200 lines                 |     3 |    265 | L2 — three strays L1/L1b's axes missed   |
+| Clean, 201–1 000 lines             |    25 | 11 500 | **L2**                                   |
+| Clean, > 1 000 lines               |     6 |  9 277 | **L3** (unchanged)                       |
+| `mock-require`, minus the ES twins |    34 | 14 128 | **L4** (unchanged)                       |
+| The two Elasticsearch twins        |     2 | 12 431 | **L5** (unchanged)                       |
+| `rewire`                           |    14 |  6 319 | **L6** (unchanged)                       |
+| **Total**                          | **84** | **53 920** |                                      |
+
+L2 is therefore **28 specs / 11 765 lines**, not 29 / 12 995. The three strays are `core/auth/passportResponse` (26), `util/memoize` (61) and `kuzzle/vault` (178) — under 200 lines, no KuzzleMock, no `mock-require`, no `rewire`: they fit L1's axis and were missed by it. _A fourth demonstration that a slice's axis is a hypothesis;_ here the cost is three cheap files rather than a re-cut.
+
+L3, L4, L5 and L6 are untouched by L1b and their numbers still hold.
+
+The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
 **Read L4, L5 and L6's line counts as the one thing they are not: a budget.** Their cost is not proportional to their size — that is the whole point of separating them from L1–L3 — and [step 12 K0](12-sprint-9-strict-flip.md#what-k0-found) is the precedent: its own estimate was low by a quarter because a per-class estimate under-counts whatever the class boundary cuts through. Re-measure before picking one up.
 
