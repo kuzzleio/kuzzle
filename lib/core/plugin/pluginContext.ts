@@ -116,7 +116,15 @@ export class PluginContext {
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>;
+    /**
+     * `| null` for the callback form: the caller gets its answer there, and
+     * there is no promise to hand back. That is what this has always
+     * returned.
+     */
+    execute: (
+      request: KuzzleRequest,
+      callback?: unknown,
+    ) => Promise<KuzzleRequest> | null;
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -252,7 +260,7 @@ export class PluginContext {
     warn: (message: any) => void;
   };
 
-  constructor(pluginName) {
+  constructor(pluginName: string) {
     this.config = JSON.parse(JSON.stringify(global.kuzzle.config));
 
     Object.freeze(this.config);
@@ -415,25 +423,37 @@ export class PluginContext {
  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
-function execute(request: KuzzleRequest, callback) {
-  if (callback && typeof callback !== "function") {
+function execute(
+  request: KuzzleRequest,
+  callback?: unknown,
+): Bluebird<KuzzleRequest> | null {
+  if (callback !== undefined && !isPrombackCallback(callback)) {
     const error = contextError.get("invalid_callback", typeof callback);
     global.kuzzle.log.error(error);
     return Bluebird.reject(error);
   }
 
-  const promback = new Promback<KuzzleRequest>(callback);
+  const promback = new Promback<KuzzleRequest>(
+    isPrombackCallback(callback) ? callback : null,
+  );
 
   if (!request || _.isEmpty(request)) {
-    return promback.reject(contextError.get("missing_request"));
+    return asRequestPromise(
+      promback.reject(contextError.get("missing_request")),
+      request,
+    );
   }
 
   if (
     request.input.controller === "realtime" &&
+    request.input.action !== null &&
     ["subscribe", "unsubscribe"].includes(request.input.action)
   ) {
-    return promback.reject(
-      contextError.get("unavailable_realtime", request.input.action),
+    return asRequestPromise(
+      promback.reject(
+        contextError.get("unavailable_realtime", request.input.action),
+      ),
+      request,
     );
   }
 
@@ -453,7 +473,56 @@ function execute(request: KuzzleRequest, callback) {
       promback.reject(err);
     });
 
-  return promback.deferred;
+  return asRequestPromise(promback.deferred, request);
+}
+
+/** Whether a plugin handed `accessors.execute` something callable. */
+function isPrombackCallback(
+  value: unknown,
+): value is (error: unknown, result?: KuzzleRequest) => void {
+  return typeof value === "function";
+}
+
+/**
+ * What `execute` answers, from a `Promback`'s deferred.
+ *
+ * `deferred` is null in callback mode — the caller gets its answer that way,
+ * and the JavaScript returned that null — and otherwise settles on
+ * `KuzzleRequest | undefined`, because `Promback.resolve()` may be called
+ * with nothing. This one is always settled with the request it was handed,
+ * so mapping through it is what turns the union into the contract.
+ */
+function asRequestPromise(
+  deferred: Bluebird<KuzzleRequest | undefined> | null,
+  request: KuzzleRequest,
+): Bluebird<KuzzleRequest> | null {
+  return deferred === null ? null : deferred.then(() => request);
+}
+
+/**
+ * Copies the three routing fields a plugin's request inherits from the one it
+ * was built from.
+ *
+ * Named, not indexed: `RequestResource` exposes three accessors and no index
+ * signature, and the loop this replaces was the one place asking it for one.
+ * Their getters answer `string | null` while their setters take a `string`,
+ * so "the target has none and the source has one" is two checks.
+ */
+function inheritResource(target: KuzzleRequest, source: KuzzleRequest): void {
+  const to = target.input.resource;
+  const from = source.input.resource;
+
+  if (!to._id && from._id !== null) {
+    to._id = from._id;
+  }
+
+  if (!to.index && from.index !== null) {
+    to.index = from.index;
+  }
+
+  if (!to.collection && from.collection !== null) {
+    to.collection = from.collection;
+  }
 }
 
 /**
@@ -466,35 +535,40 @@ function execute(request: KuzzleRequest, callback) {
  * @param {Object} [options]
  * @returns {Request}
  */
-function instantiateRequest(request, data, options = {}) {
-  let _request = request,
-    _data = data,
-    _options = options;
-
-  if (!_request) {
+function instantiateRequest(
+  request: KuzzleRequest | JSONObject | null,
+  data?: JSONObject,
+  options: JSONObject = {},
+) {
+  if (!request) {
     throw contextError.get("missing_request_data");
   }
 
-  if (!(_request instanceof KuzzleRequest)) {
-    if (_data) {
-      _options = _data;
-    }
+  // Two call shapes: `(request, data, options)` and `(data, options)`. The
+  // first argument is what tells them apart, and reassigning it — which is
+  // what the JavaScript did — throws away the narrowing that `instanceof`
+  // had just established.
+  let _request: KuzzleRequest | null;
+  let _data: JSONObject | undefined;
+  let _options: JSONObject;
 
-    _data = _request;
-    _request = null;
-  } else {
+  if (request instanceof KuzzleRequest) {
+    _request = request;
+    _data = data;
+    _options = options;
+
     Object.assign(_options, _request.context.toJSON());
+  } else {
+    _request = null;
+    _data = request;
+    _options = data ? data : options;
   }
 
   const target = new KuzzleRequest(_data, _options);
 
   // forward informations if a request object was supplied
-  if (_request) {
-    for (const resource of ["_id", "index", "collection"]) {
-      if (!target.input.resource[resource]) {
-        target.input.resource[resource] = _request.input.resource[resource];
-      }
-    }
+  if (_request !== null) {
+    inheritResource(target, _request);
 
     for (const arg of Object.keys(_request.input.args)) {
       if (target.input.args[arg] === undefined) {
@@ -502,7 +576,7 @@ function instantiateRequest(request, data, options = {}) {
       }
     }
 
-    if (!_data || _data.jwt === undefined) {
+    if ((!_data || _data.jwt === undefined) && _request.input.jwt !== null) {
       target.input.jwt = _request.input.jwt;
     }
 
@@ -511,7 +585,7 @@ function instantiateRequest(request, data, options = {}) {
         ..._request.input.volatile,
         ..._data.volatile,
       };
-    } else {
+    } else if (_request.input.volatile !== null) {
       target.input.volatile = _request.input.volatile;
     }
   }
@@ -527,8 +601,8 @@ function instantiateRequest(request, data, options = {}) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryAddStrategy(pluginName) {
-  return async function addStrategy(name, strategy) {
+function curryAddStrategy(pluginName: string) {
+  return async function addStrategy(name: string, strategy: unknown) {
     // strategy constructors cannot be used directly to dynamically
     // add new strategies, because they cannot
     // be serialized and propagated to other cluster nodes
@@ -569,10 +643,10 @@ function curryAddStrategy(pluginName) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryRemoveStrategy(pluginName) {
+function curryRemoveStrategy(pluginName: string) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
-  return async function removeStrategy(name) {
+  return async function removeStrategy(name: string) {
     const mutex = new Mutex("auth:strategies:remove", { ttl: 30000 });
 
     await mutex.lock();

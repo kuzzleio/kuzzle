@@ -133,6 +133,7 @@ lib/core/auth/passportResponse.ts
 lib/core/auth/passportWrapper.ts
 lib/core/auth/tokenManager.ts
 lib/core/backend/applicationManager.ts
+lib/core/backend/backend.ts
 lib/core/backend/backendCluster.ts
 lib/core/backend/backendConfig.ts
 lib/core/backend/backendController.ts
@@ -149,6 +150,7 @@ lib/core/backend/index.ts
 lib/core/backend/internalLogger.ts
 lib/core/cache/cacheDbEnum.ts
 lib/core/cache/cacheEngine.ts
+lib/core/debug/kuzzleDebugger.ts
 lib/core/network/accessLogger.ts
 lib/core/network/clientConnection.ts
 lib/core/network/context.ts
@@ -166,6 +168,7 @@ lib/core/network/protocols/mqttProtocol.ts
 lib/core/network/protocols/protocol.ts
 lib/core/network/router.ts
 lib/core/plugin/plugin.ts
+lib/core/plugin/pluginContext.ts
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/pluginRepository.ts
 lib/core/plugin/pluginsManager.ts
