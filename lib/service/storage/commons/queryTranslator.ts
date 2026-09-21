@@ -18,12 +18,74 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import type { JSONObject } from "kuzzle-sdk";
+
 import { get } from "../../../kerror";
+import { isPlainObject } from "../../../util/safeObject";
+
+/**
+ * What Koncorde hands a clause or an operator converter. The payloads differ
+ * per keyword — `equals` takes an object, `exists` takes an object *or* the
+ * path as a string, `and` takes a list — so this is the union the tables
+ * accept, and the two converters that need more narrow it themselves.
+ */
+type KoncordeContent = JSONObject | string | unknown[];
+
+type KoncordeConverter = (content: KoncordeContent) => JSONObject;
+
+/**
+ * The payload of a clause that is the same Elasticsearch query under another
+ * name, and so is spread into it verbatim. Only `exists` and `missing` accept
+ * the string form.
+ */
+function asClauseObject(content: KoncordeContent): JSONObject {
+  if (!isPlainObject(content)) {
+    throw get(
+      "services",
+      "koncorde",
+      "elastic_translation_error",
+      `Invalid clause payload: expected an object, got ${typeof content}`,
+    );
+  }
+
+  return content;
+}
+
+/**
+ * A Koncorde filter, as `translate` recurses over it: one keyword and its
+ * payload. Anything else is a malformed filter, and the translation error
+ * this module already raises for a malformed `exists` path says so.
+ */
+function asFilter(value: unknown): JSONObject {
+  if (!isPlainObject(value)) {
+    throw get(
+      "services",
+      "koncorde",
+      "elastic_translation_error",
+      `Invalid operand: expected a filter object, got ${typeof value}`,
+    );
+  }
+
+  return value;
+}
+
+function asFilterList(value: unknown): JSONObject[] {
+  if (!Array.isArray(value)) {
+    throw get(
+      "services",
+      "koncorde",
+      "elastic_translation_error",
+      `Invalid operands: expected a list of filters, got ${typeof value}`,
+    );
+  }
+
+  return value.map(asFilter);
+}
 
 class KeywordError extends Error {
   public keyword: { name: string; type: string };
 
-  constructor(type, name) {
+  constructor(type: string, name: string) {
     super(
       `The ${type} "${name}" of Koncorde DSL is not supported for search queries.`,
     );
@@ -41,7 +103,7 @@ const KONCORDE_OPERATORS = ["and", "or", "not", "bool"];
  * @param {string} path
  * @returns
  */
-function parseKoncordePath(path) {
+function parseKoncordePath(path: string): { path: string; value?: unknown } {
   const firstBracket = path.indexOf("[");
 
   if (firstBracket < 0) {
@@ -67,15 +129,26 @@ function parseKoncordePath(path) {
   };
 }
 
-const KONCORDE_CLAUSES_TO_ES = {
+const KONCORDE_CLAUSES_TO_ES: Record<string, KoncordeConverter> = {
   equals: (content) => ({
     term: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   exists: (field) => {
     // Support old syntax { exists: { field: "path" } } and { exists: "path" }
-    const parsedInfo = parseKoncordePath(field.field || field);
+    const declared = isPlainObject(field) ? field.field : field;
+
+    if (typeof declared !== "string") {
+      throw get(
+        "services",
+        "koncorde",
+        "elastic_translation_error",
+        `Invalid exists path: expected a string, got ${typeof declared}`,
+      );
+    }
+
+    const parsedInfo = parseKoncordePath(declared);
 
     // If we have a value, we need to use a range query to be sure that the value is the same
     if (parsedInfo.value) {
@@ -108,32 +181,32 @@ const KONCORDE_CLAUSES_TO_ES = {
   },
   geoBoundingBox: (content) => ({
     geo_bounding_box: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   geoDistance: (content) => ({
     geo_distance: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   geoDistanceRange: (content) => ({
     geo_distance_range: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   geoPolygon: (content) => ({
     geo_polygon: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   ids: (content) => ({
     ids: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   in: (content) => ({
     terms: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
   missing: (field) => ({
@@ -143,37 +216,66 @@ const KONCORDE_CLAUSES_TO_ES = {
   }),
   range: (content) => ({
     range: {
-      ...content,
+      ...asClauseObject(content),
     },
   }),
 };
 
-const KONCORDE_OPERATORS_TO_ES = {
-  and: (content) => ({
-    bool: {
-      filter: [...content],
-    },
-  }),
-  bool: undefined,
-  not: (content) => {
-    const [name, value] = Object.entries(content[0])[0];
-
-    return {
+const KONCORDE_OPERATORS_TO_ES: Record<string, KoncordeConverter | undefined> =
+  {
+    and: (content) => ({
       bool: {
-        must_not: [{ [name]: value }],
+        filter: [...asFilterList(content)],
       },
-    };
-  },
-  or: (content) => ({
-    bool: {
-      should: [...content],
+    }),
+    bool: undefined,
+    not: (content) => {
+      // `not` is handed the single already-translated filter below, so its
+      // first entry is the ES clause to negate.
+      const [first] = asFilterList(content);
+      const [entry] = Object.entries(asFilter(first));
+
+      if (entry === undefined) {
+        throw get(
+          "services",
+          "koncorde",
+          "elastic_translation_error",
+          "Invalid not operand: the negated filter is empty",
+        );
+      }
+
+      const [name, value] = entry;
+
+      return {
+        bool: {
+          must_not: [{ [name]: value }],
+        },
+      };
     },
-  }),
-};
+    or: (content) => ({
+      bool: {
+        should: [...asFilterList(content)],
+      },
+    }),
+  };
 
 export class QueryTranslator {
-  translate(filters) {
-    const [name, value] = Object.entries(filters)[0];
+  translate(filters: JSONObject): JSONObject {
+    const [entry] = Object.entries(filters);
+
+    // An empty filter has no keyword to translate. `BaseController`'s
+    // `translateKoncorde` answers `{}` before reaching here; this is what
+    // destructuring `Object.entries(filters)[0]` raised a TypeError for.
+    if (entry === undefined) {
+      throw get(
+        "services",
+        "koncorde",
+        "elastic_translation_error",
+        "Invalid filter: no keyword to translate",
+      );
+    }
+
+    const [name, value] = entry;
 
     if (KONCORDE_OPERATORS.includes(name)) {
       return this._translateOperator(name, value);
@@ -182,19 +284,19 @@ export class QueryTranslator {
     return this._translateClause(name, value);
   }
 
-  _translateOperator(operator, operands) {
+  _translateOperator(operator: string, operands: unknown): JSONObject {
     const converter = KONCORDE_OPERATORS_TO_ES[operator];
 
     if (converter === undefined) {
       throw new KeywordError("operator", operator);
     }
 
-    const esOperands = [];
+    const esOperands: JSONObject[] = [];
 
     if (operator === "not") {
-      esOperands.push(this.translate(operands));
+      esOperands.push(this.translate(asFilter(operands)));
     } else {
-      for (const operand of operands) {
+      for (const operand of asFilterList(operands)) {
         esOperands.push(this.translate(operand));
       }
     }
@@ -202,13 +304,22 @@ export class QueryTranslator {
     return converter(esOperands);
   }
 
-  _translateClause(clause, content) {
+  _translateClause(clause: string, content: unknown): JSONObject {
     const converter = KONCORDE_CLAUSES_TO_ES[clause];
 
     if (converter === undefined) {
       return {
         [clause]: content,
       };
+    }
+
+    if (!isPlainObject(content) && typeof content !== "string") {
+      throw get(
+        "services",
+        "koncorde",
+        "elastic_translation_error",
+        `Invalid "${clause}" clause: expected an object or a string, got ${typeof content}`,
+      );
     }
 
     return converter(content);

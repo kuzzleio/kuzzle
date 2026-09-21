@@ -243,12 +243,14 @@ lib/model/security/token.ts
 lib/model/security/user.ts
 lib/model/storage/apiKey.ts
 lib/model/storage/baseModel.ts
+lib/service/cache/redis.ts
 lib/service/service.ts
 lib/service/storage/7/elasticsearch.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/elasticsearch.ts
 lib/service/storage/8/esWrapper.ts
 lib/service/storage/Elasticsearch.ts
+lib/service/storage/commons/queryTranslator.ts
 lib/types/ApiRoute.ts
 lib/types/ClientConnection.ts
 lib/types/Deprecation.ts
