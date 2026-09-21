@@ -361,3 +361,21 @@ Three carriers change from absent to the node's name: the redis client name, the
 
 - **`any` rose by 1 with no `any` added.** The ratchet greps *lines*, and Prettier had split a two-parameter signature across two lines. This is [TD-73](../type-debt-register.md#td-73)'s fourth telling. It went to 178 once the two parameters were actually typed.
 - **`casts` rose by 1 on an `event as string` added three lines below an identical one.** Naming the value once served both.
+
+### The regression K5 shipped, and what caught it
+
+The first push of [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) failed **every functional shard and both Build-and-Run jobs**, with Kuzzle dying in `internalIndex.init()` on `Cannot read properties of undefined (reading 'options')`. The unit suites were green.
+
+`Redis.setCommands` had been rewritten from
+
+```ts
+commands[command] = async (...args) => { … return client[command](...args); };
+```
+
+to read `client[command]` into a local first — which is what `noUncheckedIndexedAccess` asks for, since the indexed read is `T | undefined` — and then call **the local**. ioredis' commands live on the `Commander` prototype and read `this.options`, so every one of them threw.
+
+Three things are worth keeping from it:
+
+1. **It is the second telling.** Sprint 5's Build and Run job caught the same thing in `funnel.doAction`, and that site now carries a comment saying `Reflect.apply` is what keeps the receiver. The comment did not stop it happening one directory away.
+2. **The unit suites cannot see it.** They stub the redis client with a plain object whose methods are own properties and ignore `this`. Only a real client, on a real prototype, fails.
+3. **The audit found three more hoists in the same slice**, and one of them was wrong in the other direction: `KuzzleEventEmitter.ask` called `fn(...args)` with *no* receiver, and the rewrite had started passing the emitter. Preserving a receiver means preserving the absence of one too.
