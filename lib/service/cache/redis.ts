@@ -230,7 +230,14 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
           throw kerror.get("not_connected");
         }
 
-        return implementation(...args);
+        // `Reflect.apply`, not `implementation(...args)`: ioredis' commands
+        // live on the `Commander` prototype and read `this.options`, so
+        // calling the result of an indexed read drops the receiver and
+        // every command throws. This is the bug sprint 5's Build and Run
+        // job caught in `funnel.doAction`, reintroduced here by hoisting
+        // the lookup out of the call — see `pluginsManager`'s note on the
+        // same line.
+        return Reflect.apply(implementation, client, args);
       };
     }
   }
@@ -365,9 +372,8 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     // command is an arbitrary name chosen at runtime by this method's own
     // caller (see its ask-handler callers in cacheEngine.js) -- same
     // escape hatch as setCommands().
-    const implementation = (
-      this.commands as unknown as Record<string, DynamicCommand>
-    )[command];
+    const commands = this.commands as unknown as Record<string, DynamicCommand>;
+    const implementation = commands[command];
 
     if (implementation === undefined) {
       throw kerrorLib.get(
@@ -378,7 +384,8 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       );
     }
 
-    return implementation(...args);
+    // Same reason as `setCommands()`: the receiver goes with the call.
+    return Reflect.apply(implementation, commands, args);
   }
 }
 

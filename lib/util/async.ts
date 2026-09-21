@@ -39,8 +39,12 @@ export function promiseAllN<T>(
       return;
     }
 
-    job()
-      .then((result) => {
+    // `Reflect.apply` with the collection as the receiver: `collection[j]()`
+    // passed the array as `this`, and hoisting the lookup out of the call is
+    // how that gets dropped silently. Every caller hands arrows, so nothing
+    // reads it — preserved rather than re-decided.
+    Reflect.apply(job, collection, [])
+      .then((result: T) => {
         if (rejected) {
           return; // no op!
         }

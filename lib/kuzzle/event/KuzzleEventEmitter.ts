@@ -286,7 +286,10 @@ class KuzzleEventEmitter extends EventEmitter {
       );
     }
 
-    const response = await Reflect.apply(fn, this, args);
+    // `undefined` as the receiver, which is what `fn(...args)` passed: an
+    // answerer is registered as a bound function or an arrow, and handing it
+    // the emitter would be a new claim rather than a preserved one.
+    const response = await Reflect.apply(fn, undefined, args);
 
     for (const ev of getWildcardEvents(event as string)) {
       super.emit(ev, {
