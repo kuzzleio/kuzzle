@@ -28,6 +28,8 @@ import {
   workerData,
 } from "node:worker_threads";
 
+import assert from "node:assert";
+
 import moment from "moment";
 import * as pino from "pino";
 
@@ -110,6 +112,13 @@ class AccessLogger {
       ? Buffer.byteLength(JSON.stringify(request.response)).toString()
       : "-";
 
+    // `isActive` is what `init()` sets before building the worker, so a
+    // worker that is missing here means `init()` never ran — the same
+    // condition the early return above is for, said where it can be seen.
+    if (this.worker === null) {
+      return;
+    }
+
     try {
       this.worker.postMessage({
         connection,
@@ -129,17 +138,40 @@ class AccessLogger {
 
 class AccessLoggerWorker {
   public config: ServerConfiguration;
-  public logger: pino.Logger | null;
+  private _logger: pino.Logger | null;
   public anonymousUserId: string;
 
   constructor(config: ServerConfiguration, anonymousUserId: string) {
     this.config = config;
-    this.logger = null;
+    this._logger = null;
     this.anonymousUserId = anonymousUserId;
+  }
+
+  /**
+   * The pino transport, built by `initTransport()` — which `init()` calls
+   * before anything is listening. The three writes below read it unchecked.
+   */
+  get logger(): pino.Logger {
+    if (this._logger === null) {
+      throw new Error("[network] access logger used before init()");
+    }
+
+    return this._logger;
+  }
+
+  set logger(logger: pino.Logger) {
+    this._logger = logger;
   }
 
   init(): void {
     this.initTransport();
+
+    // This module is the worker's entry point: it only runs as a worker
+    // thread, and `parentPort` is null only in the thread that spawned one.
+    assert(
+      parentPort !== null,
+      "[network] the access logger worker has no parent port",
+    );
 
     parentPort.on("message", ({ connection, extra, request, size }) => {
       this.logAccess(
@@ -236,7 +268,9 @@ class AccessLoggerWorker {
     let url;
     let verb = "DO";
 
-    if (connection.protocol.startsWith("HTTP/")) {
+    // `extra` carries the HTTP method and url, and only an HTTP connection
+    // has one: the two were read on the strength of the protocol name alone.
+    if (connection.protocol.startsWith("HTTP/") && extra !== null) {
       verb = extra.method;
       url = extra.url;
     }
@@ -293,7 +327,9 @@ class AccessLoggerWorker {
       ips.length - 1 - this.config.logs.accessLogIpOffset,
     );
 
-    return ips[idx];
+    // `ips` is non-empty here — the caller builds it from the connection —
+    // and an offset past its start is clamped to 0 above.
+    return ips[idx] ?? "";
   }
 }
 

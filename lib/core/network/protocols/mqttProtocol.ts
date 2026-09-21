@@ -20,6 +20,7 @@
  */
 
 import * as net from "node:net";
+import { inspect } from "node:util";
 
 import type {
   AedesPublishPacket,
@@ -100,7 +101,11 @@ class MqttProtocol extends Protocol<MqttConfig> {
 
     debug("initializing MQTT Server with config: %a", this.config);
 
-    this.config = {
+    // The defaults in their own object: written as literal keys before the
+    // spread, every one of them is a property the compiler can see being
+    // overwritten on the next line (TS2783), which is exactly the intent but
+    // not something worth restating six times.
+    const defaults = {
       allowPubSub: false,
       developmentMode: false,
       disconnectDelay: 250,
@@ -109,8 +114,9 @@ class MqttProtocol extends Protocol<MqttConfig> {
       server: {
         port: 1883,
       },
-      ...this.config,
     };
+
+    this.config = { ...defaults, ...this.config };
 
     /*
      * To avoid ill-use of our topics, we need to configure authorizations:
@@ -184,7 +190,10 @@ class MqttProtocol extends Protocol<MqttConfig> {
   notify(data: MqttNotification): void {
     debug("notify %a", data);
 
-    const client = this.connectionsById.get(data.connectionId);
+    const client =
+      data.connectionId === undefined
+        ? undefined
+        : this.connectionsById.get(data.connectionId);
 
     if (!client) {
       return;
@@ -200,11 +209,12 @@ class MqttProtocol extends Protocol<MqttConfig> {
   onConnection(client: Client): void {
     debug("onConnection: %s", client.id);
 
-    const connection = new ClientConnection(
-      this.name,
-      [(client.conn as net.Socket).remoteAddress],
-      {},
-    );
+    // A socket with no remote address is one that closed between the
+    // connection event and this line; the empty string is what
+    // `ClientConnection` was already given for it.
+    const remoteAddress = (client.conn as net.Socket).remoteAddress ?? "";
+
+    const connection = new ClientConnection(this.name, [remoteAddress], {});
     this.entryPoint.newConnection(connection);
 
     this.connections.set(client, connection);
@@ -227,8 +237,12 @@ class MqttProtocol extends Protocol<MqttConfig> {
     }
   }
 
-  onMessage(packet: AedesPublishPacket, client: Client): void {
+  onMessage(packet: AedesPublishPacket, client: Client | null): void {
+    // `client` is null for a publish aedes made itself — a will message, or
+    // one the broker originated. There is nobody to answer, which is what
+    // the two `_respond` calls below need.
     if (
+      client === null ||
       packet.topic !== this.config.requestTopic ||
       packet.payload === null ||
       client.id === null
@@ -261,7 +275,10 @@ class MqttProtocol extends Protocol<MqttConfig> {
         this._respond(client, response),
       );
     } catch (error) {
-      this._respondError(client, error);
+      this._respondError(
+        client,
+        error instanceof Error ? error : new Error(inspect(error)),
+      );
     }
   }
 
@@ -300,8 +317,10 @@ class MqttProtocol extends Protocol<MqttConfig> {
   }
 
   _authorizePublish(
-    client: Client,
-    packet: AedesPublishPacket,
+    // Aedes' own signature: it authorises broker-originated publishes too,
+    // and this method reads nothing off the client.
+    client: Client | null,
+    packet: PublishPacket,
     callback: (error?: Error | null) => void,
   ): void {
     const topic = packet.topic.toString();

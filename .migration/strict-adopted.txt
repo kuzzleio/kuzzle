@@ -149,8 +149,11 @@ lib/core/backend/index.ts
 lib/core/backend/internalLogger.ts
 lib/core/cache/cacheDbEnum.ts
 lib/core/cache/cacheEngine.ts
+lib/core/network/accessLogger.ts
 lib/core/network/clientConnection.ts
 lib/core/network/context.ts
+lib/core/network/entryPoint.ts
+lib/core/network/httpRouter/index.ts
 lib/core/network/httpRouter/routeHandler.ts
 lib/core/network/httpRouter/routePart.ts
 lib/core/network/httpRouter/routeTypes.ts
@@ -159,6 +162,7 @@ lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
 lib/core/network/protocols/httpwsProtocol.ts
 lib/core/network/protocols/internalProtocol.ts
+lib/core/network/protocols/mqttProtocol.ts
 lib/core/network/protocols/protocol.ts
 lib/core/network/router.ts
 lib/core/plugin/plugin.ts
@@ -187,6 +191,7 @@ lib/core/security/tokenRepository.ts
 lib/core/security/userRepository.ts
 lib/core/shared/KoncordeWrapper.ts
 lib/core/shared/ObjectRepository.ts
+lib/core/shared/abstractManifest.ts
 lib/core/shared/sdk/embeddedSdk.ts
 lib/core/shared/sdk/funnelProtocol.ts
 lib/core/shared/sdk/impersonatedSdk.ts

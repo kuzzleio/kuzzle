@@ -23,7 +23,6 @@ import { Request } from "../../../api/request";
 import { wrap } from "../../../kerror";
 import { KuzzleError } from "../../../kerror/errors";
 import createDebug from "../../../util/debug";
-import { has } from "../../../util/safeObject";
 import type HttpMessage from "../protocols/httpMessage";
 import RoutePart from "./routePart";
 import type { RouteCallback, RouteHandlerFunction } from "./routeTypes";
@@ -41,7 +40,7 @@ const debug = createDebug("kuzzle:http:router");
  */
 class Router {
   public defaultHeaders: Record<string, string>;
-  public routes: Record<string, RoutePart>;
+  public routes: Record<HttpVerb, RoutePart>;
 
   constructor() {
     this.defaultHeaders = {
@@ -133,7 +132,9 @@ class Router {
   route(message: HttpMessage, cb: RouteCallback): void {
     debug("Routing HTTP message: %a", message);
 
-    if (!has(this.routes, message.method)) {
+    const method = message.method;
+
+    if (!isHttpVerb(method)) {
       this.routeUnhandledHttpMethod(message, cb);
       return;
     }
@@ -141,7 +142,7 @@ class Router {
     let routeHandler;
 
     try {
-      routeHandler = this.routes[message.method].getHandler(message);
+      routeHandler = this.routes[method].getHandler(message);
 
       // Set Headers if not present
       routeHandler.request.response.setHeaders(this.defaultHeaders, true);
@@ -238,6 +239,21 @@ function applyACAOHeader(message: HttpMessage, request: Request): void {
   }
 }
 
+/** The HTTP verbs this router attaches handlers for. */
+const HTTP_VERBS = ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const;
+
+type HttpVerb = (typeof HTTP_VERBS)[number];
+
+/**
+ * Whether an incoming message names one of them. `has(this.routes, method)`
+ * answered the same question, without telling the compiler which key it had
+ * just proved — so the six named route parts had to be `RoutePart |
+ * undefined` for its sake.
+ */
+function isHttpVerb(method: string): method is HttpVerb {
+  return HTTP_VERBS.some((verb) => verb === method);
+}
+
 /**
  * Attach a handler to a path and stores it to the target object
  */
@@ -266,9 +282,17 @@ function attachParts(
 
   do {
     part = parts.shift();
-  } while (parts.length > 0 && part.length === 0);
+    // `part?.length`: an exhausted list answers undefined, which is not an
+    // empty part to skip over — it is the end of the loop.
+  } while (parts.length > 0 && part?.length === 0);
 
-  if (part?.startsWith(":")) {
+  if (part === undefined) {
+    // `attach()` splits a path, so there is always a first part — the empty
+    // string for "/". Nothing to attach here.
+    return false;
+  }
+
+  if (part.startsWith(":")) {
     placeholders.push(part.substring(1));
     part = "*";
   }

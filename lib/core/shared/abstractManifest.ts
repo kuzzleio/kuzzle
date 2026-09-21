@@ -52,24 +52,40 @@ class AbstractManifest {
     this.raw = null;
   }
 
-  load() {
+  /**
+   * Reads and validates the manifest, and answers the two fields it
+   * establishes.
+   *
+   * Returning them is what lets a caller use them as strings: the fields stay
+   * nullable because they are null until this runs, and `plugin.ts` reads
+   * them through `?.` for exactly that reason.
+   */
+  load(): { kuzzleVersion: string; name: string } {
+    // Read into a local: `this.raw` is the nullable field, and the six checks
+    // below each re-read it.
+    let raw: JSONObject;
+
     try {
       // The manifest of a plugin or protocol loaded from disk: the path is
       // only known at runtime.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this.raw = require(this.manifestPath);
+      raw = require(this.manifestPath);
     } catch (e) {
       throw kerror.get("cannot_load", this.manifestPath, (e as Error).message);
     }
 
-    if (isNil(this.raw.kuzzleVersion)) {
+    this.raw = raw;
+
+    if (isNil(raw.kuzzleVersion)) {
       throw kerror.get("missing_version", this.manifestPath);
     }
 
-    this.kuzzleVersion = this.raw.kuzzleVersion;
+    const kuzzleVersion: string = raw.kuzzleVersion;
+
+    this.kuzzleVersion = kuzzleVersion;
 
     if (
-      !semver.satisfies(global.kuzzle.config.version, this.kuzzleVersion, {
+      !semver.satisfies(global.kuzzle.config.version, kuzzleVersion, {
         includePrerelease: true,
       })
     ) {
@@ -77,19 +93,21 @@ class AbstractManifest {
         "version_mismatch",
         this.path,
         global.kuzzle.config.version,
-        this.kuzzleVersion,
+        kuzzleVersion,
       );
     }
 
-    if (!isNil(this.raw.name)) {
-      if (typeof this.raw.name !== "string" || this.raw.name.length === 0) {
-        throw kerror.get("invalid_name_type", this.manifestPath);
-      }
-
-      this.name = this.raw.name;
-    } else {
+    if (isNil(raw.name)) {
       throw kerror.get("missing_name", this.manifestPath);
     }
+
+    if (typeof raw.name !== "string" || raw.name.length === 0) {
+      throw kerror.get("invalid_name_type", this.manifestPath);
+    }
+
+    this.name = raw.name;
+
+    return { kuzzleVersion, name: raw.name };
   }
 
   /**

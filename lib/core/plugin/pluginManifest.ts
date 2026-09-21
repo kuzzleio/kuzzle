@@ -29,13 +29,13 @@ const kerror = wrap("plugin", "manifest");
 class PluginManifest extends AbstractManifest {
   public privileged = false;
 
-  load(): void {
-    super.load();
+  load(): { kuzzleVersion: string; name: string } {
+    const loaded = super.load();
 
-    // Ensure ES will accept the plugin name as index
-    // String(): `name` is typed nullable by the base, and `test()` coerces
-    // anyway — super.load() has already thrown if it were nil
-    if (!/^[\w-]+$/.test(String(this.name))) {
+    // Ensure ES will accept the plugin name as index. `super.load()` answers
+    // the name it established, which is what the `String()` here used to
+    // stand in for.
+    if (!/^[\w-]+$/.test(loaded.name)) {
       throw kerror.get("invalid_name", this.path);
     }
 
@@ -50,6 +50,8 @@ class PluginManifest extends AbstractManifest {
 
       this.privileged = this.raw.privileged;
     }
+
+    return loaded;
   }
 }
 
