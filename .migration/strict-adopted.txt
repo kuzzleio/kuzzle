@@ -95,6 +95,7 @@
 bin/copy-binaries.ts
 index.ts
 lib/api/controllers/adminController.ts
+lib/api/controllers/authController.ts
 lib/api/controllers/clusterController.ts
 lib/api/controllers/debugController.ts
 lib/api/controllers/index.ts

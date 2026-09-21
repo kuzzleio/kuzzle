@@ -678,6 +678,10 @@ class Funnel {
     }
 
     // if cookie is present and not null, and a token is present we should throw because we don't know which one to use
+    //
+    // `"null"` is the literal string, not a missing value: `auth:logout` used
+    // to clear the cookie by serialising `null` into it. It sends an empty
+    // value now, and this stays for the cookies already in browsers.
     if (!cookie.authToken || cookie.authToken === "null") {
       return false;
     }

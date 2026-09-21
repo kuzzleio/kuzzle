@@ -548,7 +548,17 @@ describe("Test the auth controller", () => {
     });
 
     it("should call passport.authenticate with input body and query string", async () => {
-      createTokenStub.resolves(new Token());
+      // A full token: this one is written into a Set-Cookie header, which
+      // needs both a jwt and an expiry.
+      createTokenStub.resolves(
+        new Token({
+          _id: "foobar#bar",
+          jwt: "bar",
+          userId: "foobar",
+          expiresAt: 4567,
+          ttl: 1234,
+        }),
+      );
       await authController.login(requestcookieAuth);
 
       should(kuzzle.passport.authenticate)
@@ -735,14 +745,17 @@ describe("Test the auth controller", () => {
       request.input.headers = { cookie: `authToken=${signedToken};` };
     });
 
-    it("should nullify the authToken cookie", async () => {
+    it("should clear the authToken cookie", async () => {
       await authController.logout(request);
 
       should.exists(request.response.headers);
       should.exists(request.response.headers["Set-Cookie"]);
+      // An empty value, not the string "null": `cookie.serialize` stringifies
+      // what it is given, and the funnel still carries a `=== "null"` check
+      // for the cookies that header put in browsers.
       should(request.response.headers["Set-Cookie"])
         .be.an.Array()
-        .and.match(/authToken=null; Path=\/; HttpOnly; SameSite=Strict/);
+        .and.match(/authToken=; Path=\/; HttpOnly; SameSite=Strict/);
     });
 
     it("should expire token", async () => {

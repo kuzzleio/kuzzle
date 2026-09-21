@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 import { IncomingMessage } from "node:http";
+import { Socket } from "node:net";
+import { inspect } from "node:util";
 import * as Cookie from "cookie";
 
 import Bluebird from "bluebird";
@@ -39,6 +41,18 @@ import type { Token } from "../../model/security/token";
 import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
 
 const securityError = kerror.wrap("security", "token");
+
+/**
+ * A user that has been stored, and so has a kuid. `User._id` is null until
+ * then (TD-62); a user the funnel attached to a request has been loaded or is
+ * the anonymous one, and every API key and token this controller handles is
+ * keyed on that id.
+ */
+type StoredUser = User & { _id: string };
+
+function isStored(user: User): user is StoredUser {
+  return user._id !== null;
+}
 
 class AuthController extends NativeController {
   private anonymousId: string | null = null;
@@ -85,6 +99,41 @@ class AuthController extends NativeController {
     this.anonymousId = anonymous._id;
   }
 
+  /**
+   * The user and the token the funnel attached to the request.
+   *
+   * `RequestContext` starts every field at `null` and the funnel fills them —
+   * with the anonymous user and token when nothing authenticated. Every
+   * action below runs after that, and read them straight through: eleven
+   * unchecked dereferences, each of which would have raised a TypeError
+   * rather than the 401 this controller exists to produce.
+   */
+  private userOf(request: KuzzleRequest): StoredUser {
+    const user = request.context.user;
+
+    if (user === null || !isStored(user)) {
+      throw kerror.get(
+        "security",
+        "rights",
+        "unauthorized",
+        request.input.controller,
+        request.input.action,
+      );
+    }
+
+    return user;
+  }
+
+  private tokenOf(request: KuzzleRequest): Token {
+    const token = request.context.token;
+
+    if (token === null) {
+      throw securityError.get("invalid");
+    }
+
+    return token;
+  }
+
   async createToken(request: KuzzleRequest) {
     const singleUse = request.getBoolean("singleUse");
 
@@ -129,7 +178,7 @@ class AuthController extends NativeController {
       throw kerror.get("api", "assert", "missing_argument", "body.action");
     }
 
-    const user = request.context.user;
+    const user = this.userOf(request);
 
     const allowed = await user.isActionAllowed(
       new KuzzleRequest(requestPayload),
@@ -150,7 +199,7 @@ class AuthController extends NativeController {
     const apiKeyId = request.getId({ ifMissing: "generate" });
     const description = request.getBodyString("description");
 
-    const user = request.context.user;
+    const user = this.userOf(request);
 
     const apiKey = await ApiKey.create(user, expiresIn, description, {
       apiKeyId,
@@ -169,7 +218,7 @@ class AuthController extends NativeController {
     const { from, size } = request.getSearchParams();
     const lang = request.getLangParam();
 
-    const user = request.context.user;
+    const user = this.userOf(request);
 
     if (lang === "koncorde") {
       query = await this.translateKoncorde(query);
@@ -196,7 +245,7 @@ class AuthController extends NativeController {
    * Deletes an API key
    */
   async deleteApiKey(request: KuzzleRequest) {
-    const userId = request.context.user._id;
+    const userId = this.userOf(request)._id;
     const refresh = request.getRefresh();
 
     const apiKey = await ApiKey.loadFromRequest(userId, request);
@@ -220,33 +269,27 @@ class AuthController extends NativeController {
       this.assertIsAuthenticated(request);
     }
 
+    const { id: connectionId, protocol } = request.context.connection;
+    const token = request.context.token;
+
     if (
-      globalThis.kuzzle.config.internal.notifiableProtocols.includes(
-        request.context.connection.protocol,
-      )
+      connectionId !== null &&
+      protocol !== null &&
+      globalThis.kuzzle.config.internal.notifiableProtocols.includes(protocol)
     ) {
       // Unlink connection so the connection will not be notified when the token expires.
-      globalThis.kuzzle.tokenManager.unlink(
-        request.context.token,
-        request.context.connection.id,
-      );
+      globalThis.kuzzle.tokenManager.unlink(token, connectionId);
     }
 
-    if (request.context.user._id !== this.anonymousId) {
+    if (this.userOf(request)._id !== this.anonymousId) {
       if (request.getBoolean("global")) {
         await globalThis.kuzzle.ask(
           "core:security:token:deleteByKuid",
           request.getKuid(),
           { keepApiKeys: true },
         );
-      } else if (
-        request.context.token &&
-        request.context.token.type !== "apiKey"
-      ) {
-        await globalThis.kuzzle.ask(
-          "core:security:token:delete",
-          request.context.token,
-        );
+      } else if (token && token.type !== "apiKey") {
+        await globalThis.kuzzle.ask("core:security:token:delete", token);
       }
     }
 
@@ -256,7 +299,9 @@ class AuthController extends NativeController {
     ) {
       request.response.configure({
         headers: {
-          "Set-Cookie": Cookie.serialize("authToken", null, {
+          // The empty string, not `null`: `cookie.serialize` stringifies its
+          // value, so this header used to read `authToken=null`.
+          "Set-Cookie": Cookie.serialize("authToken", "", {
             httpOnly: true,
             path: "/",
             sameSite: "strict",
@@ -289,6 +334,17 @@ class AuthController extends NativeController {
       // This allow us to detect if kuzzle does support cookie as auth token directly from the SDK
       // or that the version of kuzzle doesn't support the feature Browser Cookie as Authentication Token
 
+      // `jwt` and `expiresAt` are null on a Token that has not been issued
+      // (TD-62). One that reaches the cookie has been, and the alternative to
+      // saying so here is a cookie reading `authToken=null` with an
+      // `Invalid Date` expiry.
+      if (token.jwt === null || token.expiresAt === null) {
+        throw securityError.get(
+          "generation_failed",
+          "the issued token carries no JWT",
+        );
+      }
+
       request.response.configure({
         headers: {
           "Set-Cookie": Cookie.serialize("authToken", token.jwt, {
@@ -314,7 +370,10 @@ class AuthController extends NativeController {
    */
   async login(request: KuzzleRequest): Promise<Token> {
     const strategy = request.getString("strategy");
-    const passportRequest: any = new IncomingMessage(null);
+    // An unconnected socket rather than `null`: `IncomingMessage` only reads
+    // `readableHighWaterMark` off it, `net.Socket` opens no descriptor until
+    // it is connected, and the parameter is not optional.
+    const passportRequest: any = new IncomingMessage(new Socket());
 
     // Even in http, the url and the method are not pushed back to the request object
     // set some arbitrary values to get a pseudo-valid object.
@@ -365,9 +424,11 @@ class AuthController extends NativeController {
       options.expiresIn = request.input.args.expiresIn;
     }
 
+    const { id: connectionId, protocol } = request.context.connection;
+
     const existingToken = globalThis.kuzzle.tokenManager.getConnectedUserToken(
       authResponse.content._id,
-      request.context.connection.id,
+      connectionId,
     );
 
     /**
@@ -378,7 +439,8 @@ class AuthController extends NativeController {
      */
     if (
       existingToken &&
-      (existingToken.type === "apiKey" || existingToken.ttl < 0)
+      (existingToken.type === "apiKey" ||
+        (existingToken.ttl !== null && existingToken.ttl < 0))
     ) {
       return this._sendToken(existingToken, request);
     }
@@ -394,12 +456,12 @@ class AuthController extends NativeController {
     }
 
     if (
-      globalThis.kuzzle.config.internal.notifiableProtocols.includes(
-        request.context.connection.protocol,
-      )
+      connectionId !== null &&
+      protocol !== null &&
+      globalThis.kuzzle.config.internal.notifiableProtocols.includes(protocol)
     ) {
       // Link the connection with the token, this way the connection can be notified when the token has expired.
-      globalThis.kuzzle.tokenManager.link(token, request.context.connection.id);
+      globalThis.kuzzle.tokenManager.link(token, connectionId);
     }
 
     return this._sendToken(token, request);
@@ -412,16 +474,18 @@ class AuthController extends NativeController {
    * @returns {Promise<Object>}
    */
   async getCurrentUser(request: KuzzleRequest): Promise<object> {
-    const promises = [];
-    const userId = request.context.token.userId;
+    const promises: Promise<string | null>[] = [];
+    const userId = this.tokenOf(request).userId;
     const formattedUser: GetCurrentUserResponse = {
-      ...formatProcessing.serializeUser(request.context.user),
+      ...formatProcessing.serializeUser(this.userOf(request)),
       strategies: [],
     };
 
-    if (this.anonymousId === userId) {
-      promises.push(Bluebird.resolve([]));
-    } else {
+    // The anonymous user has no credentials on any strategy. The branch this
+    // replaces pushed `Bluebird.resolve([])` into the list, so `strategies`
+    // came back as `[[]]` and the response carried a `strategies` array whose
+    // one entry was an empty array.
+    if (this.anonymousId !== userId) {
       for (const strategy of globalThis.kuzzle.pluginsManager.listStrategies()) {
         const existsMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
           strategy,
@@ -438,9 +502,7 @@ class AuthController extends NativeController {
 
     const strategies = await Bluebird.all(promises);
 
-    if (strategies.length > 0) {
-      formattedUser.strategies = strategies.filter((item) => item !== null);
-    }
+    formattedUser.strategies = strategies.filter((item) => item !== null);
 
     return formattedUser;
   }
@@ -452,15 +514,14 @@ class AuthController extends NativeController {
    * @returns {Promise<object>}
    */
   getMyRights(request: KuzzleRequest): Promise<object> {
-    return request.context.user
-      .getRights()
-      .then((rights) =>
-        Object.keys(rights).reduce(
-          (array, item) => array.concat(rights[item]),
-          [],
-        ),
-      )
-      .then((rights) => ({ hits: rights, total: rights.length }));
+    return (
+      this.userOf(request)
+        .getRights()
+        // `Object.values`: the reduce it replaces concatenated each key's value
+        // into an array, one level deep, which is what that is.
+        .then((rights) => Object.values(rights))
+        .then((rights) => ({ hits: rights, total: rights.length }))
+    );
   }
 
   /**
@@ -469,7 +530,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<object>}
    */
-  async checkToken(request) {
+  async checkToken(request: KuzzleRequest) {
     let token;
 
     if (
@@ -489,7 +550,8 @@ class AuthController extends NativeController {
 
       return { expiresAt, kuid: userId, valid: true };
     } catch (error) {
-      if (error.status === 401) {
+      // A 401 is the answer, not a failure: the token is simply not valid.
+      if (error instanceof KuzzleError && error.status === 401) {
         return { state: error.message, valid: false };
       }
 
@@ -503,7 +565,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<object>}
    */
-  async updateSelf(request) {
+  async updateSelf(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
     this.assertBodyHasNotAttributes(request, "_id", "profileIds");
 
@@ -544,7 +606,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  createMyCredentials(request) {
+  createMyCredentials(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -571,7 +633,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  updateMyCredentials(request) {
+  updateMyCredentials(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -598,7 +660,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  credentialsExist(request) {
+  credentialsExist(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -620,7 +682,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  validateMyCredentials(request) {
+  validateMyCredentials(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -643,7 +705,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  deleteMyCredentials(request) {
+  deleteMyCredentials(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -665,7 +727,7 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  getMyCredentials(request) {
+  getMyCredentials(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
 
     const userId = request.getKuid(),
@@ -692,7 +754,7 @@ class AuthController extends NativeController {
   /**
    * @param {KuzzleRequest} request
    */
-  async refreshToken(request) {
+  async refreshToken(request: KuzzleRequest) {
     this.assertIsAuthenticated(request);
     const strategy = request.input.args?.strategy;
     let expiresIn = request.input.args?.expiresIn;
@@ -729,7 +791,7 @@ class AuthController extends NativeController {
           `Error when refreshing token with request: ${JSON.stringify(request)}`,
         );
 
-        throw securityError.get("refresh_forbidden", request.context.token.jwt);
+        throw securityError.get("refresh_forbidden", this.tokenOf(request).jwt);
       }
     }
 
@@ -743,8 +805,8 @@ class AuthController extends NativeController {
     return this._sendToken(token, request);
   }
 
-  assertIsAuthenticated(request) {
-    if (request.context.user._id === this.anonymousId) {
+  assertIsAuthenticated(request: KuzzleRequest) {
+    if (this.userOf(request)._id === this.anonymousId) {
       throw kerror.get(
         "security",
         "rights",
@@ -756,18 +818,20 @@ class AuthController extends NativeController {
   }
 }
 
-function wrapPluginError(error) {
-  if (!(error instanceof KuzzleError)) {
-    throw kerror.getFrom(
-      error,
-      "plugin",
-      "runtime",
-      "unexpected_error",
-      error.message,
-    );
+function wrapPluginError(error: unknown): never {
+  if (error instanceof KuzzleError) {
+    throw error;
   }
 
-  throw error;
+  const cause = error instanceof Error ? error : new Error(inspect(error));
+
+  throw kerror.getFrom(
+    cause,
+    "plugin",
+    "runtime",
+    "unexpected_error",
+    cause.message,
+  );
 }
 
 export = AuthController;

@@ -211,7 +211,13 @@ export class TokenManager {
    * @param token
    * @param connectionId
    */
-  unlink(token: Token, connectionId: string) {
+  /**
+   * `Token | null`: a request whose connection never authenticated carries no
+   * token, and the trace below is the deliberate answer to that. The
+   * non-nullable parameter made `authController.logout` — the one caller —
+   * look like it had checked.
+   */
+  unlink(token: Token | null, connectionId: string) {
     if (!token) {
       this.logger.trace(
         `tried to unlink connection "${connectionId}" with no token`,
@@ -368,9 +374,22 @@ export class TokenManager {
   }
 
   /**
-   * Gets the token matching user & connection if any
+   * Gets the token matching user & connection if any.
+   *
+   * `string | null` on both: this is a query, and a request that carries
+   * neither a connection nor a stored user is answered — `null` misses the
+   * map, and a null kuid matches no token's `userId` — rather than being a
+   * caller error. `authController.login` asks it of every login, including
+   * the ones where the strategy has not yet produced either.
    */
-  getConnectedUserToken(userId: string, connectionId: string): Token | null {
+  getConnectedUserToken(
+    userId: string | null,
+    connectionId: string | null,
+  ): Token | null {
+    if (connectionId === null) {
+      return null;
+    }
+
     const token = this.tokensByConnection.get(connectionId);
 
     return token && token.userId === userId ? token : null;
