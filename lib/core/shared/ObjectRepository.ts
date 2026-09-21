@@ -531,7 +531,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
 
       const id = this.idOf(object);
 
-      if (protectedObjects.indexOf(id) !== -1) {
+      if (protectedObjects.includes(id)) {
         return 0;
       }
 

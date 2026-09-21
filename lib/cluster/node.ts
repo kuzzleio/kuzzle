@@ -77,11 +77,11 @@ function isPrivateIP(ip: string): boolean {
     );
   }
 
-  // IPv4. `?? NaN` on the octets a malformed address does not have: every
+  // IPv4. `?? Number.NaN` on the octets a malformed address does not have: every
   // comparison below is then false, which is what comparing `undefined` did.
   const exploded = ip.split(".").map((s) => Number.parseInt(s));
-  const first = exploded[0] ?? NaN;
-  const second = exploded[1] ?? NaN;
+  const first = exploded[0] ?? Number.NaN;
+  const second = exploded[1] ?? Number.NaN;
 
   return (
     first === 10 ||
@@ -104,8 +104,8 @@ function isInternalIP(ip: string): boolean {
   }
 
   const exploded = ip.split(".").map((s) => Number.parseInt(s));
-  const first = exploded[0] ?? NaN;
-  const second = exploded[1] ?? NaN;
+  const first = exploded[0] ?? Number.NaN;
+  const second = exploded[1] ?? Number.NaN;
 
   // 127.x.x: loopback addresses are already flagged as "internal" by
   // os.networkInterfaces.

@@ -319,7 +319,7 @@ class Plugin {
     } catch (error) {
       const cause = error instanceof Error ? error : new Error(String(error));
 
-      if (cause.message.match(/not a constructor/i)) {
+      if (/not a constructor/i.exec(cause.message)) {
         throw assertionError.get("not_a_constructor", pluginClassName);
       }
 
@@ -439,7 +439,7 @@ function loadPluginErrors(plugin: Plugin): void {
       const cause = err instanceof Error ? err : new Error(String(err));
 
       if (
-        cause.message.match(/Error configuration file/i) ||
+        /Error configuration file/i.exec(cause.message) ||
         err instanceof SyntaxError
       ) {
         throw kerror.getFrom(

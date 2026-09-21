@@ -468,19 +468,21 @@ class CollectionController extends NativeController {
    * @returns {Object} { collections, from, size }
    */
   _paginateCollections(
-    from: unknown,
-    size: unknown,
+    // Both come from `request.getInteger`, so the `Number.parseInt` this
+    // used to run over them re-parsed a number.
+    from: number,
+    size: number,
     response: JSONObject,
   ): JSONObject {
     if (from || size) {
       if (from) {
-        response.from = Number.parseInt(String(from));
+        response.from = from;
       } else {
         response.from = 0;
       }
 
       if (size) {
-        response.size = Number.parseInt(String(size));
+        response.size = size;
 
         response.collections = response.collections.slice(
           response.from,

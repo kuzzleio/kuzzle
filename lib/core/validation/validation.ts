@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import { Koncorde } from "koncorde";
 import type { JSONObject } from "kuzzle-sdk";
@@ -103,11 +105,16 @@ function messageOf(error: unknown): string {
     return error.message;
   }
 
-  if (typeof error === "object" && error !== null && "message" in error) {
-    return String(error.message);
+  if (typeof error === "object" && error !== null) {
+    const message = "message" in error ? error.message : undefined;
+
+    // `inspect`, not `String`: an object stringifies to "[object Object]".
+    return typeof message === "string" ? message : inspect(error);
   }
 
-  return String(error);
+  // A primitive. The strictness marker used to be a thrown string, and
+  // reading it back verbatim is what recognises it.
+  return typeof error === "string" ? error : inspect(error);
 }
 
 /**
@@ -131,7 +138,8 @@ function detailedField(error: unknown): string | undefined {
     const details = error.details;
 
     if (typeof details === "object" && details !== null && "field" in details) {
-      return String(details.field);
+      // A field name is a string; anything else is not one to report.
+      return typeof details.field === "string" ? details.field : undefined;
     }
   }
 
@@ -839,30 +847,46 @@ class Validation {
           (result.errors ?? []).join("\n\t- "),
         );
       }
+
       processed.fields = result;
     }
 
     if (spec.validators && Array.isArray(spec.validators)) {
-      try {
-        const filterId = this.curateValidatorFilter(
-          index,
-          collection,
-          spec.validators,
-          dryRun,
-        );
-
-        processed.validators = filterId;
-      } catch (e) {
-        this.logger.error(e);
-        throw assertionError.getFrom(
-          e instanceof Error ? e : new Error(messageOf(e)),
-          "invalid_filters",
-          messageOf(e),
-        );
-      }
+      processed.validators = this.curateValidators(
+        index,
+        collection,
+        spec.validators,
+        dryRun,
+      );
     }
 
     return processed;
+  }
+
+  /**
+   * Registers a specification's validator filter and answers its id.
+   *
+   * The wrapping is what `curateCollectionSpecification` did inline: a filter
+   * Koncorde refuses is an `invalid_filters` assertion, logged on the way
+   * past.
+   */
+  private curateValidators(
+    index: string,
+    collection: string,
+    validators: JSONObject[],
+    dryRun: boolean,
+  ): string | null {
+    try {
+      return this.curateValidatorFilter(index, collection, validators, dryRun);
+    } catch (e) {
+      this.logger.error(e);
+
+      throw assertionError.getFrom(
+        e instanceof Error ? e : new Error(messageOf(e)),
+        "invalid_filters",
+        messageOf(e),
+      );
+    }
   }
 
   /**

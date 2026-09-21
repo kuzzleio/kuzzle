@@ -20,7 +20,7 @@
  */
 
 import assert from "assert";
-import { inspect } from "util";
+import { inspect } from "node:util";
 
 import type { JSONObject } from "kuzzle-sdk";
 

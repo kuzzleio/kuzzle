@@ -25,16 +25,6 @@ import bytes from "../../../util/bytes";
 import type { NetworkEntryPoint } from "../networkEntryPoint";
 
 /**
- * The two shapes `Protocol.init` accepts, as one tuple union — see `init`.
- * A subclass overriding `init` declares the same two overloads and takes this
- * as its implementation signature, which is what makes the override
- * assignable to the base method. Exported to subclasses as
- * `Protocol.InitArgs`, since `export =` leaves no room for a second export.
- */
-type ProtocolInitArgs =
-  [entryPoint: NetworkEntryPoint] | [name: null, entryPoint: NetworkEntryPoint];
-
-/**
  * @typeParam TConfig - the shape of `server.protocols.<name>` in the Kuzzle
  *                      configuration, which is what `init` copies into
  *                      `this.config`
@@ -92,7 +82,7 @@ class Protocol<TConfig = Record<string, unknown>> {
    * unconditionally is what the first conversion did: `init(entryPoint)`
    * type-checked and threw on `entryPoint.config` (TD-41).
    */
-  public static entryPointOf(args: ProtocolInitArgs): NetworkEntryPoint {
+  public static entryPointOf(args: Protocol.InitArgs): NetworkEntryPoint {
     const entryPoint = args[0] ?? args[1];
 
     // Both call shapes crashed on `entryPoint.config` a few lines down when
@@ -143,7 +133,7 @@ class Protocol<TConfig = Record<string, unknown>> {
   async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
   /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
   async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
-  async init(...args: ProtocolInitArgs): Promise<boolean> {
+  async init(...args: Protocol.InitArgs): Promise<boolean> {
     const entryPoint = Protocol.entryPointOf(args);
 
     this._entryPoint = entryPoint;
@@ -212,7 +202,18 @@ class Protocol<TConfig = Record<string, unknown>> {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace Protocol {
-  export type InitArgs = ProtocolInitArgs;
+  /**
+   * The two shapes `Protocol.init` accepts, as one tuple union — see `init`.
+   * A subclass overriding `init` declares the same two overloads and takes
+   * this as its implementation signature, which is what makes the override
+   * assignable to the base method.
+   *
+   * It lives in a namespace merged with the class because `export =` leaves
+   * no room for a second export.
+   */
+  export type InitArgs =
+    | [entryPoint: NetworkEntryPoint]
+    | [name: null, entryPoint: NetworkEntryPoint];
 }
 
 export = Protocol;

@@ -1139,6 +1139,41 @@ class Funnel {
   }
 
   /**
+   * Plays the request at the front of the pending queue.
+   *
+   * @returns whether the loop should carry on — false when the queue has
+   *          nothing playable at its head, when the throttle refuses the
+   *          slot, or when it throws.
+   */
+  private _playOnePendingRequest(): boolean {
+    const pendingId = this.pendingRequestsQueue.peekFront();
+    const pendingItem =
+      pendingId === undefined
+        ? undefined
+        : this.pendingRequestsById.get(pendingId);
+
+    // `quantityToInject` is capped by the queue's length, so the queue has an
+    // id and the map has its item. Both were dereferenced on that reasoning.
+    if (pendingItem === undefined) {
+      return false;
+    }
+
+    try {
+      if (
+        !this.throttle(pendingItem.fn, pendingItem.context, pendingItem.request)
+      ) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    this.pendingRequestsQueue.shift();
+
+    return true;
+  }
+
+  /**
    * Background task. Checks if there are any requests in cache, and replay them
    * if Kuzzle is not overloaded anymore,
    */
@@ -1149,37 +1184,9 @@ class Funnel {
       global.kuzzle.config.limits.concurrentRequests - this.concurrentRequests,
     );
 
-    if (quantityToInject > 0) {
-      for (let i = 0; i < quantityToInject; i++) {
-        const pendingId = this.pendingRequestsQueue.peekFront();
-        const pendingItem =
-          pendingId === undefined
-            ? undefined
-            : this.pendingRequestsById.get(pendingId);
-
-        // `quantityToInject` is capped by the queue's length, so the queue
-        // has an id and the map has its item. Both were dereferenced on that
-        // reasoning; stopping is what the loop does with anything it cannot
-        // play.
-        if (pendingItem === undefined) {
-          break;
-        }
-
-        try {
-          if (
-            this.throttle(
-              pendingItem.fn,
-              pendingItem.context,
-              pendingItem.request,
-            )
-          ) {
-            this.pendingRequestsQueue.shift();
-          } else {
-            break;
-          }
-        } catch {
-          break;
-        }
+    for (let i = 0; i < quantityToInject; i++) {
+      if (!this._playOnePendingRequest()) {
+        break;
       }
     }
 

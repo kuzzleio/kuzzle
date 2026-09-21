@@ -337,22 +337,23 @@ export class TokenRepository extends ObjectRepository<Token> {
     }
   }
 
-  async verifyToken(token: string): Promise<Token> {
-    if (token === null) {
-      return this.anonymousToken;
-    }
-
-    const isApiKey = token.startsWith(Token.APIKEY_PREFIX);
-    const tokenWithoutPrefix = this.removeTokenPrefix(token);
-
-    let decoded;
-
+  /**
+   * Verifies a JWT's signature and answers its payload.
+   *
+   * Extracted from `verifyToken` unchanged: its three `catch` branches were
+   * most of that method's cognitive complexity, and none of them is about
+   * what the token then means.
+   */
+  private decodeToken(tokenWithoutPrefix: string) {
     try {
-      decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);
+      const decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);
+
       // probably forged token => throw without providing any information
       if (!decoded._id) {
         throw new jwt.JsonWebTokenError("Invalid token");
       }
+
+      return decoded;
     } catch (err) {
       if (err instanceof jwt.JsonWebTokenError) {
         throw securityError.get("invalid");
@@ -368,25 +369,44 @@ export class TokenRepository extends ObjectRepository<Token> {
         err instanceof Error ? err.message : String(err),
       );
     }
+  }
 
-    if (isApiKey) {
-      return this._verifyApiKey(decoded, token);
-    }
-
-    let userToken;
-
+  /**
+   * `loadForUser`, with the wrapping every caller of `verifyToken` expects:
+   * an `UnauthorizedError` is the answer, anything else is a verification
+   * failure.
+   */
+  private async loadVerifiedToken(userId: string, token: string) {
     try {
-      userToken = await this.loadForUser(decoded._id, token);
+      return await this.loadForUser(userId, token);
     } catch (err) {
       if (err instanceof UnauthorizedError) {
         throw err;
       }
+
       throw securityError.getFrom(
         err instanceof Error ? err : new Error(String(err)),
         "verification_error",
         err instanceof Error ? err.message : String(err),
       );
     }
+  }
+
+  async verifyToken(token: string): Promise<Token> {
+    if (token === null) {
+      return this.anonymousToken;
+    }
+
+    const isApiKey = token.startsWith(Token.APIKEY_PREFIX);
+    const tokenWithoutPrefix = this.removeTokenPrefix(token);
+
+    const decoded = this.decodeToken(tokenWithoutPrefix);
+
+    if (isApiKey) {
+      return this._verifyApiKey(decoded, token);
+    }
+
+    const userToken = await this.loadVerifiedToken(decoded._id, token);
 
     if (userToken === null) {
       throw securityError.get("invalid");

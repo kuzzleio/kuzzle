@@ -80,13 +80,13 @@ class KuzzleEventEmitter extends EventEmitter {
    * together is that they are callable. `ask()` dispatches through
    * `Reflect.apply`, which is what that costs.
    */
-  private coreAnswerers: Map<string, StoredAskHandler>;
+  private readonly coreAnswerers: Map<string, StoredAskHandler>;
   private coreSyncedAnswerers: Map<string, HookEventHandler>;
-  private corePipes: Map<string, PipeEventHandler[]>;
-  private pipeRunner: PipeRunner;
+  private readonly corePipes: Map<string, PipeEventHandler[]>;
+  private readonly pipeRunner: PipeRunner;
   private readonly pluginPipes: Map<string, RegisteredPipeHandler[]>;
-  private pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
-  private superEmit: typeof EventEmitter.prototype.emit;
+  private readonly pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
+  private readonly superEmit: typeof EventEmitter.prototype.emit;
 
   constructor(maxConcurrentPipes: number, pipesBufferSize: number) {
     super();

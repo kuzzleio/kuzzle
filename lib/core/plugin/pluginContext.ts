@@ -503,25 +503,19 @@ function asRequestPromise(
  * Copies the three routing fields a plugin's request inherits from the one it
  * was built from.
  *
- * Named, not indexed: `RequestResource` exposes three accessors and no index
- * signature, and the loop this replaces was the one place asking it for one.
- * Their getters answer `string | null` while their setters take a `string`,
- * so "the target has none and the source has one" is two checks.
+ * Through `input.args`, which is what `input.resource`'s own deprecation
+ * notice points at and what those accessors read and write anyway — the loop
+ * this replaces asked `RequestResource` for an index signature it does not
+ * have.
  */
 function inheritResource(target: KuzzleRequest, source: KuzzleRequest): void {
-  const to = target.input.resource;
-  const from = source.input.resource;
+  const to = target.input.args;
+  const from = source.input.args;
 
-  if (!to._id && from._id !== null) {
-    to._id = from._id;
-  }
-
-  if (!to.index && from.index !== null) {
-    to.index = from.index;
-  }
-
-  if (!to.collection && from.collection !== null) {
-    to.collection = from.collection;
+  for (const field of ["_id", "index", "collection"]) {
+    if (!to[field] && from[field]) {
+      to[field] = from[field];
+    }
   }
 }
 
@@ -561,36 +555,48 @@ function instantiateRequest(
   } else {
     _request = null;
     _data = request;
-    _options = data ? data : options;
+    _options = data ?? options;
   }
 
   const target = new KuzzleRequest(_data, _options);
 
   // forward informations if a request object was supplied
   if (_request !== null) {
-    inheritResource(target, _request);
-
-    for (const arg of Object.keys(_request.input.args)) {
-      if (target.input.args[arg] === undefined) {
-        target.input.args[arg] = _request.input.args[arg];
-      }
-    }
-
-    if ((!_data || _data.jwt === undefined) && _request.input.jwt !== null) {
-      target.input.jwt = _request.input.jwt;
-    }
-
-    if (_data) {
-      target.input.volatile = {
-        ..._request.input.volatile,
-        ..._data.volatile,
-      };
-    } else if (_request.input.volatile !== null) {
-      target.input.volatile = _request.input.volatile;
-    }
+    inheritInput(target, _request, _data);
   }
 
   return target;
+}
+
+/**
+ * Copies onto `target` what it did not receive of its own: the routing
+ * fields, the arguments, the token and the volatile data.
+ */
+function inheritInput(
+  target: KuzzleRequest,
+  source: KuzzleRequest,
+  data?: JSONObject,
+): void {
+  inheritResource(target, source);
+
+  for (const arg of Object.keys(source.input.args)) {
+    if (target.input.args[arg] === undefined) {
+      target.input.args[arg] = source.input.args[arg];
+    }
+  }
+
+  if (data?.jwt === undefined && source.input.jwt !== null) {
+    target.input.jwt = source.input.jwt;
+  }
+
+  if (data) {
+    target.input.volatile = {
+      ...source.input.volatile,
+      ...data.volatile,
+    };
+  } else if (source.input.volatile !== null) {
+    target.input.volatile = source.input.volatile;
+  }
 }
 
 /**

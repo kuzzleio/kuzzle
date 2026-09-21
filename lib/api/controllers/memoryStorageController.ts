@@ -719,30 +719,79 @@ function initMapping() {
  * @param {Request} request
  * @returns {*}
  */
+/**
+ * Commands whose arguments a dedicated function reads, because the table
+ * cannot describe them. The six `if`s this replaces were the bulk of
+ * `extractArgumentsFromRequest`'s cognitive complexity.
+ */
+const SPECIAL_EXTRACTORS: Record<
+  string,
+  (request: KuzzleRequest) => unknown[]
+> = {
+  mexecute: (request) => extractArgumentsFromRequestForMExecute(request),
+  set: (request) => extractArgumentsFromRequestForSet(request),
+  sort: (request) => extractArgumentsFromRequestForSort(request),
+  zadd: (request) => extractArgumentsFromRequestForZAdd(request),
+  zinterstore: (request) => extractArgumentsFromRequestForZInterstore(request),
+  zunionstore: (request) => extractArgumentsFromRequestForZInterstore(request),
+};
+
+/**
+ * Reads one of a command's arguments out of the request and appends it to the
+ * argument list.
+ */
+function appendArgument(
+  args: unknown[],
+  key: string,
+  data: CommandArgumentPath | CommandArgumentSpec,
+  request: KuzzleRequest,
+): void {
+  const path = Array.isArray(data) ? data : data.path;
+  const toMerge = !Array.isArray(data) && data.merge === true;
+  const map = !Array.isArray(data) && data.map;
+  const skip = !Array.isArray(data) && data.skip === true;
+
+  let value = path.reduce<unknown>((previousValue, currentValue) => {
+    // Indexing `undefined` throws, as it did before: no path in the table
+    // is deeper than the two levels the request always has.
+    const next = (previousValue as Record<string, unknown>)[currentValue];
+
+    return next ?? undefined;
+  }, request.input);
+
+  if (value === undefined) {
+    if (skip) {
+      return;
+    }
+
+    throw kerror.get("missing_argument", key);
+  }
+
+  if (map) {
+    value = map(value, request);
+  }
+
+  if (value === undefined) {
+    return;
+  }
+
+  if (toMerge && Array.isArray(value)) {
+    for (const item of value) {
+      args.push(item);
+    }
+  } else {
+    args.push(value);
+  }
+}
+
 function extractArgumentsFromRequest(
   command: string,
   request: KuzzleRequest,
 ): unknown[] {
-  let args: unknown[] = [];
+  const special = SPECIAL_EXTRACTORS[command];
 
-  // Dealing with exceptions
-  if (command === "set") {
-    return extractArgumentsFromRequestForSet(request);
-  }
-  if (command === "sort") {
-    return extractArgumentsFromRequestForSort(request);
-  }
-  if (command === "zadd") {
-    return extractArgumentsFromRequestForZAdd(request);
-  }
-  if (command === "zinterstore") {
-    return extractArgumentsFromRequestForZInterstore(request);
-  }
-  if (command === "zunionstore") {
-    return extractArgumentsFromRequestForZInterstore(request);
-  }
-  if (command === "mexecute") {
-    return extractArgumentsFromRequestForMExecute(request);
+  if (special) {
+    return special(request);
   }
 
   const commandArguments = mapping[command];
@@ -758,38 +807,10 @@ function extractArgumentsFromRequest(
     request.input.body = {};
   }
 
+  const args: unknown[] = [];
+
   for (const [key, data] of Object.entries(commandArguments)) {
-    const path = Array.isArray(data) ? data : data.path;
-    const toMerge = !Array.isArray(data) && data.merge === true;
-    const map = !Array.isArray(data) && data.map;
-    const skip = !Array.isArray(data) && data.skip === true;
-
-    let value = path.reduce<unknown>((previousValue, currentValue) => {
-      // Indexing `undefined` throws, as it did before: no path in the table
-      // is deeper than the two levels the request always has.
-      const next = (previousValue as Record<string, unknown>)[currentValue];
-
-      return next ?? undefined;
-    }, request.input);
-
-    if (value === undefined) {
-      if (skip) {
-        continue;
-      }
-      throw kerror.get("missing_argument", key);
-    }
-
-    if (map) {
-      value = map(value, request);
-    }
-
-    if (value !== undefined) {
-      if (toMerge && Array.isArray(value)) {
-        args = args.concat(value);
-      } else {
-        args.push(value);
-      }
-    }
+    appendArgument(args, key, data, request);
   }
 
   return args;

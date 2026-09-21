@@ -396,7 +396,7 @@ class UserRepository extends ObjectRepository<User> {
     const profiles = await this.module.profile.loadProfiles(user.profileIds);
 
     // Fail if not all profiles are found
-    if (profiles.some((profile) => profile === null)) {
+    if (profiles.some((profile) => !profile)) {
       throw kerror.get("security", "user", "cannot_hydrate", dto._id);
     }
 

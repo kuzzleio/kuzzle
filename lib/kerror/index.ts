@@ -73,7 +73,7 @@ export function rawGet(
   let options: JSONObject = {};
 
   // extract options object from the placeholders
-  const last = placeholders[placeholders.length - 1];
+  const last = placeholders.at(-1);
 
   if (isPlainObject(last)) {
     options = last;

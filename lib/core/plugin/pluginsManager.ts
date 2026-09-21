@@ -68,8 +68,13 @@ function causeOf(thrown: unknown): Error {
  * The `id` of whatever was thrown, when it carries one.
  */
 function idOf(thrown: unknown): string | undefined {
-  if (typeof thrown === "object" && thrown !== null && "id" in thrown) {
-    return String(thrown.id);
+  if (
+    typeof thrown === "object" &&
+    thrown !== null &&
+    "id" in thrown &&
+    typeof thrown.id === "string"
+  ) {
+    return thrown.id;
   }
 
   return undefined;

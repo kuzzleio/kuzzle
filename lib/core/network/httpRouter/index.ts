@@ -244,6 +244,9 @@ const HTTP_VERBS = ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const;
 
 type HttpVerb = (typeof HTTP_VERBS)[number];
 
+/** The same list as a set, which is what `isHttpVerb` asks. */
+const HTTP_VERB_SET: ReadonlySet<string> = new Set(HTTP_VERBS);
+
 /**
  * Whether an incoming message names one of them. `has(this.routes, method)`
  * answered the same question, without telling the compiler which key it had
@@ -251,7 +254,7 @@ type HttpVerb = (typeof HTTP_VERBS)[number];
  * undefined` for its sake.
  */
 function isHttpVerb(method: string): method is HttpVerb {
-  return HTTP_VERBS.some((verb) => verb === method);
+  return HTTP_VERB_SET.has(method);
 }
 
 /**

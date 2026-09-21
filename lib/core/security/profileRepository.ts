@@ -76,7 +76,7 @@ type UpdateOptions = {
  * @extends ObjectRepository
  */
 export class ProfileRepository extends ObjectRepository<Profile> {
-  private module: SecurityModule;
+  private readonly module: SecurityModule;
 
   /**
    * @constructor
@@ -566,7 +566,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     const roles = await this.module.role.loadRoles(policiesRoles);
 
     // Fail if not all roles are found
-    if (roles.some((r: unknown) => r === null)) {
+    if (roles.some((role) => !role)) {
       throw kerror.get("security", "profile", "cannot_hydrate");
     }
 

@@ -297,24 +297,9 @@ class ClusterSubscriber {
    */
   async listen(): Promise<void> {
     while (this.state !== stateEnum.EVICTED) {
-      let frame: Buffer[];
+      const frame = await this.receiveFrame();
 
-      try {
-        // `dispose()` drops the socket, and the loop's own condition is
-        // checked before the state it sets is visible here.
-        if (this.socket === null) {
-          return;
-        }
-
-        frame = await this.socket.receive();
-      } catch (e) {
-        if (this.state !== stateEnum.EVICTED) {
-          await this.evictNode({
-            broadcast: true,
-            reason: e instanceof Error ? e.message : inspect(e),
-          });
-        }
-
+      if (frame === null) {
         return;
       }
 
@@ -342,6 +327,34 @@ class ClusterSubscriber {
       } else {
         this.buffer.push([topic.toString(), data]);
       }
+    }
+  }
+
+  /**
+   * One frame off the sync socket.
+   *
+   * @returns `null` when there is nothing more to read — the socket is gone,
+   *          or the read failed and this node has been evicted for it, which
+   *          is what ends `listen()`'s loop.
+   */
+  private async receiveFrame(): Promise<Buffer[] | null> {
+    try {
+      // `dispose()` drops the socket, and the loop's own condition is checked
+      // before the state it sets is visible here.
+      if (this.socket === null) {
+        return null;
+      }
+
+      return await this.socket.receive();
+    } catch (e) {
+      if (this.state !== stateEnum.EVICTED) {
+        await this.evictNode({
+          broadcast: true,
+          reason: e instanceof Error ? e.message : inspect(e),
+        });
+      }
+
+      return null;
     }
   }
 

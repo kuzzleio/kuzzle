@@ -20,7 +20,7 @@
  */
 
 import path from "path";
-import { inspect } from "util";
+import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
