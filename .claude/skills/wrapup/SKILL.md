@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & strict, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified.
+description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & test type-check, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified.
 ---
 
 # Wrapup
@@ -36,9 +36,9 @@ If a fresh reader would be missing something to continue, add it now. This is th
 Run the checks CI will run, so nothing is stale. After the LAST code/test edit:
 
 1. **Lint + error-codes** — the two gates that most commonly fail a first push. Use the `pr-preflight` skill (`.ci/scripts/pr-preflight.sh`): `npm run test:lint` + the error-codes doc diff. If `lib/kerror/codes/*.json` changed, regenerate with `npm run doc-error-codes` and commit `doc/2/api/errors/error-codes/`.
-2. **Migration ratchets & strict** (the `migration-ratchets` CI job): `npm run ratchet` (js / mocha / any — a count may only decrease) **and** `npm run test:strict` (strict on adopted files). If a conversion reduced a count, update its baseline in the SAME PR (`npm run ratchet:<js|mocha|any> -- --update`), and add any newly-clean file to `.migration/strict-adopted.txt`.
+2. **Migration ratchets & test type-check** (the `migration-ratchets` CI job): `npm run ratchet` (js / mocha / any / casts / cpd-exclusions — a count may only decrease) **and** `npm run typecheck:tests` (`tsconfig.tests.json`, which is what the build no longer compiles). If a conversion reduced a count, update its baseline in the SAME PR (`npm run ratchet:<js|mocha|any|casts> -- --update`). There is no strict step: `strict` is on in `tsconfig.json` since step 12 (K6), so strict errors in `lib/` fail the build at 4.
 3. **Unit tests** — mocha **and** vitest. Locally via the `docker-tests` skill (`.ci/scripts/docker-test.sh unit vitest` / `… unit mocha`) or `npm run test:unit:*`. Run in Docker — the native `re2` binding can't load on host arm64.
-4. **Build** — `npm run build` (tsc + copy-binaries) catches type/emit errors.
+4. **Build** — `npm run build` (tsc + copy-binaries) catches type/emit errors, and since step 12 it IS the strict type-check of `lib/` + `index.ts` + `bin/`.
 5. Touched the big flows (network, cluster, controllers)? Run the relevant **functional** suite via `docker-tests` (`.ci/scripts/docker-test.sh functional http` / `websocket`).
 
 > **Sonar coverage note (kuzzle-specific):** SonarCloud coverage comes from **mocha only** (`npm run test:unit:mocha:coverage` → `coverage/lcov.info`), and `.ts` / `.vue` are coverage-excluded (`sonar-project.properties`). New **`.js`** code therefore needs mocha coverage to satisfy the new-code gate; new **`.ts`** code is coverage-excluded. `coverage/` is gitignored — CI regenerates it, there is nothing to commit.

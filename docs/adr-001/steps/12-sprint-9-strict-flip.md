@@ -1,6 +1,6 @@
 # Step 12 — Sprint 9: the strict flip
 
-**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · K3 [#2802](https://github.com/kuzzleio/kuzzle/pull/2802) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done · **Opened:** 2026-09-18 · **Closed:** 2026-09-21 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · K3 [#2802](https://github.com/kuzzleio/kuzzle/pull/2802) · K4+K5 [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) · K6 `PR_K6_PLACEHOLDER` · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -78,7 +78,7 @@ Ordered so that each one is independently mergeable and the flip is last. Nothin
 | **K3** ✅ | The two `elasticsearch.ts` — **cleared 430 errors and adopted both**, see _What K3 found_                                                                                                                     |    433 | 26% of the debt in two files, and [TD-62](../type-debt-register.md#td-62) says 32 of its 56 lying `null` declarations live here. Same file twice (ES 7 and ES 8), so the second is largely the first's diff. Its own PR because its size will dominate any review it shares.                                                                                                |
 | **K4** ✅ | `lib/core` mid-weights — `validation`, `httpwsProtocol`, `pluginsManager`, `plugin`, `tokenRepository`, `store`, `ObjectRepository`, `hotelClerk` — **cleared 349 errors, adopted 19 files, closed [TD-62](../type-debt-register.md#td-62)**, see _What K4 found_ |   ~334 | The layer with the most files and the most history. `ObjectRepository` and `store` are base classes — expect their fixes to clear errors in subclasses, so measure after, not before.                                                                                                                                                                                       |
 | **K5** ✅ | The rest: `funnel`, the controllers, `kerror`, `kuzzle`, `cluster`'s 85, `service/cache`, `queryTranslator` — **cleared the remaining 522 and adopted 37 files; `--count` is empty**, see _What K5 found_ |   ~530 | Whatever K0–K4 has not already retired. Re-slice on the count that exists then; this row is a bucket, not a plan.                                                                                                                                                                                                                                                           |
-| **K6** 🟦 | **The flip**: `strict: true` in `tsconfig.json`, `allowJs` removed, `tsconfig.strict.json` + `strict-check.sh` + `strict-adopted.txt` deleted, `npm run test:strict` and the `pr-preflight` reminders retired |      0 | Mechanical, and only correct when `--count` is empty. The build-payload diff is part of this PR.                                                                                                                                                                                                                                                                            |
+| **K6** ✅ | **The flip**: `strict: true` in `tsconfig.json`, `allowJs` removed, `tsconfig.strict.json` + `tsconfig.implicit.json` + `strict-check.sh` + `strict-adopted.txt` deleted, `npm run test:strict` and the `implicit-any` ratchet retired — **and the test code moved to a program of its own**, see _What K6 found_ |      0 | Mechanical, and only correct when `--count` is empty. The build-payload diff is part of this PR. It was not mechanical: see below.                                                                                                                                                                                                                                                                            |
 
 ## Definition of done, per PR
 
@@ -98,12 +98,23 @@ The standing list is [ADR § Conversion standards](../ADR-0001-migration-typescr
 
 ## Key commands
 
+**All of these are gone with K6.** They are kept here because the step's own
+numbers were produced with them, and a reader reproducing those numbers needs
+to know what produced them:
+
 ```bash
 bash scripts/strict-check.sh --count            # every unadopted file, ranked — the step's backlog
 bash scripts/strict-check.sh --count lib/x.ts   # the number a PR reports
 bash scripts/strict-check.sh --candidates       # files that pass strict but are not adopted yet
 npx tsc -p tsconfig.strict.json --noEmit        # the raw diagnostics, with their codes
-npm run ratchet                                 # no counter may rise
+```
+
+What replaces them after the flip:
+
+```bash
+npm run build               # IS the strict type-check of lib/ + index.ts + bin/
+npm run typecheck:tests     # tsconfig.tests.json — tests/, test/, features/, features-legacy/
+npm run ratchet             # js / mocha / any / casts / cpd-exclusions — no counter may rise
 ```
 
 ---
@@ -379,3 +390,145 @@ Three things are worth keeping from it:
 1. **It is the second telling.** Sprint 5's Build and Run job caught the same thing in `funnel.doAction`, and that site now carries a comment saying `Reflect.apply` is what keeps the receiver. The comment did not stop it happening one directory away.
 2. **The unit suites cannot see it.** They stub the redis client with a plain object whose methods are own properties and ignore `this`. Only a real client, on a real prototype, fails.
 3. **The audit found three more hoists in the same slice**, and one of them was wrong in the other direction: `KuzzleEventEmitter.ask` called `fn(...args)` with *no* receiver, and the rewrite had started passing the emitter. Preserving a receiver means preserving the absence of one too.
+
+## What K6 found
+
+**`strict: true` is on in `tsconfig.json`, `allowJs` is gone, and the machinery
+that got us here is deleted**: `tsconfig.strict.json`, `tsconfig.implicit.json`,
+`scripts/strict-check.sh`, `.migration/strict-adopted.txt`,
+`.migration/implicit-any-baseline.txt`, `npm run test:strict`, the
+`implicit-any` ratchet and the two `pr-preflight` strict reminders. Axis 3 closes.
+
+It was filed as **mechanical, 0 errors**. It was not, and the reason is the part
+worth keeping.
+
+### `strict` is a property of a program, not of a file
+
+The step's own numbers — 1 673 → 0 — were all produced through
+`tsconfig.strict.json`, whose `include` is `lib/**/*.ts` + `index.ts`. The root
+`tsconfig.json` includes far more than that: `tests/`, `test/`, `features/`,
+`features-legacy/`, `start-kuzzle-{dev,test}.ts`. Setting `strict: true` there
+does not check the same set of files the step spent nine slices clearing — it
+checks that set **plus the specs**:
+
+| Where                 | Strict errors |
+| --------------------- | ------------: |
+| `features-legacy/`    |       **661** |
+| `tests/`              |        **53** |
+| `features/`           |        **47** |
+| `start-kuzzle-test.ts`|         **6** |
+| `.ci/` (pulled in by its spec) | **6** |
+| **`lib/` + `index.ts`** | **0** |
+
+`npm run build` is a bare `tsc`, so the naive flip does not produce a strict
+repository — it produces a repository that **does not build**. The 773 were
+never in `--count`'s output, because `--count` reads a different program.
+
+**The fix is two programs, and it is the only shape that keeps both promises:**
+
+- `tsconfig.json` — production only (`lib/`, `index.ts`, `bin/`), `strict: true`,
+  no `allowJs`. It is what `dist/` is emitted from, and it is now the strict
+  type-check: production code that does not pass strict does not build.
+- `tsconfig.tests.json` — the specs, `strict: false`, `allowJs: true`, checked by
+  `npm run typecheck:tests` in the `migration-ratchets` job and **emitted by
+  `npm run build:tests`** (see below). **Exactly the checking the test code had
+  before the flip** — no more, no less. Hardening it is
+  [step 13](../ADR-0001-migration-typescript.md#step-table)'s business, and the 773
+  above are that step's measured starting point, not a debt this one hid.
+
+One non-obvious consequence, found by the type-checker rather than by reading:
+`lib/types/node-internals.d.ts` (the ambient declarations for `process.moduleLoadList`
+and friends, from [step 10](10-sprint-7-kuzzle.md)) **is not pulled into a program
+by an import** — nothing imports a `.d.ts`. It reached the old shared program
+through `lib/**/*.ts`. The test program has to name it explicitly, or
+`dumpGenerator.ts` fails to compile there while compiling fine in the build.
+
+### The journal entry about `allowJs` was right and incomplete
+
+The 2026-09-18 entry says compiling with `allowJs: false` type-checks clean today.
+It does — that measurement was made on `tsconfig.strict.json`'s file set, which is
+`lib/` only. `allowJs` was never the blocker; `strict` over the test code was, and
+nothing had measured it because nothing had reason to. _A measurement is scoped to
+the program it was taken in, and a config file's `include` is part of the measurement._
+
+### One of the 749 dropped outputs was load-bearing: the Mocha suite runs on `dist/`
+
+`.mocharc` globs **`./dist/test/**/*.test.js`** — the 148-file Mocha suite does not
+run on the sources, it runs on what `tsc` emitted, and CI's recipe is
+`npm run build && npm run test:unit:mocha` (`.github/actions/unit-tests`, and
+`.ci/scripts/docker-test.sh` locally). Narrowing the production `include` therefore
+did not just shrink the payload: it silently removed the suite's entire input.
+
+```
+Warning: Cannot find any files matching pattern "./dist/test/**/*.test.js"
+No test file(s) found with the given pattern, exiting with code 1
+```
+
+Mocha exits **1**, so CI would have failed rather than passed green — but it fails
+with a *configuration* message, not a test failure, and `npm run build` would have
+been the last thing anyone suspected. The fix keeps the emit where it was:
+`tsconfig.tests.json` compiles into the same `dist/` at the same paths, via
+`npm run build:tests`, and `test:unit:mocha` (and `:coverage`) run it first. No
+workflow file changes — the hook is inside the npm script CI already calls.
+
+#### And two specs were resolving the package through `dist/`
+
+Emitting the tests **after** the production build — which is the order CI runs them
+in — then failed with 132 × `TS5055: Cannot write file 'dist/lib/….d.ts' because it
+would overwrite input file`. Nothing in the test program imports `dist/`; two Mocha
+specs require the repository **as a directory**:
+
+```js
+test/core/backend/BackendErrors.test.js:  require("../../..")
+test/core/network/protocols/http.test.js: require("../../../..")
+```
+
+A directory resolves through `package.json`, whose `types` field is `./dist/index.d.ts`
+— so those two specs type against **the built package** whenever one exists, and drag
+132 of its declaration files into the program as *inputs*. It never surfaced before
+because `npm run build` begins with `rm -Rf ./dist`: in a single-program build, `dist/`
+was always empty at the moment tsc read it. Splitting the programs is what made a
+second compile run against a populated `dist/`.
+
+Both now require `../../../index` explicitly. _A spec that resolves its own package by
+directory is asking for whatever `dist/` happens to hold — usually the previous build._
+
+_The reading that generalises:_ **the thing consuming a build artefact is not always
+the thing that declares it.** `package.json`'s `files` names what the *package*
+promises and is what `check-build-payload.sh` checks; it says nothing about the
+outputs the repo's own tooling reads back out of `dist/`, and this one was named
+three config files away, in `.mocharc`. The payload diff was taken as the step said
+to take it, was green, and still missed it — a payload gate derived from `files`
+cannot see a consumer that is not a package consumer. Running the suites is what saw it.
+
+### What else the payload lost, and why the rest was safe
+
+The guard exists because this class of change broke the package once
+([TD-35](../type-debt-register.md#td-35)/[TD-36](../type-debt-register.md#td-36)),
+so the diff was taken: **1 518 → 769 emitted files**.
+
+- **Unchanged**: every file `package.json`'s `files` promises. `dist/lib/**` is
+  761 files before and after, `dist/index.*`, `dist/bin/*` identical, and
+  `check-build-payload.sh` is green (249 `.js`, 249 `.d.ts`, 10 `.json`, 2 `.proto`).
+- **Gone from `npm run build`**: `dist/test/**`, `dist/tests/**`, `dist/features/**`,
+  `dist/features-legacy/**` — never published, and now emitted by `build:tests`
+  instead — plus `dist/start-kuzzle-{dev,test}.*`
+  and `dist/.ci/scripts/prepare-coverage.*`. Those last three looked load-bearing and
+  are not: every consumer runs them **from source** through `tsx` or
+  `ts-node/transpile-only` (`.ci/test-cluster-{7,8}.yml`, `npm run dev`,
+  `npm run test:unit:mocha:coverage`). Nothing reads them out of `dist/`.
+
+### The `implicit-any` ratchet retired rather than being repointed
+
+`tsconfig.implicit.json` `extends` `tsconfig.strict.json`, so deleting the latter
+breaks it. The choice was to re-point it or to retire it, and its own header comment
+had already made it: _"the count reaches 0, `noImplicitAny` is covered by the global
+`strict` flip, and this file is deleted"_.
+
+Its last reading was **30**, and that number is an artefact of how it measured, not
+work left over: it runs with `strict: false, noImplicitAny: true`, and under that
+combination the two `elasticsearch.ts` (23 of the 30) produce `TS7xxx` that
+**full strict does not** — with `strictNullChecks` off, overload resolution fails
+differently and parameters fall back to implicit `any`. Under the program that now
+builds the package, `lib/` has **zero** implicit any. A ratchet whose floor is a
+build failure is not a ratchet worth keeping.

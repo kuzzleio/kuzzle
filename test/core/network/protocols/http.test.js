@@ -14,7 +14,7 @@ const ClientConnection = require("../../../../lib/core/network/clientConnection"
 const KuzzleMock = require("../../../mocks/kuzzle.mock");
 const uWSMock = require("../../../mocks/uWS.mock");
 const EntryPointMock = require("../../../mocks/entrypoint.mock");
-const { HttpStream } = require("../../../..");
+const { HttpStream } = require("../../../../index");
 const { PassThrough } = require("stream");
 
 describe("core/network/protocols/http", () => {

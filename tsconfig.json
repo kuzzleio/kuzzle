@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "outDir": "dist",
+    "strict": true,
     "noUncheckedIndexedAccess": true,
     "declaration": true,
     "listEmittedFiles": true,
     "module": "commonjs",
     "target": "es2020",
     "lib": ["es2022", "dom", "dom.iterable"],
-    "allowJs": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "baseUrl": ".",
@@ -27,29 +27,21 @@
       "@cucumber/cucumber"
     ]
   },
+  // This is the PRODUCTION program, and the one `npm run build` emits `dist/` from:
+  // `lib/`, the package entrypoint, and the binaries — nothing else. `strict` is a
+  // property of a *program*, not of a file, so the tests cannot be exempted from it
+  // while sharing this one; they have their own program in `tsconfig.tests.json`,
+  // which is type-checked by `npm run typecheck:tests`. Widening this `include` back
+  // over `tests/` or `features/` puts ~770 strict errors in the build's path.
+  // See docs/adr-001/steps/12-sprint-9-strict-flip.md (K6).
   "include": [
     // Kuzzle core files
     "lib/**/*.ts",
-    "lib/**/*.js",
     "lib/**/*.json",
     "index.ts",
-    // Functional tests
-    "features/**/*.ts",
-    "features-legacy/**/*.ts",
-    // Unit tests vitest
-    "tests/**/*.ts",
-    "tests/**/*.js",
-    "tests/**/*.json",
-    // Unit tests mocha
-    "test/**/*.ts",
-    "test/**/*.js",
-    "test/**/*.json",
     // Binaries
     "bin/copy-binaries.ts",
-    "bin/start-kuzzle-server",
-    // development files
-    "start-kuzzle-test.ts",
-    "start-kuzzle-dev.ts"
+    "bin/start-kuzzle-server"
   ],
   "exclude": [
     "dist"

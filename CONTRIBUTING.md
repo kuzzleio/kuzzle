@@ -21,15 +21,23 @@ Kuzzle is being migrated from JavaScript to TypeScript incrementally (see
 **Since 2026-09-18, `lib/` is 100% TypeScript** — the five remaining `.js` files are all
 in `bin/` and are the agreed floor.
 
-**Since 2026-09-21, `lib/` also passes `strict`**: every production file is in
-`.migration/strict-adopted.txt` and `npm run test:strict -- --count` prints nothing.
-`strict: true` is not yet on in the main `tsconfig.json` — flipping it, and removing
-this machinery, is the last item of
-[step 12](docs/adr-001/steps/12-sprint-9-strict-flip.md). Until then **a new file has
-to be added to `strict-adopted.txt` in the PR that adds it**, and the rule for fixing a
-strict error is that **the fix removes it rather than moving it** — no `!`, no `as`, no
-widening a parameter to silence a call site. The `casts` and `any` ratchets below are
-what enforce that.
+**Since 2026-09-21, `strict: true` is on in `tsconfig.json`** — the progressive
+machinery that got it there (`tsconfig.strict.json`, `scripts/strict-check.sh`,
+`.migration/strict-adopted.txt`, `npm run test:strict`) is gone, and there is nothing
+to adopt a file into any more: **production code that does not pass `strict` does not
+build**. The rule for fixing a strict error is unchanged and now matters more, because
+the build is the only place left to hide it: **the fix removes the error rather than
+moving it** — no `!`, no `as`, no widening a parameter to silence a call site. The
+`casts` and `any` ratchets below are what enforce that.
+
+`strict` applies to a whole *program*, not to a file, so **the test code has its own**:
+`tsconfig.tests.json` (strict off, `allowJs` on for the frozen Mocha specs) covers
+`tests/`, `test/`, `features/` and `features-legacy/`, and `npm run typecheck:tests`
+checks it in CI. That is the same checking the specs had before the flip — hardening
+them is step 13's business (test closure — see the step table in
+[ADR-0001](docs/adr-001/ADR-0001-migration-typescript.md)). Note what
+this means in practice: `npm run build` no longer compiles the tests, so a type error
+in a spec surfaces in `typecheck:tests`, not in the build.
 
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
@@ -40,9 +48,6 @@ the `migration-ratchets` job:
   live* below. The legacy Mocha suite is frozen; its spec count may only decrease.
 * **No new explicit `any`** in `lib/**/*.ts` — the count may only decrease
   (`@typescript-eslint/no-explicit-any` is on as a warning). `as unknown as` counts too.
-* **No new implicit `any`** — the count of `TS7xxx` diagnostics under `noImplicitAny`
-  may only decrease. This is what stops a conversion from being a rename: leaving a
-  parameter un-annotated is free for the explicit-`any` ratchet but not for this one.
 * **No new type assertion** (`x as SomeType`) in `lib/**/*.ts` — the count may only
   decrease. An assertion is the hatch a conversion reaches for once `any` is
   ratcheted, and it is the worse one: `any` is permissive and visibly untyped,
@@ -50,36 +55,30 @@ the `migration-ratchets` job:
   believes it. Narrow instead — a type guard, `satisfies`, or a fix to the source
   type. `as const`, `as any` and `as unknown as T` are **not** counted here (the
   first cannot be wrong, the other two are the `any` ratchet's).
-* When a file passes `strict`, add it to `.migration/strict-adopted.txt`
-  (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
-  converting, this is part of the PR — not a later chore.
-* **Never declare a type the next line contradicts.** `npm run test:strict` fails on
-  a non-nullable type assigned `undefined` (and on a function that cannot return what
-  it declares) **anywhere in `lib/`**, whether or not the file is in
-  `strict-adopted.txt` — `x: string[]` then `this.x = undefined` is rejected; widen
-  the declaration to `string[] | undefined`. It is the one defect class the adoption
-  list cannot help with, since being exempt is what lets it through (ADR-0001, TD-56).
-* **If it does not pass `strict`, say how far it is.** Every existing file does, so
-  this now applies to new ones: leaving a file out of `strict-adopted.txt` is allowed,
-  leaving it out *silently* is not. Run `npm run test:strict -- --count <your files>`
-  and put in the PR body — per file — how many errors remain and which of them are
-  guards the runtime can actually reach. Those are bugs, not typing chores: the two
-  defects found by hand in sprint 6 were both already in that list, and step 12 found
-  a dozen more the same way. A conversion that compiles is not a conversion that
-  checks.
+* **No new implicit `any` under `lib/`** — this is no longer a count but a build
+  failure, since `strict` implies `noImplicitAny`. It is what stops a conversion from
+  being a rename: leaving a parameter un-annotated is free for the explicit-`any`
+  ratchet, and not free for `tsc`.
+* **Never declare a type the next line contradicts.** `x: string[]` then
+  `this.x = undefined` is rejected by the build; widen the declaration to
+  `string[] | undefined` rather than asserting past it. This used to need its own gate
+  in `strict-check.sh`, because a file could be exempt from strict and a ratchet a file
+  is exempt from cannot catch the defect it exists for (ADR-0001, TD-56). Nothing is
+  exempt any more.
 * **Converting a file that has no unit spec? Write one** (vitest + TS) in the same PR.
   `.ts` is measured by the coverage gate, so an untested conversion now fails CI.
 
 Run the gates locally before pushing:
 
 ```bash
-npm run ratchet             # js / mocha / any / implicit-any / casts / cpd-exclusions
-npm run test:strict         # strict type-check on adopted files
-.ci/scripts/pr-preflight.sh # the above + lint + error-codes + three reminders
+npm run ratchet             # js / mocha / any / casts / cpd-exclusions
+npm run typecheck:tests     # type-check tests/, test/, features/, features-legacy/
+npm run build               # this IS the strict type-check of lib/ + index.ts + bin/
+.ci/scripts/pr-preflight.sh # the above + lint + error-codes + coverage reminder
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
-`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`, `:casts`) — then
+`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:casts`) — then
 commit `.migration/`.
 
 ### Assertions on errors
