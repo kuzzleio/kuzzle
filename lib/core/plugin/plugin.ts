@@ -30,7 +30,7 @@ import * as kerror from "../../kerror";
 import * as errorCodes from "../../kerror/codes";
 import type { ControllerDefinition } from "../../types";
 import type { PluginInstance, PluginOptions } from "../../types/PluginInstance";
-import { has, isPlainObject } from "../../util/safeObject";
+import { get, has, isPlainObject } from "../../util/safeObject";
 import Manifest from "./pluginManifest";
 import { PluginContext } from "./pluginContext";
 import PrivilegedPluginContext from "./privilegedContext";
@@ -178,8 +178,8 @@ class Plugin {
         version: this.version,
         commit: this.commit,
         controllers: this.instance.api,
-        pipes: Object.keys(this.instance.pipes),
-        hooks: Object.keys(this.instance.hooks),
+        pipes: Object.keys(this.instance.pipes ?? {}),
+        hooks: Object.keys(this.instance.hooks ?? {}),
       };
     }
 
@@ -196,29 +196,29 @@ class Plugin {
     /* eslint-enable sort-keys */
 
     if (has(this.instance, "imports")) {
-      description.imports = Object.keys(this.instance.imports);
+      description.imports = Object.keys(this.instance.imports ?? {});
     }
 
     if (has(this.instance, "hooks")) {
-      description.hooks = Object.keys(this.instance.hooks);
+      description.hooks = Object.keys(this.instance.hooks ?? {});
     }
 
     if (has(this.instance, "pipes")) {
-      description.pipes = Object.keys(this.instance.pipes);
+      description.pipes = Object.keys(this.instance.pipes ?? {});
     }
 
     if (has(this.instance, "controllers")) {
-      description.controllers = Object.keys(this.instance.controllers).map(
-        (controller) => `${this.name}/${controller}`,
-      );
+      description.controllers = Object.keys(
+        this.instance.controllers ?? {},
+      ).map((controller) => `${this.name}/${controller}`);
     }
 
     if (has(this.instance, "routes")) {
-      description.routes = this.instance.routes;
+      description.routes = this.instance.routes ?? [];
     }
 
     if (has(this.instance, "strategies")) {
-      description.strategies = Object.keys(this.instance.strategies);
+      description.strategies = Object.keys(this.instance.strategies ?? {});
     }
 
     return description;
@@ -300,29 +300,40 @@ class Plugin {
     }
 
     let plugin: Plugin;
-    let PluginClass: { new (): PluginInstance; name?: string } = null;
+    // Captured before the instantiation that may fail, because the catch
+    // below names it — the class itself used to be held in a `let` seeded with
+    // `null`, which is what the error path would have read on a failed require.
+    let pluginClassName: string | undefined;
+
     try {
       // A plugin is loaded from disk at runtime: the path is only known then,
       // so this require is the feature, not an unconverted import.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      PluginClass = require(pluginPath);
+      const PluginClass: { new (): PluginInstance; name?: string } = require(
+        pluginPath,
+      );
 
-      const pluginInstance = new PluginClass();
+      pluginClassName = PluginClass.name;
 
-      plugin = new Plugin(pluginInstance);
+      plugin = new Plugin(new PluginClass());
     } catch (error) {
-      if (error.message.match(/not a constructor/i)) {
-        throw assertionError.get("not_a_constructor", PluginClass.name);
+      const cause = error instanceof Error ? error : new Error(String(error));
+
+      if (cause.message.match(/not a constructor/i)) {
+        throw assertionError.get("not_a_constructor", pluginClassName);
       }
 
-      throw runtimeError.getFrom(error, "unexpected_error", error.message);
+      throw runtimeError.getFrom(cause, "unexpected_error", cause.message);
     }
 
     // load manifest
     plugin.manifest = new Manifest(pluginPath);
     plugin.manifest.load();
 
-    plugin.name = plugin.manifest.name;
+    const manifest = plugin.manifest;
+
+    // `load()` above throws `missing_name` rather than leave it unset.
+    plugin.name = manifest.name ?? "";
 
     // load plugin version if exists
     const packageJsonPath = path.join(pluginPath, "package.json");
@@ -392,20 +403,31 @@ class Plugin {
  * Lifted verbatim out of `Plugin.loadFromDirectory` for the same gate reason.
  */
 function loadPluginErrors(plugin: Plugin): void {
-  if (plugin.manifest.raw.errors) {
+  // A plugin loaded from a directory always has one: `loadFromDirectory`
+  // builds it two lines before calling this.
+  const manifest = plugin.manifest;
+
+  if (manifest?.raw?.errors) {
     try {
       // we use the manifest name instead of the lowerCased plugin name
       // to ensure to match the plugin original name in the configuration
-      const config = global.kuzzle.config[plugin.manifest.name];
-      const pluginCode = config?._pluginCode ? config._pluginCode : 0x00;
+      // A plugin's section is keyed by its own name, which no declared
+      // configuration shape can carry — `get` is the prototype-safe read the
+      // rest of the codebase uses for exactly this.
+      const config = get(global.kuzzle.config, manifest.name ?? "");
+      const configuredCode = isPlainObject(config)
+        ? config._pluginCode
+        : undefined;
+      const pluginCode =
+        typeof configuredCode === "number" ? configuredCode : 0x00;
 
       // The two properties `loadPluginsErrors` reads, named explicitly:
       // `raw` is a JSONObject and cannot be narrowed to the shape it wants
       // without an assertion. Same values, same call.
       errorCodes.loadPluginsErrors(
         {
-          errors: plugin.manifest.raw.errors,
-          name: plugin.manifest.raw.name,
+          errors: manifest.raw.errors,
+          name: manifest.raw.name,
         },
         pluginCode,
       );
@@ -414,17 +436,19 @@ function loadPluginErrors(plugin: Plugin): void {
         `${plugin.logPrefix} Custom errors successfully loaded.`,
       );
     } catch (err) {
+      const cause = err instanceof Error ? err : new Error(String(err));
+
       if (
-        err.message.match(/Error configuration file/i) ||
+        cause.message.match(/Error configuration file/i) ||
         err instanceof SyntaxError
       ) {
         throw kerror.getFrom(
-          err,
+          cause,
           "plugin",
           "manifest",
           "invalid_errors",
-          plugin.manifest.name,
-          err.message,
+          manifest.name,
+          cause.message,
         );
       }
 

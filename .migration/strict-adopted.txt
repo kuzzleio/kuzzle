@@ -87,6 +87,10 @@
 # tokenManager's `search` + `array[pos]` two-step became one `find(idx)`:
 # indexing answers `| undefined` for every position, so testing the element
 # instead of the position removes the second check rather than adding one.
+# Step 12 K4, part 5 (2026-09-21): plugin.ts, hotelClerk.ts and subscription.ts.
+# `subscribe` answers `null` when the connection died between the funnel's
+# liveness check and its own — the declared return type had never said so, and
+# the callers were reading `.roomId` off it.
 
 bin/copy-binaries.ts
 index.ts
@@ -145,12 +149,14 @@ lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
 lib/core/network/protocols/protocol.ts
 lib/core/network/router.ts
+lib/core/plugin/plugin.ts
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/pluginRepository.ts
 lib/core/plugin/privilegedContext.ts
 lib/core/realtime/actionEnum.ts
 lib/core/realtime/channel.ts
 lib/core/realtime/connectionRooms.ts
+lib/core/realtime/hotelClerk.ts
 lib/core/realtime/index.ts
 lib/core/realtime/notification/document.ts
 lib/core/realtime/notification/index.ts
@@ -158,6 +164,7 @@ lib/core/realtime/notification/server.ts
 lib/core/realtime/notification/user.ts
 lib/core/realtime/notifier.ts
 lib/core/realtime/room.ts
+lib/core/realtime/subscription.ts
 lib/core/realtime/subscription.ts
 lib/core/security/index.ts
 lib/core/security/profileRepository.ts
