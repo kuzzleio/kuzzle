@@ -50,7 +50,13 @@ class PluginPipeDefinition<
 > {
   public event: TEventDefinition["name"];
   public handler: RegisteredPipeHandler<TEventDefinition>;
-  public pipeId: string | null;
+  /**
+   * Never null: the constructor answers a fresh uuid when it is given none,
+   * which is what `pipeId || uuidv4()` has always done. The nullable
+   * declaration was TD-62's shape, and `PluginsManager.registerPipe` returns
+   * this value as its declared `string`.
+   */
+  public pipeId: string;
 
   constructor(
     event: TEventDefinition["name"],

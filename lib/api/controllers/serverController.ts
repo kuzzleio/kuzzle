@@ -287,8 +287,10 @@ class ServerController extends NativeController {
     response.kuzzle.plugins =
       global.kuzzle.pluginsManager.getPluginsDescription();
 
+    // A Kuzzle started without an application has none to describe, and this
+    // route answered by throwing on `undefined.info()`.
     response.kuzzle.application =
-      global.kuzzle.pluginsManager.application.info();
+      global.kuzzle.pluginsManager.application?.info();
 
     response.services = {
       internalCache: await global.kuzzle.ask("core:cache:internal:info:get"),

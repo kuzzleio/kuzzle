@@ -295,9 +295,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.install(options.installations);
 
-      this.log.info(
-        `[✔] Start "${this.pluginsManager.application.name}" application`,
-      );
+      // `application` is the very wrapper handed to the plugins manager six
+      // lines up, so reading the name back off the manager was a round trip
+      // through a getter that can answer `undefined`.
+      this.log.info(`[✔] Start "${application.name}" application`);
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,

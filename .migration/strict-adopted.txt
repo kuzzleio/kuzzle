@@ -154,6 +154,7 @@ lib/core/network/router.ts
 lib/core/plugin/plugin.ts
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/pluginRepository.ts
+lib/core/plugin/pluginsManager.ts
 lib/core/plugin/privilegedContext.ts
 lib/core/realtime/actionEnum.ts
 lib/core/realtime/channel.ts

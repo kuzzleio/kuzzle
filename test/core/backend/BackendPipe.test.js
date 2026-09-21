@@ -11,6 +11,11 @@ describe("Backend", () => {
   let Backend;
 
   beforeEach(() => {
+    // Sets `global.kuzzle`: `BackendPipe.register` reads the application off
+    // the plugins manager once the backend is started, and this suite never
+    // starts one, so it used to read whatever the previous suite had left.
+    new KuzzleMock();
+
     mockrequire("../../../lib/kuzzle", KuzzleMock);
 
     ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
@@ -55,6 +60,10 @@ describe("Backend", () => {
       application.started = true;
       global.kuzzle = {
         pluginsManager: {
+          // The application the pipe is attributed to. This stub used to omit
+          // it, so the assertion below read `undefined` and passed by
+          // comparing it to the `undefined` the code handed on.
+          application: { name: "black-mesa" },
           registerPipe: sinon.stub().returns("pipe-unique-id"),
         },
       };
