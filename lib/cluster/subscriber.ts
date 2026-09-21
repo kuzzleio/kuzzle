@@ -29,7 +29,6 @@ import DocumentNotification from "../core/realtime/notification/document";
 import UserNotification from "../core/realtime/notification/user";
 import createDebug from "../util/debug";
 import { fromKoncordeIndex } from "../util/koncordeCompat";
-import { has } from "../util/safeObject";
 
 import type { RealtimeScope, RealtimeUsers } from "../types";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";

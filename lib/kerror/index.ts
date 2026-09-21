@@ -21,7 +21,6 @@
 
 import { format } from "util";
 
-import _ from "lodash";
 import type { JSONObject } from "kuzzle-sdk";
 
 import type { Domains } from "./codes";
@@ -104,13 +103,13 @@ export function rawGet(
     kuzzleError.class === "PartialError" ||
     kuzzleError.class === "MultipleErrorsError"
   ) {
-    const [last] = placeholders.splice(-1);
+    const [partials] = placeholders.splice(-1);
 
     // The documented shape is the list of partial errors. Anything else was
     // handed to the constructor and dropped there — `Array.isArray(body)` is
     // the only thing it does with it — so the check moves to where the type
     // is decided.
-    body = Array.isArray(last) ? last : undefined;
+    body = Array.isArray(partials) ? partials : undefined;
   }
 
   const message =
