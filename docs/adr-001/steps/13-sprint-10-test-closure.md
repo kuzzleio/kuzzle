@@ -74,7 +74,8 @@ A port is not a rewrite of assertions — `should` → `expect` is mechanical an
 
 ### Two findings that change what "port" means
 
-**Six lib files already have a spec in BOTH runners, and three of those ports are unfinished:**
+**Six lib files already have a spec in BOTH runners.** When this step was
+opened, that was read off the line counts:
 
 | Spec                                           | Mocha lines | vitest lines |
 | ---------------------------------------------- | ----------: | -----------: |
@@ -85,7 +86,28 @@ A port is not a rewrite of assertions — `should` → `expect` is mechanical an
 | `core/shared/sdk/impersonatedSdk.test`         |         106 |          130 |
 | `core/storage/storageEngine.test`              |          59 |          107 |
 
-The bottom three grew in the port, which is what a finished port looks like. The top three did not: `memoryStorageController` is at **16%** of its Mocha spec and `clientAdapter` at **50%**. **Deleting those Mocha files today would lose real coverage**, and the `mocha` ratchet would read it as progress — it counts files, not tests. `prepare-coverage.ts` is what has kept this honest so far — it never hands a file over to the runner that measures it worse ([ADR § Coverage measurement](../ADR-0001-migration-typescript.md#cold-start)) — but that is a coverage gate, not a permission to delete. **Finishing these three is L0**, and they are the measure of what a "port" costs when nobody is counting.
+— and the conclusion drawn was that the top three were unfinished ports. **Two
+of those three were not**, and the error is the same one the step's own DoD was
+written to prevent: _lines are not tests_. Measured properly, before touching
+anything (`--coverage` per subject):
+
+| Subject                      | Mocha                | vitest, before L0  | What it meant                                                                                                                                                                                                                                |
+| ---------------------------- | -------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clientAdapter.ts`           | **24.1%** L, 31.8% F | **100%** L, 100% F | The vitest port is table-driven — three tables instead of forty `describe`s. It is _shorter because it is denser_, and it strictly supersedes a 1 903-line spec that mocked so much of the subject it exercised a quarter of it.             |
+| `stackTrace.ts`              | 91.8% L, 89.5% B     | 78.9% L, 70.8% B   | **Not a port at all**: the Mocha spec tests `hilightUserCode`, the vitest one tests `removeStacktrace`. Two functions of the same module. (They looked like a pair only because macOS matched `stacktrace.test.js` to `stackTrace.test.ts`.) |
+| `memoryStorageController.ts` | 74.5% L, 48.0% F     | 55.7% L, 56.0% F   | **The one real partial port**, and the gap is named: `set`, `sort`, `zinterstore`/`zunionstore`, `mexecute` and the constructor.                                                                                                             |
+
+_The generalisable part, and it is the reason L0 exists at all:_ **a line count
+compares two texts; only coverage compares two tests.** The finding that drove
+this slice survives — a file count can fall while coverage does, and
+`memoryStorageController` is the proof — but the instrument that found it was
+wrong twice out of three, in both directions: it accused a better port and it
+invented a port that was not one.
+
+`prepare-coverage.ts` is what has kept the underlying risk honest so far — it
+never hands a file over to the runner that measures it worse
+([ADR § Coverage measurement](../ADR-0001-migration-typescript.md#cold-start)) —
+but that is a coverage gate, not a permission to delete.
 
 **52 of the 148 specs do not mirror a `lib/` file**, e.g. `test/api/funnel/execute.test.js`, `test/api/funnel/checkRights.test.js` and four more that between them cover one file, or `test/kerror/codes.test.js` which covers a directory. The `tests/` mirror convention is what `prepare-coverage.ts` uses to assign a file its owning runner, so **for a third of the suite the convention cannot answer who owns what**. Decide the target layout for those 52 before porting them, not during: a per-file mirror means merging six funnel specs into one, and that is a judgement about test organisation, not a translation.
 
@@ -93,16 +115,16 @@ The bottom three grew in the port, which is what a finished port looks like. The
 
 Ordered so each is independently mergeable, the ratchet moves in every one of them, and the deletions are last.
 
-| #      | Content                                                                                                                                                                                                                                                                                                              |  Specs |      Lines | Why this grouping                                                                                                                                                                                                                                                                                                                     |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **L0** | **Finish the three half-ported specs** (`clientAdapter`, `memoryStorageController`, `stacktrace`) and delete their Mocha originals                                                                                                                                                                                   |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
-| **L1** | **The codemod, proven on the small clean specs**: `should` → `expect`, `sinon` → `vi`, on the ≤ 200-line specs using neither `mock-require` nor `rewire`                                                                                                                                                             | **60** |  **5 773** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
-| **L2** | The clean specs at **201–1 000 lines**, by layer                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
-| **L3** | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
-| **L4** | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
-| **L5** | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
-| **L6** | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
-| **L7** | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
+| #         | Content                                                                                                                                                                                                                                                                                                              |  Specs |      Lines | Why this grouping                                                                                                                                                                                                                                                                                                                     |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L0** ✅ | **The three specs that already had a vitest counterpart** — measured by coverage rather than by line count, completed where the coverage said so, then deleted; see _What L0 found_                                                                                                                                  |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
+| **L1**    | **The codemod, proven on the small clean specs**: `should` → `expect`, `sinon` → `vi`, on the ≤ 200-line specs using neither `mock-require` nor `rewire`                                                                                                                                                             | **60** |  **5 773** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
+| **L2**    | The clean specs at **201–1 000 lines**, by layer                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
+| **L3**    | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
+| **L4**    | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
+| **L5**    | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
+| **L6**    | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
+| **L7**    | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
 The seven work slices partition the 148 specs and the 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**.
 
@@ -139,3 +161,80 @@ npm run typecheck:tests                        # tsconfig.tests.json
 npm run test:unit:mocha:coverage               # c8 + merge — what arbitrates a port's honesty
 grep -rl "mock-require\|rewire" test --include='*.js' | wc -l   # the hard files: 52 today
 ```
+
+---
+
+## What L0 found
+
+**`mocha` 148 → 145**, three specs deleted, and **not one of the three was what
+the plan said it was.**
+
+| Subject                      | Mocha (before)  | vitest before   | vitest after                | Action taken                           |
+| ---------------------------- | --------------- | --------------- | --------------------------- | -------------------------------------- |
+| `clientAdapter.ts`           | 24.1% L 31.8% F | 100% L 100% F   | unchanged                   | **Deleted outright** — nothing to port |
+| `stackTrace.ts`              | 91.8% L 89.5% B | 78.9% L 70.8% B | **100/100/100**             | Ported + gap closed                    |
+| `memoryStorageController.ts` | 74.5% L 48.0% F | 55.7% L 56.0% F | **98.4% L 98.7% B 96.0% F** | Ported                                 |
+
+Vitest: **20 → 86 tests** across the two files (3 → 14 and 17 → 52).
+
+**Suite totals: Mocha 3 092 → 2 921 tests, vitest 261 → 327.** That is **105
+fewer test cases for strictly more coverage**, and it is the number a
+file-counting ratchet cannot see in either direction. `clientAdapter`'s Mocha
+spec alone held 93 `it`s exercising 24% of its subject; the port replaced them
+with tables that exercise all of it. **Count of tests is not a proxy for
+coverage either** — it is only a better one than count of files, which is why
+the DoD asks for both numbers and the coverage report as the arbiter.
+
+### The slice was planned on line counts, and line counts were wrong twice
+
+This step's own DoD says _report tests, not files_. L0 was scoped on a third
+thing — **lines** — and it misread two of the three subjects:
+
+- **`clientAdapter`'s vitest spec is not a partial port, it is a better one.**
+  948 lines against 1 903 because it replaces forty near-identical `describe`
+  blocks with three typed tables (`pass-through handlers`, `handlers that
+reshape their arguments`, `handlers delegating to the adapter's own methods`).
+  It reaches **100% of the file**; the Mocha spec reaches **24.1%**, because it
+  mocks so much of the adapter that most of it never runs. The 1 903-line file
+  was pure redundancy and its deletion costs nothing.
+- **`stackTrace` was never a pair.** `test/util/stacktrace.test.js` tests
+  `hilightUserCode`; `tests/util/stackTrace.test.ts` tests `removeStacktrace`.
+  They matched only because **macOS's filesystem is case-insensitive**, so the
+  script that paired `test/**` with `tests/**` saw `stacktrace` and `stackTrace`
+  as the same path. On CI's Linux filesystem the pair would not have been found
+  at all — and the conclusion drawn from it would simply never have been drawn.
+
+Only `memoryStorageController` was what it was filed as, and there the line
+ratio (16%) understated the real gap (55.7% coverage): it was missing `set`,
+`sort`, `zinterstore`/`zunionstore`, `mexecute` and the constructor's three
+action shapes, which is more than 16% of the file's behaviour.
+
+_Two lessons, and the second is the one to carry into L1–L7:_
+
+1. **A line count compares two texts; only coverage compares two tests.** Three
+   subjects, three different verdicts, and the cheap instrument got two wrong —
+   in _both_ directions, accusing a better port and inventing a port that was
+   not one.
+2. **A path comparison on macOS is not a path comparison.** Anything that pairs
+   `test/x` with `tests/x` has to be case-sensitive, or it will keep inventing
+   pairs — and the remaining 145 specs are paired that way by the coverage
+   gate's mirror convention.
+
+### Both ported specs now cover more than the Mocha ones did
+
+Not by translating assertions, but because the gaps were visible once coverage
+was the instrument:
+
+- **`stackTrace`** gained the `at /` and `at async /` frames (the two disjuncts
+  that let an anonymous user frame be marked as user code), and the whole
+  **serialized-request-response arm** of `removeStacktrace` — the shape the
+  protocols actually hand it, which **neither spec covered**: 4 tests, 3 branches.
+- **`memoryStorageController`** gained the table's own `map` closures, which the
+  Mocha spec **could not reach by construction** — it swapped the command table
+  for a fixture, so `toArray`, `sanitizeArrayArgument` and `processLimit` never
+  ran there. Function coverage **48% → 96%** is almost entirely that.
+
+### One thing L0 did not fix
+
+`test/mocks/clientAdapter.mock.js` stays: `storageEngine`, `baseModel` and
+`apiKey`'s Mocha specs still use it. It goes with the last of them, not here.
