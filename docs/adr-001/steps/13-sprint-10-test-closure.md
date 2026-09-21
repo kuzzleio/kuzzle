@@ -119,7 +119,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **L0** ✅  | **The three specs that already had a vitest counterpart** — measured by coverage rather than by line count, completed where the coverage said so, then deleted; see _What L0 found_                                                                                                                                  |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
-| **L1b** 🟨 | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` (4); see _What L1b1/L1b2/L1b2b/L1b3 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
+| **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2**     | The clean specs at **201–1 000 lines**, by layer                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3**     | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
@@ -142,6 +142,7 @@ The standing list is [ADR § Conversion standards](../ADR-0001-migration-typescr
 - **`git diff origin/2-dev --name-only -- lib/` prints nothing.** A porting slice does not change production code; if it must, that is a finding to state in the PR, not a line to carry along. L1 committed a stray `git stash pop` conflict into `lib/` and only `tsc` and lint noticed.
 - **Compare tests, not coverage percentages, across runners.** c8 and the v8 provider do not share a denominator (see _What L1 found_): the claim a port owes is that every `it` it replaces is accounted for, plus the normalised report from `prepare-coverage.ts` if a number is needed.
 - **`npm run typecheck:tests` and `npm run build` both green** — the specs and the production code are separate programs since [step 12](12-sprint-9-strict-flip.md), and only the first one sees a test file.
+- **Run the WHOLE Mocha suite after every deletion, and read its failure count.** A ported spec's siblings may be leaning on state it left on the global: deleting `deprecate.test.js` broke `didYouMean.test.js`, in a file that slice never touched (see _What L1b4 found_). 84 specs remain and there is no way to know which ones lean on a neighbour.
 - Run the suites **in Docker** (`.ci/scripts/docker-test.sh unit vitest` / `unit mocha`); the host cannot load `re2` on arm64.
 
 ## Risks
@@ -505,3 +506,63 @@ The last two are the [L1b2](#what-l1b2-found) pattern again: **the private-membe
 ### Where the real config is the right fixture
 
 `router`'s HTTP half asserts "registers the routes from `config/httpRoutes`" — the route table **is** the subject. So that block loads the real config with `loadConfig()` and stubs only the funnel, rather than inventing three routes and testing the invention. A fixture is small because the dependency is small, not as a rule.
+
+---
+
+## What L1b4 found — and L1b is closed
+
+**`mocha` 88 → 84**, 4 specs ported into 5 files, vitest **713 → 748 tests** across **69 → 73 files**. The four Mocha specs held **25** tests; the five vitest ones hold **35**.
+
+**L1b is done: 30 specs, 3 459 lines, `148 → 84` on the ratchet across b1–b4** (plus the four L2 specs pulled in to close two mirrors). Not one of the 30 was a translation; every one was a question about what its subject actually needs.
+
+### ⚠️ The finding that matters most: a spec was passing because of another file
+
+Deleting `test/util/deprecate.test.js` **broke `test/util/didYouMean.test.js`** — two failures, in a file this slice never touched.
+
+`lib/util/didYouMean.ts` reads **`global.NODE_ENV`**. `didYouMean.test.js` only ever set **`process.env.NODE_ENV`**. It passed because Mocha runs the whole suite in one process, `deprecate.test.js` sorts first, and its `beforeEach` set the *global* to `"development"` and left it there. The assertion under test — "calls the library" — was being satisfied by a sibling's leftover state.
+
+```
+2 failing
+  1) Test: Deprecate util  ← didYouMean.test.js, under deprecate's describe title
+       should call didYouMean library with provided args:
+     expected 'stub' to be called once but was called 0 times
+```
+
+Even the `describe` title was `"Test: Deprecate util"`, copied from the file it depended on.
+
+`didYouMean.test.js` now states its own precondition (and restores it in an `afterEach`). That is a change to a Mocha spec, which this step otherwise only deletes — justified because the slice is what removed the setup it was leaning on.
+
+**This is the risk the `mocha` ratchet cannot see, and it is worse than the coverage one L0 found.** A file count going down says nothing about what the remaining files were silently relying on. **Run the whole Mocha suite after every deletion** — the DoD said so for correctness; this is the reason.
+
+⚠️ **There are 84 specs left and no way to know which of them lean on a neighbour.** Each will surface the way this one did: as a failure somewhere else, in the PR that deletes its supplier.
+
+### The ES twins: one body, two mirrors, no duplication
+
+`esWrapper-es7.test.js` and `esWrapper-es8.test.js` are **188 lines each and byte-identical but for one import line**:
+
+```
+$ diff test/service/storage/esWrapper-es7.test.js test/service/storage/esWrapper-es8.test.js
+9c9
+< const ESWrapper = require("../../../lib/service/storage/7/esWrapper");
+---
+> const ESWrapper = require("../../../lib/service/storage/8/esWrapper");
+```
+
+Copying that across would have put 188 duplicated lines in front of SonarCloud, and [TD-23](../type-debt-register.md#td-23) says `sonar.cpd.exclusions` may only shrink — a third and fourth entry is a decision for a human, not a default. So:
+
+- `tests/service/storage/esWrapperCases.ts` holds the cases once, as `describeESWrapper(version, ESWrapper)`.
+- `tests/service/storage/7/esWrapper.test.ts` and `.../8/esWrapper.test.ts` are **four lines each**, naming their own subject.
+
+Both mirrors resolve (`lib/service/storage/{7,8}/esWrapper.ts`), both subjects get their coverage, and there is nothing to exclude. **This is the shape [L5](#slices) needs for the two 6 000-line `elasticsearch.ts` twins** — 19% of the remaining suite in two near-identical files — proven here at 1/30th the size. _L5 is no longer an open question about duplication; it is an application of this._
+
+(A third mis-filing, too: both Mocha specs sat flat in `test/service/storage/` while their subjects are nested under `7/` and `8/`.)
+
+### Two more decorative or impossible tests
+
+- **`describe("logging in production")` guarded nothing.** The two `esWrapper` specs set `global.NODE_ENV = "production"` around the emit assertions, which reads as "this only happens in production" — and `formatESError` emits **unconditionally**. There is no such branch. The block is gone and the port asserts the emit in both environments, with the absence of a guard stated.
+- **`Service` is `abstract`** and the Mocha spec instantiated it directly (TS2554 ×4 — `_initSequence` is the hook a real service implements). The port declares a four-line concrete subclass, which is both what type-checks and what a service *is*; the sequence is a `vi.fn` the tests drive rather than a field assigned onto the instance afterwards.
+- `lib/util/deprecate` exports a **named** `deprecateProperties`, and the Mocha spec imported the module object as if it were a namespace. Fourth occurrence of an import-shape mismatch in this step.
+
+### `deprecate` needed no application at all
+
+`deprecateProperties(logger, object, deprecations)` takes its logger **as an argument**. The Mocha spec built a full `KuzzleMock` to reach `kuzzle.log.warn` — so a spec about a `Proxy` looked like it needed the application. The port passes `{ warn: vi.fn() }` and touches no global. _It is the clearest single example of what L1b was for._
