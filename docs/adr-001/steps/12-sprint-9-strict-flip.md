@@ -501,6 +501,35 @@ three config files away, in `.mocharc`. The payload diff was taken as the step s
 to take it, was green, and still missed it — a payload gate derived from `files`
 cannot see a consumer that is not a package consumer. Running the suites is what saw it.
 
+#### And cucumber type-checks its step definitions at load time
+
+The same class of miss, one layer further out, and this one only CI could show:
+all **30 functional shards** failed on the first push, with Kuzzle itself perfectly
+healthy (Elasticsearch creating indices, no boot error anywhere in the log). The
+whole failure is one line:
+
+```
+features/step_definitions/auth-steps.ts(65,11): error TS18046: 'error' is of type 'unknown'.
+```
+
+`cucumber.config.cjs` declares `requireModule: ["ts-node/register"]` — the
+type-checking register, not `transpile-only` — and **ts-node reads `tsconfig.json`**
+unless `TS_NODE_PROJECT` says otherwise. After the flip that file is the production
+program: `strict: true`, and `features/` not even in its `include`. So every step
+definition was being compiled under settings it was never written for, and the suite
+died at load time. `cucumber.config.cjs` now sets `TS_NODE_PROJECT` to
+`tsconfig.tests.json` (respecting an existing value), which is the same program
+`typecheck:tests` uses. Verified with `cucumber-js --dry-run` on all five profiles —
+it loads and compiles the step definitions without needing a running Kuzzle, and it
+reproduces the CI error exactly when pointed back at `tsconfig.json`.
+
+_Third instance of one thing:_ **splitting a tsconfig splits every tool that reads
+it, and the tools do not say which one they read.** `.mocharc` (via `dist/`),
+`cucumber.config.cjs` (via ts-node), and `npm run build` each consumed the single
+program in a different way. The ones that run through `transpile-only` or `tsx`
+(`npm run dev`, `.ci/test-cluster-{7,8}.yml`, `prepare-coverage.ts`) were never
+affected, because they never type-checked in the first place.
+
 ### What else the payload lost, and why the rest was safe
 
 The guard exists because this class of change broke the package once
