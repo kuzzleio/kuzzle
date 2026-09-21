@@ -68,7 +68,11 @@ interface PersistOptions {
  */
 class UserRepository extends ObjectRepository<User> {
   protected module: SecurityModule;
-  public anonymousUser: User | null;
+  /**
+   * Built by `init()` and read nowhere before it — the `null` the constructor
+   * used to write was never observed. See ADR-0001, TD-62.
+   */
+  public anonymousUser!: User;
 
   /**
    * @param {SecurityModule} securityModule
@@ -79,7 +83,6 @@ class UserRepository extends ObjectRepository<User> {
     this.module = securityModule;
     this.collection = "users";
     this.ObjectConstructor = User;
-    this.anonymousUser = null;
   }
 
   async init() {
@@ -238,7 +241,11 @@ class UserRepository extends ObjectRepository<User> {
         database: { method: "create", refresh },
       });
     } catch (error) {
-      if (error.id === "services.storage.document_already_exists") {
+      if (
+        error instanceof Error &&
+        "id" in error &&
+        error.id === "services.storage.document_already_exists"
+      ) {
         throw kerror.get("security", "user", "already_exists", id);
       }
 
@@ -335,7 +342,16 @@ class UserRepository extends ObjectRepository<User> {
       return this.anonymousUser;
     }
 
-    return super.load(id);
+    const user = await super.load(id);
+
+    // The base resolves `null` for a user it could not build; `fromDTO` and
+    // `loadOneFromDatabase` both already turn that into a not_found, so this
+    // is the same answer stated where the return type can see it.
+    if (user === null) {
+      throw kerror.get("security", "user", "not_found", id);
+    }
+
+    return user;
   }
 
   async persist(user: User, options: PersistOptions = {}) {
@@ -380,7 +396,7 @@ class UserRepository extends ObjectRepository<User> {
     const profiles = await this.module.profile.loadProfiles(user.profileIds);
 
     // Fail if not all profiles are found
-    if (profiles.includes(null)) {
+    if (profiles.some((profile) => !profile)) {
       throw kerror.get("security", "user", "cannot_hydrate", dto._id);
     }
 
@@ -409,7 +425,7 @@ class UserRepository extends ObjectRepository<User> {
 
     await this._removeUserStrategies(user);
     await ApiKey.deleteByUser(user, { refresh });
-    await this.module.token.deleteByKuid(user._id);
+    await this.module.token.deleteByKuid(this.idOf(user));
     await super.delete(user, { refresh });
   }
 
@@ -467,9 +483,15 @@ class UserRepository extends ObjectRepository<User> {
    */
   async loadOneFromDatabase(id: string): Promise<User> {
     try {
-      return await super.loadOneFromDatabase(id);
+      const user = await super.loadOneFromDatabase(id);
+
+      if (user === null) {
+        throw kerror.get("security", "user", "not_found", id);
+      }
+
+      return user;
     } catch (err) {
-      if (err.status === 404) {
+      if (err instanceof Error && "status" in err && err.status === 404) {
         throw kerror.get("security", "user", "not_found", id);
       }
       throw err;

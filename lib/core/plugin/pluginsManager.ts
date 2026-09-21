@@ -22,6 +22,7 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
+import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import type { JSONObject } from "kuzzle-sdk";
@@ -50,6 +51,49 @@ const controllerError = kerror.wrap("plugin", "controller");
 
 // Without those plugins, Kuzzle won't start at all.
 const CORE_PLUGINS = new Set(["kuzzle-plugin-auth-passport-local"]);
+
+/**
+ * Whatever was thrown, as an `Error`.
+ *
+ * `catch` answers `unknown`, and everything below reads `.message` off it —
+ * which is what the JavaScript did, on values a plugin is free to make
+ * anything at all. `inspect`, not `String`: a thrown object stringifies to
+ * `[object Object]`.
+ */
+function causeOf(thrown: unknown): Error {
+  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
+}
+
+/**
+ * The `id` of whatever was thrown, when it carries one.
+ */
+function idOf(thrown: unknown): string | undefined {
+  if (
+    typeof thrown === "object" &&
+    thrown !== null &&
+    "id" in thrown &&
+    typeof thrown.id === "string"
+  ) {
+    return thrown.id;
+  }
+
+  return undefined;
+}
+
+/**
+ * Whatever was thrown, as the `KuzzleError` the caller is about to forward.
+ * A plugin's own KuzzleError passes through untouched — that is the contract
+ * these two handlers have always honoured.
+ */
+function asKuzzleError(thrown: unknown): KuzzleError {
+  if (thrown instanceof KuzzleError) {
+    return thrown;
+  }
+
+  const cause = causeOf(thrown);
+
+  return runtimeError.getFrom(cause, "unexpected_error", cause.message);
+}
 
 /**
  * Any function a plugin exposes: a pipe, a hook, an action handler, a strategy
@@ -171,10 +215,57 @@ class PluginsManager {
     );
   }
 
-  get application(): Plugin {
+  /**
+   * The application plugin, once `kuzzle.start` has registered one.
+   *
+   * `undefined` before that, and the shutdown path already read it that way —
+   * `pluginsManager?.application?.instance?.log?.flush?.()` defends against a
+   * start that failed before the assignment. The declared `Plugin` was the
+   * half of that the three eager readers assumed.
+   */
+  get application(): Plugin | undefined {
     return Array.from(this._plugins.values()).find(
       (plugin) => plugin.application,
     );
+  }
+
+  /**
+   * The plugin registered under `pluginName`, which is the only thing the
+   * strategy methods below can act on. Pre-Kaaf plugin names may carry upper
+   * case, hence the lowercasing every call site did for itself.
+   *
+   * The three callers dereferenced the map's answer unchecked — a strategy
+   * registered for an unknown plugin read `undefined.initCalled`. The error
+   * is the one `Backend.plugin.get` already raises for the same question.
+   */
+  private getPlugin(pluginName: string): Plugin {
+    const plugin = this._plugins.get(pluginName.toLowerCase());
+
+    if (plugin === undefined) {
+      throw assertionError.get(
+        "plugin_not_found",
+        pluginName,
+        didYouMean(pluginName, Array.from(this._plugins.keys())),
+      );
+    }
+
+    return plugin;
+  }
+
+  /**
+   * The strategy registered under `strategyName`. Reading it off the record
+   * and dereferencing straight away is what `getStrategyFields` and
+   * `getStrategyMethod` did; `hasStrategyMethod` is the guard that existed,
+   * and only one of the two call sites used it.
+   */
+  private getStrategy(strategyName: string): RegisteredStrategy {
+    const strategy = this.strategies[strategyName];
+
+    if (strategy === undefined) {
+      throw strategyError.get("strategy_not_found", strategyName);
+    }
+
+    return strategy;
   }
 
   /**
@@ -205,7 +296,12 @@ class PluginsManager {
    * @returns {Array}
    */
   getActions(controller: string): string[] {
-    return Array.from(this.controllers.get(controller)._actions);
+    const registered = this.controllers.get(controller);
+
+    // An unregistered controller has no actions. Reading `._actions` off the
+    // map's answer raised a TypeError instead, which is what `isAction`
+    // answered for a controller `isController` says does not exist.
+    return registered === undefined ? [] : Array.from(registered._actions);
   }
 
   /**
@@ -234,7 +330,7 @@ class PluginsManager {
    * @returns {object}
    */
   getPluginsDescription(): JSONObject {
-    const pluginsDescription = {};
+    const pluginsDescription: JSONObject = {};
 
     for (const plugin of this.plugins) {
       pluginsDescription[plugin.name] = plugin.info();
@@ -295,10 +391,20 @@ class PluginsManager {
         plugin.config.privileged ? "privileged" : "standard",
       );
 
+      const { init } = plugin.instance;
+
+      // Both loaders — `loadPlugins` here and `Backend.plugin.use` — refuse a
+      // plugin without one, so this is the third statement of the same
+      // precondition rather than a new one. It is the type of `init` on a
+      // user-supplied object that makes it appear.
+      if (!isPluginMethod(init)) {
+        throw assertionError.get("init_not_found", plugin.name);
+      }
+
       const promise = Bluebird.resolve(
         (async () => {
           try {
-            await plugin.instance.init(plugin.config, plugin.context);
+            await init.call(plugin.instance, plugin.config, plugin.context);
           } catch (error) {
             throw runtimeError.get("failed_init", plugin.name, error);
           }
@@ -374,7 +480,7 @@ class PluginsManager {
    * @returns {string[]}
    */
   getStrategyFields(strategyName: string): string[] {
-    return this.strategies[strategyName].strategy.config.fields || [];
+    return this.getStrategy(strategyName).strategy.config.fields || [];
   }
 
   /**
@@ -396,7 +502,7 @@ class PluginsManager {
    * @returns {function}
    */
   getStrategyMethod(strategyName: string, methodName: string): StrategyMethod {
-    return this.strategies[strategyName].methods[methodName];
+    return this.getStrategy(strategyName).methods[methodName];
   }
 
   /**
@@ -430,7 +536,7 @@ class PluginsManager {
       throw strategyError.get("invalid_methods", errorPrefix, strategy.methods);
     }
 
-    const plugin = this._plugins.get(pluginName.toLowerCase());
+    const plugin = this.getPlugin(pluginName);
 
     // required methods check
     ["exists", "create", "update", "delete", "validate", "verify"].forEach(
@@ -541,13 +647,22 @@ class PluginsManager {
         ? plugin.config.pipeWarnTime
         : this.config.common.pipeWarnTime;
 
-    const wrapper = (...data) => {
-      const now = warnDelay ? Date.now() : null;
+    const wrapper = (...data: unknown[]) => {
+      const startedAt = warnDelay ? Date.now() : null;
       const callback = data.pop();
 
+      // The pipe runner always calls a registered pipe with a trailing
+      // callback — the same narrowing `wrapStrategyVerify` makes, and the
+      // same branch that cannot be taken.
+      if (!isPluginMethod(callback)) {
+        return;
+      }
+
       const cb = (error: Error | null, result?: unknown) => {
-        if (warnDelay) {
-          const elapsed = Date.now() - now;
+        // `startedAt !== null` is `warnDelay` truthy, said in the form that
+        // proves there is a timestamp to subtract.
+        if (startedAt !== null) {
+          const elapsed = Date.now() - startedAt;
 
           if (elapsed > warnDelay) {
             this.logger.warn(
@@ -572,11 +687,7 @@ class PluginsManager {
             .catch((error) => cb(error));
         }
       } catch (error) {
-        cb(
-          error instanceof KuzzleError
-            ? error
-            : runtimeError.getFrom(error, "unexpected_error", error.message),
-        );
+        cb(asKuzzleError(error));
       }
     };
 
@@ -603,8 +714,7 @@ class PluginsManager {
     strategyName: string,
     strategy: StrategyEntry,
   ): void {
-    // prior to Kaaf, plugin names can contains upper case
-    const plugin = this._plugins.get(pluginName.toLowerCase());
+    const plugin = this.getPlugin(pluginName);
 
     // only add the strategy to the strategies object if the init method
     // has not been called
@@ -629,7 +739,7 @@ class PluginsManager {
     for (const methodName of Object.keys(strategy.methods).filter(
       (name) => name !== "verify",
     )) {
-      methods[methodName] = async (...args) => {
+      methods[methodName] = async (...args: unknown[]) => {
         try {
           const boundFunction = bindPluginMethod(
             plugin.instance,
@@ -638,11 +748,7 @@ class PluginsManager {
 
           return await boundFunction(...args);
         } catch (error) {
-          if (error instanceof KuzzleError) {
-            throw error;
-          }
-
-          throw runtimeError.getFrom(error, "unexpected_error", error.message);
+          throw asKuzzleError(error);
         }
       };
     }
@@ -674,11 +780,13 @@ class PluginsManager {
         methods.afterRegister(instance);
       }
     } catch (e) {
+      const cause = causeOf(e);
+
       throw strategyError.getFrom(
-        e,
+        cause,
         "failed_registration",
         strategyName,
-        e.message,
+        cause.message,
       );
     }
   }
@@ -712,7 +820,9 @@ class PluginsManager {
   _initPipes(plugin: Plugin): void {
     const methodsList = getMethods(plugin.instance);
 
-    for (const [event, fn] of Object.entries(plugin.instance.pipes)) {
+    // `?? {}`: every member of a plugin's object is optional, and `init`
+    // guards each of these loops with an `isEmpty` the compiler cannot read.
+    for (const [event, fn] of Object.entries(plugin.instance.pipes ?? {})) {
       const list = Array.isArray(fn) ? fn : [fn];
 
       for (const target of list) {
@@ -780,7 +890,7 @@ class PluginsManager {
   _initHooks(plugin: Plugin): void {
     const methodsList = getMethods(plugin.instance);
 
-    for (const [event, fn] of Object.entries(plugin.instance.hooks)) {
+    for (const [event, fn] of Object.entries(plugin.instance.hooks ?? {})) {
       const list = Array.isArray(fn) ? fn : [fn];
 
       for (const target of list) {
@@ -802,7 +912,7 @@ class PluginsManager {
 
   async _initApi(plugin: Plugin): Promise<void> {
     for (const [controller, definition] of Object.entries(
-      plugin.instance.api,
+      plugin.instance.api ?? {},
     )) {
       debug(
         "[%s][%s] starting api controller registration",
@@ -873,7 +983,9 @@ class PluginsManager {
       );
     }
 
-    for (const controller of Object.keys(plugin.instance.controllers)) {
+    const legacyControllers = plugin.instance.controllers ?? {};
+
+    for (const controller of Object.keys(legacyControllers)) {
       debug(
         "[%s][%s] starting controller registration",
         plugin.name,
@@ -882,7 +994,7 @@ class PluginsManager {
 
       const methodsList = getMethods(plugin.instance);
       const controllerName = `${plugin.name}/${controller}`;
-      const definition: JSONObject = plugin.instance.controllers[controller];
+      const definition: JSONObject = legacyControllers[controller];
       const errorControllerPrefix = `Unable to inject controller "${controller}" from plugin "${plugin.name}":`;
 
       if (!isPlainObject(definition)) {
@@ -921,7 +1033,7 @@ class PluginsManager {
       "options",
     ];
     const routeProperties = ["verb", "url", "controller", "action", "path"];
-    const controllerNames = Object.keys(plugin.instance.controllers);
+    const controllerNames = Object.keys(legacyControllers);
 
     // @deprecated - warn about using the obsolete "routes" object
     if (!isEmpty(plugin.instance.routes)) {
@@ -1130,21 +1242,27 @@ class PluginsManager {
     methodsList: string[],
   ): void {
     const { action, controller, controllerName, errorControllerPrefix } = names;
-    const named = typeof target === "string" ? target : null;
+    // Nested rather than one flat condition: what the throw leaves standing
+    // is "a function, or a name that resolves to one", and written this way
+    // that is what the compiler carries down to the two branches below —
+    // where the `null` the previous spelling introduced had to be asserted
+    // away again.
+    if (typeof target !== "function") {
+      if (
+        typeof target !== "string" ||
+        typeof plugin.instance[target] !== "function"
+      ) {
+        const suggestion =
+          typeof target === "string" ? didYouMean(target, methodsList) : "";
 
-    if (
-      typeof target !== "function" &&
-      (named === null || typeof plugin.instance[named] !== "function")
-    ) {
-      const suggestion = named === null ? "" : didYouMean(named, methodsList);
-
-      throw controllerError.get(
-        "invalid_action",
-        errorControllerPrefix,
-        controller,
-        action,
-        suggestion,
-      );
+        throw controllerError.get(
+          "invalid_action",
+          errorControllerPrefix,
+          controller,
+          action,
+          suggestion,
+        );
+      }
     }
 
     let apiController = this.controllers.get(controllerName);
@@ -1159,7 +1277,7 @@ class PluginsManager {
     } else {
       apiController._addAction(
         action,
-        bindPluginMethod(plugin.instance, named),
+        bindPluginMethod(plugin.instance, target),
       );
     }
   }
@@ -1257,7 +1375,7 @@ class PluginsManager {
       throw assertionError.get(
         "invalid_plugins_dir",
         this.pluginsEnabledDir,
-        e.message,
+        causeOf(e).message,
       );
     }
 
@@ -1266,7 +1384,10 @@ class PluginsManager {
     for (const relativePluginPath of pluginsPath) {
       const plugin = Plugin.loadFromDirectory(relativePluginPath);
 
-      plugin.init(plugin.manifest.raw.name);
+      // `loadFromDirectory` has already read the name out of the manifest —
+      // `manifest.load()` throws `missing_name` rather than leave it unset —
+      // so this is the same string without two nullable dereferences.
+      plugin.init(plugin.name);
 
       if (loadedPlugins.has(plugin.name)) {
         throw assertionError.get("name_already_exists", plugin.name);
@@ -1383,7 +1504,10 @@ async function resolveKuid(
 
     callback(null, user);
   } catch (e) {
-    if (e.id === "security.user.not_found") {
+    // Duck-typed, as it always was: `core:security:user:get` rejects with a
+    // KuzzleError, but the id is all this branch reads and narrowing to the
+    // class would change which errors it recognises.
+    if (idOf(e) === "security.user.not_found") {
       callback(strategyError.get("unknown_kuid", prefix));
     } else {
       callback(e);
@@ -1398,24 +1522,26 @@ async function resolveKuid(
  * `typeof` check is what makes the result callable. Every call site had already
  * made that check; this is the same one, in the place that needs it.
  *
- * The result is `undefined` when the name resolves to nothing callable. That is
- * unreachable today — all four call sites establish it first — but the first
- * version of this helper declared `PluginMethod` and returned `undefined`
- * anyway, which is [TD-40](https://github.com/kuzzleio/kuzzle/issues/2727)
- * written a second time (TD-56, #2759). Under the repo's current non-strict
- * program the union collapses, so this annotation costs no call site a guard;
- * it is what makes them appear the day this file joins `strict-adopted`
- * (TD-54, #2757), which is the moment to decide whether the dead branch should
- * throw instead.
+ * The name resolving to nothing callable is unreachable — all four call sites
+ * establish it first — and the previous annotation said so by answering
+ * `undefined`, deferring the choice to the day this file joined
+ * `strict-adopted` (TD-54, #2757). That is this slice: the branch throws, so
+ * the three callers that would each have had to guard a value that cannot
+ * exist do not, and the one thing that could produce it — a plugin whose
+ * member stopped being a function between the check and the bind — says so
+ * instead of returning something uncallable.
  */
 function bindPluginMethod(
   instance: PluginInstance,
   name: string,
-): PluginMethod | undefined {
+): PluginMethod {
   const method = instance[name];
 
   if (!isPluginMethod(method)) {
-    return undefined;
+    throw runtimeError.get(
+      "unexpected_error",
+      `plugin member "${name}" is not a function`,
+    );
   }
 
   return method.bind(instance);
@@ -1473,7 +1599,7 @@ function getMethods(object: object): string[] {
   );
 
   const objectMethods = Object.getOwnPropertyNames(object).filter(
-    (key) => typeof object[key] === "function",
+    (key) => typeof Reflect.get(object, key) === "function",
   );
 
   return [...instanceMethods, ...objectMethods];

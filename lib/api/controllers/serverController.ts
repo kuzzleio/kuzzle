@@ -20,6 +20,7 @@
  */
 
 import * as os from "node:os";
+import { inspect } from "node:util";
 
 import jsonToYaml from "json2yaml";
 
@@ -29,6 +30,11 @@ import * as kerror from "../../kerror";
 import type { ApiRoute } from "../../types/ApiRoute";
 import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
+
+/** Whatever a health probe rejected with, as an `Error`. */
+function causeOf(thrown: unknown): Error {
+  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
+}
 
 interface ApiActionDefinition {
   action: string;
@@ -40,7 +46,8 @@ interface ApiActionDefinition {
  * @class ServerController
  */
 class ServerController extends NativeController {
-  private readonly _info: Record<string, { version: string }>;
+  /** Filled by `init()`, from what the two services report. */
+  private readonly _info: Record<string, { version: string } | null>;
 
   constructor() {
     super([
@@ -147,18 +154,26 @@ class ServerController extends NativeController {
     const plugins: Record<string, { version: string }> = {};
 
     for (const plugin of config.plugins.common.include) {
-      plugins[plugin] = {
-        version: packagejson.dependencies[plugin],
-      };
+      // A plugin listed in `plugins.common.include` that is not a dependency
+      // of this package has no version to report. It was read off the
+      // manifest's dependency map by a name only known at runtime.
+      const dependencies: Record<string, string> = packagejson.dependencies;
+
+      plugins[plugin] = { version: dependencies[plugin] ?? "" };
     }
 
     for (const [name, info] of Object.entries<{ backend?: string }>(
       config.services,
     )) {
-      if (info.backend !== undefined) {
+      const reported =
+        info.backend === undefined ? undefined : this._info[info.backend];
+
+      // `_info` holds one entry per service `init()` asked, so a service
+      // configured against a backend Kuzzle does not run has none.
+      if (info.backend !== undefined && reported) {
         services[name] = {
           backend: info.backend,
-          version: this._info[info.backend].version,
+          version: reported.version,
         };
       }
     }
@@ -210,7 +225,7 @@ class ServerController extends NativeController {
         await global.kuzzle.ask("core:cache:internal:info:get");
         result.services.internalCache = "green";
       } catch (error) {
-        request.setError(getServiceUnavailableError(error));
+        request.setError(getServiceUnavailableError(causeOf(error)));
         result.services.internalCache = "red";
         result.status = "red";
       }
@@ -220,7 +235,7 @@ class ServerController extends NativeController {
         await global.kuzzle.ask("core:cache:public:info:get");
         result.services.memoryStorage = "green";
       } catch (error) {
-        request.setError(getServiceUnavailableError(error));
+        request.setError(getServiceUnavailableError(causeOf(error)));
         result.services.memoryStorage = "red";
         result.status = "red";
       }
@@ -237,7 +252,7 @@ class ServerController extends NativeController {
 
         result.services.storageEngine = "green";
       } catch (error) {
-        request.setError(getServiceUnavailableError(error));
+        request.setError(getServiceUnavailableError(causeOf(error)));
         result.services.storageEngine = "red";
         result.status = "red";
       }
@@ -287,8 +302,10 @@ class ServerController extends NativeController {
     response.kuzzle.plugins =
       global.kuzzle.pluginsManager.getPluginsDescription();
 
+    // A Kuzzle started without an application has none to describe, and this
+    // route answered by throwing on `undefined.info()`.
     response.kuzzle.application =
-      global.kuzzle.pluginsManager.application.info();
+      global.kuzzle.pluginsManager.application?.info() ?? {};
 
     response.services = {
       internalCache: await global.kuzzle.ask("core:cache:internal:info:get"),
@@ -365,7 +382,9 @@ class ServerController extends NativeController {
       const actionList: Record<string, ApiActionDefinition> = {};
 
       for (const action of controller._actions) {
-        actionList[action] = { action, controller: name };
+        const definition: ApiActionDefinition = { action, controller: name };
+
+        actionList[action] = definition;
 
         // resolve associated http route for each actions
         const routes = httpRoutes.filter((route) => {
@@ -377,11 +396,10 @@ class ServerController extends NativeController {
         });
 
         for (const route of routes) {
-          if (!actionList[action].http) {
-            actionList[action].http = [];
-          }
+          // The entry was just created above, and read back three times.
+          definition.http ??= [];
 
-          actionList[action].http.push({
+          definition.http.push({
             path: route.path,
             url: route.path,
             verb: route.verb.toUpperCase(),

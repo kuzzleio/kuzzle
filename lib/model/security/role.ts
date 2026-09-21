@@ -36,7 +36,11 @@ const assertionError = kerror.wrap("api", "assert");
  */
 export class Role {
   public controllers: ControllerRights;
-  public _id: string;
+  /**
+   * The constructor does not set it; `RoleRepository` does, on the way out of
+   * the store. See ADR-0001, TD-62.
+   */
+  public _id!: string;
 
   constructor() {
     this.controllers = {};
@@ -66,7 +70,10 @@ export class Role {
       (this.controllers.ms || this.controllers.memoryStorage)
     ) {
       controllerRights = this.controllers.ms || this.controllers.memoryStorage;
-    } else if (has(this.controllers, request.input.controller)) {
+    } else if (
+      request.input.controller !== null &&
+      has(this.controllers, request.input.controller)
+    ) {
       controllerRights = this.controllers[request.input.controller];
     } else if (this.controllers["*"] !== undefined) {
       controllerRights = this.controllers["*"];
@@ -74,13 +81,19 @@ export class Role {
       return false;
     }
 
-    if (controllerRights.actions === undefined) {
+    if (
+      controllerRights === undefined ||
+      controllerRights.actions === undefined
+    ) {
       return false;
     }
 
     let actionRights;
 
-    if (has(controllerRights.actions, request.input.action)) {
+    if (
+      request.input.action !== null &&
+      has(controllerRights.actions, request.input.action)
+    ) {
       actionRights = controllerRights.actions[request.input.action];
     } else if (controllerRights.actions["*"] !== undefined) {
       actionRights = controllerRights.actions["*"];
@@ -129,7 +142,9 @@ export class Role {
   checkRestrictions(
     index: string,
     collection: string,
-    restrictedTo: OptimizedPolicyRestrictions,
+    // Optional, and the first line already reads it as such: an optimized
+    // policy carries `restrictedTo` only when the profile restricted it.
+    restrictedTo?: OptimizedPolicyRestrictions,
   ): boolean {
     // If no restrictions, we allow the action:
     if (!restrictedTo || restrictedTo.size === 0) {
@@ -213,9 +228,9 @@ export class Role {
    */
   canLogIn(): boolean {
     for (const controllerKey of ["auth", "*"]) {
-      if (this.controllers[controllerKey]) {
-        const controller = this.controllers[controllerKey];
+      const controller = this.controllers[controllerKey];
 
+      if (controller) {
         for (const actionKey of ["login", "*"]) {
           const action = controller.actions[actionKey];
 

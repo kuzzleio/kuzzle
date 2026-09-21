@@ -76,9 +76,9 @@ Ordered so that each one is independently mergeable and the flip is last. Nothin
 | **K1** ✅ | The files at ≤ 5 errors, in layer-sized batches — **cleared 132 errors and adopted 56 files**, see _What K1 found_                                                                                            |    153 | 54% of the remaining files for 9% of the errors. Adopting them shrinks `--count`'s output to the files that actually need thought, and it is the cheapest way to make the ratchet's list stop being a survey.                                                                                                                                                               |
 | **K2** ✅ | `lib/api/request/*` — `kuzzleRequest`, `requestContext`, `requestResponse`, `requestInput`                                                                                                                    |    133 | One object, four files, and it is **public API surface** (`KuzzleRequest` is re-exported). Its types are what every controller and every plugin sees, so fixing it changes error counts everywhere else — do it before the controllers, not after.                                                                                                                          |
 | **K3** ✅ | The two `elasticsearch.ts` — **cleared 430 errors and adopted both**, see _What K3 found_                                                                                                                     |    433 | 26% of the debt in two files, and [TD-62](../type-debt-register.md#td-62) says 32 of its 56 lying `null` declarations live here. Same file twice (ES 7 and ES 8), so the second is largely the first's diff. Its own PR because its size will dominate any review it shares.                                                                                                |
-| **K4**    | `lib/core` mid-weights — `validation`, `httpwsProtocol`, `pluginsManager`, `plugin`, `tokenRepository`, `store`, `ObjectRepository`, `hotelClerk`                                                             |   ~334 | The layer with the most files and the most history. `ObjectRepository` and `store` are base classes — expect their fixes to clear errors in subclasses, so measure after, not before.                                                                                                                                                                                       |
-| **K5**    | The rest: `funnel`, the controllers, `kerror`, `kuzzle`, `cluster`'s 85, `service/cache`, `queryTranslator`                                                                                                   |   ~530 | Whatever K0–K4 has not already retired. Re-slice on the count that exists then; this row is a bucket, not a plan.                                                                                                                                                                                                                                                           |
-| **K6**    | **The flip**: `strict: true` in `tsconfig.json`, `allowJs` removed, `tsconfig.strict.json` + `strict-check.sh` + `strict-adopted.txt` deleted, `npm run test:strict` and the `pr-preflight` reminders retired |      0 | Mechanical, and only correct when `--count` is empty. The build-payload diff is part of this PR.                                                                                                                                                                                                                                                                            |
+| **K4** ✅ | `lib/core` mid-weights — `validation`, `httpwsProtocol`, `pluginsManager`, `plugin`, `tokenRepository`, `store`, `ObjectRepository`, `hotelClerk` — **cleared 349 errors, adopted 19 files, closed [TD-62](../type-debt-register.md#td-62)**, see _What K4 found_ |   ~334 | The layer with the most files and the most history. `ObjectRepository` and `store` are base classes — expect their fixes to clear errors in subclasses, so measure after, not before.                                                                                                                                                                                       |
+| **K5** ✅ | The rest: `funnel`, the controllers, `kerror`, `kuzzle`, `cluster`'s 85, `service/cache`, `queryTranslator` — **cleared the remaining 522 and adopted 37 files; `--count` is empty**, see _What K5 found_ |   ~530 | Whatever K0–K4 has not already retired. Re-slice on the count that exists then; this row is a bucket, not a plan.                                                                                                                                                                                                                                                           |
+| **K6** 🟦 | **The flip**: `strict: true` in `tsconfig.json`, `allowJs` removed, `tsconfig.strict.json` + `strict-check.sh` + `strict-adopted.txt` deleted, `npm run test:strict` and the `pr-preflight` reminders retired |      0 | Mechanical, and only correct when `--count` is empty. The build-payload diff is part of this PR.                                                                                                                                                                                                                                                                            |
 
 ## Definition of done, per PR
 
@@ -290,3 +290,92 @@ The two files join `sonar.cpd.exclusions`, where their own `esWrapper.ts` pair a
 Everything else the gate found was real and is fixed: six `S3776` (the guards K3 added pushed `search`, `import` and `_mExecute` one or two points over the complexity threshold, in both files — three extractions each side) and two minor violations in ES7. The two red functional shards were Docker Hub answering `502` to a `docker pull`.
 
 [TD-62](../type-debt-register.md#td-62) closes with this slice for the storage layer: the 32 lying `null` declarations that lived in these two files are gone. The 24 in `lib/model/security` remain, and belong to K4.
+
+---
+
+## What K4 found
+
+✅ **Landed.** `lib/core`'s mid-weights, in six commits. `validation` 95 → 0, `httpwsProtocol` 48 → 0, `pluginsManager` 44 → 0, `plugin` 24 → 0, `hotelClerk` 20 → 0, `tokenManager` 19 → 0, `tokenRepository` 17 → 0, plus the two base classes and the security models.
+
+Repo-wide: strict **871 → 522**, adopted **207 → 226**. [TD-62](../type-debt-register.md#td-62) closed with it.
+
+### One shape carried most of the layer: state that `init()` establishes
+
+`Protocol.entryPoint` and `maxRequestSize`, `HttpWsProtocol`'s `server`/`wsConfig`/`httpConfig`, `ClusterCommand`'s REP socket and protobuf schema, `ClusterNode.nodeId`, `Redis.connectedClient` (K3's, finally used by its own file). Each is a field the constructor sets to `null`, `init()` fills, and everything afterwards reads unchecked — **forty-odd dereferences across the layer**.
+
+They are accessors now: one throw, at the one place it can fail, instead of a guard at each call site that cannot. Where a spec assigns the field — `maxRequestSize`, `nodeId` — the accessor has a setter, because a field replaced by a read-only accessor is a behaviour change to every test double.
+
+### The `_id` nullability that K1 measured, paid
+
+[TD-62](../type-debt-register.md#td-62)'s remaining 24 sites were `lib/model/security`'s `_id: string = null`. K1 had measured making them honest as **+18 relocated errors** and reverted; the real figure was **+19**, and what K1's estimate did not include is that the widening reaches three *already adopted* files, so the ratchet refused the commit until those were fixed too. That is the property to keep: the ratchet makes the real cost non-negotiable instead of letting it drift.
+
+It surfaced `ObjectRepository` building cache keys and deletions from `object._id` without ever checking — a model that has never been stored addresses `repos/<index>/<collection>/null`, silently. There is a single `idOf()` that refuses, at the four sites.
+
+### Defects
+
+- **`initMapping`'s eighteen aliases could not be assigned.** `memoryStorageController`'s command table was *annotated* `RedisCommandMapping`, so every read-back was `CommandArguments | undefined`. `satisfies` checks it against the same type — which is what contextually types the `map` closures, the reason the annotation was there — while leaving the entries known.
+- **`setHeader("Content-Length", null)`** set the header to the string `"null"`; `setHeader` does `String(value)`. `removeHeader` is what the comment says it does.
+- **`wsOnMessageHandler` read `connection.id` six times** without checking the map answered. A socket torn down by `wsOnCloseHandler` has nothing to answer on, not even a rate-limit error.
+- **`HttpWsProtocol.init` never awaited `super.init()`**, which sets the two values `parseWebSocketOptions` reads two lines down.
+- **`getActions` raised a TypeError for a controller `isController` says does not exist** — through `isAction`, which is the pair's whole point.
+- **`PluginPipeDefinition.pipeId` was `string | null`** while its constructor answers `pipeId || uuidv4()`.
+- **`init(null, entryPoint)` threw on all three protocol subclasses**, though the base class publishes that call shape. `Protocol.entryPointOf` normalises it once and `Protocol.InitArgs` is the implementation signature the three overrides share.
+
+### `bindPluginMethod` is the deferred decision, taken
+
+Its annotation answered `undefined` and said so in its own comment, deferring the choice to _"the day this file joins `strict-adopted`"_. That day was this slice: it throws, and the three callers keep no guard for a value that cannot exist. **A deferral written into a type is a decision with a trigger; the trigger fired.**
+
+---
+
+## What K5 found
+
+✅ **Landed.** Ten commits, and it emptied the step: **`strict-check.sh --count` is empty and all 263 production files are adopted.**
+
+Repo-wide: strict **522 → 0**, adopted **226 → 263**, implicit-any **197 → 30**, `any` **180 → 178**, `casts` unchanged at 84.
+
+### Three levers that each paid across files
+
+1. **`assertHasBody` carries its check.** It is an assertion signature now — `asserts request is RequestWithBody`. `input.body` is `JSONObject | null` on every request and the controllers read it straight after asserting it: thirty-five times in `memoryStorageController` alone. The check existed; it did not reach the reads.
+2. **`request.context` and `request.input` are getters, so a check on one of their properties never narrows the next read of it.** That is one line of TypeScript semantics and it accounts for ~40 errors across `authController`, `funnel` and `pluginContext`. Read once into a local, or ask a helper that throws — `userOf`, `tokenOf`, `targetOf`.
+3. **`satisfies` instead of an annotation**, wherever a literal table is both checked against a type and read back by key: the Redis command table, `kerror`'s nine domains.
+
+### Seven defects, three of them visible to a client
+
+- **`kerror.get("notconnected")` matched no error.** The code is `services.cache.not_connected`, with the underscore both Elasticsearch wrappers spell correctly. Every command issued while the cache adapter was down raised `core.fatal.unexpected_error`.
+- **Both ES wrappers declared one mapping entry `subCode` where the reader asks `subcode`.** `es_rejected_execution_exception` therefore fell through to `core.fatal.unexpected_error`: `services.storage.too_many_operations` was unreachable. _Two error names, found the same way — by declaring what a name is, not by reading the code._
+- **`Kuzzle.id` was declared `string` and assigned nowhere.** Every reader of `global.kuzzle.id` read `undefined`: the redis `SETNAME`, the cluster ID card, and the `node` field of every realtime notification. `accessLogger` sends `global.nodeId` to its worker and reads it back as `kuzzle.id`, which is what says the two are the same value.
+- **`auth:logout` cleared its cookie by serialising `null`**, so the header read `authToken=null`. The funnel has carried an explicit `=== "null"` check for that string ever since — the fossil of the bug, and the reason it never surfaced.
+- **`auth:getCurrentUser` answered `strategies: [[]]` for the anonymous user.**
+- **`promiseAllN([])` answered `undefined`, not a promise** — its guard read `return resolve([])`, the resolver's return value.
+- **`performDocumentAlias` indexed its alias table with a possibly-null action, twice.**
+
+### `Kuzzle.id` is the one behaviour change to watch
+
+Three carriers change from absent to the node's name: the redis client name, the ID card's `id` field, and `node` on every realtime notification. All three were documented as carrying it. The functional suites are the check; nothing in the unit suites pinned `undefined`.
+
+### Four more local declarations, and the rule held
+
+`rc`, `ndjson`, `json2yaml` — plus `jsonwebtoken` and `sorted-array` earlier in K4. Same reasoning as `ms`/`semver` in K3 and `didyoumean` in K1: a dependency change is not a typing slice's to make, and each declares only what Kuzzle calls.
+
+### Two ratchets misfired, and both were informative
+
+- **`any` rose by 1 with no `any` added.** The ratchet greps *lines*, and Prettier had split a two-parameter signature across two lines. This is [TD-73](../type-debt-register.md#td-73)'s fourth telling. It went to 178 once the two parameters were actually typed.
+- **`casts` rose by 1 on an `event as string` added three lines below an identical one.** Naming the value once served both.
+
+### The regression K5 shipped, and what caught it
+
+The first push of [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) failed **every functional shard and both Build-and-Run jobs**, with Kuzzle dying in `internalIndex.init()` on `Cannot read properties of undefined (reading 'options')`. The unit suites were green.
+
+`Redis.setCommands` had been rewritten from
+
+```ts
+commands[command] = async (...args) => { … return client[command](...args); };
+```
+
+to read `client[command]` into a local first — which is what `noUncheckedIndexedAccess` asks for, since the indexed read is `T | undefined` — and then call **the local**. ioredis' commands live on the `Commander` prototype and read `this.options`, so every one of them threw.
+
+Three things are worth keeping from it:
+
+1. **It is the second telling.** Sprint 5's Build and Run job caught the same thing in `funnel.doAction`, and that site now carries a comment saying `Reflect.apply` is what keeps the receiver. The comment did not stop it happening one directory away.
+2. **The unit suites cannot see it.** They stub the redis client with a plain object whose methods are own properties and ignore `this`. Only a real client, on a real prototype, fails.
+3. **The audit found three more hoists in the same slice**, and one of them was wrong in the other direction: `KuzzleEventEmitter.ask` called `fn(...args)` with *no* receiver, and the rewrite had started passing the emitter. Preserving a receiver means preserving the absence of one too.

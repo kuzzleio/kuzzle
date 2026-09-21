@@ -218,7 +218,7 @@ export class HotelClerk {
    */
   async subscribe(
     request: KuzzleRequest,
-  ): Promise<{ channel: string; roomId: string }> {
+  ): Promise<{ channel: string; roomId: string } | null> {
     const { index, collection } = request.input.resource;
 
     if (!index) {
@@ -240,7 +240,14 @@ export class HotelClerk {
      * is made on the very last moment and is essential to ensure
      * that no zombie subscription can be performed
      */
-    if (!global.kuzzle.router.isConnectionAlive(request.context)) {
+    const connectionId = request.context.connection.id;
+
+    // A subscription is keyed by the connection that made it, so no connection
+    // id is the same dead connection this check is here to catch.
+    if (
+      connectionId === null ||
+      !global.kuzzle.router.isConnectionAlive(request.context)
+    ) {
       return null;
     }
 
@@ -248,11 +255,16 @@ export class HotelClerk {
 
     try {
       normalized = this.koncorde.normalize(
-        request.input.body,
+        request.input.body ?? {},
         toKoncordeIndex(index, collection),
       );
     } catch (e) {
-      throw kerror.get("api", "assert", "koncorde_dsl_error", e.message);
+      throw kerror.get(
+        "api",
+        "assert",
+        "koncorde_dsl_error",
+        e instanceof Error ? e.message : String(e),
+      );
     }
 
     this.createRoom(normalized);
@@ -272,7 +284,7 @@ export class HotelClerk {
      * and we execute it right after the subscription this way we keep descending the execution stack without returning and
      * without switching context.
      */
-    const afterSubscribeCallback = async (subscribed) => {
+    const afterSubscribeCallback = async (subscribed: boolean) => {
       if (subscribed) {
         global.kuzzle.call("core:realtime:subscribe:after", normalized.id);
 
@@ -298,9 +310,9 @@ export class HotelClerk {
     const subscription = new Subscription(
       index,
       collection,
-      request.input.body,
+      request.input.body ?? {},
       normalized.id,
-      request.context.connection.id,
+      connectionId,
       request.context.user,
     );
 
@@ -325,8 +337,10 @@ export class HotelClerk {
    * The room may exists on another cluster node, if it's the case, the normalized
    * filters will be fetched from the cluster.
    */
-  async join(request: KuzzleRequest): Promise<{ channel; roomId }> {
-    const roomId = request.input.body.roomId;
+  async join(
+    request: KuzzleRequest,
+  ): Promise<{ channel: string; roomId: string }> {
+    const roomId = request.input.body?.roomId;
 
     if (!this.rooms.has(roomId)) {
       const normalized: NormalizedFilter = await global.kuzzle.ask(
@@ -356,7 +370,10 @@ export class HotelClerk {
      * and we execute it right after the subscription this way we keep descending the execution stack without returning and
      * without switching context.
      */
-    const afterSubscribeCallback = async (subscribed, cluster) => {
+    const afterSubscribeCallback = async (
+      subscribed: boolean,
+      cluster: boolean,
+    ) => {
       if (cluster && subscribed) {
         global.kuzzle.call("core:realtime:subscribe:after", roomId);
       }
@@ -403,8 +420,9 @@ export class HotelClerk {
       const collectionNames = Object.keys(collections);
 
       // Iterate from the end so we process the most recently added collections first
-      for (let i = collectionNames.length - 1; i >= 0; i--) {
-        const collection = collectionNames[i];
+      // Reversed copy rather than a backwards index loop: same order, and the
+      // entries come out of it already narrowed.
+      for (const collection of [...collectionNames].reverse()) {
         isAllowedRequest.input.resource.collection = collection;
 
         if (!(await user.isActionAllowed(isAllowedRequest))) {
@@ -413,7 +431,7 @@ export class HotelClerk {
       }
 
       for (const collection of toRemove) {
-        delete fullStateRooms[index][collection];
+        delete fullStateRooms[index]?.[collection];
       }
     }
 
@@ -472,7 +490,7 @@ export class HotelClerk {
 
     connectionRooms.addRoom(roomId, volatile);
 
-    this.rooms.get(roomId).addConnection(connectionId);
+    this.rooms.get(roomId)?.addConnection(connectionId);
   }
 
   /**
@@ -680,13 +698,27 @@ export class HotelClerk {
     const { scope, users, propagate } = request.input.args;
     const connectionId = request.context.connection.id;
 
+    // Same as `subscribe`: a room is joined by a connection, and there is none.
+    if (connectionId === null) {
+      throw kerror.get("core", "realtime", "not_subscribed", "", roomId);
+    }
+
     const channel = new Channel(roomId, { propagate, scope, users });
     const connectionRooms = this.subscriptions.get(connectionId);
     const room = this.rooms.get(roomId);
 
+    // Every caller creates or fetches the room before subscribing to it.
+    if (room === undefined) {
+      throw kerror.get("core", "realtime", "room_not_found", roomId);
+    }
+
     if (!connectionRooms || !connectionRooms.hasRoom(roomId)) {
       subscribed = true;
-      this.registerSubscription(connectionId, roomId, request.input.volatile);
+      this.registerSubscription(
+        connectionId,
+        roomId,
+        request.input.volatile ?? {},
+      );
 
       notifyPromise = this.module.notifier.notifyUser(roomId, request, "in", {
         count: room.size,

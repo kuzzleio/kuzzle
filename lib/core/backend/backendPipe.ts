@@ -47,8 +47,18 @@ export class BackendPipe extends ApplicationManager {
     }
 
     if (this._application.started) {
+      const application = global.kuzzle.pluginsManager.application;
+
+      // `started` is set by `kuzzle.start`, which registers the application
+      // with the plugins manager before it flips: an application that is
+      // running and unknown to the manager cannot happen, and the error says
+      // which half is missing rather than handing `undefined` on.
+      if (application === undefined) {
+        throw runtimeError.get("unavailable_before_start", "pipe.register");
+      }
+
       return global.kuzzle.pluginsManager.registerPipe(
-        global.kuzzle.pluginsManager.application,
+        application,
         event,
         handler,
       );

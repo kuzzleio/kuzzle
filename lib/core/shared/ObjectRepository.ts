@@ -35,10 +35,41 @@ interface ObjectRepositoryOptions {
   store?: { index: string } | null;
 }
 
-export class ObjectRepository<TObject extends { _id: string }> {
+/**
+ * What `formatSearchResults` builds out of a raw store answer, and what
+ * `truncate`'s recursion reads back.
+ */
+export interface RepositorySearchResult<TObject> {
+  aggregations?: JSONObject;
+  hits: TObject[];
+  scrollId?: string;
+  total: number;
+}
+
+/**
+ * One page of a `truncate` walk, handed to the next recursive call.
+ */
+interface TruncatePart {
+  fetched: number;
+  scrollId: string;
+  total: number;
+}
+
+/**
+ * `_id` is nullable because the models are: `User`, `Profile` and `Token` are
+ * all constructed empty and get their id on the way out of the store
+ * (ADR-0001, TD-62). The repository only ever reads it off an object it
+ * loaded, which has one.
+ */
+export class ObjectRepository<TObject extends { _id: string | null }> {
   protected ttl: number;
   protected index: string;
-  protected collection: string;
+
+  /**
+   * Set by every subclass's own constructor — the `= null` this used to carry
+   * was never read (ADR-0001, TD-62).
+   */
+  protected collection!: string;
   protected ObjectConstructor: any;
   protected store: any;
   protected cacheDb: cacheDbEnum;
@@ -48,7 +79,6 @@ export class ObjectRepository<TObject extends { _id: string }> {
     store = null,
   }: ObjectRepositoryOptions = {}) {
     this.ttl = global.kuzzle.config.repositories.common.cacheTTL;
-    this.collection = null;
     this.ObjectConstructor = null;
     this.store = store;
     this.index = store ? store.index : global.kuzzle.internalIndex.index;
@@ -65,7 +95,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
     try {
       response = await this.store.get(this.collection, id);
     } catch (error) {
-      if (error.status === 404) {
+      if (error instanceof Error && "status" in error && error.status === 404) {
         throw kerror.get("services", "storage", "not_found", id);
       }
 
@@ -117,7 +147,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} [options] - optional search arguments (from, size, scroll)
    * @returns {Promise}
    */
-  async search(searchBody, options = {}) {
+  async search(
+    searchBody: JSONObject,
+    options: JSONObject = {},
+  ): Promise<RepositorySearchResult<TObject>> {
     const response = await this.store.search(
       this.collection,
       searchBody,
@@ -163,7 +196,12 @@ export class ObjectRepository<TObject extends { _id: string }> {
 
       return await this.fromDTO({ ...JSON.parse(response) });
     } catch (err) {
-      throw kerror.get("services", "cache", "read_failed", err.message);
+      throw kerror.get(
+        "services",
+        "cache",
+        "read_failed",
+        err instanceof Error ? err.message : String(err),
+      );
     }
   }
 
@@ -256,11 +294,11 @@ export class ObjectRepository<TObject extends { _id: string }> {
     const promises = [];
 
     if (this.cacheDb !== cacheDbEnum.NONE) {
-      promises.push(this.deleteFromCache(object._id, options));
+      promises.push(this.deleteFromCache(this.idOf(object), options));
     }
 
     if (this.store) {
-      promises.push(this.deleteFromDatabase(object._id, options));
+      promises.push(this.deleteFromDatabase(this.idOf(object), options));
     }
 
     await Promise.all(promises);
@@ -284,7 +322,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
     object: TObject,
     options: { key?: string; ttl?: number } = {},
   ): Promise<TObject> {
-    const key = options.key || this.getCacheKey(object._id);
+    const key = options.key || this.getCacheKey(this.idOf(object));
     const value = JSON.stringify(this.serializeToCache(object));
     const ttl = options.ttl ?? this.ttl;
 
@@ -341,7 +379,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
    */
   async expireFromCache(object: TObject, options: { key?: string } = {}) {
-    const key = options.key || this.getCacheKey(object._id);
+    const key = options.key || this.getCacheKey(this.idOf(object));
 
     await global.kuzzle.ask(`core:cache:${this.cacheDb}:expire`, key, -1);
   }
@@ -374,6 +412,24 @@ export class ObjectRepository<TObject extends { _id: string }> {
   /**
    * @param {string} id
    */
+  /**
+   * The id of an object being written, removed or expired.
+   *
+   * A model carries `null` until it has been stored (ADR-0001, TD-62), and
+   * every path that calls this already holds one that has. Building a cache
+   * key out of a `null` would silently address `repos/<index>/<collection>/null`,
+   * which is the failure this replaces.
+   *
+   * @throws {PreconditionError} when the object has no id
+   */
+  protected idOf(object: { _id: string | null }): string {
+    if (object._id === null) {
+      throw kerror.get("services", "storage", "missing_argument", "_id");
+    }
+
+    return object._id;
+  }
+
   getCacheKey(id: string): string {
     return `repos/${this.index}/${this.collection}/${id}`;
   }
@@ -404,7 +460,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} part
    * @returns {Promise<integer>} total deleted objects
    */
-  async truncate(options) {
+  async truncate(options: JSONObject): Promise<number> {
     // Allows safe overrides, as _truncate is called recursively
     return this._truncate(options);
   }
@@ -412,7 +468,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
   /**
    * Do not override this: this function calls itself.
    */
-  private async _truncate(options, part = null) {
+  private async _truncate(
+    options: JSONObject,
+    part: TruncatePart | null = null,
+  ): Promise<number> {
     if (part === null) {
       const objects = await this.search(
         {},
@@ -420,7 +479,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
       );
       const deleted = await this.truncatePart(objects, options);
 
-      if (objects.hits.length < objects.total) {
+      // A page that holds back hits always answers a scroll id; without one
+      // there is no next page to walk, and calling `scroll(undefined)` is how
+      // that used to be discovered.
+      if (objects.hits.length < objects.total && objects.scrollId) {
         const total = await this._truncate(options, {
           fetched: objects.hits.length,
           scrollId: objects.scrollId,
@@ -438,7 +500,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
 
     part.fetched += objects.hits.length;
 
-    if (part.fetched < part.total) {
+    if (part.fetched < part.total && objects.scrollId) {
       part.scrollId = objects.scrollId;
 
       const total = await this._truncate(options, part);
@@ -453,10 +515,13 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param {object} options
    * @returns {Promise<integer>} count of deleted objects
    */
-  private async truncatePart(objects, options) {
-    const promises = [];
+  private async truncatePart(
+    objects: RepositorySearchResult<TObject>,
+    options: JSONObject,
+  ): Promise<number> {
+    const promises: Array<Promise<number>> = [];
 
-    const processObject = async (object) => {
+    const processObject = async (object: TObject): Promise<number> => {
       // profile and role repositories have protected objects, we can't delete
       // them
       const protectedObjects =
@@ -464,11 +529,18 @@ export class ObjectRepository<TObject extends { _id: string }> {
           ? ["admin", "default", "anonymous"]
           : [];
 
-      if (protectedObjects.indexOf(object._id) !== -1) {
+      const id = this.idOf(object);
+
+      if (protectedObjects.includes(id)) {
         return 0;
       }
 
-      const loaded = await this.load(object._id);
+      const loaded = await this.load(id);
+
+      if (loaded === null) {
+        return 0;
+      }
+
       await this.delete(loaded, options);
 
       return 1;
@@ -489,8 +561,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @returns {Promise<object>}
    * @private
    */
-  private async formatSearchResults(raw) {
-    const result = {
+  private async formatSearchResults(
+    raw: JSONObject,
+  ): Promise<RepositorySearchResult<TObject>> {
+    const result: RepositorySearchResult<TObject> = {
       aggregations: raw.aggregations,
       hits: [],
       scrollId: raw.scrollId,

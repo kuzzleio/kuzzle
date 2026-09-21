@@ -143,7 +143,11 @@ export class TokenRepository extends ObjectRepository<Token> {
         await this.verifyToken(token);
       } catch (e) {
         // ? seed has changed
-        if (e.id === "security.token.invalid") {
+        if (
+          e instanceof Error &&
+          "id" in e &&
+          e.id === "security.token.invalid"
+        ) {
           await global.kuzzle.ask("core:cache:internal:del", existingTokens);
         }
       }
@@ -174,7 +178,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     }
 
     // do not refresh API Keys or token that have an infinite TTL
-    if (token.type === "apiKey" || token.ttl < 0) {
+    if (token.type === "apiKey" || (token.ttl ?? 0) < 0) {
       throw securityError.get(
         "refresh_forbidden",
         token.type === "apiKey" ? "API Key" : "Token with infinite TTL",
@@ -261,7 +265,11 @@ export class TokenRepository extends ObjectRepository<Token> {
         signOptions,
       );
     } catch (err) {
-      throw securityError.getFrom(err, "generation_failed", err.message);
+      throw securityError.getFrom(
+        err instanceof Error ? err : new Error(String(err)),
+        "generation_failed",
+        err instanceof Error ? err.message : String(err),
+      );
     }
 
     if (type === "apiKey") {
@@ -320,11 +328,66 @@ export class TokenRepository extends ObjectRepository<Token> {
       return await this.persistToCache(token, { ttl: redisTTL });
     } catch (err) {
       throw kerror.getFrom(
-        err,
+        err instanceof Error ? err : new Error(String(err)),
         "services",
         "cache",
         "write_failed",
-        err.message,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  /**
+   * Verifies a JWT's signature and answers its payload.
+   *
+   * Extracted from `verifyToken` unchanged: its three `catch` branches were
+   * most of that method's cognitive complexity, and none of them is about
+   * what the token then means.
+   */
+  private decodeToken(tokenWithoutPrefix: string) {
+    try {
+      const decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);
+
+      // probably forged token => throw without providing any information
+      if (!decoded._id) {
+        throw new jwt.JsonWebTokenError("Invalid token");
+      }
+
+      return decoded;
+    } catch (err) {
+      if (err instanceof jwt.JsonWebTokenError) {
+        throw securityError.get("invalid");
+      }
+
+      if (err instanceof jwt.TokenExpiredError) {
+        throw securityError.get("expired");
+      }
+
+      throw securityError.getFrom(
+        err instanceof Error ? err : new Error(String(err)),
+        "verification_error",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  /**
+   * `loadForUser`, with the wrapping every caller of `verifyToken` expects:
+   * an `UnauthorizedError` is the answer, anything else is a verification
+   * failure.
+   */
+  private async loadVerifiedToken(userId: string, token: string) {
+    try {
+      return await this.loadForUser(userId, token);
+    } catch (err) {
+      if (err instanceof UnauthorizedError) {
+        throw err;
+      }
+
+      throw securityError.getFrom(
+        err instanceof Error ? err : new Error(String(err)),
+        "verification_error",
+        err instanceof Error ? err.message : String(err),
       );
     }
   }
@@ -337,40 +400,13 @@ export class TokenRepository extends ObjectRepository<Token> {
     const isApiKey = token.startsWith(Token.APIKEY_PREFIX);
     const tokenWithoutPrefix = this.removeTokenPrefix(token);
 
-    let decoded;
-
-    try {
-      decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);
-      // probably forged token => throw without providing any information
-      if (!decoded._id) {
-        throw new jwt.JsonWebTokenError("Invalid token");
-      }
-    } catch (err) {
-      if (err instanceof jwt.JsonWebTokenError) {
-        throw securityError.get("invalid");
-      }
-
-      if (err instanceof jwt.TokenExpiredError) {
-        throw securityError.get("expired");
-      }
-
-      throw securityError.getFrom(err, "verification_error", err.message);
-    }
+    const decoded = this.decodeToken(tokenWithoutPrefix);
 
     if (isApiKey) {
       return this._verifyApiKey(decoded, token);
     }
 
-    let userToken;
-
-    try {
-      userToken = await this.loadForUser(decoded._id, token);
-    } catch (err) {
-      if (err instanceof UnauthorizedError) {
-        throw err;
-      }
-      throw securityError.getFrom(err, "verification_error", err.message);
-    }
+    const userToken = await this.loadVerifiedToken(decoded._id, token);
 
     if (userToken === null) {
       throw securityError.get("invalid");
@@ -383,7 +419,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     return userToken;
   }
 
-  async _verifyApiKey(decoded, token: string) {
+  async _verifyApiKey(decoded: JSONObject, token: string) {
     const fingerprint = sha256(token);
 
     const userApiKeys: any = await ApiKey.search(
@@ -398,7 +434,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     );
 
     const targetApiKey = userApiKeys?.find(
-      (apiKey) => apiKey.fingerprint === fingerprint,
+      (apiKey: JSONObject) => apiKey.fingerprint === fingerprint,
     );
 
     if (!targetApiKey) {
@@ -424,11 +460,11 @@ export class TokenRepository extends ObjectRepository<Token> {
       .replace(Token.APIKEY_PREFIX, "");
   }
 
-  loadForUser(userId: string, encodedToken: string): Promise<Token> {
+  loadForUser(userId: string, encodedToken: string): Promise<Token | null> {
     return this.load(`${userId}#${encodedToken}`);
   }
 
-  async hydrate(userToken, data) {
+  async hydrate(userToken: Token, data: JSONObject) {
     if (!_.isObject(data)) {
       return userToken;
     }
@@ -442,7 +478,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     return userToken;
   }
 
-  serializeToDatabase(token) {
+  serializeToDatabase(token: Token) {
     return this.serializeToCache(token);
   }
 
@@ -474,14 +510,14 @@ export class TokenRepository extends ObjectRepository<Token> {
      JWT character
      */
     const ids = keys
-      .map((key) => {
+      .map((key: string) => {
         return key.indexOf("#", userKey.length - 1) === -1
           ? key.slice(emptyKeyLength)
           : null;
       })
-      .filter((key) => key !== null);
+      .filter((key: string | null) => key !== null);
 
-    const expireToken = async (token) => {
+    const expireToken = async (token: string) => {
       const cacheToken = await this.load(token);
 
       if (cacheToken !== null) {

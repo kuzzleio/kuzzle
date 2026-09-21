@@ -38,14 +38,16 @@ const assertionError = kerror.wrap("api", "assert");
 /** @internal */
 type InternalProfilePolicy = {
   role: Role;
-  restrictedTo: OptimizedPolicyRestrictions;
+  /** Carried straight off the optimized policy, which may not have one. */
+  restrictedTo?: OptimizedPolicyRestrictions;
 };
 
 /**
  * @class Profile
  */
 export class Profile {
-  public _id: string;
+  /** `null` until the profile is stored — see ADR-0001, TD-62. */
+  public _id: string | null;
   public policies: Policy[];
   /**
    * Unset while the profile is persisted — `persistToDatabase` clears it so the
@@ -73,7 +75,7 @@ export class Profile {
     }
 
     return Bluebird.map(
-      this.optimizedPolicies,
+      this.optimizedPolicies ?? [],
       async ({ restrictedTo, roleId }) => {
         const role = await global.kuzzle.ask("core:security:role:get", roleId);
         return { restrictedTo, role };

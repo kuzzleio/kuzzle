@@ -55,7 +55,10 @@ type CheckOptions = {
   plugin?: boolean;
 };
 
-const domains: Domains = {
+// `satisfies`, not an annotation: the nine domains are known, and
+// `loadPluginsErrors` reaches into `domains.plugin` — which, through a
+// `Record<string, Domain>`, is `Domain | undefined`.
+const domains = {
   api: api as Domain,
   cluster: cluster as Domain,
   core: core as Domain,
@@ -65,7 +68,7 @@ const domains: Domains = {
   security: security as Domain,
   services: services as Domain,
   validation: validation as Domain,
-};
+} satisfies Domains;
 
 function checkErrors(
   subdomain: SubDomain,
@@ -135,9 +138,7 @@ function checkErrors(
 function checkSubdomains(domain: Domain, options: CheckOptions): void {
   const subdomainCodes = new Set<number>();
 
-  for (const subdomainName of Object.keys(domain.subDomains)) {
-    const subdomain = domain.subDomains[subdomainName];
-
+  for (const [subdomainName, subdomain] of Object.entries(domain.subDomains)) {
     if (!options.plugin) {
       assert(
         has(subdomain, "code"),
@@ -183,9 +184,7 @@ function checkDomains(
 ): void {
   const domainCodes = new Set<number>();
 
-  for (const domainName of Object.keys(errorCodesFiles)) {
-    const domain = errorCodesFiles[domainName];
-
+  for (const [domainName, domain] of Object.entries(errorCodesFiles)) {
     assert(
       has(domain, "code"),
       `Error configuration file : Missing required 'code' field. (domain: '${domainName}').`,

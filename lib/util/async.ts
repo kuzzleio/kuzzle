@@ -8,27 +8,43 @@ export function promiseAllN<T>(
   collection: Array<() => Promise<T>>,
   n = 100,
 ): Promise<T[]> {
+  // An empty collection resolves to an empty list. The guard clause this
+  // replaces read `return resolve([])`, which answers `undefined` — the
+  // resolver's return value — rather than the promise it had just settled.
+  if (collection.length === 0) {
+    return Promise.resolve([]);
+  }
+
   let i = 0;
   let jobsLeft = collection.length;
-  const outcome = [];
+  const outcome: T[] = [];
   let rejected = false;
 
   // create a new promise and capture reference to resolve and reject to avoid nesting of code
-  let resolve, reject;
-  const pendingPromise: Promise<T[]> = new Promise((res, rej) => {
+  let resolve: (result: T[]) => void = () => undefined;
+  let reject: (error: unknown) => void = () => undefined;
+
+  const pendingPromise = new Promise<T[]>((res, rej) => {
     resolve = res;
     reject = rej;
   });
 
-  // Guard clause
-  if (collection.length === 0) {
-    return resolve([]);
-  }
-
   // execute the j'th thunk
   function runJob(j: number) {
-    collection[j]()
-      .then((result) => {
+    const job = collection[j];
+
+    // `j` is always an index into `collection` — the bootstrap below and the
+    // `i < collection.length` check are what keep it one.
+    if (job === undefined) {
+      return;
+    }
+
+    // `Reflect.apply` with the collection as the receiver: `collection[j]()`
+    // passed the array as `this`, and hoisting the lookup out of the call is
+    // how that gets dropped silently. Every caller hands arrows, so nothing
+    // reads it — preserved rather than re-decided.
+    Reflect.apply(job, collection, [])
+      .then((result: T) => {
         if (rejected) {
           return; // no op!
         }

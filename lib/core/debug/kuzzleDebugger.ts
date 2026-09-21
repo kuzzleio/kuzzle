@@ -29,7 +29,8 @@ function isSocketRegistry(protocol: unknown): protocol is SocketRegistry {
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
 
 export class KuzzleDebugger {
-  private inspector: Inspector.Session;
+  /** Built by `init()`, which is called before anything can reach the API. */
+  private inspector!: Inspector.Session;
 
   private debuggerStatus = false;
 
@@ -132,8 +133,9 @@ export class KuzzleDebugger {
 
     // Disable debug mode for all connected sockets that still have listeners
     if (this.httpWsProtocol) {
-      for (const eventName of this.events.keys()) {
-        for (const connectionId of this.events.get(eventName)) {
+      // `values()`: the key was read only to index the map back with it.
+      for (const connectionIds of this.events.values()) {
+        for (const connectionId of connectionIds) {
           const socket =
             this.httpWsProtocol.socketByConnectionId.get(connectionId);
           if (socket) {
@@ -271,23 +273,18 @@ export class KuzzleDebugger {
       throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    let resolve;
-
-    const promise = new Promise((res) => {
-      resolve = res;
+    return new Promise<JSONObject>((resolve) => {
+      this.inspector.post(method, params, (err, res) => {
+        if (err) {
+          resolve({
+            error: JSON.stringify(Object.getOwnPropertyDescriptors(err)),
+          });
+        } else {
+          // The inspector answers `undefined` for a method with no result.
+          resolve(res ?? {});
+        }
+      });
     });
-
-    this.inspector.post(method, params, (err, res) => {
-      if (err) {
-        resolve({
-          error: JSON.stringify(Object.getOwnPropertyDescriptors(err)),
-        });
-      } else {
-        resolve(res);
-      }
-    });
-
-    return promise;
   }
 
   /**

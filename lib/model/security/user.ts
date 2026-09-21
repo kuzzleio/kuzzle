@@ -31,7 +31,8 @@ import type { Target } from "../../types";
  * @class User
  */
 export class User {
-  public _id: string;
+  /** `null` until the user is stored — see ADR-0001, TD-62. */
+  public _id: string | null;
   public profileIds: string[];
   // TODO modify this type to reflect the real type
   public strategies: any;
@@ -110,17 +111,21 @@ export class User {
 
     // Every target must be allowed by at least one profile
     for (const target of targets) {
+      // Held in locals: the closures below lose the narrowing this guard gives
+      // the properties.
+      const { index, collections } = target;
+
       // Skip targets with no Index or Collection
-      if (!target.index || !target.collections) {
+      if (!index || !collections) {
         continue;
       }
 
       // TODO: Support Wildcard
-      if (target.index.includes("*")) {
+      if (index.includes("*")) {
         return false;
       }
 
-      for (const collection of target.collections) {
+      for (const collection of collections) {
         // TODO: Support Wildcard
         if (collection.includes("*")) {
           return false;
@@ -129,7 +134,7 @@ export class User {
         const isTargetAllowed = profilesPolicies.some((policies) =>
           policies.some((policy) =>
             policy.role.checkRestrictions(
-              target.index,
+              index,
               collection,
               policy.restrictedTo,
             ),

@@ -44,19 +44,39 @@ interface ExtractorDefinition {
   targets: string[];
 }
 
+/**
+ * The body of a request whose action declares one. Every extractor below runs
+ * on an action that takes a body — `deleteFields`, `mCreate`, `upsert` — and
+ * read `request.input.body` straight through; `body` is `JSONObject | null`
+ * on every request, and a request arriving without one raised a TypeError
+ * rather than the 400 this error is.
+ */
+function bodyOf(request: KuzzleRequest): JSONObject {
+  const body = request.input.body;
+
+  if (body === null) {
+    throw assertionError.get("body_required");
+  }
+
+  return body;
+}
+
 const extractorDefinitions: ExtractorDefinition[] = [
   {
     methods: {
       extractFromRequest: (request) => [
         {
           _id: request.input.args._id,
-          _source: request.input.body.fields,
+          _source: bodyOf(request).fields,
         },
       ],
       extractFromResult: (request) => [request.result],
-      insertInRequest: ([documents], request) => {
-        request.input.args._id = documents._id;
-        request.input.body.fields = documents._source;
+      insertInRequest: ([document], request) => {
+        if (document) {
+          request.input.args._id = document._id;
+          bodyOf(request).fields = document._source;
+        }
+
         return request;
       },
       insertInResult: ([document], request) => {
@@ -84,7 +104,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
   {
     methods: {
       extractFromRequest: (request) => {
-        let ids = [];
+        let ids: unknown[] = [];
         if (
           request.input.body?.ids &&
           Object.keys(request.input.body.ids).length
@@ -104,7 +124,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
             );
           }
         }
-        return ids.map((_id) => ({ _id }));
+        return ids.map((_id: unknown) => ({ _id }));
       },
       extractFromResult: (request) => {
         if (request.input.action === "mGet") {
@@ -120,8 +140,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
         return documents;
       },
       insertInRequest: (documents, request) => {
-        if (request.input.body && Object.keys(request.input.body).length) {
-          request.input.body.ids = documents.map((document) => document._id);
+        const body = request.input.body;
+
+        if (body && Object.keys(body).length) {
+          body.ids = documents.map((document) => document._id);
         } else {
           request.input.args.ids = documents.map((document) => document._id);
         }
@@ -139,7 +161,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
           return request;
         }
 
-        const result = {
+        const result: { errors: unknown; successes: unknown[] } = {
           errors: request.result.errors,
           successes: [],
         };
@@ -160,7 +182,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
       extractFromRequest: (request) => {
         const documents = [];
 
-        for (const document of request.input.body.documents) {
+        for (const document of bodyOf(request).documents) {
           if (request.input.action === "mUpsert") {
             documents.push({
               _id: document._id,
@@ -175,26 +197,26 @@ const extractorDefinitions: ExtractorDefinition[] = [
       },
       extractFromResult: (request) => request.result.successes,
       insertInRequest: (documents, request) => {
-        const tmpDocuments = request.input.body.documents;
+        const body = bodyOf(request);
+        const tmpDocuments: JSONObject[] = body.documents;
+        const rewritten: JSONObject[] = [];
 
-        request.input.body.documents = [];
-
-        for (let it = 0; it < documents.length; it++) {
-          const document = documents[it];
-
+        for (const [it, document] of documents.entries()) {
           if (request.input.action === "mUpsert") {
-            request.input.body.documents.push({
+            rewritten.push({
               _id: document._id,
               changes: document._source,
-              default: tmpDocuments[it].default,
+              default: tmpDocuments[it]?.default,
             });
           } else {
-            request.input.body.documents.push({
+            rewritten.push({
               _id: document._id,
               body: document._source,
             });
           }
         }
+
+        body.documents = rewritten;
 
         return request;
       },
@@ -260,14 +282,14 @@ const extractorDefinitions: ExtractorDefinition[] = [
       extractFromRequest: (request) => [
         {
           _id: request.input.args._id,
-          _source: request.input.body.changes,
+          _source: bodyOf(request).changes,
         },
       ],
       extractFromResult: (request) => [request.result],
       insertInRequest: ([document], request) => {
         if (document) {
           request.input.args._id = document._id;
-          request.input.body.changes = document._source;
+          bodyOf(request).changes = document._source;
         }
 
         return request;
@@ -298,7 +320,10 @@ class DocumentExtractor {
   constructor(request: KuzzleRequest) {
     this.request = request;
 
-    const extractor = extractors[request.input.action];
+    const extractor =
+      request.input.action === null
+        ? undefined
+        : extractors[request.input.action];
 
     if (extractor === undefined) {
       throw kerror.get(
@@ -319,10 +344,31 @@ class DocumentExtractor {
   }
 
   extract() {
+    // `search`, `deleteByQuery` and `export` have no request-side extractor:
+    // they are in `documentEventAliases.notBefore`, so the "before" pass that
+    // would ask for one never runs. Both were invoked unchecked.
+    if (this.extractMethod === null) {
+      throw kerror.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `no request-side documents extractor for ${this.request.input.action}`,
+      );
+    }
+
     return this.extractMethod(this.request);
   }
 
   insert(documents: JSONObject[]) {
+    if (this.insertMethod === null) {
+      throw kerror.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `no request-side documents extractor for ${this.request.input.action}`,
+      );
+    }
+
     return this.insertMethod(documents, this.request);
   }
 }

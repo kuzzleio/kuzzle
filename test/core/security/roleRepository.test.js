@@ -907,6 +907,14 @@ describe("Test: security/roleRepository", () => {
       should(roleRepository.roles).be.empty();
     });
 
+    it("should answer the count of deleted roles", async () => {
+      // The override used to await the base and return undefined, so
+      // admin:resetSecurity reported `deletedRoles: undefined`.
+      ObjectRepository.prototype.truncate.resolves(3);
+
+      should(await roleRepository.truncate({})).be.eql(3);
+    });
+
     it("should clear the RAM cache even if the truncate fails", async () => {
       const error = new Error("foo");
 

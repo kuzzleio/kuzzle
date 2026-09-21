@@ -21,14 +21,13 @@
 
 import { format } from "util";
 
-import _ from "lodash";
 import type { JSONObject } from "kuzzle-sdk";
 
 import type { Domains } from "./codes";
 import { domains as internalDomains } from "./codes";
 import * as errors from "./errors";
 import type { KuzzleError } from "./errors";
-import type { ErrorDefinition } from "../types";
+import { isPlainObject } from "../util/safeObject";
 
 /**
  * Gets this file name in the exact same format than the one printed in the
@@ -69,21 +68,27 @@ export function rawGet(
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): KuzzleError {
   let options: JSONObject = {};
 
   // extract options object from the placeholders
-  if (_.isPlainObject(placeholders[placeholders.length - 1])) {
-    options = placeholders.pop();
+  const last = placeholders.at(-1);
+
+  if (isPlainObject(last)) {
+    options = last;
+    placeholders.pop();
   }
 
-  const kuzzleError = _.get(
-    domains,
-    `${domain}.subDomains.${subdomain}.errors.${error}`,
-  ) as any as ErrorDefinition;
+  // Walked rather than fetched through a dotted `_.get` path: the three
+  // levels are what the code below reads the codes off, the guard then covers
+  // all three at once, and the `as any as ErrorDefinition` that the string
+  // path required is gone with it.
+  const domainEntry = domains[domain];
+  const subdomainEntry = domainEntry?.subDomains[subdomain];
+  const kuzzleError = subdomainEntry?.errors[error];
 
-  if (!kuzzleError) {
+  if (!domainEntry || !subdomainEntry || !kuzzleError) {
     return get(
       "core",
       "fatal",
@@ -92,22 +97,26 @@ export function rawGet(
     );
   }
 
-  let body = null;
+  let body: KuzzleError[] | undefined;
 
   if (
     kuzzleError.class === "PartialError" ||
     kuzzleError.class === "MultipleErrorsError"
   ) {
-    body = placeholders.splice(-1)[0];
+    const [partials] = placeholders.splice(-1);
+
+    // The documented shape is the list of partial errors. Anything else was
+    // handed to the constructor and dropped there — `Array.isArray(body)` is
+    // the only thing it does with it — so the check moves to where the type
+    // is decided.
+    body = Array.isArray(partials) ? partials : undefined;
   }
 
   const message =
     options.message || format(kuzzleError.message, ...placeholders);
   const id = `${domain}.${subdomain}.${error}`;
   const code =
-    (domains[domain].code << 24) |
-    (domains[domain].subDomains[subdomain].code << 16) |
-    domains[domain].subDomains[subdomain].errors[error].code;
+    (domainEntry.code << 24) | (subdomainEntry.code << 16) | kuzzleError.code;
 
   let kerror;
   if (
@@ -144,6 +153,12 @@ export function rawGet(
  */
 
 function cleanStackTrace(error: KuzzleError): void {
+  // `Error.stack` is not guaranteed — `Error.stackTraceLimit = 0` removes it,
+  // and there is nothing to trim off an error that has none.
+  if (error.stack === undefined) {
+    return;
+  }
+
   // Keep the original error message
   const messageLength = error.message.split("\n").length;
   const currentFileName = _getCurrentFileName();
@@ -182,7 +197,7 @@ export function rawReject(
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): Promise<any> {
   return Promise.reject(
     rawGet(domains, domain, subdomain, error, ...placeholders),
@@ -202,11 +217,16 @@ export function rawReject(
  */
 export function rawGetFrom(
   domains: Domains,
-  source: Error,
+  /**
+   * Whatever was thrown. `unknown`, not `Error`: the only thing read off it
+   * is a stack, if it has one, and `pipeRunner` derives from what a plugin
+   * rejected with — which may be a string.
+   */
+  source: unknown,
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): KuzzleError {
   const derivedError = rawGet(
     domains,
@@ -218,7 +238,7 @@ export function rawGetFrom(
 
   // If a stacktrace is present, we need to modify the first line because it
   // still contains the original error message
-  if (derivedError?.stack?.length && source?.stack) {
+  if (derivedError?.stack?.length && source instanceof Error && source.stack) {
     const stackArray = source.stack.split("\n");
     stackArray.shift();
     derivedError.stack = [
@@ -235,11 +255,11 @@ export function rawGetFrom(
  */
 export function rawWrap(domains: Domains, domain: string, subdomain: string) {
   return {
-    get: (error, ...placeholders) =>
+    get: (error: string, ...placeholders: unknown[]) =>
       rawGet(domains, domain, subdomain, error, ...placeholders),
-    getFrom: (source, error, ...placeholders) =>
+    getFrom: (source: unknown, error: string, ...placeholders: unknown[]) =>
       rawGetFrom(domains, source, domain, subdomain, error, ...placeholders),
-    reject: (error, ...placeholders) =>
+    reject: (error: string, ...placeholders: unknown[]) =>
       rawReject(domains, domain, subdomain, error, ...placeholders),
   };
 }
@@ -257,7 +277,7 @@ export function get(
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): KuzzleError {
   return rawGet(internalDomains, domain, subdomain, error, ...placeholders);
 }
@@ -274,7 +294,7 @@ export function reject(
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): Promise<any> {
   return rawReject(internalDomains, domain, subdomain, error, ...placeholders);
 }
@@ -290,11 +310,11 @@ export function reject(
  * @param  placeholders - Placeholders value to inject in error message
  */
 export function getFrom(
-  source: Error,
+  source: unknown,
   domain: string,
   subdomain: string,
   error: string,
-  ...placeholders
+  ...placeholders: unknown[]
 ): KuzzleError {
   return rawGetFrom(
     internalDomains,
@@ -311,11 +331,11 @@ export function getFrom(
  */
 export function wrap(domain: string, subdomain: string) {
   return {
-    get: (error, ...placeholders) =>
+    get: (error: string, ...placeholders: unknown[]) =>
       get(domain, subdomain, error, ...placeholders),
-    getFrom: (source, error, ...placeholders) =>
+    getFrom: (source: unknown, error: string, ...placeholders: unknown[]) =>
       getFrom(source, domain, subdomain, error, ...placeholders),
-    reject: (error, ...placeholders) =>
+    reject: (error: string, ...placeholders: unknown[]) =>
       reject(domain, subdomain, error, ...placeholders),
   };
 }

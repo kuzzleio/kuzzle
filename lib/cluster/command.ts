@@ -89,9 +89,41 @@ type HandshakeResponses = Record<string, Decoded<HandshakeResponse> | null>;
 class ClusterCommand {
   private readonly node: CommandingNode;
 
-  private server: Reply | null;
+  private _server: Reply | null;
 
-  private protoroot: protobuf.Root | null;
+  private _protoroot: protobuf.Root | null;
+
+  /**
+   * The REP socket and the protobuf schema, both built by `init()`.
+   *
+   * Every method below runs on a command layer that has been initialised —
+   * `listen()` is started by `init()` itself, and the rest answer requests it
+   * received — and all eleven dereferenced them unchecked. Same shape as
+   * `Protocol.entryPoint`: said once, where it can fail.
+   */
+  private get server(): Reply {
+    if (this._server === null) {
+      throw new Error("[CLUSTER] Command server used before init()");
+    }
+
+    return this._server;
+  }
+
+  private set server(server: Reply) {
+    this._server = server;
+  }
+
+  private get protoroot(): protobuf.Root {
+    if (this._protoroot === null) {
+      throw new Error("[CLUSTER] Command protobuf schema loaded by init()");
+    }
+
+    return this._protoroot;
+  }
+
+  private set protoroot(protoroot: protobuf.Root) {
+    this._protoroot = protoroot;
+  }
 
   /**
    * One of `stateEnum`'s values. `number` and not the literal union for the
@@ -109,8 +141,8 @@ class ClusterCommand {
    */
   constructor(localNode: CommandingNode) {
     this.node = localNode;
-    this.server = null;
-    this.protoroot = null;
+    this._server = null;
+    this._protoroot = null;
 
     this.state = stateEnum.INITIALIZING;
     this.logger = global.kuzzle.log.child("cluster:command");
@@ -141,11 +173,19 @@ class ClusterCommand {
       try {
         const [type, data] = await this.server.receive();
 
-        switch (type.toString()) {
+        // A REQ frame carries a topic and, for a handshake, a payload. A
+        // request missing either is answered with DISCARDED, which is what
+        // this socket owes every REQ — the two frames were read unchecked.
+        switch (type?.toString()) {
           case commandTopic.FULLSTATE:
             await this.sendFullState();
             break;
           case commandTopic.HANDSHAKE:
+            if (data === undefined) {
+              await this.server.send([commandTopic.DISCARDED, null]);
+              break;
+            }
+
             await this.handleHandshake(data);
             break;
           default:
@@ -166,7 +206,10 @@ class ClusterCommand {
    */
   dispose(): void {
     this.state = stateEnum.CLOSED;
-    this.server.close();
+
+    // `?.`: a command that never bound has nothing to close, and disposing of
+    // one is what the specs do to release the port after a failed init.
+    this._server?.close();
   }
 
   /**
@@ -212,7 +255,13 @@ class ClusterCommand {
     );
     const { nodeId, ip, lastMessageId } = request;
 
-    const added = await this.node.addNode(nodeId, ip, lastMessageId);
+    // Protobuf leaves an absent field undefined. A handshake that names no
+    // node or no address is not one this node can add; it is told so through
+    // the `added: false` the response already carries for a duplicate.
+    const added =
+      nodeId === undefined || ip === undefined || lastMessageId === undefined
+        ? false
+        : await this.node.addNode(nodeId, ip, lastMessageId);
 
     const encoder = this.protoroot.lookupType("HandshakeResponse");
     const response: HandshakeResponse = {
@@ -247,7 +296,13 @@ class ClusterCommand {
       fullState === null && retries < nodes.length;
       retries++
     ) {
-      const { id, ip } = nodes[idx];
+      const node = nodes[idx];
+
+      if (node === undefined) {
+        break;
+      }
+
+      const { id, ip } = node;
       const req = new Request();
 
       req.receiveTimeout = this.node.config.syncTimeout;
@@ -258,7 +313,7 @@ class ClusterCommand {
       await req.send([commandTopic.FULLSTATE, null]);
 
       try {
-        [, fullState] = await req.receive();
+        [, fullState = null] = await req.receive();
       } catch {
         // no response from the remote node in a timely fashion... retrying
         // with another one
@@ -308,11 +363,13 @@ class ClusterCommand {
     const decoder = this.protoroot.lookupType("HandshakeResponse");
     const result: HandshakeResponses = {};
 
-    for (let i = 0; i < nodes.length; i++) {
+    // `entries()`: the two lists are built in step by `Bluebird.map`, which
+    // is what indexing one with the other's counter relied on.
+    for (const [i, node] of nodes.entries()) {
       const response = responses[i];
 
-      if (response === null) {
-        result[nodes[i].id] = null;
+      if (response === null || response === undefined) {
+        result[node.id] = null;
         continue;
       }
 
@@ -320,7 +377,7 @@ class ClusterCommand {
         decoder.decode(response),
       );
 
-      result[nodes[i].id] = decoded;
+      result[node.id] = decoded;
     }
 
     return result;
@@ -347,10 +404,10 @@ class ClusterCommand {
 
     await req.send([commandTopic.HANDSHAKE, payload]);
 
-    let response = null;
+    let response: Buffer | null = null;
 
     try {
-      [, response] = await req.receive();
+      [, response = null] = await req.receive();
     } catch {
       this.logger.warn(
         `Couldn't complete handshake with node ${id}: no response received`,

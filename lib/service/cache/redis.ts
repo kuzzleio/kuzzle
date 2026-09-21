@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import type { RedisCommander } from "ioredis";
 import IORedis, { Cluster } from "ioredis";
@@ -114,20 +116,23 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       ) => callback(null, address);
     }
 
-    if (config.nodes) {
-      this.client = this._buildClusterClient({
-        ...config.clusterOptions,
-        redisOptions: config.options,
-      });
-    } else {
-      this.client = this._buildClient(config.options);
-    }
+    // Built into a local and then published: `this.client` is the nullable
+    // field the accessor guards, and reading it back seven times here is what
+    // made every one of those reads a null check.
+    const client = config.nodes
+      ? this._buildClusterClient({
+          ...config.clusterOptions,
+          redisOptions: config.options,
+        })
+      : this._buildClient(config.options ?? {});
 
-    this.client.on("ready", () => {
+    this.client = client;
+
+    client.on("ready", () => {
       this.connected = true;
     });
 
-    this.client.on("error", (error) => {
+    client.on("error", (error) => {
       if (this.connected) {
         global.kuzzle.log.error(
           `Redis service seem to be down, see original error for more info:\n${error.message}`,
@@ -143,15 +148,15 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     }
 
     return new Bluebird<void>((resolve, reject) => {
-      this.client.once("ready", async () => {
-        await this.client.client(
+      client.once("ready", async () => {
+        await client.client(
           "SETNAME",
           `${this.adapterName}/${global.kuzzle.id}`,
         );
         resolve();
       });
 
-      this.client.once("error", (error) => {
+      client.once("error", (error) => {
         reject(error);
       });
     });
@@ -162,13 +167,13 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * Every 60 seconds a ping is sent to Redis
    */
   private _setupKeepAlive(delay: number) {
-    this.client.on("ready", async () => {
+    this.connectedClient.on("ready", async () => {
       await this._ping();
       this.pingIntervalID = setInterval(this._ping.bind(this), delay);
     });
 
-    this.client.on("error", () => {
-      clearInterval(this.pingIntervalID);
+    this.connectedClient.on("error", () => {
+      clearInterval(this.pingIntervalID ?? undefined);
       this.pingIntervalID = null;
     });
   }
@@ -178,10 +183,12 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    */
   private async _ping() {
     try {
-      await this.client.ping();
+      await this.connectedClient.ping();
     } catch (error) {
       global.kuzzle.log.error(
-        `Failed to PING Redis to keep connection alive:\n${error.message}`,
+        `Failed to PING Redis to keep connection alive:\n${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
       );
     }
   }
@@ -190,7 +197,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * Initializes the Redis commands list, and add transformers when necessary
    */
   setCommands(): void {
-    const commandsList = this.client.getBuiltinCommands();
+    const commandsList = this.connectedClient.getBuiltinCommands();
 
     // Command names are only known at runtime (from getBuiltinCommands()),
     // so this dispatch table can't be built against RedisCommander's named
@@ -199,15 +206,38 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     // ioredis command set, so the cast reflects a real guarantee, not a
     // hand-wave.
     const commands = this.commands as unknown as Record<string, DynamicCommand>;
-    const client = this.client as unknown as Record<string, DynamicCommand>;
+    const client = this.connectedClient as unknown as Record<
+      string,
+      DynamicCommand
+    >;
 
     for (const command of commandsList) {
+      const implementation = client[command];
+
+      // `getBuiltinCommands()` lists what the client exposes, so the lookup
+      // is the same object answering about itself — the indexed read was the
+      // only thing the compiler could not follow.
+      if (implementation === undefined) {
+        continue;
+      }
+
       commands[command] = async (...args: unknown[]) => {
         if (!this.connected) {
-          throw kerror.get("notconnected");
+          // `not_connected`, with the underscore the code is declared with.
+          // `notconnected` matches nothing, so every command issued while
+          // the adapter was down raised `core.fatal.unexpected_error`
+          // instead of "Unable to connect to the cache server".
+          throw kerror.get("not_connected");
         }
 
-        return client[command](...args);
+        // `Reflect.apply`, not `implementation(...args)`: ioredis' commands
+        // live on the `Commander` prototype and read `this.options`, so
+        // calling the result of an indexed read drops the receiver and
+        // every command throws. This is the bug sprint 5's Build and Run
+        // job caught in `funnel.doAction`, reintroduced here by hoisting
+        // the lookup out of the call — see `pluginsManager`'s note on the
+        // same line.
+        return Reflect.apply(implementation, client, args);
       };
     }
   }
@@ -224,17 +254,23 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     for (const rawItem of arr) {
       const item = rawItem.trim();
       if (item.length > 0 && !item.startsWith("#")) {
-        const keyValuePair = item.split(":");
-        info[keyValuePair[0]] = keyValuePair[1];
+        const [key, value] = item.split(":");
+
+        // A line with no colon carries no value. It was stored as
+        // `info[key] = undefined`, which the five reads below then answered
+        // with while claiming `string`.
+        if (key !== undefined && value !== undefined) {
+          info[key] = value;
+        }
       }
     }
 
     return {
-      memoryPeak: info.used_memory_peak_human,
-      memoryUsed: info.used_memory_human,
-      mode: info.redis_mode,
+      memoryPeak: info.used_memory_peak_human ?? "",
+      memoryUsed: info.used_memory_human ?? "",
+      mode: info.redis_mode ?? "",
       type: "redis",
-      version: info.redis_version,
+      version: info.redis_version ?? "",
     };
   }
 
@@ -246,15 +282,17 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    *     and http://redis.io/commands/scan
    */
   async searchKeys(pattern: string): Promise<string[]> {
-    if (this.client instanceof Cluster) {
-      const keys = await Bluebird.map(this.client.nodes("master"), (node) => {
+    const client = this.connectedClient;
+
+    if (client instanceof Cluster) {
+      const keys = await Bluebird.map(client.nodes("master"), (node) => {
         return this._searchNodeKeys(node, pattern);
       });
 
       return [...new Set(keys.flat())];
     }
 
-    return this._searchNodeKeys(this.client, pattern);
+    return this._searchNodeKeys(client, pattern);
   }
 
   /**
@@ -267,7 +305,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       return Bluebird.resolve([]);
     }
 
-    return this.client.multi(commands as unknown[][]).exec();
+    return this.connectedClient.multi(commands as unknown[][]).exec();
   }
 
   private _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
@@ -290,7 +328,9 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   }
 
   private _buildClusterClient(options: Record<string, unknown>): Cluster {
-    return new Cluster(this._config.nodes, options);
+    // The caller only reaches here when `nodes` is set; `?? []` is what the
+    // Cluster constructor would have been handed otherwise.
+    return new Cluster(this._config.nodes ?? [], options);
   }
 
   /**
@@ -332,9 +372,20 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     // command is an arbitrary name chosen at runtime by this method's own
     // caller (see its ask-handler callers in cacheEngine.js) -- same
     // escape hatch as setCommands().
-    return (this.commands as unknown as Record<string, DynamicCommand>)[
-      command
-    ](...args);
+    const commands = this.commands as unknown as Record<string, DynamicCommand>;
+    const implementation = commands[command];
+
+    if (implementation === undefined) {
+      throw kerrorLib.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `redis adapter "${this.adapterName}" has no command "${command}"`,
+      );
+    }
+
+    // Same reason as `setCommands()`: the receiver goes with the call.
+    return Reflect.apply(implementation, commands, args);
   }
 }
 

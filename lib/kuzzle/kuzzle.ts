@@ -20,6 +20,7 @@
  */
 
 import path from "path";
+import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
@@ -60,8 +61,9 @@ import InternalIndexHandler from "./internalIndexHandler";
 import kuzzleStateEnum from "./kuzzleStateEnum";
 import { Logger } from "./Logger";
 import vault from "./vault";
+import { NameGenerator } from "../util/name-generator";
 
-let _kuzzle = null;
+let _kuzzle: Kuzzle | null = null;
 
 Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
@@ -162,7 +164,12 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   private version: string;
 
-  private openApiManager: OpenApiManager;
+  /**
+   * Built by `start()`, from the application's own OpenAPI declaration.
+   * Nothing reads it before then — `server:openapi` answers off it, and the
+   * API is not serving yet.
+   */
+  private openApiManager: OpenApiManager | undefined;
 
   /**
    * List of differents imports types and their associated method
@@ -177,8 +184,12 @@ class Kuzzle extends KuzzleEventEmitter {
     ) => Promise<void>;
   };
 
-  public koncorde: Koncorde;
-  public secret: string;
+  /**
+   * The realtime engine, and the secret read out of the internal index.
+   * Both are set by `start()`, before anything that uses them is wired up.
+   */
+  public koncorde!: Koncorde;
+  public secret!: string;
 
   /**
    * Node unique ID amongst other cluster nodes
@@ -215,6 +226,17 @@ class Kuzzle extends KuzzleEventEmitter {
     this.asyncStore = new AsyncStore();
     this.debugger = new KuzzleDebugger();
     this.version = version;
+
+    // `global.nodeId` when a `Backend` named this process, and a name of the
+    // same shape otherwise — the draw `ClusterIdCardHandler` makes for the
+    // same reason. This field was declared `string` and assigned nowhere, so
+    // every reader of `kuzzle.id` — the redis `SETNAME`, the ID card, the
+    // `node` field of every realtime notification — has been reading
+    // `undefined`. `accessLogger` sends `global.nodeId` to its worker and
+    // reads it back as `kuzzle.id`, which is what says the two are the same
+    // value.
+    this.id =
+      global.nodeId ?? NameGenerator.generateRandomName({ prefix: "knode" });
 
     this.importTypes = {
       fixtures: this.importFixtures.bind(this),
@@ -295,9 +317,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.install(options.installations);
 
-      this.log.info(
-        `[✔] Start "${this.pluginsManager.application.name}" application`,
-      );
+      // `application` is the very wrapper handed to the plugins manager six
+      // lines up, so reading the name back off the manager was a round trip
+      // through a getter that can answer `undefined`.
+      this.log.info(`[✔] Start "${application.name}" application`);
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
@@ -323,7 +346,9 @@ class Kuzzle extends KuzzleEventEmitter {
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
       this.log.error(
-        `[X] Cannot start Kuzzle ${this.version}: ${error.message}`,
+        `[X] Cannot start Kuzzle ${this.version}: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
       );
 
       throw error;
@@ -356,7 +381,7 @@ class Kuzzle extends KuzzleEventEmitter {
     this.log.info("Initiating shutdown...");
 
     // Ask the network layer to stop accepting new request
-    this.entryPoint.dispatch("shutdown", null);
+    this.entryPoint.dispatch("shutdown", {});
 
     await this.pipe("kuzzle:shutdown");
 
@@ -392,7 +417,9 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install(installations: InstallationConfig[]): Promise<void> {
+  async install(installations?: InstallationConfig[]): Promise<void> {
+    // Optional, which is what `options.installations` is and what the
+    // `?.length` below already read it as.
     if (!installations?.length) {
       return;
     }
@@ -624,7 +651,10 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  private isConfigsEmpty(importConfig, supportConfig) {
+  private isConfigsEmpty(
+    importConfig: ImportConfig,
+    supportConfig: SupportConfig,
+  ) {
     if (
       _.isEmpty(importConfig.mappings) &&
       _.isEmpty(importConfig.profiles) &&
@@ -645,6 +675,11 @@ class Kuzzle extends KuzzleEventEmitter {
     existingESHash,
     importPayloadHash,
     type,
+  }: {
+    existingRedisHash: string | null;
+    existingESHash: string | null;
+    importPayloadHash: string;
+    type: string;
   }) {
     if (!existingRedisHash && !existingESHash) {
       // If the import is not initialized in the redis cache and in the ES, we initialize it
@@ -750,7 +785,9 @@ class Kuzzle extends KuzzleEventEmitter {
             break;
         }
 
-        const importPayloadHash = sha256(stringify(importPayload));
+        // `?? ""`: `json-stable-stringify` answers undefined for a value it
+        // cannot serialise, and the payload is built right above.
+        const importPayloadHash = sha256(stringify(importPayload) ?? "");
         // `timeout: 0` means a single acquisition attempt: exactly one node
         // runs the import and the others carry on with `locked: false`.
         // The TTL has to outlive the import itself, because this lock is held
@@ -829,7 +866,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  dump(suffix) {
+  dump(suffix: string) {
     return this.dumpGenerator.dump(suffix);
   }
 
@@ -847,7 +884,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     return murmur.v3(
-      Buffer.from(inString),
+      Buffer.from(String(inString)),
       this.config.internal.hash.seed as number,
     );
   }
@@ -934,7 +971,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async dumpAndExit(suffix) {
+  async dumpAndExit(suffix: string) {
     if (this.config.dump.enabled) {
       try {
         await this.dump(suffix);

@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import { Koncorde } from "koncorde";
 import type { JSONObject } from "kuzzle-sdk";
@@ -40,7 +42,9 @@ import type {
   FieldSpecification,
   RawSpecification,
   SpecificationValidationResult,
+  CuratedFieldSpecification,
   StructuredFieldSpecification,
+  UnplacedCuratedField,
   VerboseErrorMessages,
 } from "./specification";
 import AnythingType from "./types/anything";
@@ -89,6 +93,31 @@ const BUILT_IN_TYPES = [
 ];
 
 /**
+ * The message of whatever was thrown.
+ *
+ * `catch` answers `unknown`, and the values that reach these handlers are not
+ * all Errors: a plugin's validation type may throw anything, and the code has
+ * always simply read `.message` off it. Narrowing to `Error` here would change
+ * what those messages say, which the specs pin.
+ */
+function messageOf(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const message = "message" in error ? error.message : undefined;
+
+    // `inspect`, not `String`: an object stringifies to "[object Object]".
+    return typeof message === "string" ? message : inspect(error);
+  }
+
+  // A primitive. The strictness marker used to be a thrown string, and
+  // reading it back verbatim is what recognises it.
+  return typeof error === "string" ? error : inspect(error);
+}
+
+/**
  * The marker `recurseFieldValidation` throws when a document holds a field its
  * specification does not declare and the specification is strict.
  *
@@ -96,6 +125,27 @@ const BUILT_IN_TYPES = [
  * and carries the offending field name for the message the catcher builds. It
  * was a plain `Error` with an untyped `details` property bolted on.
  */
+/**
+ * The field name a strictness marker carries, read off whatever was thrown for
+ * the same reason `messageOf` exists.
+ */
+function detailedField(error: unknown): string | undefined {
+  if (error instanceof StrictnessError) {
+    return error.details.field;
+  }
+
+  if (typeof error === "object" && error !== null && "details" in error) {
+    const details = error.details;
+
+    if (typeof details === "object" && details !== null && "field" in details) {
+      // A field name is a string; anything else is not one to report.
+      return typeof details.field === "string" ? details.field : undefined;
+    }
+  }
+
+  return undefined;
+}
+
 class StrictnessError extends Error {
   public details: { field: string };
 
@@ -172,12 +222,14 @@ class Validation {
 
     // `has` rather than a plain lookup: `index` and `collection` come from the
     // request, so an inherited property must not answer for a specification.
-    const indexSpec = has(this.specification, index)
-      ? this.specification[index]
-      : undefined;
+    const indexSpec =
+      index !== null && has(this.specification, index)
+        ? this.specification[index]
+        : undefined;
     const collectionSpec: Partial<CuratedCollectionSpecification> =
       (isPlainObject(this.specification) &&
         indexSpec !== undefined &&
+        collection !== null &&
         has(indexSpec, collection) &&
         indexSpec[collection]) ||
       {};
@@ -200,13 +252,13 @@ class Validation {
       isValid = this.checkDocumentFields(
         body,
         children,
-        collectionSpec.strict,
+        collectionSpec.strict === true,
         errorMessages,
         verbose,
       );
     }
 
-    if (collectionSpec.validators) {
+    if (collectionSpec.validators && index !== null && collection !== null) {
       isValid =
         this.checkValidators(
           index,
@@ -224,7 +276,7 @@ class Validation {
       if (children) {
         request.input.body = this.recurseApplyDefault(
           isUpdate,
-          request.input.body,
+          request.input.body ?? {},
           children,
         );
       }
@@ -242,10 +294,10 @@ class Validation {
    */
   private async resolveValidationBody(
     request: KuzzleRequest,
-    index: string,
-    collection: string,
-    _id: string,
-  ): Promise<{ body: JSONObject; isUpdate: boolean }> {
+    index: string | null,
+    collection: string | null,
+    _id: string | null,
+  ): Promise<{ body: JSONObject | null; isUpdate: boolean }> {
     if (
       request.input.controller !== "document" ||
       request.input.action !== "update"
@@ -261,7 +313,7 @@ class Validation {
     );
 
     // Avoid side effects on the request during the update validation
-    const body = cloneDeep(request.input.body); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
+    const body = cloneDeep(request.input.body ?? {}); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
     defaultsDeep(body, document._source);
 
     return { body, isUpdate: true };
@@ -272,8 +324,8 @@ class Validation {
    * root-level strictness breach into a message rather than an exception.
    */
   private checkDocumentFields(
-    body: JSONObject,
-    children: Record<string, StructuredFieldSpecification>,
+    body: JSONObject | null,
+    children: Record<string, CuratedFieldSpecification>,
     strict: boolean,
     errorMessages: ErrorMessages,
     verbose: boolean,
@@ -288,15 +340,17 @@ class Validation {
       );
     } catch (error) {
       // The strictness message can be received here only if it happens at
-      // the validation of the document's root
-      if (error.message !== "strictness") {
+      // the validation of the document's root. Matched on the message, not on
+      // `instanceof StrictnessError`: a validation type is plugin code and may
+      // throw its own object, which is what the specs feed this.
+      if (messageOf(error) !== "strictness") {
         throw error;
       }
 
       manageErrorMessage(
         "document",
         errorMessages,
-        `The document validation is strict. Cannot add unspecified sub-field "${error.details.field}"`,
+        `The document validation is strict. Cannot add unspecified sub-field "${detailedField(error)}"`,
         verbose,
       );
 
@@ -310,13 +364,19 @@ class Validation {
   private checkValidators(
     index: string,
     collection: string,
-    _id: string,
-    body: JSONObject,
+    _id: string | null,
+    body: JSONObject | null,
     validators: string,
     errorMessages: ErrorMessages,
     verbose: boolean,
   ): boolean {
-    const filters = koncordeTest(this.koncorde, index, collection, body, _id);
+    const filters = koncordeTest(
+      this.koncorde,
+      index,
+      collection,
+      body ?? {},
+      _id ?? undefined,
+    );
 
     if (filters.length === 0 || filters[0] !== validators) {
       manageErrorMessage(
@@ -339,15 +399,14 @@ class Validation {
   recurseApplyDefault(
     isUpdate: boolean,
     documentSubset: JSONObject,
-    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+    collectionSpecSubset: Record<string, CuratedFieldSpecification>,
   ): JSONObject {
-    Object.keys(collectionSpecSubset).forEach((fieldName) => {
-      const specSubset = collectionSpecSubset[fieldName],
-        field = documentSubset[fieldName];
+    Object.entries(collectionSpecSubset).forEach(([fieldName, specSubset]) => {
+      const field = documentSubset[fieldName];
 
       if (
         has(documentSubset, fieldName) &&
-        this.types[specSubset.type].allowChildren &&
+        this.typeOf(specSubset.type).allowChildren &&
         specSubset.children
       ) {
         if (Array.isArray(field)) {
@@ -384,14 +443,14 @@ class Validation {
    * into a message naming the field.
    */
   recurseFieldValidation(
-    documentSubset: JSONObject,
-    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+    documentSubset: JSONObject | null,
+    collectionSpecSubset: Record<string, CuratedFieldSpecification>,
     strictness: boolean,
     errorMessages: ErrorMessages,
     verbose: boolean,
   ): boolean {
     if (strictness) {
-      for (const field of Object.keys(documentSubset)) {
+      for (const field of Object.keys(documentSubset ?? {})) {
         if (!collectionSpecSubset[field]) {
           throw new StrictnessError(field);
         }
@@ -403,7 +462,7 @@ class Validation {
       return Object.keys(collectionSpecSubset).every((fieldName) =>
         this.isValidField(
           fieldName,
-          documentSubset,
+          documentSubset ?? {},
           collectionSpecSubset,
           strictness,
           errorMessages,
@@ -417,7 +476,7 @@ class Validation {
       (reductionResult, fieldName) =>
         this.isValidField(
           fieldName,
-          documentSubset,
+          documentSubset ?? {},
           collectionSpecSubset,
           strictness,
           errorMessages,
@@ -433,12 +492,18 @@ class Validation {
   isValidField(
     fieldName: string,
     documentSubset: JSONObject,
-    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+    collectionSpecSubset: Record<string, CuratedFieldSpecification>,
     strictness: boolean,
     errorMessages: ErrorMessages,
     verbose: boolean,
   ): boolean {
     const field = collectionSpecSubset[fieldName];
+
+    // Both callers drive this from the map's own keys; a name that is not in
+    // it has no specification to check the document against.
+    if (field === undefined) {
+      return true;
+    }
 
     if (
       field.mandatory &&
@@ -469,7 +534,7 @@ class Validation {
       return false;
     }
 
-    const type = this.types[field.type];
+    const type = this.typeOf(field.type);
     const nestedStrictness = type.allowChildren
       ? type.getStrictness(field.typeOptions, strictness)
       : false;
@@ -502,7 +567,7 @@ class Validation {
    * the field's arity is wrong.
    */
   private resolveFieldValues(
-    field: StructuredFieldSpecification,
+    field: CuratedFieldSpecification,
     value: JSONObject,
     errorMessages: ErrorMessages,
     verbose: boolean,
@@ -531,27 +596,23 @@ class Validation {
       return null;
     }
 
-    if (
-      has(field.multivalued, "minCount") &&
-      value.length < field.multivalued.minCount
-    ) {
+    const { minCount, maxCount } = field.multivalued;
+
+    if (minCount !== undefined && value.length < minCount) {
       manageErrorMessage(
         field.path,
         errorMessages,
-        `Not enough elements. Minimum count is set to ${field.multivalued.minCount}.`,
+        `Not enough elements. Minimum count is set to ${minCount}.`,
         verbose,
       );
       return null;
     }
 
-    if (
-      has(field.multivalued, "maxCount") &&
-      value.length > field.multivalued.maxCount
-    ) {
+    if (maxCount !== undefined && value.length > maxCount) {
       manageErrorMessage(
         field.path,
         errorMessages,
-        `Too many elements. Maximum count is set to ${field.multivalued.maxCount}.`,
+        `Too many elements. Maximum count is set to ${maxCount}.`,
         verbose,
       );
       return null;
@@ -564,14 +625,14 @@ class Validation {
    * Hands one value to the field's registered type.
    */
   private validateFieldValue(
-    field: StructuredFieldSpecification,
+    field: CuratedFieldSpecification,
     val: unknown,
     errorMessages: ErrorMessages,
     verbose: boolean,
   ): boolean {
     const fieldErrors: string[] = [];
 
-    if (this.types[field.type].validate(field.typeOptions, val, fieldErrors)) {
+    if (this.typeOf(field.type).validate(field.typeOptions, val, fieldErrors)) {
       return true;
     }
 
@@ -597,7 +658,7 @@ class Validation {
    * into a message rather than an exception.
    */
   private validateFieldChildren(
-    field: StructuredFieldSpecification,
+    field: CuratedFieldSpecification,
     val: JSONObject,
     nestedStrictness: boolean,
     errorMessages: ErrorMessages,
@@ -606,21 +667,26 @@ class Validation {
     try {
       return this.recurseFieldValidation(
         val,
-        field.children,
+        field.children ?? {},
         nestedStrictness,
         errorMessages,
         verbose,
       );
     } catch (error) {
-      if (error.message === "strictness") {
+      if (messageOf(error) === "strictness") {
         manageErrorMessage(
           field.path,
           errorMessages,
-          `The field is set to "strict"; cannot add unspecified sub-field "${error.details.field}".`,
+          `The field is set to "strict"; cannot add unspecified sub-field "${detailedField(error)}".`,
           verbose,
         );
       } else if (verbose) {
-        manageErrorMessage(field.path, errorMessages, error.message, verbose);
+        manageErrorMessage(
+          field.path,
+          errorMessages,
+          messageOf(error),
+          verbose,
+        );
       } else {
         throw error;
       }
@@ -642,21 +708,21 @@ class Validation {
     return getValidationConfiguration().then((validation) => {
       this.rawConfiguration = validation;
 
-      for (const indexName of Object.keys(this.rawConfiguration)) {
-        for (const collectionName of Object.keys(
-          this.rawConfiguration[indexName],
+      for (const [indexName, collections] of Object.entries(
+        this.rawConfiguration,
+      )) {
+        for (const [collectionName, collectionSpec] of Object.entries(
+          collections,
         )) {
           const promise = this.curateCollectionSpecification(
             indexName,
             collectionName,
-            this.rawConfiguration[indexName][collectionName],
+            collectionSpec,
           )
             .then((curatedSpec) => {
-              if (!has(specification, indexName)) {
-                specification[indexName] = {};
-              }
+              const indexSpec = (specification[indexName] ??= {});
 
-              specification[indexName][collectionName] = curatedSpec;
+              indexSpec[collectionName] = curatedSpec;
 
               return null;
             })
@@ -778,29 +844,49 @@ class Validation {
 
         throw assertionError.get(
           "invalid_specifications",
-          result.errors.join("\n\t- "),
+          (result.errors ?? []).join("\n\t- "),
         );
       }
+
       processed.fields = result;
     }
 
     if (spec.validators && Array.isArray(spec.validators)) {
-      try {
-        const filterId = this.curateValidatorFilter(
-          index,
-          collection,
-          spec.validators,
-          dryRun,
-        );
-
-        processed.validators = filterId;
-      } catch (e) {
-        this.logger.error(e);
-        throw assertionError.getFrom(e, "invalid_filters", e.message);
-      }
+      processed.validators = this.curateValidators(
+        index,
+        collection,
+        spec.validators,
+        dryRun,
+      );
     }
 
     return processed;
+  }
+
+  /**
+   * Registers a specification's validator filter and answers its id.
+   *
+   * The wrapping is what `curateCollectionSpecification` did inline: a filter
+   * Koncorde refuses is an `invalid_filters` assertion, logged on the way
+   * past.
+   */
+  private curateValidators(
+    index: string,
+    collection: string,
+    validators: JSONObject[],
+    dryRun: boolean,
+  ): string | null {
+    try {
+      return this.curateValidatorFilter(index, collection, validators, dryRun);
+    } catch (e) {
+      this.logger.error(e);
+
+      throw assertionError.getFrom(
+        e instanceof Error ? e : new Error(messageOf(e)),
+        "invalid_filters",
+        messageOf(e),
+      );
+    }
   }
 
   /**
@@ -812,13 +898,15 @@ class Validation {
     collectionName: string,
     verboseErrors = false,
   ): StructuredFieldSpecification | SpecificationValidationResult {
-    const fields: Record<number, StructuredFieldSpecification[]> = {};
+    const fields: Record<number, CuratedFieldSpecification[]> = {};
     let errors: string[] = [];
     let maxDepth = 0;
 
-    for (const fieldName of Object.keys(collectionSpec.fields)) {
+    for (const [fieldName, fieldSpec] of Object.entries(
+      collectionSpec.fields ?? {},
+    )) {
       const // We deep clone the field because we will modify it
-        fieldSpecClone = cloneDeep(collectionSpec.fields[fieldName]); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
+        fieldSpecClone = cloneDeep(fieldSpec); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
 
       try {
         const result = this.curateFieldSpecification(
@@ -829,24 +917,28 @@ class Validation {
           verboseErrors,
         );
 
-        if (result.isValid === false) {
-          errors = errors.concat(result.errors);
-          this.logger.error(result.errors.join("\n"));
-        } else {
-          const field = result.fieldSpec;
+        if (result.isValid === false || result.fieldSpec === undefined) {
+          const resultErrors = result.errors ?? [];
 
-          field.path = fieldName.split("/");
-          field.depth = field.path.length;
+          errors = errors.concat(resultErrors);
+          this.logger.error(resultErrors.join("\n"));
+        } else {
+          // `curateFieldSpecification` answers everything but the field's
+          // place in the tree; the key it was filed under is what gives it one.
+          const path = fieldName.split("/");
+          const field: CuratedFieldSpecification = {
+            ...result.fieldSpec,
+            depth: path.length,
+            path,
+          };
 
           if (field.depth > maxDepth) {
             maxDepth = field.depth;
           }
 
-          if (!fields[field.depth]) {
-            fields[field.depth] = [];
-          }
+          const sameDepth = (fields[field.depth] ??= []);
 
-          fields[field.depth].push(field);
+          sameDepth.push(field);
         }
       } catch (error) {
         this.logger.error(error);
@@ -877,7 +969,7 @@ class Validation {
     fieldName: string,
     verboseErrors = false,
   ): SpecificationValidationResult & {
-    fieldSpec?: StructuredFieldSpecification;
+    fieldSpec?: UnplacedCuratedField;
   } {
     const errors: string[] = [];
 
@@ -893,20 +985,19 @@ class Validation {
       return result;
     }
 
-    defaultsDeep(fieldSpec, {
-      mandatory: false,
-      multivalued: {
-        value: false,
-      },
-    });
+    // Built rather than `defaultsDeep`-ed in place: the defaults are what turn
+    // a submitted field into a curated one, and saying so is what lets the
+    // return type be `UnplacedCuratedField` instead of the submitted shape.
+    const curated: UnplacedCuratedField = {
+      ...fieldSpec,
+      mandatory: fieldSpec.mandatory ?? false,
+      multivalued: { value: false, ...fieldSpec.multivalued },
+      typeOptions: fieldSpec.typeOptions ?? {},
+    };
 
-    if (!has(fieldSpec, "typeOptions")) {
-      fieldSpec.typeOptions = {};
-    }
+    const allowed = this.typeOf(curated.type).allowedTypeOptions || [];
 
-    const allowed = this.types[fieldSpec.type].allowedTypeOptions || [];
-
-    if (!checkAllowedProperties(fieldSpec.typeOptions, allowed)) {
+    if (!checkAllowedProperties(curated.typeOptions, allowed)) {
       throwOrStoreError(
         assertionError.get(
           "unexpected_properties",
@@ -919,24 +1010,26 @@ class Validation {
     }
 
     try {
-      fieldSpec.typeOptions = this.types[
-        fieldSpec.type
-      ].validateFieldSpecification(fieldSpec.typeOptions);
+      curated.typeOptions = this.typeOf(
+        curated.type,
+      ).validateFieldSpecification(curated.typeOptions);
     } catch (e) {
+      const cause = e instanceof Error ? e : new Error(messageOf(e));
+
       if (!verboseErrors) {
         if (e instanceof KuzzleError) {
           throw e;
         }
         throw kerror.getFrom(
-          e,
+          cause,
           "plugin",
           "runtime",
           "unexpected_error",
-          e.message,
+          cause.message,
         );
       }
 
-      errors.push(e.message);
+      errors.push(cause.message);
     }
 
     if (errors.length > 0) {
@@ -948,10 +1041,10 @@ class Validation {
       indexName,
       collectionName,
       fieldName,
-      fieldSpec,
+      curated,
     );
 
-    return { fieldSpec, isValid: true };
+    return { fieldSpec: curated, isValid: true };
   }
 
   /**
@@ -1131,6 +1224,26 @@ class Validation {
 
     this.types[validationType.typeName] = validationType;
   }
+
+  /**
+   * The validation type a curated field declares.
+   *
+   * Every caller reaches this through a field that `curateFieldSpecification`
+   * has been through, and that method refuses a `type` the map does not hold —
+   * so the throw here is the invariant restated where the compiler can see it,
+   * not a new failure mode.
+   *
+   * @throws {PreconditionError} when the type is not registered
+   */
+  private typeOf(typeName: string): BaseType {
+    const type = this.types[typeName];
+
+    if (type === undefined) {
+      throw kerror.get("validation", "types", "missing_type_name", typeName);
+    }
+
+    return type;
+  }
 }
 
 /**
@@ -1146,12 +1259,14 @@ function checkMultivaluedSpecification(
   verboseErrors: boolean,
   errors: string[],
 ): void {
-  if (!has(fieldSpec, "multivalued")) {
+  const multivalued = fieldSpec.multivalued;
+
+  if (multivalued === undefined) {
     return;
   }
 
   const multivaluedProps = ["value", "minCount", "maxCount"];
-  if (!checkAllowedProperties(fieldSpec.multivalued, multivaluedProps)) {
+  if (!checkAllowedProperties(multivalued, multivaluedProps)) {
     throwOrStoreError(
       assertionError.get(
         "unexpected_properties",
@@ -1163,7 +1278,7 @@ function checkMultivaluedSpecification(
     );
   }
 
-  if (!has(fieldSpec.multivalued, "value")) {
+  if (!has(multivalued, "value")) {
     throwOrStoreError(
       assertionError.get(
         "missing_value",
@@ -1174,7 +1289,7 @@ function checkMultivaluedSpecification(
     );
   }
 
-  if (typeof fieldSpec.multivalued.value !== "boolean") {
+  if (typeof multivalued.value !== "boolean") {
     throwOrStoreError(
       assertionError.get(
         "invalid_type",
@@ -1187,10 +1302,7 @@ function checkMultivaluedSpecification(
   }
 
   for (const unexpected of ["minCount", "maxCount"]) {
-    if (
-      !fieldSpec.multivalued.value &&
-      has(fieldSpec.multivalued, unexpected)
-    ) {
+    if (!multivalued.value && has(multivalued, unexpected)) {
       throwOrStoreError(
         assertionError.get(
           "not_multivalued",
@@ -1204,9 +1316,9 @@ function checkMultivaluedSpecification(
   }
 
   if (
-    has(fieldSpec.multivalued, "minCount") &&
-    has(fieldSpec.multivalued, "maxCount") &&
-    fieldSpec.multivalued.minCount > fieldSpec.multivalued.maxCount
+    multivalued.minCount !== undefined &&
+    multivalued.maxCount !== undefined &&
+    multivalued.minCount > multivalued.maxCount
   ) {
     throwOrStoreError(
       assertionError.get(
@@ -1245,7 +1357,7 @@ function checkAllowedProperties(
  */
 function curateStructuredFields(
   typeAllowsChildren: string[],
-  fields: Record<number, StructuredFieldSpecification[]>,
+  fields: Record<number, CuratedFieldSpecification[]>,
   maxDepth: number,
 ): StructuredFieldSpecification {
   const structuredFields: StructuredFieldSpecification = {
@@ -1254,23 +1366,25 @@ function curateStructuredFields(
   };
 
   for (let i = 1; i <= maxDepth; i++) {
-    if (!has(fields, i)) {
+    const sameDepth = fields[i];
+
+    if (sameDepth === undefined) {
       throw assertionError.get("missing_nested_spec");
     }
 
-    fields[i].forEach((field) => {
+    sameDepth.forEach((field) => {
       const parent = getParent(structuredFields, field.path),
-        childKey = field.path.at(-1);
+        // `path` is a field's key split on "/", so it always has a last
+        // segment; the fallback is what makes that readable to the compiler.
+        childKey = field.path.at(-1) ?? "";
 
-      if (!parent.root && !typeAllowsChildren.includes(parent.type)) {
+      if (!parent.root && !typeAllowsChildren.includes(parent.type ?? "")) {
         throw assertionError.get("unexpected_children", parent.type);
       }
 
-      if (!has(parent, "children")) {
-        parent.children = {};
-      }
+      const children = (parent.children ??= {});
 
-      parent.children[childKey] = field;
+      children[childKey] = field;
     });
   }
 
@@ -1290,14 +1404,16 @@ function getParent(
     return structuredFields;
   }
 
-  let pointer = structuredFields;
+  let pointer: StructuredFieldSpecification = structuredFields;
 
-  for (let i = 0; i < fieldPath.length - 1; i++) {
-    if (!has(pointer.children, fieldPath[i])) {
+  for (const segment of fieldPath.slice(0, -1)) {
+    const child = pointer.children?.[segment];
+
+    if (child === undefined) {
       throw assertionError.get("missing_parent", fieldPath.join("."));
     }
 
-    pointer = pointer.children[fieldPath[i]];
+    pointer = child;
   }
 
   return pointer;
@@ -1308,7 +1424,7 @@ function getParent(
  * choice is made during curation.
  */
 function throwOrStoreError(
-  error: KuzzleError,
+  error: unknown,
   doNotThrow: boolean,
   errorMessages: string[],
 ): void {
@@ -1316,7 +1432,7 @@ function throwOrStoreError(
     throw error;
   }
 
-  errorMessages.push(error.message);
+  errorMessages.push(messageOf(error));
 }
 
 /**
@@ -1349,21 +1465,14 @@ function storeErrorMessage(
   let pointer: FieldErrorScope = errorHolder.fieldScope;
 
   for (const segment of errorContext) {
-    if (!pointer.children) {
-      pointer.children = {};
-    }
+    const children = (pointer.children ??= {});
 
-    if (!has(pointer.children, segment)) {
-      pointer.children[segment] = {};
-    }
-    pointer = pointer.children[segment];
+    pointer = children[segment] ??= {};
   }
 
-  if (!has(pointer, "messages")) {
-    pointer.messages = [];
-  }
+  const messages = (pointer.messages ??= []);
 
-  pointer.messages.push(message);
+  messages.push(message);
 }
 
 function throwErrorMessage(
@@ -1426,11 +1535,9 @@ function collectStoredSpecification(
     }
   }
 
-  if (!has(validation, _source.index)) {
-    validation[_source.index] = {};
-  }
+  const indexValidation = (validation[_source.index] ??= {});
 
-  validation[_source.index][_source.collection] = _source.validation;
+  indexValidation[_source.collection] = _source.validation;
 }
 
 function getValidationConfiguration(): Promise<RawSpecification> {

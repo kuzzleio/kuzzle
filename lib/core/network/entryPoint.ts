@@ -19,8 +19,10 @@
  * limitations under the License.
  */
 
+import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
+import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import type { JSONObject } from "kuzzle-sdk";
@@ -40,6 +42,14 @@ import type Protocol from "./protocols/protocol";
 import type ClientConnection from "./clientConnection";
 import type { NetworkEntryPoint } from "./networkEntryPoint";
 import type { ServerConfiguration } from "../../types";
+
+/**
+ * The message of whatever was thrown. Each of the five handlers below logs a
+ * protocol's failure and carries on; `catch` answers `unknown`.
+ */
+function messageOf(thrown: unknown): string {
+  return thrown instanceof Error ? thrown.message : inspect(thrown);
+}
 
 const debug = createDebug("kuzzle:network:embedded");
 
@@ -98,13 +108,27 @@ class EntryPoint implements NetworkEntryPoint {
    * @returns {Promise}
    */
   async init(): Promise<boolean> {
+    let internal: InternalProtocol | undefined;
+
     for (const ProtocolClass of DEFAULT_PROTOCOLS) {
       const protocol = new ProtocolClass();
 
       this.protocols.set(protocol.name, protocol);
+
+      if (protocol instanceof InternalProtocol) {
+        internal = protocol;
+      }
     }
 
-    return this.protocols.get("internal").init(this);
+    // The internal protocol is one of `DEFAULT_PROTOCOLS`, so it was fetched
+    // back out of the map it had just been put into, by the name it gives
+    // itself.
+    assert(
+      internal !== undefined,
+      "[network] the internal protocol is missing from the default protocols",
+    );
+
+    return internal.init(this);
   }
 
   /**
@@ -161,10 +185,10 @@ class EntryPoint implements NetworkEntryPoint {
     }
 
     try {
-      this.protocols.get(client.protocol).joinChannel(channel, connectionId);
+      this.protocolOf(client).joinChannel(channel, connectionId);
     } catch (e) {
       this.logger.error(
-        `[join] protocol ${client.protocol} failed: ${e.message}`,
+        `[join] protocol ${client.protocol} failed: ${messageOf(e)}`,
       );
     }
   }
@@ -183,10 +207,10 @@ class EntryPoint implements NetworkEntryPoint {
     }
 
     try {
-      this.protocols.get(client.protocol).leaveChannel(channel, connectionId);
+      this.protocolOf(client).leaveChannel(channel, connectionId);
     } catch (e) {
       this.logger.error(
-        `[leave channel] protocol ${client.protocol} failed: ${e.message}`,
+        `[leave channel] protocol ${client.protocol} failed: ${messageOf(e)}`,
       );
     }
   }
@@ -215,7 +239,9 @@ class EntryPoint implements NetworkEntryPoint {
       const protocol = new (require(protoDir))();
       const manifest = new Manifest(protoDir, protocol);
 
-      manifest.load();
+      // `load()` answers the name it validated: the field stays nullable
+      // because it is null until this call.
+      const { name } = manifest.load();
 
       const initTimeout =
         global.kuzzle.config.services.common.defaultInitTimeout;
@@ -223,24 +249,19 @@ class EntryPoint implements NetworkEntryPoint {
       return Bluebird.resolve()
         .then(() => protocol.init(this, new Context()))
         .catch((error) => {
-          this.logger.error(`Error during "${manifest.name}" protocol init:`);
+          this.logger.error(`Error during "${name}" protocol init:`);
           throw error;
         })
         .timeout(
           initTimeout,
-          `Protocol "${manifest.name}" initialization timed out after ${initTimeout}ms. Try to increase the configuration "services.common.defaultInitTimeout".`,
+          `Protocol "${name}" initialization timed out after ${initTimeout}ms. Try to increase the configuration "services.common.defaultInitTimeout".`,
         )
         .then(() => {
-          if (this.protocols.has(manifest.name)) {
-            throw kerror.get(
-              "protocol",
-              "runtime",
-              "already_exists",
-              manifest.name,
-            );
+          if (this.protocols.has(name)) {
+            throw kerror.get("protocol", "runtime", "already_exists", name);
           }
 
-          this.protocols.set(manifest.name, protocol);
+          this.protocols.set(name, protocol);
         });
     });
   }
@@ -346,10 +367,38 @@ class EntryPoint implements NetworkEntryPoint {
         protocol.broadcast(sanitized);
       } catch (e) {
         this.logger.error(
-          `[broadcast] protocol ${name} failed: ${e.message}\n${e.stack}`,
+          `[broadcast] protocol ${name} failed: ${messageOf(e)}\n${
+            e instanceof Error ? e.stack : ""
+          }`,
         );
       }
     }
+  }
+
+  /**
+   * The protocol a client is connected through.
+   *
+   * The three callers each guard `client?.protocol` and then read the map
+   * with it, unchecked: a connection naming a protocol this entry point does
+   * not have is what the `try` around each of them was already for, so the
+   * throw lands where the log already is.
+   */
+  private protocolOf(client: { protocol: string | null }): Protocol<unknown> {
+    const protocol =
+      client.protocol === null
+        ? undefined
+        : this.protocols.get(client.protocol);
+
+    if (protocol === undefined) {
+      throw kerror.get(
+        "protocol",
+        "runtime",
+        "invalid_connection",
+        client.protocol,
+      );
+    }
+
+    return protocol;
   }
 
   _isShuttingDownError(
@@ -377,10 +426,10 @@ class EntryPoint implements NetworkEntryPoint {
     }
 
     try {
-      this.protocols.get(client.protocol).notify(removeStacktrace(data));
+      this.protocolOf(client).notify(removeStacktrace(data));
     } catch (e) {
       this.logger.error(
-        `[notify] protocol ${client.protocol} failed: ${e.message}`,
+        `[notify] protocol ${client.protocol} failed: ${messageOf(e)}`,
       );
     }
   }

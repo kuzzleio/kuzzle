@@ -71,7 +71,11 @@ class RateLimiter {
         return true;
       }
 
-      const { _id, profileIds } = user;
+      // A user resolved from a request has been stored, so it has an id; the
+      // fallback is what makes the frame key readable to the compiler, and it
+      // is the same key an id-less user would have produced before.
+      const { profileIds } = user;
+      const _id = user._id ?? "null";
 
       // By definition, auth:logout should be unrestricted
       if (_id !== "-1" && controller === "auth" && action === "logout") {

@@ -725,7 +725,7 @@ class DocumentController extends NativeController {
 
     return {
       errors,
-      successes: documents.map((d) => d._id),
+      successes: documents.map((d: JSONObject) => d._id),
     };
   }
 
@@ -765,11 +765,11 @@ class DocumentController extends NativeController {
     }
 
     if (!source) {
-      result.documents.forEach((d) => (d._source = undefined));
+      result.documents.forEach((d: JSONObject) => (d._source = undefined));
     }
     return {
       documents: result.documents,
-      ids: result.documents.map((d) => d._id),
+      ids: result.documents.map((d: JSONObject) => d._id),
     };
   }
 
@@ -853,7 +853,7 @@ class DocumentController extends NativeController {
         "core:realtime:document:mNotify",
         request,
         actionEnum.UPDATE,
-        result.successes.map((doc) => ({
+        result.successes.map((doc: JSONObject) => ({
           _id: doc._id,
           _source: doc._source,
           _updatedFields: extractFields(changes, {
@@ -864,7 +864,7 @@ class DocumentController extends NativeController {
     }
 
     if (!source) {
-      result.successes.forEach((d) => (d._source = undefined));
+      result.successes.forEach((d: JSONObject) => (d._source = undefined));
     }
 
     return result;
@@ -1095,7 +1095,7 @@ class DocumentController extends NativeController {
         "core:realtime:document:mNotify",
         request,
         action,
-        response.items.map((item) => {
+        response.items.map((item: JSONObject) => {
           if (!item.created) {
             item._updatedFields = extractFields(
               documentsDictionnary[item._id],

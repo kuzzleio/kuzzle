@@ -19,11 +19,17 @@ Kuzzle is being migrated from JavaScript to TypeScript incrementally (see
 [`docs/adr-001/ADR-0001-migration-typescript.md`](docs/adr-001/ADR-0001-migration-typescript.md)).
 
 **Since 2026-09-18, `lib/` is 100% TypeScript** — the five remaining `.js` files are all
-in `bin/` and are the agreed floor. The live phase is now the **strict flip**
-([step 12](docs/adr-001/steps/12-sprint-9-strict-flip.md)): 112 files still fail
-`strict`, and the rule for fixing one is that **the fix removes the error rather than
-moving it** — no `!`, no `as`, no widening a parameter to silence a call site. The
-`casts` and `any` ratchets below are what enforce that.
+in `bin/` and are the agreed floor.
+
+**Since 2026-09-21, `lib/` also passes `strict`**: every production file is in
+`.migration/strict-adopted.txt` and `npm run test:strict -- --count` prints nothing.
+`strict: true` is not yet on in the main `tsconfig.json` — flipping it, and removing
+this machinery, is the last item of
+[step 12](docs/adr-001/steps/12-sprint-9-strict-flip.md). Until then **a new file has
+to be added to `strict-adopted.txt` in the PR that adds it**, and the rule for fixing a
+strict error is that **the fix removes it rather than moving it** — no `!`, no `as`, no
+widening a parameter to silence a call site. The `casts` and `any` ratchets below are
+what enforce that.
 
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
@@ -53,13 +59,14 @@ the `migration-ratchets` job:
   `strict-adopted.txt` — `x: string[]` then `this.x = undefined` is rejected; widen
   the declaration to `string[] | undefined`. It is the one defect class the adoption
   list cannot help with, since being exempt is what lets it through (ADR-0001, TD-56).
-* **If it does not pass `strict`, say how far it is.** Converting a file and leaving
-  it out of `strict-adopted.txt` is allowed; leaving it out *silently* is not. Run
-  `npx tsc -p tsconfig.strict.json --noEmit`, filter it to the files you converted,
+* **If it does not pass `strict`, say how far it is.** Every existing file does, so
+  this now applies to new ones: leaving a file out of `strict-adopted.txt` is allowed,
+  leaving it out *silently* is not. Run `npm run test:strict -- --count <your files>`
   and put in the PR body — per file — how many errors remain and which of them are
   guards the runtime can actually reach. Those are bugs, not typing chores: the two
-  defects found by hand in sprint 6 were both already in that list. A conversion that
-  compiles is not a conversion that checks.
+  defects found by hand in sprint 6 were both already in that list, and step 12 found
+  a dozen more the same way. A conversion that compiles is not a conversion that
+  checks.
 * **Converting a file that has no unit spec? Write one** (vitest + TS) in the same PR.
   `.ts` is measured by the coverage gate, so an untested conversion now fails CI.
 

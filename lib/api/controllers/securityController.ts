@@ -18,6 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import { isEmpty, isNil } from "lodash";
 import { v4 as uuidv4 } from "uuid";
@@ -31,6 +33,17 @@ import ApiKey from "../../model/storage/apiKey";
 import * as kerror from "../../kerror";
 import { has } from "../../util/safeObject";
 import { NameGenerator } from "../../util/name-generator";
+import type { JSONObject } from "kuzzle-sdk";
+import type { Profile } from "../../model/security/profile";
+import type { User } from "../../model/security/user";
+
+/**
+ * Whatever was thrown, as an `Error`. `catch` answers `unknown`, and the
+ * rollback path below reads a message off everything it collected.
+ */
+function causeOf(thrown: unknown): Error {
+  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
+}
 
 /**
  * @class SecurityController
@@ -263,7 +276,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  updateProfileMapping(request) {
+  updateProfileMapping(request: KuzzleRequest) {
     const mappings = request.getBody();
 
     return global.kuzzle.internalIndex.updateMapping("profiles", mappings);
@@ -488,7 +501,7 @@ class SecurityController extends NativeController {
     // @todo - should return an array of profiles directly, this is not a
     // search route...
     return {
-      hits: profiles.map((profile) =>
+      hits: profiles.map((profile: Profile) =>
         formatProcessing.serializeProfile(profile),
       ),
     };
@@ -673,7 +686,9 @@ class SecurityController extends NativeController {
 
     const users = await this.ask("core:security:user:mGet", ids);
 
-    return { hits: users.map((user) => formatProcessing.serializeUser(user)) };
+    return {
+      hits: users.map((user: User) => formatProcessing.serializeUser(user)),
+    };
   }
 
   /**
@@ -742,7 +757,7 @@ class SecurityController extends NativeController {
         const existMethod = this.getStrategyMethod(strategy, "exists");
 
         checkPromises.push(
-          existMethod(request, userId, strategy).then((exists) =>
+          existMethod(request, userId, strategy).then((exists: unknown) =>
             exists ? strategy : null,
           ),
         );
@@ -917,7 +932,13 @@ class SecurityController extends NativeController {
     try {
       return await this._changeUser(request, id, content, userId, profileIds);
     } catch (error) {
-      if (error.id && error.id === "security.user.not_found") {
+      // Duck-typed on the id, as it was: `core:security:user:get` rejects
+      // with a KuzzleError, and this branch reads nothing else off it.
+      if (
+        error instanceof Error &&
+        "id" in error &&
+        error.id === "security.user.not_found"
+      ) {
         const creatingContent = {
           ...defaultValues,
           ...content, // Order important, content erase default duplicates
@@ -1068,14 +1089,17 @@ class SecurityController extends NativeController {
   async restrictDefaultRights(request: KuzzleRequest) {
     const userId = request.getKuid();
 
-    for (const type of ["role", "profile"]) {
-      await Bluebird.map(
-        Object.entries(global.kuzzle.config.security.standard[`${type}s`]),
-        ([name, value]) =>
-          this.ask(`core:security:${type}:createOrReplace`, name, value, {
-            refresh: "wait_for",
-            userId,
-          }),
+    const standard = global.kuzzle.config.security.standard;
+
+    for (const [type, defaults] of [
+      ["role", standard.roles],
+      ["profile", standard.profiles],
+    ] as const) {
+      await Bluebird.map(Object.entries(defaults), ([name, value]) =>
+        this.ask(`core:security:${type}:createOrReplace`, name, value, {
+          refresh: "wait_for",
+          userId,
+        }),
       );
     }
 
@@ -1090,7 +1114,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mDeleteProfiles(request) {
+  mDeleteProfiles(request: KuzzleRequest) {
     return this._mDelete("profile", request);
   }
 
@@ -1100,7 +1124,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mDeleteRoles(request) {
+  mDeleteRoles(request: KuzzleRequest) {
     return this._mDelete("role", request);
   }
 
@@ -1110,7 +1134,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mDeleteUsers(request) {
+  mDeleteUsers(request: KuzzleRequest) {
     return this._mDelete("user", request);
   }
 
@@ -1319,7 +1343,7 @@ class SecurityController extends NativeController {
    * @returns {Promise<Object>}
    */
   async getAllCredentialFields() {
-    const strategyFields = {};
+    const strategyFields: JSONObject = {};
 
     global.kuzzle.pluginsManager.listStrategies().forEach((strategy) => {
       strategyFields[strategy] =
@@ -1355,8 +1379,8 @@ class SecurityController extends NativeController {
       throw kerror.get("services", "storage", "write_limit_exceeded");
     }
 
-    const successes = [];
-    const errors = [];
+    const successes: string[] = [];
+    const errors: unknown[] = [];
 
     await Bluebird.map(ids, (id) =>
       this.ask(`core:security:${type}:delete`, id, { refresh })
@@ -1542,16 +1566,17 @@ class SecurityController extends NativeController {
       this.logger.error(`User rollback error: ${e}`);
     }
 
+    const cause = causeOf(creationFailure.error);
+
     if (deletionErrors.length > 0) {
       // 2 errors > we
       throw kerror.get(
         "plugin",
         "runtime",
         "unexpected_error",
-        [
-          creationFailure.error.message,
-          ...deletionErrors.map((e) => e.message),
-        ].join("\n"),
+        [cause.message, ...deletionErrors.map((e) => causeOf(e).message)].join(
+          "\n",
+        ),
       );
     }
 
@@ -1561,20 +1586,20 @@ class SecurityController extends NativeController {
 
     if (creationFailure.validation) {
       throw kerror.getFrom(
-        creationFailure.error,
+        cause,
         "security",
         "credentials",
         "rejected",
-        creationFailure.error.message,
+        cause.message,
       );
     }
 
     throw kerror.getFrom(
-      creationFailure.error,
+      cause,
       "plugin",
       "runtime",
       "unexpected_error",
-      creationFailure.error.message,
+      cause.message,
     );
   }
 

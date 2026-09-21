@@ -429,7 +429,12 @@ export default class State {
    *
    * @param serialized POJO object of a full realtime state
    */
-  loadFullState(serialized: SerializedState) {
+  /**
+   * `Partial`: this reads a full state off the wire, and protobuf leaves an
+   * absent field undefined. Both branches below already guard for it; the
+   * parameter described what `serialize()` produces, not what arrives.
+   */
+  loadFullState(serialized: Partial<SerializedState>) {
     if (serialized.rooms) {
       for (const state of serialized.rooms) {
         for (const node of state.nodes) {

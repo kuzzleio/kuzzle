@@ -68,15 +68,48 @@
 # written down; what ES7 had on top was untyped helper signatures (19 of them)
 # and a bulk body built as a bare `[]`. Its esWrapper had had none of the
 # error-path work — `formatESError` taking `unknown` was 39 of the 197 alone.
+# Step 12 K4, part 1 (2026-09-20): the two base classes, done first because a
+# base class's fix can clear its subclasses'. Measured after: it cleared none —
+# store.ts's 23 were all its own `Reflect.set` members, and ObjectRepository's
+# were its untyped search/truncate path. The subclasses' errors are their own.
+# Step 12 K4, part 2 (2026-09-20): lib/core/validation/validation.ts, the
+# heaviest file left (95). Two levers: a `CuratedFieldSpecification` for what
+# hangs off a `children` map — the root is the only node missing type/path/
+# depth/mandatory/multivalued/typeOptions, and the walkers never see it — and
+# `Object.entries` wherever a map was walked by key and then indexed.
+# Step 12 K4, part 3 (2026-09-20): TD-62's `lib/model/security` half and the
+# three repositories it relocates into. K1 measured the relocation at +18 and
+# reverted; it is +19 here, and clearing it costs the six files below. The base
+# class's `TObject extends { _id: string }` had to widen with the models, and
+# `ObjectRepository.idOf` is the one place that now refuses a write with no id.
+# Step 12 K4, part 4 (2026-09-20): the token pair. `jsonwebtoken` and
+# `sorted-array` get local declarations, the ms/semver precedent from K3.
+# tokenManager's `search` + `array[pos]` two-step became one `find(idx)`:
+# indexing answers `| undefined` for every position, so testing the element
+# instead of the position removes the second check rather than adding one.
+# Step 12 K4, part 5 (2026-09-21): plugin.ts, hotelClerk.ts and subscription.ts.
+# `subscribe` answers `null` when the connection died between the funnel's
+# liveness check and its own — the declared return type had never said so, and
+# the callers were reading `.roomId` off it.
 
 bin/copy-binaries.ts
 index.ts
 lib/api/controllers/adminController.ts
+lib/api/controllers/authController.ts
+lib/api/controllers/baseController.ts
+lib/api/controllers/bulkController.ts
 lib/api/controllers/clusterController.ts
+lib/api/controllers/collectionController.ts
 lib/api/controllers/debugController.ts
+lib/api/controllers/documentController.ts
 lib/api/controllers/index.ts
 lib/api/controllers/indexController.ts
+lib/api/controllers/memoryStorageController.ts
 lib/api/controllers/realtimeController.ts
+lib/api/controllers/securityController.ts
+lib/api/controllers/serverController.ts
+lib/api/documentExtractor.ts
+lib/api/funnel.ts
 lib/api/httpRoutes.ts
 lib/api/openapi/OpenApiManager.ts
 lib/api/openapi/index.ts
@@ -87,18 +120,25 @@ lib/api/request/kuzzleRequest.ts
 lib/api/request/requestContext.ts
 lib/api/request/requestInput.ts
 lib/api/request/requestResponse.ts
+lib/cluster/command.ts
 lib/cluster/idCardHandler.ts
 lib/cluster/index.ts
 lib/cluster/protobuf/commandMessages.ts
 lib/cluster/protobuf/syncMessages.ts
+lib/cluster/node.ts
 lib/cluster/publisher.ts
 lib/cluster/state.ts
+lib/cluster/subscriber.ts
+lib/cluster/workers/IDCardRenewer.ts
 lib/config/default.config.ts
 lib/config/documentEventAliases.ts
+lib/config/index.ts
 lib/core/auth/formatProcessing.ts
 lib/core/auth/passportResponse.ts
 lib/core/auth/passportWrapper.ts
+lib/core/auth/tokenManager.ts
 lib/core/backend/applicationManager.ts
+lib/core/backend/backend.ts
 lib/core/backend/backendCluster.ts
 lib/core/backend/backendConfig.ts
 lib/core/backend/backendController.ts
@@ -115,22 +155,33 @@ lib/core/backend/index.ts
 lib/core/backend/internalLogger.ts
 lib/core/cache/cacheDbEnum.ts
 lib/core/cache/cacheEngine.ts
+lib/core/debug/kuzzleDebugger.ts
+lib/core/network/accessLogger.ts
 lib/core/network/clientConnection.ts
 lib/core/network/context.ts
+lib/core/network/entryPoint.ts
+lib/core/network/httpRouter/index.ts
 lib/core/network/httpRouter/routeHandler.ts
 lib/core/network/httpRouter/routePart.ts
 lib/core/network/httpRouter/routeTypes.ts
 lib/core/network/networkEntryPoint.ts
 lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
+lib/core/network/protocols/httpwsProtocol.ts
+lib/core/network/protocols/internalProtocol.ts
+lib/core/network/protocols/mqttProtocol.ts
 lib/core/network/protocols/protocol.ts
 lib/core/network/router.ts
+lib/core/plugin/plugin.ts
+lib/core/plugin/pluginContext.ts
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/pluginRepository.ts
+lib/core/plugin/pluginsManager.ts
 lib/core/plugin/privilegedContext.ts
 lib/core/realtime/actionEnum.ts
 lib/core/realtime/channel.ts
 lib/core/realtime/connectionRooms.ts
+lib/core/realtime/hotelClerk.ts
 lib/core/realtime/index.ts
 lib/core/realtime/notification/document.ts
 lib/core/realtime/notification/index.ts
@@ -139,12 +190,20 @@ lib/core/realtime/notification/user.ts
 lib/core/realtime/notifier.ts
 lib/core/realtime/room.ts
 lib/core/realtime/subscription.ts
+lib/core/realtime/subscription.ts
 lib/core/security/index.ts
+lib/core/security/profileRepository.ts
+lib/core/security/roleRepository.ts
 lib/core/security/securityLoader.ts
+lib/core/security/tokenRepository.ts
+lib/core/security/userRepository.ts
 lib/core/shared/KoncordeWrapper.ts
+lib/core/shared/ObjectRepository.ts
+lib/core/shared/abstractManifest.ts
 lib/core/shared/sdk/embeddedSdk.ts
 lib/core/shared/sdk/funnelProtocol.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+lib/core/shared/store.ts
 lib/core/statistics/statistics.ts
 lib/core/storage/clientAdapter.ts
 lib/core/storage/indexCache.ts
@@ -166,6 +225,9 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
+lib/core/validation/validation.ts
+lib/kerror/codes/index.ts
+lib/kerror/index.ts
 lib/kerror/errors/badRequestError.ts
 lib/kerror/errors/externalServiceError.ts
 lib/kerror/errors/forbiddenError.ts
@@ -183,6 +245,8 @@ lib/kerror/errors/sizeLimitError.ts
 lib/kerror/errors/tooManyRequestsError.ts
 lib/kerror/errors/unauthorizedError.ts
 lib/kuzzle/Logger.ts
+lib/kuzzle/event/KuzzleEventEmitter.ts
+lib/kuzzle/kuzzle.ts
 lib/kuzzle/dumpGenerator.ts
 lib/kuzzle/event/pipeRunner.ts
 lib/kuzzle/event/waterfall.ts
@@ -190,15 +254,21 @@ lib/kuzzle/index.ts
 lib/kuzzle/internalIndexHandler.ts
 lib/kuzzle/kuzzleStateEnum.ts
 lib/kuzzle/vault.ts
+lib/model/security/profile.ts
 lib/model/security/rights.ts
+lib/model/security/role.ts
+lib/model/security/token.ts
+lib/model/security/user.ts
 lib/model/storage/apiKey.ts
 lib/model/storage/baseModel.ts
+lib/service/cache/redis.ts
 lib/service/service.ts
 lib/service/storage/7/elasticsearch.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/elasticsearch.ts
 lib/service/storage/8/esWrapper.ts
 lib/service/storage/Elasticsearch.ts
+lib/service/storage/commons/queryTranslator.ts
 lib/types/ApiRoute.ts
 lib/types/ClientConnection.ts
 lib/types/Deprecation.ts
@@ -247,16 +317,24 @@ lib/types/errors/ErrorDomains.ts
 lib/types/events/EventGenericDocument.ts
 lib/types/events/EventProtocol.ts
 lib/types/index.ts
+lib/types/json2yaml.d.ts
+lib/types/jsonwebtoken.d.ts
+lib/types/ms.d.ts
+lib/types/ndjson.d.ts
 lib/types/node-internals.d.ts
+lib/types/rc.d.ts
 lib/types/realtime/RealtimeScope.ts
 lib/types/realtime/RealtimeUsers.ts
 lib/types/realtime/RoomList.ts
+lib/types/semver.d.ts
 lib/types/shared/StoreCollectionsDefinition.ts
+lib/types/sorted-array.d.ts
 lib/types/storage/7/Elasticsearch.ts
 lib/types/storage/8/Elasticsearch.ts
 lib/util/Inflector.ts
 lib/util/array.ts
 lib/util/assertType.ts
+lib/util/async.ts
 lib/util/asyncStore.ts
 lib/util/bufferedPassThrough.ts
 lib/util/bytes.ts
@@ -265,6 +343,7 @@ lib/util/debug.ts
 lib/util/deprecate.ts
 lib/util/didYouMean.ts
 lib/util/distributedLock.ts
+lib/util/dump-collection.ts
 lib/util/esRequest.ts
 lib/util/extractFields.ts
 lib/util/koncordeCompat.ts

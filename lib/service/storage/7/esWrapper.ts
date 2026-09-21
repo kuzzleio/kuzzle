@@ -52,8 +52,15 @@ type ThrownESResponseError = ThrownESError & { meta: JSONObject };
 
 interface ESErrorMapping {
   regex: RegExp;
-  subcode?: string;
-  subCode?: string;
+  /**
+   * The `services.storage` error this elasticsearch message maps to.
+   *
+   * Required, and spelled one way. One entry declared `subCode` while the
+   * reader has always asked for `subcode`, so the rejected-execution mapping
+   * answered `undefined` and `kerror.get` fell through to
+   * `core.fatal.unexpected_error` — `too_many_operations` was unreachable.
+   */
+  subcode: string;
   getPlaceholders: (
     esError: ThrownESError,
     matches: RegExpMatchArray,
@@ -64,7 +71,7 @@ const errorMessagesMapping: ESErrorMapping[] = [
   {
     regex:
       /^\[es_rejected_execution_exception] rejected execution .*? on EsThreadPoolExecutor\[(.*?), .*$/,
-    subCode: "too_many_operations",
+    subcode: "too_many_operations",
     getPlaceholders: (esError, matches) => [matches[1]],
   },
   {

@@ -21,6 +21,7 @@
 
 import querystring from "node:querystring";
 import url from "node:url";
+import { inspect } from "node:util";
 import zlib from "node:zlib";
 
 import type { JSONObject } from "kuzzle-sdk";
@@ -110,10 +111,30 @@ interface HttpWsProtocolConfig {
   http: JSONObject;
 }
 
+/**
+ * `catch` answers `unknown`. What the two WebSocket handlers below catch is
+ * a `KuzzleError` in every in-tree path — `new Request()` raises
+ * `BadRequestError` — but a plugin pipe registered on
+ * `protocol:websocket:afterParsingPayload` can throw anything at all, and
+ * `JSON.parse` raises a plain `SyntaxError`. Both end up on the wire, so both
+ * are normalised here rather than at each call site.
+ *
+ * `inspect`, not `String`: a thrown object stringifies to `[object Object]`.
+ */
+function asKuzzleError(thrown: unknown): KuzzleError {
+  if (thrown instanceof KuzzleError) {
+    return thrown;
+  }
+
+  const error = thrown instanceof Error ? thrown : new Error(inspect(thrown));
+
+  return kerrorWS.getFrom(error, "unexpected_error", error.message);
+}
+
 class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
-  public server: uWS.TemplatedApp | null;
-  public wsConfig: JSONObject | null;
-  public httpConfig: JSONObject | null;
+  private _server: uWS.TemplatedApp | null;
+  private _wsConfig: JSONObject | null;
+  private _httpConfig: JSONObject | null;
   public now: number;
   public nowInterval: NodeJS.Timeout;
   public connectionBySocket: Map<KuzzleWebSocket, ClientConnection>;
@@ -124,9 +145,9 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
   constructor() {
     super("websocket");
 
-    this.server = null;
-    this.wsConfig = null;
-    this.httpConfig = null;
+    this._server = null;
+    this._wsConfig = null;
+    this._httpConfig = null;
 
     // Used to limit the rate of messages on websocket
     this.now = Date.now();
@@ -146,20 +167,67 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     this.logger = global.kuzzle.log.child("core:network:protocols:httpws");
   }
 
-  async init(entrypoint: NetworkEntryPoint): Promise<boolean> {
-    super.init(entrypoint);
+  /**
+   * The uWebSockets application and the two parsed configuration blocks.
+   * All three are built by `init` — the first from the other two, which are
+   * themselves parsed out of a configuration only the entry point has — and
+   * every one of the seventeen reads below happens in a handler that the
+   * server registered, so none of them can run before `init` returned.
+   *
+   * Declaring them nullable and dereferencing them anyway is the shape
+   * `Protocol.entryPoint` had; these accessors answer the same way, once,
+   * instead of at each call site.
+   */
+  get server(): uWS.TemplatedApp {
+    if (this._server === null) {
+      throw new Error("[http/websocket] no server: init() has not been called");
+    }
+
+    return this._server;
+  }
+
+  get wsConfig(): JSONObject {
+    if (this._wsConfig === null) {
+      throw new Error(
+        "[http/websocket] no websocket configuration: init() has not been called",
+      );
+    }
+
+    return this._wsConfig;
+  }
+
+  get httpConfig(): JSONObject {
+    if (this._httpConfig === null) {
+      throw new Error(
+        "[http/websocket] no http configuration: init() has not been called",
+      );
+    }
+
+    return this._httpConfig;
+  }
+
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
+  /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
+  async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
+  async init(...args: Protocol.InitArgs): Promise<boolean> {
+    const entrypoint = Protocol.entryPointOf(args);
+
+    // Awaited: the base sets `entryPoint` and `maxRequestSize`, which
+    // `parseWebSocketOptions` reads two lines down. It happened to work
+    // because that body has no `await` of its own.
+    await super.init(entrypoint);
 
     this.config = entrypoint.config.protocols;
 
-    this.wsConfig = this.parseWebSocketOptions();
-    this.httpConfig = this.parseHttpOptions();
+    this._wsConfig = this.parseWebSocketOptions();
+    this._httpConfig = this.parseHttpOptions();
 
     if (!this.wsConfig.enabled && !this.httpConfig.enabled) {
       return false;
     }
 
     // eslint-disable-next-line new-cap
-    this.server = uWS.App();
+    this._server = uWS.App();
 
     if (this.wsConfig.enabled) {
       this.initWebSocket();
@@ -281,7 +349,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     socket.unsubscribe(`realtime/${channel}`);
   }
 
-  disconnect(connectionId: string, message: string = null): void {
+  disconnect(connectionId: string, message: string | null = null): void {
     debugWS("[%s] forced disconnect", connectionId);
 
     const socket = this.socketByConnectionId.get(connectionId);
@@ -309,8 +377,14 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
     res.upgrade(
       {
+        // `last` and `count` are the rate limiter's bookkeeping. Seeding them
+        // here is what makes them non-optional on the socket: the limiter
+        // incremented `count` on a socket that had never been given one, and
+        // only ever read it in the branch that had just written it.
+        count: 0,
         headers,
         internal: {},
+        last: 0,
       },
       req.getHeader("sec-websocket-key"),
       req.getHeader("sec-websocket-protocol"),
@@ -379,6 +453,13 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
     const connection = this.connectionBySocket.get(socket);
 
+    // A socket with no connection is one `wsOnCloseHandler` has already torn
+    // down: there is nothing left to answer on, not even a rate-limit error.
+    // The six reads below took that on trust.
+    if (connection === undefined) {
+      return;
+    }
+
     // enforce rate limits
     if (this.wsConfig.rateLimit > 0) {
       if (socket.last === this.now) {
@@ -417,11 +498,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
        So... the error is forwarded to the client, hoping they know
        what to do with it.
        */
-      this.wsSendError(
-        socket,
-        connection,
-        kerrorWS.getFrom(e, "unexpected_error", e.message),
-      );
+      this.wsSendError(socket, connection, asKuzzleError(e));
       return;
     }
 
@@ -436,7 +513,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     try {
       request = new Request(parsed, { connection });
     } catch (e) {
-      this.wsSendError(socket, connection, e, parsed.requestId);
+      this.wsSendError(socket, connection, asKuzzleError(e), parsed.requestId);
       return;
     }
 
@@ -461,11 +538,21 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     socket.cork(() => {
       const buffer = this.backpressureBuffer.get(socket);
 
+      if (buffer === undefined) {
+        return;
+      }
+
+      // Drain until the socket fills up again, or until there is nothing left
+      // to drain — which is what `shift()` answering `undefined` means.
       while (
-        buffer.length > 0 &&
         socket.getBufferedAmount() < WS_PER_SOCKET_BACKPRESSURE_BUFFER_SIZE
       ) {
         const payload = buffer.shift();
+
+        if (payload === undefined) {
+          break;
+        }
+
         socket.send(payload);
       }
     });
@@ -503,14 +590,20 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
    * @param  {Buffer} payload
    */
   wsSend(socket: KuzzleWebSocket, payload: Buffer): void {
-    if (!this.connectionBySocket.has(socket)) {
+    // The three socket maps are written by `wsOnOpenHandler` and cleared by
+    // `wsOnCloseHandler`, together: a socket with no backpressure buffer is a
+    // socket with no connection. Asking the map that is about to be read
+    // answers both questions at once, and replaces a `has()`-then-`get()`
+    // pair on two different maps.
+    const buffer = this.backpressureBuffer.get(socket);
+
+    if (buffer === undefined) {
       return;
     }
 
     if (socket.getBufferedAmount() < WS_PER_SOCKET_BACKPRESSURE_BUFFER_SIZE) {
       socket.cork(() => socket.send(payload));
     } else {
-      const buffer = this.backpressureBuffer.get(socket);
       buffer.push(payload);
 
       /**
@@ -575,17 +668,21 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
         );
         return;
       }
-    }
 
-    const encoding = CHARSET_REGEX.exec(contentTypeHeader);
+      // Inside the branch now: a charset is declared by the content-type
+      // header, so with no header there is nothing to read one out of. The
+      // regex used to be run against `undefined`, which stringifies to
+      // "undefined" and matches nothing — the same answer, by accident.
+      const charset = CHARSET_REGEX.exec(contentTypeHeader)?.[1];
 
-    if (encoding !== null && encoding[1].toLowerCase() !== "utf-8") {
-      this.httpSendError(
-        message,
-        response,
-        kerrorHTTP.get("unsupported_charset", encoding[1].toLowerCase()),
-      );
-      return;
+      if (charset !== undefined && charset.toLowerCase() !== "utf-8") {
+        this.httpSendError(
+          message,
+          response,
+          kerrorHTTP.get("unsupported_charset", charset.toLowerCase()),
+        );
+        return;
+      }
     }
 
     this.httpReadData(message, response, (err) => {
@@ -675,7 +772,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     const type = message.headers["content-type"] || "";
 
     if (type.includes("multipart/form-data")) {
-      if (!this.httpParseMultipart(message, content)) {
+      if (!this.httpParseMultipart(message, content, type)) {
         cb(HTTP_FILE_TOO_LARGE_ERROR);
         return;
       }
@@ -712,8 +809,15 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
    * it to stay under the cognitive complexity ceiling the `.js` → `.ts` rename
    * re-scores as new code.
    */
-  private httpParseMultipart(message: HttpMessage, content: Buffer): boolean {
-    const parts = uWS.getParts(content, message.headers["content-type"]);
+  private httpParseMultipart(
+    message: HttpMessage,
+    content: Buffer,
+    contentType: string,
+  ): boolean {
+    // Handed down rather than read off the message again: the caller only
+    // reaches here because it read that header and found "multipart/form-data"
+    // in it.
+    const parts = uWS.getParts(content, contentType);
 
     message.content = {};
 
@@ -886,8 +990,12 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
       return;
     }
 
-    // Remove Content-Length header to avoid conflic with Transfer-Encoding header
-    request.response.setHeader("Content-Length", null);
+    // Remove Content-Length header to avoid a conflict with the
+    // Transfer-Encoding header. `setHeader(name, null)` was the spelling, and
+    // it sets the header to the string "null" — `String(value)` — rather than
+    // removing anything. It went unnoticed because `httpWriteRequestHeaders`
+    // skips content-length on its way to the wire.
+    request.response.removeHeader("Content-Length");
 
     // Send Headers in one go
     response.cork(() => {
@@ -1144,7 +1252,9 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
         .split(",")
         .map((e) => e.trim().toLowerCase());
 
-      let algorithm: string;
+      // Undefined until a gzip or deflate encoding is seen: the list may hold
+      // neither, which is the `identity` answer at the bottom of the method.
+      let algorithm: string | undefined;
       let priority = -1;
 
       for (const encoding of encodings) {
@@ -1306,22 +1416,19 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
     // precomputes default headers
     const httpCfg = global.kuzzle.config.http;
-    // A row starts as [name, value] and is rewritten in place to
-    // [Buffer(name), Buffer(value), rawName] — uWS writes Buffers, and the raw
-    // name is kept for the lookup that follows. The annotation is what says so;
-    // the alternative was asserting it at the loop, which the `casts` ratchet
-    // prices.
-    const headers: (string | Buffer)[][] = [
+    // uWS writes Buffers, and the raw name is kept in a third slot for the
+    // lookup that follows. Built as that triplet rather than rewritten into
+    // one in place: the loop read back the slots it was overwriting, so every
+    // row was `string | Buffer | undefined` to the compiler and the widened
+    // element type was the only thing holding the shape together.
+    const rawHeaders: [string, string][] = [
       ["Access-Control-Allow-Headers", httpCfg.accessControlAllowHeaders],
       ["Access-Control-Allow-Methods", httpCfg.accessControlAllowMethods],
       ["Content-Type", "application/json"],
     ];
-
-    for (const header of headers) {
-      header[2] = header[0]; // Save the raw header name in the third slot
-      header[0] = Buffer.from(header[0]);
-      header[1] = Buffer.from(header[1]);
-    }
+    const headers: [Buffer, Buffer, string][] = rawHeaders.map(
+      ([name, value]) => [Buffer.from(name), Buffer.from(value), name],
+    );
 
     return {
       enabled: cfg.enabled,

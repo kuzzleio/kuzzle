@@ -39,11 +39,7 @@ function flattenStep(
   object: JSONObject,
   prev: string | null = null,
 ): void {
-  const keys = Object.keys(object);
-
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    const value = object[key];
+  for (const [key, value] of Object.entries(object)) {
     const newKey = prev ? prev + "." + key : key;
 
     if (Object.prototype.toString.call(value) === "[object Object]") {
@@ -108,7 +104,8 @@ function formatValueForCSV(value: any) {
 }
 
 abstract class AbstractDumper {
-  protected collectionDir: string;
+  /** Set by `setup()`, before any document is written. */
+  protected collectionDir = "";
 
   protected abstract get fileExtension(): string;
 
@@ -175,7 +172,7 @@ abstract class AbstractDumper {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public async tearDown() {}
 
-  private async scroll(scrollId: string): Promise<JSONObject> {
+  private async scroll(scrollId: string): Promise<JSONObject | null> {
     if (!scrollId) {
       return null;
     }
@@ -233,7 +230,7 @@ abstract class AbstractDumper {
 
       await this.tearDown();
     } catch (e) {
-      this.writeStream.write(e.toString());
+      this.writeStream.write(String(e));
     }
 
     this.writeStream.end();

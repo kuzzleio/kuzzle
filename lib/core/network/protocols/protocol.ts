@@ -30,11 +30,72 @@ import type { NetworkEntryPoint } from "../networkEntryPoint";
  *                      `this.config`
  */
 class Protocol<TConfig = Record<string, unknown>> {
-  public maxRequestSize: number | null = null;
-  public entryPoint: NetworkEntryPoint | null = null;
+  private _maxRequestSize: number | null = null;
+  private _entryPoint: NetworkEntryPoint | null = null;
   public name: string;
   public config: TConfig = {} as TConfig;
   public initCalled = false;
+
+  /**
+   * The entry point that owns this protocol, and the request size limit it
+   * published. Both are set by `init` and read by everything a protocol does
+   * afterwards — a handler cannot run before the server it is registered on
+   * has been created.
+   *
+   * Declaring them nullable and reading them anyway is what the subclasses
+   * did: 20 unchecked dereferences across the three of them, each one taking
+   * on trust what `init` establishes. These two accessors say it once, where
+   * it can actually fail.
+   */
+  get entryPoint(): NetworkEntryPoint {
+    if (this._entryPoint === null) {
+      throw new Error(
+        `Protocol "${this.name}" has no entry point: init() has not been called yet`,
+      );
+    }
+
+    return this._entryPoint;
+  }
+
+  get maxRequestSize(): number {
+    if (this._maxRequestSize === null) {
+      throw new Error(
+        `Protocol "${this.name}" has no maxRequestSize: init() has not been called yet`,
+      );
+    }
+
+    return this._maxRequestSize;
+  }
+
+  set maxRequestSize(size: number) {
+    this._maxRequestSize = size;
+  }
+
+  /**
+   * Normalises the two `init` call shapes into the entry point they both
+   * carry. Every subclass overriding `init` has to accept both shapes too —
+   * a subclass that only took the live one would not honour the contract its
+   * base class publishes, and `init(null, entryPoint)` on it would throw —
+   * so the normalisation lives here rather than being written out four times.
+   *
+   * The old shape puts the entry point second. Reading `args[1]`
+   * unconditionally is what the first conversion did: `init(entryPoint)`
+   * type-checked and threw on `entryPoint.config` (TD-41).
+   */
+  public static entryPointOf(args: Protocol.InitArgs): NetworkEntryPoint {
+    const entryPoint = args[0] ?? args[1];
+
+    // Both call shapes crashed on `entryPoint.config` a few lines down when
+    // the entry point was missing. Same outcome, with the reason in the
+    // message — a third-party protocol in JavaScript is not constrained by
+    // the overloads.
+    assert(
+      entryPoint !== undefined && entryPoint !== null,
+      'Invalid "entryPoint" parameter value: expected the network entry point',
+    );
+
+    return entryPoint;
+  }
 
   constructor(name = "") {
     this.name = name;
@@ -72,26 +133,10 @@ class Protocol<TConfig = Record<string, unknown>> {
   async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
   /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
   async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
-  async init(
-    nameOrEntryPoint: null | NetworkEntryPoint,
-    maybeEntryPoint?: NetworkEntryPoint,
-  ): Promise<boolean> {
-    // The old shape puts the entry point second. Normalising here is what the
-    // union in the first conversion left undone: the body read `maybeEntryPoint`
-    // unconditionally, so `init(entryPoint)` type-checked and threw on
-    // `entryPoint.config` (TD-41).
-    const entryPoint = nameOrEntryPoint ?? maybeEntryPoint;
+  async init(...args: Protocol.InitArgs): Promise<boolean> {
+    const entryPoint = Protocol.entryPointOf(args);
 
-    // New: the call shapes above both crashed on `entryPoint.config` a few
-    // lines down when the entry point was missing. Same outcome, with the
-    // reason in the message — httpwsProtocol.js is still JavaScript and the
-    // overloads do not constrain it.
-    assert(
-      entryPoint !== undefined && entryPoint !== null,
-      'Invalid "entryPoint" parameter value: expected the network entry point',
-    );
-
-    this.entryPoint = entryPoint;
+    this._entryPoint = entryPoint;
 
     // name should be passed in the constructor. The original condition was
     // `this.name && !name`; normalisation above proves the first argument is
@@ -102,7 +147,7 @@ class Protocol<TConfig = Record<string, unknown>> {
       "A name has been given in the constructor and init method. Passing the name in the init method is deprecated.",
     );
 
-    this.maxRequestSize = bytes(entryPoint.config.maxRequestSize);
+    this._maxRequestSize = bytes(entryPoint.config.maxRequestSize);
 
     assert(
       typeof this.name === "string" && this.name.length > 0,
@@ -117,7 +162,7 @@ class Protocol<TConfig = Record<string, unknown>> {
     }
 
     assert(
-      Number.isInteger(this.maxRequestSize),
+      Number.isInteger(this._maxRequestSize),
       'Invalid "maxRequestSize" parameter value: expected a numeric value',
     );
 
@@ -153,6 +198,22 @@ class Protocol<TConfig = Record<string, unknown>> {
   notify(): void {
     // do nothing by default
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace Protocol {
+  /**
+   * The two shapes `Protocol.init` accepts, as one tuple union — see `init`.
+   * A subclass overriding `init` declares the same two overloads and takes
+   * this as its implementation signature, which is what makes the override
+   * assignable to the base method.
+   *
+   * It lives in a namespace merged with the class because `export =` leaves
+   * no room for a second export.
+   */
+  export type InitArgs =
+    | [entryPoint: NetworkEntryPoint]
+    | [name: null, entryPoint: NetworkEntryPoint];
 }
 
 export = Protocol;
