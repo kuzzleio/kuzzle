@@ -232,6 +232,8 @@ lib/kerror/errors/sizeLimitError.ts
 lib/kerror/errors/tooManyRequestsError.ts
 lib/kerror/errors/unauthorizedError.ts
 lib/kuzzle/Logger.ts
+lib/kuzzle/event/KuzzleEventEmitter.ts
+lib/kuzzle/kuzzle.ts
 lib/kuzzle/dumpGenerator.ts
 lib/kuzzle/event/pipeRunner.ts
 lib/kuzzle/event/waterfall.ts

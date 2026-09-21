@@ -71,7 +71,16 @@ class PluginPipeDefinition<
 }
 
 class KuzzleEventEmitter extends EventEmitter {
-  private coreAnswerers: Map<string, AskEventHandler>;
+  /**
+   * The ask answerers, whatever event each was registered for.
+   *
+   * `onAsk` is generic over its event, and a handler's parameters are
+   * contravariant: a handler for one event is not assignable to the handler
+   * type of another, so the only thing the map can say about all of them
+   * together is that they are callable. `ask()` dispatches through
+   * `Reflect.apply`, which is what that costs.
+   */
+  private coreAnswerers: Map<string, StoredAskHandler>;
   private coreSyncedAnswerers: Map<string, HookEventHandler>;
   private corePipes: Map<string, PipeEventHandler[]>;
   private pipeRunner: PipeRunner;
@@ -95,7 +104,7 @@ class KuzzleEventEmitter extends EventEmitter {
     this.pluginPipeDefinitions = new Map<string, PluginPipeDefinition>();
 
     this.corePipes = new Map<string, PipeEventHandler[]>();
-    this.coreAnswerers = new Map<string, AskEventHandler>();
+    this.coreAnswerers = new Map<string, StoredAskHandler>();
     this.coreSyncedAnswerers = new Map<string, AskEventHandler>();
   }
 
@@ -113,11 +122,10 @@ class KuzzleEventEmitter extends EventEmitter {
       `Cannot listen to pipe event ${event}: "${fn}" is not a function`,
     );
 
-    if (!this.corePipes.has(event)) {
-      this.corePipes.set(event, []);
-    }
+    const registered = this.corePipes.get(event) ?? [];
 
-    this.corePipes.get(event).push(fn);
+    registered.push(fn);
+    this.corePipes.set(event, registered);
   }
 
   /**
@@ -137,6 +145,9 @@ class KuzzleEventEmitter extends EventEmitter {
       `Cannot add a listener to the ask event "${event}": event has already an answerer`,
     );
 
+    // The map holds the un-parameterised handler: `onAsk` is generic over the
+    // event it registers, and what the map can say about all of them together
+    // is the base signature.
     this.coreAnswerers.set(event, fn);
   }
 
@@ -212,7 +223,10 @@ class KuzzleEventEmitter extends EventEmitter {
       callback = payload.pop();
     }
 
-    const events = getWildcardEvents(event as string);
+    // Named once: the event is the pipe's target and the seed of its
+    // wildcard list, and the callback context carries it too.
+    const eventName = event as string;
+    const events = getWildcardEvents(eventName);
     const funcs = [];
 
     for (const element of events) {
@@ -227,11 +241,18 @@ class KuzzleEventEmitter extends EventEmitter {
 
     // Create a context for the emitPluginPipe callback
     const promback = new Promback<TEventDefinition["args"][0]>(callback);
-    const callbackContext = {
+    // What the callback needs, rather than the whole emitter: it is invoked
+    // with this object as its receiver, from `pipeRunner`, and reaching back
+    // into two private members through it was the only thing that asked for
+    // `instance`.
+    const callbackContext: PipeCallbackContext = {
+      corePipes: this.corePipes,
       events,
-      instance: this,
       promback,
-      targetEvent: event,
+      superEmit: (ev, ...a) => {
+        this.superEmit(ev, ...a);
+      },
+      targetEvent: eventName,
     };
 
     if (funcs.length === 0) {
@@ -265,7 +286,7 @@ class KuzzleEventEmitter extends EventEmitter {
       );
     }
 
-    const response = await fn(...args);
+    const response = await Reflect.apply(fn, this, args);
 
     for (const ev of getWildcardEvents(event as string)) {
       super.emit(ev, {
@@ -332,7 +353,7 @@ class KuzzleEventEmitter extends EventEmitter {
           "catch" in ret &&
           typeof ret.catch === "function"
         ) {
-          ret.catch((error) => {
+          ret.catch((error: unknown) => {
             if (event !== "hook:onError") {
               this.emit("hook:onError", { error, event, pluginName });
             } else {
@@ -359,11 +380,10 @@ class KuzzleEventEmitter extends EventEmitter {
     // callback form. The promise-only type described half of what is accepted.
     handler: RegisteredPipeHandler<TEventDefinition>,
   ) {
-    if (!this.pluginPipes.has(event)) {
-      this.pluginPipes.set(event, []);
-    }
+    const registered = this.pluginPipes.get(event) ?? [];
 
-    this.pluginPipes.get(event).push(handler);
+    registered.push(handler);
+    this.pluginPipes.set(event, registered);
 
     const definition = new PluginPipeDefinition(event, handler);
 
@@ -379,8 +399,10 @@ class KuzzleEventEmitter extends EventEmitter {
       throw kerror.get("plugin", "runtime", "unknown_pipe", pipeId);
     }
 
-    const handlers = this.pluginPipes.get(definition.event);
+    const handlers = this.pluginPipes.get(definition.event) ?? [];
+
     handlers.splice(handlers.indexOf(definition.handler), 1);
+
     if (handlers.length > 0) {
       this.pluginPipes.set(definition.event, handlers);
     } else {
@@ -405,27 +427,48 @@ class KuzzleEventEmitter extends EventEmitter {
  * The context of this callback must be bound to this following object:
  * { instance: (kuzzle instance), promback, events }
  *
+ * Declared as `this`, rather than left implicit: the function is never called
+ * as a method, so the compiler has nothing else to read the receiver from.
+ *
  * @warning Critical section of code
  */
-async function pipeCallback(error: any, ...updated: any[]) {
+async function pipeCallback(
+  this: PipeCallbackContext,
+  error?: unknown,
+  ...updated: unknown[]
+) {
   /* eslint-disable no-invalid-this */
   if (error) {
     this.promback.reject(error);
     return;
   }
 
-  const corePipes = this.instance.corePipes.get(this.targetEvent);
+  const corePipes = this.corePipes.get(this.targetEvent);
 
   if (corePipes) {
     await Bluebird.map(corePipes, (fn: any) => fn(...updated));
   }
 
   for (const element of this.events) {
-    this.instance.superEmit(element, ...updated);
+    this.superEmit(element, ...updated);
   }
 
   this.promback.resolve(updated[0]);
   /* eslint-enable no-invalid-this */
+}
+
+/** An ask answerer as `coreAnswerers` holds it — see that field. */
+type StoredAskHandler = (...args: never[]) => unknown;
+
+/**
+ * What `pipe()` binds `pipeCallback` to.
+ */
+interface PipeCallbackContext {
+  events: string[];
+  corePipes: Map<string, PipeEventHandler[]>;
+  promback: Promback<unknown>;
+  superEmit: (event: string, ...args: unknown[]) => void;
+  targetEvent: string;
 }
 
 /**
