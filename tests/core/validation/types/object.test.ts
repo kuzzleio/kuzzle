@@ -60,11 +60,11 @@ describe("#core/validation/types/object", () => {
   });
 
   describe("#getStrictness", () => {
-    it("returns parentStrictness if strict is not defined in typeOptions", () => {
+    it("inherits a strict parent when strict is not in the typeOptions", () => {
       expect(objectType.getStrictness({}, true)).toBe(true);
     });
 
-    it("returns parentStrictness if strict is not defined in typeOptions", () => {
+    it("inherits a non-strict parent when strict is not in the typeOptions", () => {
       expect(objectType.getStrictness({}, false)).toBe(false);
     });
 

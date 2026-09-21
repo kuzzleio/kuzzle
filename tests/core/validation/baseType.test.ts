@@ -24,11 +24,11 @@ describe("#core/validation/baseType", () => {
     expect(baseType.validateFieldSpecification("foobar")).toBe("foobar");
   });
 
-  it("defines function getStrictness to return parent's strictness", () => {
+  it("returns a strict parent's strictness", () => {
     expect(baseType.getStrictness({}, true)).toBe(true);
   });
 
-  it("defines function getStrictness to return parent's strictness", () => {
+  it("returns a non-strict parent's strictness", () => {
     expect(baseType.getStrictness({}, false)).toBe(false);
   });
 

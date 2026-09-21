@@ -55,7 +55,7 @@ describe("#core/validation/types/email", () => {
       expect(errorMessage).toEqual(["Field cannot be undefined or null"]);
     });
 
-    it("returns false if the value is not valid", () => {
+    it("returns false on a string that is not an email address", () => {
       const errorMessage = [];
 
       expect(
@@ -66,7 +66,7 @@ describe("#core/validation/types/email", () => {
       ]);
     });
 
-    it("returns false if the value is not valid", () => {
+    it("returns false on a value that is not a string at all", () => {
       const errorMessage = [];
 
       expect(
