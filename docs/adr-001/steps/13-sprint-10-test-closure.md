@@ -119,7 +119,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **L0** ✅  | **The three specs that already had a vitest counterpart** — measured by coverage rather than by line count, completed where the coverage said so, then deleted; see _What L0 found_                                                                                                                                  |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
-| **L1b** 🟨 | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` (8) · **b4** `service/` + `util` (4); see _What L1b1/L1b2/L1b2b found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
+| **L1b** 🟨 | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` (4); see _What L1b1/L1b2/L1b2b/L1b3 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2**     | The clean specs at **201–1 000 lines**, by layer                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3**     | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
@@ -452,3 +452,56 @@ _This is the second time in two slices that sinon's prefix matching hid an argum
 - `DocumentNotification` and `UserNotification` ship `export =`, so a **default** import is the correct one — L1's trap, third occurrence.
 - `notifyDocumentDelete` returns `[]` whatever it matched (a deleted document is in no room afterwards), which the Mocha spec asserted as "an empty array" without saying why. Written down now.
 - The four `actionEnum` pairs — CREATE/DELETE, UPDATE/REPLACE, WRITE/UPSERT — are `it.each` tables rather than eight near-identical tests, which is what made it visible that WRITE and UPSERT differ **only** in which method handles the non-created documents.
+
+---
+
+## What L1b3 found
+
+**`mocha` 96 → 88**, 8 specs ported into **7** files, vitest **623 → 713 tests** across **62 → 69 files**. The eight Mocha specs held **68** tests; the seven vitest ones hold **90**.
+
+The rest of `core/`: `router` × 2 (merged), `internalProtocol`, `funnelProtocol`, `cacheEngine`, `indexCache`, `pluginRepository`, `securityLoader`.
+
+### Two more mirror faults, found before porting rather than after
+
+Checking the mirror **first** is now part of picking up a slice, and it paid twice:
+
+- `test/core/network/router/router.test.js` **and** `httpRequest.test.js` are both for `lib/core/network/router.ts`. Merged, like [hotelClerk](#what-l1b2-found) and [notifier](#what-l1b2b-found).
+- `test/core/network/protocols/internal.test.js` is for `internalProtocol.ts` — mis-filed, the second instance after `OpenApiManager`. Renamed.
+
+### ⚠️ `kuzzle.pipe` has two calling conventions, and the less obvious one is silent
+
+`Router._executeFromHttp` calls `global.kuzzle.pipe(event, request, callback)` — the **callback** form. A fixture whose `pipe` only returns a promise leaves it waiting forever, which is how this presented: **seven tests timing out at 20 seconds with no error at all**. KuzzleMock honoured both forms silently, so no spec had ever had to know.
+
+```ts
+pipe = vi.fn((event, payload, callback) =>
+  callback ? (callback(null, payload), undefined) : Promise.resolve(payload),
+);
+```
+
+_Second time in this slice group that a fixture needed a **behaviour** rather than fields_ — [L1b2b](#what-l1b2b-found)'s pipe chain was the first. **When a spec hangs instead of failing, suspect a calling convention the fixture does not implement.**
+
+### `global.kuzzle.router` is how the router reaches itself
+
+`httpRouter` looks a message's connection up through `global.kuzzle.router.connections`. The subject therefore needs to be **on the global it reads**, which KuzzleMock provided by carrying its own `Router` instance. The spec assigns it after `init()`, with the reason written down — it is a circular dependency the fixture has to close, not an incidental field.
+
+### Four more defects, three of them signature mismatches
+
+| What | Caught by |
+| --- | --- |
+| `InternalProtocol.joinChannel(channel, connectionId)` and `leaveChannel` take **two** arguments; the Mocha spec passed one, four times. | TS2554 × 4 |
+| `_send` emits one message per channel — and the Mocha spec asserted `room: "c1"` **twice**, by copy-paste, so nothing checked that the second channel was emitted at all. The port pins both, and the call count with them. | reading it |
+| `ObjectRepository`'s `index`, `collection`, `ObjectConstructor`, `store` and `cacheDb` are **`protected`**, and the `pluginRepository` spec reads all five — they are what its constructor is *for*. | TS2445 × 5 |
+| `Router.logger` is `private`, and half the connection-bookkeeping assertions are about what it was handed (an invalid connection is *logged*, not thrown). | TS2341 |
+
+The last two are the [L1b2](#what-l1b2-found) pattern again: **the private-member problem is not `hotelClerk`'s, it is the suite's.** Named once per spec, never dropped.
+
+### Three mocks retired, one fixture relocated
+
+- **`test/mocks/service/redisClient.mock.js`** models ioredis; nothing in `cacheEngine`'s spec is about ioredis — every assertion is "this event reaches this command with these arguments". Replaced by a 20-line `stubRedis()` whose `commands` is a `Proxy` returning a stable `vi.fn` per name, so a command needs no declaration to be asserted on. It also surfaced that the subject goes through **`Redis.connectedClient`**, not `client` — the K4/K5 accessor pattern.
+- **`test/mocks/uWS.mock.js`** models the response side and the socket lifecycle too; the router spec needs the five request getters `HttpMessage` reads. Inlined. ⚠️ **Three Mocha specs still use that mock** — when the next one is ported, this belongs in `tests/mocks/uWS.ts`.
+- **A real `EntryPoint`** was constructed by the `internalProtocol` spec only to stub two methods on it, which made the spec depend on the entry point's config for nothing. Two `vi.fn`s instead.
+- **`test/mocks/securities.json` → `tests/fixtures/securities.json`.** It is a payload, not a mock: nothing in it stands in for a collaborator. `tests/fixtures/` is new and is where the next one goes.
+
+### Where the real config is the right fixture
+
+`router`'s HTTP half asserts "registers the routes from `config/httpRoutes`" — the route table **is** the subject. So that block loads the real config with `loadConfig()` and stubs only the funnel, rather than inventing three routes and testing the invention. A fixture is small because the dependency is small, not as a rule.
