@@ -1621,3 +1621,31 @@ This is the **fourth** instance of one finding — [TD-45](#td-45) (`*.js` never
 - **Second instance, [step 12](steps/12-sprint-9-strict-flip.md) K5 (2026-09-21):** `any` went `179 → 180` on a commit that **added no `any`**. `pipeCallback(error: any, ...updated: any[])` had been reformatted onto three lines by Prettier, so the same two annotations became two matching lines instead of one. _It counts lines, not occurrences_ — which also means the counter silently **under**-counts two `any` on one line. It went to 178 once the two parameters were typed for real, but the misfire cost the same afternoon the entry predicts.
 
 - **The generalisable part, fourth telling:** _a grep-based metric counts text, and source files contain prose._ The corollary is the operational one: **when a finding names a class of tool, fixing the instance that was reported is half the work** — enumerate the siblings in the same PR, or the same bug is refiled under a new number later.
+
+---
+
+### TD-74
+
+**`RealtimeScope` forbids a value the runtime validates and the dispatcher relies on** · 🟠 medium · `lib/types/realtime/RealtimeScope.ts`, `lib/core/realtime/channel.ts`
+
+Found porting the `notifier` specs ([step 13 L1b2b](steps/13-sprint-10-test-closure.md#what-l1b2b-found)), by TS2322 × 6.
+
+```ts
+// lib/types/realtime/RealtimeScope.ts
+export type RealtimeScope = "in" | "out" | "all";
+
+// lib/core/realtime/channel.ts
+static USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
+static SCOPE_ALLOWED_VALUES = Channel.USERS_ALLOWED_VALUES;  // ← same array
+```
+
+`scope: "none"` is **accepted by the subscribe validator** (`SCOPE_ALLOWED_VALUES` is literally `USERS_ALLOWED_VALUES`), it is **meaningful** — `_notifyDocument` keeps a channel only when `channel.scope === "all" || channel.scope === notification.scope`, so a `"none"` scope is how a channel subscribes to *user* events and to no document event — and it is what four of the six channels in the `notifyMethods` fixture were built with. The type says it cannot happen.
+
+Two things are wrong and they pull in opposite directions:
+
+1. **`RealtimeScope` is missing `"none"`.** A caller writing `scope: "none"` in TypeScript is refused something the HTTP API accepts.
+2. **`Channel.hash`'s `scope` switch has no `"none"` case**, while its `users` switch does (and maps `"none"` onto `"3"`, the same string as `"out"` — its own smell). A `"none"`-scoped channel therefore contributes **nothing** to the hash, so it collides with a channel that has no scope at all.
+
+- **Why 🟠 and not 🟡:** #2 is a hash collision on a value the API accepts, and channel names are derived from that hash. Two different channel configurations can share a name.
+- **Fix:** add `"none"` to `RealtimeScope`, then make `SCOPE_ALLOWED_VALUES` its own array derived from the type rather than an alias of the users' one, and give the `scope` switch its fourth case with a distinct digit. The `users` switch's `"out"`/`"none"` collision needs the same look.
+- **Not fixed here:** a test-porting slice must leave `lib/` untouched. `tests/core/realtime/notifier.test.ts` casts the four fixture channels and asserts current behaviour, with a pointer to this entry.
