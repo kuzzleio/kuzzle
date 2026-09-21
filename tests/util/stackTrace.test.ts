@@ -25,23 +25,20 @@ describe("#hilightUserCode", () => {
     expect(hilightUserCode(line)).toBe(line);
   });
 
-  it("pads a frame in Kuzzle's own code", () => {
-    const line =
-      " at BackendController._add (/home/kuzzle/lib/core/application/backend.ts:261:28)";
-
-    expect(hilightUserCode(line)).toBe(`  ${line}`);
-  });
-
-  it("pads a frame in a Node internal", () => {
-    const line = " at processImmediate (internal/timers.js:462:21)";
-
-    expect(hilightUserCode(line)).toBe(`  ${line}`);
-  });
-
-  it("pads a frame in a module", () => {
-    const line =
-      " at Assertion.value (node_modules/should/cjs/should.js:356:19)";
-
+  // The three kinds of frame that are padded rather than marked: Kuzzle's own
+  // code, a Node internal, and a module. One table, because the assertion is
+  // the same and only the classification differs.
+  it.each([
+    [
+      "Kuzzle's own code",
+      " at BackendController._add (/home/kuzzle/lib/core/application/backend.ts:261:28)",
+    ],
+    ["a Node internal", " at processImmediate (internal/timers.js:462:21)"],
+    [
+      "a module",
+      " at Assertion.value (node_modules/should/cjs/should.js:356:19)",
+    ],
+  ])("pads a frame in %s", (_kind, line) => {
     expect(hilightUserCode(line)).toBe(`  ${line}`);
   });
 
