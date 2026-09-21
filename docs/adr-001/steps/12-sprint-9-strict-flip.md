@@ -1,6 +1,6 @@
 # Step 12 — Sprint 9: the strict flip
 
-**Status:** ✅ Done · **Opened:** 2026-09-18 · **Closed:** 2026-09-21 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · K3 [#2802](https://github.com/kuzzleio/kuzzle/pull/2802) · K4+K5 [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) · K6 `PR_K6_PLACEHOLDER` · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done · **Opened:** 2026-09-18 · **Closed:** 2026-09-21 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · K3 [#2802](https://github.com/kuzzleio/kuzzle/pull/2802) · K4+K5 [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) · K6 [#2804](https://github.com/kuzzleio/kuzzle/pull/2804) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
