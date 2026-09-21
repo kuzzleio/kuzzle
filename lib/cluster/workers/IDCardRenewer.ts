@@ -1,3 +1,5 @@
+import { inspect } from "node:util";
+
 import type { JSONObject } from "kuzzle-sdk";
 
 // A default import, not `import Redis = require(...)`: the latter emits a real
@@ -18,6 +20,14 @@ type RedisServiceConfig = ConstructorParameters<typeof Redis>[0];
  * It is a `child_process.fork()` child, so everything here crossed an IPC
  * boundary and is plain JSON.
  */
+/**
+ * The message of whatever was thrown. `catch` answers `unknown`, and this
+ * worker reports every failure it meets to its parent as text.
+ */
+function messageOf(thrown: unknown): string {
+  return thrown instanceof Error ? thrown.message : inspect(thrown);
+}
+
 export type IDCardRenewerConfig = {
   nodeIdKey: string;
   refreshDelay?: number;
@@ -50,7 +60,8 @@ class IDCardRenewer {
 
   public refreshDelay = 2000;
 
-  public refreshMultiplier: number;
+  /** Same default as `ClusterIdCardHandler`, which is what sends the real one. */
+  public refreshMultiplier = 2;
 
   /** Disposed until `init()` says otherwise. */
   public disposed = true;
@@ -78,7 +89,7 @@ class IDCardRenewer {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
-        `Failed to connect to redis, could not refresh ID card: ${error.message}`,
+        `Failed to connect to redis, could not refresh ID card: ${messageOf(error)}`,
       );
       // `process.send`, not `this.parentPort.postMessage`: this worker is a
       // `child_process.fork()` child and has no `parentPort` — that is the
@@ -87,8 +98,8 @@ class IDCardRenewer {
       // *why* the ID card cannot be renewed used to raise a TypeError instead
       // of sending `{ error }`, so the node was evicted by the `close` handler
       // with a generic reason rather than this one. See TD-63 (#2770).
-      process.send({
-        error: `Failed to connect to redis, could not refresh ID card: ${error.message}`,
+      process.send?.({
+        error: `Failed to connect to redis, could not refresh ID card: ${messageOf(error)}`,
       });
       return;
     }
@@ -106,10 +117,18 @@ class IDCardRenewer {
     }
 
     // Notify that the worker is running and updating the ID Card
-    process.send({ initialized: true });
+    process.send?.({ initialized: true });
   }
 
-  async initRedis(config: RedisServiceConfig, name: string): Promise<void> {
+  async initRedis(config?: RedisServiceConfig, name?: string): Promise<void> {
+    // Rejecting here is what `init()` above reports: the worker is started
+    // without a redis configuration in the specs, and the JS read two fields
+    // off a `config.redis || {}` and handed `new Redis(undefined, undefined)`
+    // the result.
+    if (config === undefined || name === undefined) {
+      throw new Error("no redis configuration was sent to the ID card worker");
+    }
+
     const redis = new Redis(config, name);
     await redis.init();
     this.redis = redis;
@@ -118,6 +137,12 @@ class IDCardRenewer {
   async renewIDCard(): Promise<void> {
     if (this.disposed) {
       return; // Do not refresh ID Card when worker has been disposed
+    }
+
+    // Both are set by `init()`, which is the only thing that clears
+    // `disposed` above — but the timer it starts outlives a failed one.
+    if (this.redis === null || this.nodeIdKey === null) {
+      return;
     }
 
     try {
@@ -129,14 +154,14 @@ class IDCardRenewer {
       // => this node is too slow, we need to remove it from the cluster
       if (refreshed === 0) {
         await this.dispose();
-        process.send({
+        process.send?.({
           error: "Node too slow: ID card expired",
         });
       }
     } catch (error) {
       await this.dispose();
-      process.send({
-        error: `Failed to refresh ID Card: ${error.message}`,
+      process.send?.({
+        error: `Failed to refresh ID Card: ${messageOf(error)}`,
       });
     }
   }
@@ -148,12 +173,12 @@ class IDCardRenewer {
 
     this.disposed = true;
 
-    clearInterval(this.refreshTimer);
+    clearInterval(this.refreshTimer ?? undefined);
     this.refreshTimer = null;
 
     // If the worker is disposed before it had time to starts, redis service
     // may not have been initialized
-    if (!this.redis) {
+    if (!this.redis || this.nodeIdKey === null) {
       return;
     }
 
@@ -162,7 +187,7 @@ class IDCardRenewer {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
-        `Could not delete key '${this.nodeIdKey}' from redis: ${error.message}`,
+        `Could not delete key '${this.nodeIdKey}' from redis: ${messageOf(error)}`,
       );
     }
   }

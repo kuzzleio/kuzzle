@@ -113,12 +113,16 @@ lib/api/request/kuzzleRequest.ts
 lib/api/request/requestContext.ts
 lib/api/request/requestInput.ts
 lib/api/request/requestResponse.ts
+lib/cluster/command.ts
 lib/cluster/idCardHandler.ts
 lib/cluster/index.ts
 lib/cluster/protobuf/commandMessages.ts
 lib/cluster/protobuf/syncMessages.ts
+lib/cluster/node.ts
 lib/cluster/publisher.ts
 lib/cluster/state.ts
+lib/cluster/subscriber.ts
+lib/cluster/workers/IDCardRenewer.ts
 lib/config/default.config.ts
 lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts

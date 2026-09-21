@@ -26,6 +26,7 @@
 // J3a, where a hard-coded `.js` next to a renamed file took the whole
 // functional matrix down.
 import assert from "assert"; // NOSONAR
+import { inspect } from "util"; // NOSONAR
 import net from "net"; // NOSONAR
 import os from "os"; // NOSONAR
 
@@ -38,7 +39,9 @@ import type { storeScopeEnum } from "../core/storage/storeScopeEnum";
 import type { AuthStrategy } from "./protobuf/syncMessages";
 import intersection from "lodash/intersection";
 import xor from "lodash/xor";
-import type Long from "long";
+import Long from "long";
+
+import type { JSONObject } from "kuzzle-sdk";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
@@ -66,20 +69,24 @@ const debug = createDebug("kuzzle:cluster:sync");
  */
 function isPrivateIP(ip: string): boolean {
   if (net.isIPv6(ip)) {
-    const prefix = ip.split(":")[0];
+    // `split` always yields a first element, empty string included.
+    const prefix = ip.split(":")[0] ?? "";
 
     return (
       (prefix.startsWith("fd") && prefix.length === 4) || prefix === "fe80"
     );
   }
 
-  // IPv4
+  // IPv4. `?? NaN` on the octets a malformed address does not have: every
+  // comparison below is then false, which is what comparing `undefined` did.
   const exploded = ip.split(".").map((s) => Number.parseInt(s));
+  const first = exploded[0] ?? NaN;
+  const second = exploded[1] ?? NaN;
 
   return (
-    exploded[0] === 10 ||
-    (exploded[0] === 172 && exploded[1] >= 16 && exploded[1] <= 31) ||
-    (exploded[0] === 192 && exploded[1] === 168)
+    first === 10 ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
   );
 }
 
@@ -97,16 +104,18 @@ function isInternalIP(ip: string): boolean {
   }
 
   const exploded = ip.split(".").map((s) => Number.parseInt(s));
+  const first = exploded[0] ?? NaN;
+  const second = exploded[1] ?? NaN;
 
   // 127.x.x: loopback addresses are already flagged as "internal" by
   // os.networkInterfaces.
   return (
-    exploded[0] === 127 ||
+    first === 127 ||
     // 169.254.x.x addresses are APIPA addresses: temporary and non-routable.
     // We need to remove them from the accepted list of IP addresses
     // (this is a "just in case" scenario: APIPA addresses are obsolete and
     // should not be used anymore, but we never know...)
-    (exploded[0] === 169 && exploded[1] === 254)
+    (first === 169 && second === 254)
   );
 }
 
@@ -132,7 +141,8 @@ function getIP({
   let interfaces = [];
 
   for (const [key, value] of Object.entries(os.networkInterfaces())) {
-    for (const _interface of value) {
+    // `os.networkInterfaces()` declares its values optional.
+    for (const _interface of value ?? []) {
       interfaces.push({
         interface: key,
         ..._interface,
@@ -153,13 +163,15 @@ function getIP({
 
   debug("Filtered interfaces %o", interfaces);
 
-  if (interfaces.length === 0) {
+  const [firstInterface] = interfaces;
+
+  if (firstInterface === undefined) {
     return null;
   }
 
   // take the first IP from the list if no interface has been defined
   if (!netInterface) {
-    return interfaces[0].address;
+    return firstInterface.address;
   }
 
   for (const i of interfaces) {
@@ -204,13 +216,26 @@ class ClusterNode {
 
   public readonly ip: string;
 
+  private _nodeId: string | null = null;
+
   /**
-   * Assigned by `handshake()`, from the ID card this node manages to reserve —
-   * so it is null until the handshake gets that far. `subscriber.ts` and
-   * `command.ts` both declare it a `string`, which is true by the time either
-   * of them reads it.
+   * The id of the ID card this node reserved during `handshake()`.
+   *
+   * Null until the handshake gets that far, and read as a `string` at
+   * seventeen sites here plus `subscriber.ts` and `command.ts` — all of which
+   * run after it. The accessor says once where that can fail.
    */
-  public nodeId: string;
+  public get nodeId(): string {
+    if (this._nodeId === null) {
+      throw new Error("[CLUSTER] No node id yet: the handshake has not run");
+    }
+
+    return this._nodeId;
+  }
+
+  public set nodeId(id: string) {
+    this._nodeId = id;
+  }
 
   private heartbeatTimer: NodeJS.Timeout | null;
 
@@ -242,19 +267,19 @@ class ClusterNode {
 
     const family = this.config.ipv6 ? "IPv6" : "IPv4";
 
-    this.ip = getIP({
+    const ip = getIP({
       family,
       interface: this.config.interface,
       ip: this.config.ip,
     });
 
-    debug("Found IP address: %s with config %o", this.ip, this.config);
+    debug("Found IP address: %s with config %o", ip, this.config);
     assert(
-      this.ip !== null,
+      ip !== null,
       `[CLUSTER] No suitable IP address found with the provided configuration (family: ${family}, interface: ${this.config.interface}, ip: ${this.config.ip})`,
     );
 
-    this.nodeId = null;
+    this.ip = ip;
     this.heartbeatTimer = null;
 
     this.idCardHandler = new ClusterIdCardHandler(this);
@@ -309,7 +334,7 @@ class ClusterNode {
    * nodes, and removes entries from the cache
    */
   async shutdown(): Promise<void> {
-    clearInterval(this.heartbeatTimer);
+    clearInterval(this.heartbeatTimer ?? undefined);
     await this.idCardHandler.dispose();
 
     for (const subscriber of this.remoteNodes.values()) {
@@ -397,7 +422,7 @@ class ClusterNode {
    * @param  {Error} [error]
    * @return {void}
    */
-  async evictSelf(reason: string, error: Error = null): Promise<void> {
+  async evictSelf(reason: string, error: Error | null = null): Promise<void> {
     this.logger.error(`[CLUSTER] ${reason}`);
 
     if (error) {
@@ -481,7 +506,13 @@ class ClusterNode {
 
     try {
       const idCards = await this.idCardHandler.getRemoteIdCards();
-      idCards.push(this.idCardHandler.idCard);
+      const ownIdCard = this.idCardHandler.idCard;
+
+      // A node with no ID card contributes no topology. Pushing `null` is
+      // what `detectSplits` then read `.topology` off, one line later.
+      if (ownIdCard !== null) {
+        idCards.push(ownIdCard);
+      }
 
       const splits = this.detectSplits(idCards);
 
@@ -502,7 +533,7 @@ class ClusterNode {
       this.logger.error(
         "[CLUSTER] Unexpected exception caught during a cluster consistency check. Shutting down...",
       );
-      this.logger.error(err.stack);
+      this.logger.error(err instanceof Error ? err.stack : inspect(err));
       global.kuzzle.shutdown();
     }
   }
@@ -580,18 +611,26 @@ class ClusterNode {
     );
 
     splits = splits.sort((a, b) => a.length - b.length);
+
+    const [smallest] = splits;
+
+    // The caller only reaches here with at least one split — the empty case
+    // returns before — and the sort then makes `splits[0]` the smallest.
+    if (smallest === undefined) {
+      return [];
+    }
+
     const eligibleSplits = splits.filter(
-      (split) => split.length === splits[0].length,
+      (split) => split.length === smallest.length,
     );
 
-    let candidates: string[];
+    const [onlyEligible] = eligibleSplits;
 
-    if (eligibleSplits.length === 1) {
-      candidates = eligibleSplits[0];
-    } else {
-      candidates = this.electFromTiedSplits(eligibleSplits, splits, idCards);
+    if (eligibleSplits.length === 1 && onlyEligible !== undefined) {
+      return onlyEligible;
     }
-    return candidates;
+
+    return this.electFromTiedSplits(eligibleSplits, splits, idCards);
   }
 
   /**
@@ -607,7 +646,6 @@ class ClusterNode {
     splits: string[][],
     idCards: IdCard[],
   ): string[] {
-    let candidates: string[];
     // Beware: search isolated nodes in ALL the splits, not only the
     // smallest ones
     let isolatedNodes = xor(...splits);
@@ -622,26 +660,38 @@ class ClusterNode {
       isolatedNodes = eligibleNodes;
     }
 
-    let youngestNode;
+    let youngestNode: IdCard | undefined;
 
     for (const isolatedNode of isolatedNodes) {
       const idCard = idCards.find((card) => card.id === isolatedNode);
+
+      // `find` answers undefined for a node whose ID card has expired since
+      // the topologies were read. It was dereferenced for its birthdate.
+      if (idCard === undefined) {
+        continue;
+      }
+
       if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
         youngestNode = idCard;
       }
     }
 
-    if (isIsolated) {
-      for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
-        if (eligibleSplits[i].includes(youngestNode.id)) {
-          candidates = intersection(eligibleSplits[i], isolatedNodes);
-        }
-      }
-    } else {
-      candidates = [youngestNode.id];
+    // Every isolated node's ID card is gone: there is nobody left to elect.
+    if (youngestNode === undefined) {
+      return [];
     }
 
-    return candidates;
+    if (!isIsolated) {
+      return [youngestNode.id];
+    }
+
+    for (const split of eligibleSplits) {
+      if (split.includes(youngestNode.id)) {
+        return intersection(split, isolatedNodes);
+      }
+    }
+
+    return [];
   }
 
   /**
@@ -715,7 +765,14 @@ class ClusterNode {
       await this.idCardHandler.createIdCard();
       debug("[CLUSTER] ID Card created");
 
-      this.nodeId = this.idCardHandler.nodeId;
+      const nodeId = this.idCardHandler.nodeId;
+
+      assert(
+        nodeId !== null,
+        "[CLUSTER] createIdCard() returned without reserving a node id",
+      );
+
+      this.nodeId = nodeId;
 
       await this.startHeartbeat(); // NOSONAR: TD-26
       debug("[CLUSTER] Start heartbeat");
@@ -740,7 +797,7 @@ class ClusterNode {
 
         if (duplicate.length > 0) {
           this.logger.error(
-            `[CLUSTER] Another node share the same IP address as this one (${this.ip}): ${duplicate[0].id}. Shutting down.`,
+            `[CLUSTER] Another node share the same IP address as this one (${this.ip}): ${duplicate[0]?.id}. Shutting down.`,
           );
           global.kuzzle.shutdown();
           return;
@@ -844,12 +901,24 @@ class ClusterNode {
     handshakeResponses: Awaited<
       ReturnType<ClusterCommand["broadcastHandshake"]>
     >,
-    fullState: Awaited<ReturnType<ClusterCommand["getFullState"]>>,
+    // `NonNullable`: the caller loops until the full state is not null, and
+    // this reads `nodesState` off it.
+    fullState: NonNullable<Awaited<ReturnType<ClusterCommand["getFullState"]>>>,
   ): Promise<void> {
     // Update subscribers: start synchronizing, or unsubscribes from nodes who
     // didn't respond
     for (const [nodeId, handshakeData] of Object.entries(handshakeResponses)) {
       const subscriber = this.remoteNodes.get(nodeId);
+
+      // A response from a node this one never subscribed to: there is nothing
+      // to dispose of and nothing to sync. `subscribeToNodes` fills the map
+      // from the same list the handshake was broadcast to, so this is the
+      // gap between the two — and both branches below dereferenced it.
+      if (subscriber === undefined) {
+        this.remoteNodes.delete(nodeId);
+        continue;
+      }
+
       if (handshakeData === null) {
         subscriber.dispose();
         this.remoteNodes.delete(nodeId);
@@ -857,13 +926,19 @@ class ClusterNode {
         await this.idCardHandler.addNode(nodeId);
         const nodesStates = fullState.nodesState || [];
         const nodeStatus = nodesStates.find((node) => node.id === nodeId);
+
+        // Protobuf leaves an absent field undefined, and zero is where a
+        // subscriber that has seen nothing starts.
+        const lastMessageId =
+          nodeStatus?.lastMessageId ??
+          handshakeData.lastMessageId ??
+          new Long(0, 0, true);
+
         // Awaited: `sync()` replays the buffered messages, and a gap found
         // there evicts this node. Fired and forgotten, it used to print
         // "Successfully completed the handshake" 2ms AFTER the eviction that
         // contradicts it — a log describing a state the code is not in.
-        const synced = await subscriber.sync(
-          nodeStatus ? nodeStatus.lastMessageId : handshakeData.lastMessageId,
-        );
+        const synced = await subscriber.sync(lastMessageId);
 
         if (synced) {
           this.logger.info(
@@ -923,7 +998,11 @@ class ClusterNode {
       nodes: [],
     };
     const idCards = await this.idCardHandler.getRemoteIdCards();
-    idCards.push(this.idCardHandler.idCard);
+    const ownIdCard = this.idCardHandler.idCard;
+
+    if (ownIdCard !== null) {
+      idCards.push(ownIdCard);
+    }
 
     for (const idCard of idCards) {
       status.nodes.push({
@@ -1241,7 +1320,7 @@ class ClusterNode {
    * @param {string} event name
    * @param {Object} payload - event payload
    */
-  broadcast(event: string, payload: unknown): void {
+  broadcast(event: string, payload: JSONObject): void {
     const messageId = this.publisher.sendClusterWideEvent(event, payload);
 
     debug(

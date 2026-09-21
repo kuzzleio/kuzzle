@@ -112,7 +112,7 @@ describe("#cluster/ClusterCommand", () => {
 
     // `dispose()` is what stops `listen()`'s loop; without it the unresolved
     // `receive()` keeps the socket — and the port — for the next test.
-    if (command.server && command.state !== 3) {
+    if (command && command.state !== 3) {
       command.dispose();
     }
   });

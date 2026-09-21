@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Long from "long";
 import * as protobuf from "protobufjs";
 import { Subscriber } from "zeromq";
@@ -296,20 +298,33 @@ class ClusterSubscriber {
    */
   async listen(): Promise<void> {
     while (this.state !== stateEnum.EVICTED) {
-      let topic: Buffer;
-      let data: Buffer;
+      let frame: Buffer[];
 
       try {
-        [topic, data] = await this.socket.receive();
+        // `dispose()` drops the socket, and the loop's own condition is
+        // checked before the state it sets is visible here.
+        if (this.socket === null) {
+          return;
+        }
+
+        frame = await this.socket.receive();
       } catch (e) {
         if (this.state !== stateEnum.EVICTED) {
           await this.evictNode({
             broadcast: true,
-            reason: e.message,
+            reason: e instanceof Error ? e.message : inspect(e),
           });
         }
 
         return;
+      }
+
+      const [topic, data] = frame;
+
+      // A sync message is a topic and a payload. One that is neither is not
+      // something to dispatch on, and both frames were read unchecked.
+      if (topic === undefined || data === undefined) {
+        continue;
       }
 
       if (!this.subscriptionConfirmed) {
@@ -419,7 +434,7 @@ class ClusterSubscriber {
       return;
     }
 
-    const decoder = this.protoroot.lookup(topic);
+    const decoder = this.protoroot?.lookup(topic) ?? null;
 
     // `lookup` resolves any reflection object, not only message types, so a
     // topic naming — say — a nested namespace used to reach `decoder.decode`
@@ -449,13 +464,17 @@ class ClusterSubscriber {
       // If we are receiving messages from a node,
       // it means the node is alive so it should counts as an heartbeat
       this.handleHeartbeat();
-      await this.handlers[topic].call(this, message);
+      // `Reflect.apply`, not `handlers[topic].call`: the handler table is a
+      // union of per-topic signatures, and `call` asks each of them to accept
+      // `this` plus every other member's message. `isSyncTopic` above is what
+      // pairs the topic with its message.
+      await Reflect.apply(this.handlers[topic], this, [message]);
     } catch (e) {
       this.localNode.evictSelf(
         `Unable to process sync message (topic: ${topic}, message: ${JSON.stringify(
           message,
         )}`,
-        e,
+        e instanceof Error ? e : new Error(inspect(e)),
       );
     }
   }
@@ -967,9 +986,9 @@ class ClusterSubscriber {
     }
 
     this.state = stateEnum.EVICTED;
-    this.socket.close();
+    this.socket?.close();
     this.socket = null;
-    clearInterval(this.heartbeatTimer);
+    clearInterval(this.heartbeatTimer ?? undefined);
   }
 
   /**
@@ -978,7 +997,11 @@ class ClusterSubscriber {
    * @return false: the message must be discarded, true otherwise
    */
   async validateMessage(message: DecodedMessage): Promise<boolean> {
-    if (!has(message, "messageId")) {
+    const messageId = message.messageId;
+
+    // Read once and checked for what it is: `has()` answers whether the key
+    // is there, which is not what the three `Long` operations below need.
+    if (messageId === undefined) {
       this.logger.warn(
         `Invalid message received from node ${this.remoteNodeId}. Evicting it.`,
       );
@@ -993,14 +1016,14 @@ class ClusterSubscriber {
 
     if (
       this.state === stateEnum.BUFFERING &&
-      this.lastMessageId.greaterThanOrEqual(message.messageId)
+      this.lastMessageId.greaterThanOrEqual(messageId)
     ) {
       return false;
     }
 
     this.lastMessageId = this.lastMessageId.add(1);
 
-    if (this.lastMessageId.notEquals(message.messageId)) {
+    if (this.lastMessageId.notEquals(messageId)) {
       // `lastMessageId` was advanced to the id this node EXPECTS on the line
       // above, so the number of missing messages is the plain difference. The
       // `- 1` this used to carry computed the gap against the previous id, so a
@@ -1014,9 +1037,7 @@ class ClusterSubscriber {
       // on `Long.prototype.valueOf` — which works, loses precision past 2^53,
       // and is what SonarCloud's S3757 objects to. `fromValue` accepts either
       // shape and `subtract` is exact.
-      const lost = Long.fromValue(message.messageId).subtract(
-        this.lastMessageId,
-      );
+      const lost = Long.fromValue(messageId).subtract(this.lastMessageId);
 
       // Stop before evicting, for two reasons. `lastMessageId` is advanced by
       // exactly one per message and is not resynchronised here, so leaving this
