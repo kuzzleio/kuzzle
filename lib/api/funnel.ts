@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import Deque from "denque";
 import * as Cookie from "cookie";
@@ -42,6 +44,7 @@ import type {
   NativeController,
 } from "./controllers/baseController";
 import type { KuzzleRequest } from "./request";
+import type { User } from "../model/security/user";
 
 const {
   AdminController,
@@ -64,6 +67,43 @@ const processError = kerror.wrap("api", "process");
 // Actions of the auth controller that does not necessite to verify the token
 // when cookie auth is active
 const SKIP_TOKEN_VERIF_ACTIONS = new Set(["login", "checkToken", "logout"]);
+
+/**
+ * Whatever was thrown, as an `Error`.
+ *
+ * `catch` answers `unknown`, and everything here hands what it caught to
+ * `setError`, `_wrapError` or a callback, all of which take an `Error`.
+ * `inspect`, not `String`: a thrown object stringifies to `[object Object]`.
+ */
+function causeOf(thrown: unknown): Error {
+  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
+}
+
+/**
+ * The controller and action a request names.
+ *
+ * `RequestInput` leaves both `null` until they are set, and ten sites below
+ * — the event names, the document alias table, the `Reflect.get` that
+ * dispatches — read them as strings. A request naming neither is what
+ * `controller_not_found` has always been for, and it was raised at the bottom
+ * of `getController` and nowhere else.
+ */
+function targetOf(request: KuzzleRequest): {
+  action: string;
+  controller: string;
+} {
+  const { action, controller } = request.input;
+
+  if (controller === null) {
+    throw processError.get("controller_not_found", controller);
+  }
+
+  if (action === null) {
+    throw processError.get("action_not_found", controller, action);
+  }
+
+  return { action, controller };
+}
 
 type ThrottledFn = (request: KuzzleRequest) => void;
 type ExecuteCallback = (error: Error | null, request: KuzzleRequest) => void;
@@ -111,7 +151,7 @@ class Funnel {
   public logger: Logger;
 
   constructor() {
-    this.loadDocumentEventAliases();
+    this.documentEventAliases = this.loadDocumentEventAliases();
 
     this.logger = global.kuzzle.log.child("api:funnel");
   }
@@ -152,24 +192,31 @@ class Funnel {
     this.controllers.set("memoryStorage", msController);
     this.controllers.set("ms", msController);
 
-    const initPromises = Array.from(this.controllers.keys()).map((ctrl) =>
-      this.controllers.get(ctrl).init(),
+    const initPromises = Array.from(this.controllers.values()).map(
+      (controller) => controller.init(),
     );
 
     return Bluebird.all(initPromises);
   }
 
-  loadDocumentEventAliases() {
-    this.documentEventAliases = documentEventAliases as DocumentEventAliases;
-    this.documentEventAliases.mirrorList = {};
+  /**
+   * Answers the table rather than assigning it: a field set by a method the
+   * constructor calls is not one the compiler can see being initialised.
+   */
+  loadDocumentEventAliases(): DocumentEventAliases {
+    const aliases = documentEventAliases as DocumentEventAliases;
+
+    aliases.mirrorList = {};
 
     for (const [alias, aliasedActions] of Object.entries(
       documentEventAliases.list,
     )) {
       for (const aliasOf of aliasedActions) {
-        this.documentEventAliases.mirrorList[aliasOf] = alias;
+        aliases.mirrorList[aliasOf] = alias;
       }
     }
+
+    return aliases;
   }
 
   /**
@@ -394,8 +441,10 @@ class Funnel {
 
       return executing ? 0 : -1;
     } catch (error) {
-      request.setError(error);
-      callback(error, request);
+      const cause = causeOf(error);
+
+      request.setError(cause);
+      callback(cause, request);
       return 1;
     }
   }
@@ -546,16 +595,14 @@ class Funnel {
               : err,
           );
 
-          if (
-            !this.lastDumpedErrors[errorType] ||
-            this.lastDumpedErrors[errorType] < now - handledErrors.minInterval
-          ) {
-            // simplify error message to use it in folder dump name
-            let errorMessage = err.message;
+          const lastDumped = this.lastDumpedErrors[errorType];
 
-            if (errorMessage.includes("\n")) {
-              errorMessage = errorMessage.split("\n")[0];
-            }
+          if (!lastDumped || lastDumped < now - handledErrors.minInterval) {
+            // simplify error message to use it in folder dump name
+            //
+            // `split()[0]` of a string that contains a "\n" is a string; the
+            // `includes` guard was the only thing saying so.
+            let errorMessage = err.message.split("\n")[0] ?? err.message;
 
             errorMessage = errorMessage
               .toLowerCase()
@@ -605,27 +652,32 @@ class Funnel {
       throw error;
     }
 
-    const userId = request.context.token.userId;
+    // `request.context` is a getter, so a check on `request.context.token`
+    // does not narrow the next read of it. Both are read once here instead.
+    const token = request.context.token;
+    const userId = token === null ? null : token.userId;
 
-    request.context.user = await global.kuzzle.ask(
+    const user: User = await global.kuzzle.ask(
       "core:security:user:get",
       userId,
     );
 
+    request.context.user = user;
+
     // If we have a token, link the connection with the token,
     // this way the connection can be notified when the token has expired.
+    const { id: connectionId, protocol } = request.context.connection;
+
     if (
-      global.kuzzle.config.internal.notifiableProtocols.includes(
-        request.context.connection.protocol,
-      )
+      token !== null &&
+      connectionId !== null &&
+      protocol !== null &&
+      global.kuzzle.config.internal.notifiableProtocols.includes(protocol)
     ) {
-      global.kuzzle.tokenManager.link(
-        request.context.token,
-        request.context.connection.id,
-      );
+      global.kuzzle.tokenManager.link(token, connectionId);
     }
 
-    if (!(await request.context.user.isActionAllowed(request))) {
+    if (!(await user.isActionAllowed(request))) {
       // anonymous user => 401 (Unauthorized) error
       // logged-in user with insufficient permissions => 403 (Forbidden) error
       const error = kerror.get(
@@ -634,7 +686,7 @@ class Funnel {
         userId === "-1" ? "unauthorized" : "forbidden",
         request.input.controller,
         request.input.action,
-        request.context.user._id,
+        user._id,
       );
 
       request.setError(error);
@@ -646,7 +698,7 @@ class Funnel {
     if (
       global.kuzzle.config.plugins.common.failsafeMode &&
       !this._isLogin(request) &&
-      !request.context.user.profileIds.includes("admin")
+      !user.profileIds.includes("admin")
     ) {
       await global.kuzzle.pipe("request:onUnauthorized", request);
       throw kerror.get("security", "rights", "failsafe_mode_admin_only");
@@ -704,6 +756,7 @@ class Funnel {
     return (
       request.getBoolean("cookieAuth") &&
       request.input.controller === "auth" &&
+      request.input.action !== null &&
       SKIP_TOKEN_VERIF_ACTIONS.has(request.input.action)
     );
   }
@@ -746,7 +799,7 @@ class Funnel {
         // Only here is the error known to come from the controller itself:
         // `_wrapError` sits downstream of the pipes too and cannot tell the
         // two apart (TD-27).
-        throw this._wrapControllerError(_request, e);
+        throw this._wrapControllerError(_request, causeOf(e));
       }
 
       const status = _request.status === 102 ? 200 : _request.status;
@@ -776,7 +829,7 @@ class Funnel {
       _request = await global.kuzzle.pipe("request:onSuccess", _request);
       global.kuzzle.statistics.completedRequest(_request);
     } catch (error) {
-      return this.handleProcessRequestError(_request, _request, error);
+      return this.handleProcessRequestError(_request, _request, causeOf(error));
     } finally {
       this.concurrentRequests--;
     }
@@ -799,17 +852,24 @@ class Funnel {
     prefix: string,
   ): Promise<KuzzleRequest> {
     const { controller, action } = request.input;
-    const mustTrigger =
-      controller === "document" &&
-      this.documentEventAliases.mirrorList[action] &&
-      (prefix !== "before" ||
-        !this.documentEventAliases.notBefore.includes(action));
 
-    if (!mustTrigger) {
+    if (controller !== "document" || action === null) {
       return request;
     }
 
+    // One lookup: the alias is what decides whether to trigger and what to
+    // name the event, and it was read twice with the table indexed by a
+    // possibly-null action.
     const alias = this.documentEventAliases.mirrorList[action];
+
+    if (
+      !alias ||
+      (prefix === "before" &&
+        this.documentEventAliases.notBefore.includes(action))
+    ) {
+      return request;
+    }
+
     const event = `${this.documentEventAliases.namespace}:${prefix}${capitalize(
       alias,
     )}`;
@@ -863,7 +923,7 @@ class Funnel {
     try {
       return await doAction(this.getController(request), request);
     } catch (e) {
-      this.handleErrorDump(e);
+      this.handleErrorDump(causeOf(e));
       throw e;
     }
   }
@@ -890,7 +950,7 @@ class Funnel {
       // Pipe recovered from the error: returned the new result
       return updated;
     } catch (err) {
-      _error = this._wrapError(request, err);
+      _error = this._wrapError(request, causeOf(err));
     }
 
     // Handling the error thrown by the error pipe
@@ -909,7 +969,7 @@ class Funnel {
 
       return updated;
     } catch (err) {
-      throw this._wrapError(request, err);
+      throw this._wrapError(request, causeOf(err));
     }
   }
 
@@ -922,12 +982,10 @@ class Funnel {
    * @returns {string} event name
    */
   getEventName(request: KuzzleRequest, prefix: string): string {
-    const event =
-      request.input.controller === "memoryStorage"
-        ? "ms"
-        : request.input.controller;
+    const { action, controller } = targetOf(request);
+    const event = controller === "memoryStorage" ? "ms" : controller;
 
-    return `${event}:${prefix}${capitalize(request.input.action)}`;
+    return `${event}:${prefix}${capitalize(action)}`;
   }
 
   /**
@@ -955,11 +1013,13 @@ class Funnel {
       global.kuzzle.pluginsManager.controllers,
     ];
 
+    const { action, controller: name } = targetOf(request);
+
     for (const controllers of controllerMaps) {
-      const controller = controllers.get(request.input.controller);
+      const controller = controllers.get(name);
 
       if (controller) {
-        if (controller._isAction(request.input.action)) {
+        if (controller._isAction(action)) {
           return controller;
         }
 
@@ -979,8 +1039,13 @@ class Funnel {
    * @param  {String}  controller
    * @returns {Boolean}
    */
-  isNativeController(controller: string): boolean {
-    return this.controllers.has(controller);
+  /**
+   * `string | null`: the two callers ask it of `request.input.controller`,
+   * which is null until set. A request naming no controller is not a native
+   * one, which is the answer the map already gave.
+   */
+  isNativeController(controller: string | null): boolean {
+    return controller !== null && this.controllers.has(controller);
   }
 
   /**
@@ -1086,9 +1151,19 @@ class Funnel {
 
     if (quantityToInject > 0) {
       for (let i = 0; i < quantityToInject; i++) {
-        const pendingItem = this.pendingRequestsById.get(
-          this.pendingRequestsQueue.peekFront(),
-        );
+        const pendingId = this.pendingRequestsQueue.peekFront();
+        const pendingItem =
+          pendingId === undefined
+            ? undefined
+            : this.pendingRequestsById.get(pendingId);
+
+        // `quantityToInject` is capped by the queue's length, so the queue
+        // has an id and the map has its item. Both were dereferenced on that
+        // reasoning; stopping is what the loop does with anything it cannot
+        // play.
+        if (pendingItem === undefined) {
+          break;
+        }
 
         try {
           if (
@@ -1244,11 +1319,11 @@ function doAction(controller: BaseController, request: KuzzleRequest) {
   // index signature (TD-28). `apply` rather than calling the result of `get`
   // keeps the receiver — losing it is the exact bug sprint 5's Build and Run
   // job caught.
-  const ret = Reflect.apply(
-    Reflect.get(controller, request.input.action),
-    controller,
-    [request],
-  );
+  const { action } = targetOf(request);
+
+  const ret = Reflect.apply(Reflect.get(controller, action), controller, [
+    request,
+  ]);
 
   // Same duck-type check as before, spelled so it narrows: a truthy non-object
   // used to reach `ret.then` and read `undefined`, which took this branch too.
@@ -1286,12 +1361,22 @@ function satisfiesMajor(
   let maxRequirement = true,
     minRequirement = true;
 
+  // The major digit. A version string with none satisfies no requirement,
+  // either way round — `undefined >= "2"` and `undefined <= "2"` are both
+  // false, because a relational comparison against `undefined` is NaN. That
+  // is what the explicit check preserves; defaulting the digit to `""` would
+  // have turned a string comparison on, and an empty version would then
+  // satisfy every `max`.
+  const major = version[0];
+
   if (requirements.min) {
-    minRequirement = version[0] >= requirements.min.toString();
+    minRequirement =
+      major !== undefined && major >= requirements.min.toString();
   }
 
   if (requirements.max) {
-    maxRequirement = version[0] <= requirements.max.toString();
+    maxRequirement =
+      major !== undefined && major <= requirements.max.toString();
   }
 
   return maxRequirement && minRequirement;
