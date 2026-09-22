@@ -133,6 +133,9 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 
 8. **An empty object is a matcher that matches everything.** `calledWithMatch(event, {}, {})` checked only that the event had been asked — [L3b](steps/13-sprint-10-test-closure.md#what-l3b-found). Pinning the two arguments for real is what revealed that `searchUsers`' page size defaults to `limits.documentsFetchCount`, which nothing in either suite had ever stated. **A placeholder argument written to "keep the shape" is an assertion deleted.**
 
+9. **A test can be written so that it never runs, and the reason is usually that it would fail.** `should(() => { … })` with no assertion method on the end wraps the callback and drops it — [L3c](steps/13-sprint-10-test-closure.md#what-l3c-found). Running that one for real showed the subject throws where the test's *name* said it returns `{}`. **A neutered test is a bug report nobody filed**, and the ten dead-assertion forms this step has found are all cheaper to catch with a lint rule (`expect` must terminate, no self-comparison) than with a reader.
+10. **A `(global as any).x` reads the global and hides it from `grep`.** `requestResponse.ts` is why `request`'s spec needed a `global.kuzzle` after all, while grepping `global.kuzzle` across `lib/api/request/` returns nothing — [L3c](steps/13-sprint-10-test-closure.md#what-l3c-found). Worth a sweep for `(global as any)` before any slice sizes itself on what its subjects appear to depend on.
+
 Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 
 Gated on 2026-09-16, and both were worth the hour:

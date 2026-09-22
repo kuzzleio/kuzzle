@@ -181,7 +181,7 @@ converted, and the sixth needs no fixture at all.
 | --------- | ---- | ----: | ----: | -------- |
 | **L3a** ✅ ([#2820](https://github.com/kuzzleio/kuzzle/pull/2820)) | `core/security/roleRepository` | 1 046 | 54 | `profileRepository`, `userRepository`, `shared/repository` ([L2b](#what-l2b-found)) |
 | **L3b** ✅ ([#2821](https://github.com/kuzzleio/kuzzle/pull/2821)) | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
-| **L3c** | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
+| **L3c** ✅ | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3d** | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
 | **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
@@ -841,7 +841,53 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
-**What is left: L3c–L3f (4 specs / 6 841 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+**What is left: L3d–L3f (3 specs / 5 463 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+
+## What L3c found
+
+**`mocha` 54 → 53**, vitest **1 562 → 1 693 tests** across **103 → 104 files**. One spec, 1 378 lines, 131 `it`s in and 131 out.
+
+### ⚠️ `should(() => { … })` with no assertion method — the callback is never invoked
+
+```js
+it("should return a {} object when the route is invoked with GET with a null search body is provided", () => {
+  request.input.args.searchBody = null;
+
+  should(() => {
+    request.getSearchBody().be.eql({});   // never runs
+  });
+});
+```
+
+`should(fn)` builds an assertion object and waits for `.throw()`, `.not.throw()` — something. Nothing came, so the function was wrapped and dropped. **A ninth form of assertion that asserts less than it reads**, and the most complete one yet: the test asserted *nothing at all*.
+
+**Running it says why it was written that way.** With `searchBody: null`, `getSearchBody()` does not return `{}` — it throws `api.assert.invalid_type`, because `null` is not *absent*, so the default never applies and `getObject` rejects it. The test's **name** described a behaviour the subject does not have. The port asserts what it does, and renames it. Whether `null` ought to be read as absent is a `lib/` question, filed not fixed.
+
+### ⚠️ `should(x).be.exactly(x)` — a value compared with itself
+
+```js
+should(request.error.status).be.exactly(request.error.status);
+```
+
+Twice, in the two tests that build a request from an error and from a *serialized* error. Both meant "the error keeps the status it came in with" — which is the whole point of the second one, deserialization — and both are true of every value in the language. **A tenth form.**
+
+### Three declarations `tsc` refused, all in the subject
+
+| | |
+| --- | --- |
+| `getBodyArray`, `getArray` and `getArrayLegacy` declare their default as `def: [] \| undefined` — the empty **tuple**. No caller can pass a default with anything in it. Four tests do, at runtime, happily. | TS2345 × 4 |
+| `serialize()` returns a `headers` field (deprecated, a duplicate of `options.connection.misc.headers`) that its return type `{ data, options }` does not mention. | TS2339 |
+
+Cast at the call sites with the reason, as the DoD requires; both are `lib/` fixes for a slice that is allowed to touch it.
+
+### ⚠️ A `global.kuzzle` dependency that `grep` cannot see
+
+`KuzzleRequest` reads exactly one thing off the global — `global.NODE_ENV`, in `addDeprecation`. Grepping `global.kuzzle` across `lib/api/request/` returns **nothing**. It is still wrong: `requestResponse.ts` spells it `(global as any).kuzzle.id`, so the fixture needs one field after all, and the Mocha spec's bare `new KuzzleMock()` — a ~600-line application stub instantiated purely for its constructor's side effect — was there for that. _The cast that silences the compiler also hides the dependency from the reader._ Worth a grep for `(global as any)` before L4 sizes itself on what subjects appear to need.
+
+### Small things
+
+- Two tests shared the name _"should return the string of an array (lodash parameter)"_; one is about `names.0` and the other about `relations.lebron[0]`. Renamed, not merged.
+- `getArray` and `getObject` **write their parse back onto `input.args`**. The Mocha spec asserted that, which is why the port's `throws()` helper runs its callback exactly once — a matcher that invokes it twice would be asserting against a request the first call already changed.
 
 ## What L3b found
 
