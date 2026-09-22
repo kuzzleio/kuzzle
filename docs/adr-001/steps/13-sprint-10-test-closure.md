@@ -234,8 +234,17 @@ nothing to do with mocking:
 | Class | Specs | Port |
 | --- | ---: | --- |
 | **Reset only — no substitution at all** | **3** (`validation/init`, `util/mutex`, `plugin/pluginsManager`) | `vi.resetModules()` and nothing else. They import `mock-require` purely to call `reRequire`; **`vi.mock` never appears in the port.** |
-| Substitution **and** reset of the subject | 18 | `vi.mock` at module level + the L4a fixture shape |
-| Substitution, **no** reset | **2** (`plugin/context/context`, `api/funnel/processRequest`) | ⚠️ `plugin/context` registers a `mutex` stub and never reloads anything — check whether the stub was ever reached before porting it faithfully. |
+| Substitution **and** reset of the subject | **20** | `vi.mock` at module level + the L4a fixture shape |
+
+⚠️ **The sweep is a grep and it under-reports.** Its first run put
+`plugin/context/context` in a third class, "substitutes but never reloads",
+which would have made its `mutex` stub dead. It reloads its subject through a
+**template literal** — `reRequire(\`${root}/lib/core/plugin/pluginContext\`)` —
+and a regex looking for a quoted string does not see it. Same failure mode as
+[L3e](#what-l3e-found)'s `globalThis.kuzzle` and [L3f](#what-l3f-found)'s
+single-quoted `it` names: **three times in this step, a count taken by grep has
+been wrong about the thing it was counting.** Read the `beforeEach` before
+trusting the row.
 
 Three pairs of specs share a subject and therefore a mirror, and must land in
 one PR each: `protocols/{http,websocket}` both reset `httpwsProtocol`;
