@@ -217,7 +217,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
-| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
+| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** `node` |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
@@ -1573,3 +1573,65 @@ one per subject. What it settled:
 
 **Next: L4c (cluster, 3 specs / 2 627 lines), L4d (plugin + validation, 4 /
 3 882), L4e (the strays, 11 / 2 982).**
+
+## What L4c1 found
+
+**`mocha` 34 → 32**, vitest **2 129 → 2 205 tests** across **121 → 123 files**.
+Two specs, 1 233 lines, 73 `it`s in and **76** out. `publisher` and `subscriber`
+are siblings — `node` stubs both — so they share a PR.
+
+### ⚠️ A deleted Mocha spec keeps running until a full build
+
+`npm run test:unit:mocha` runs `build:tests` (`tsc -p tsconfig.tests.json`) and
+then Mocha over `dist/test/**`. **`tsc` does not prune its output.** After
+deleting `test/cluster/{publisher,subscriber}.test.js`, `dist/test/cluster/`
+still held both compiled files, and the suite reported *exactly the same count
+as before the deletion* — 1 262 passing, twice, with 73 tests that no longer
+have a source file. `npm run build` begins with `rm -Rf ./dist`, and the count
+then falls to 1 189, which is the honest one.
+
+CI is safe: its job is `npm run build && npm run test:unit:mocha`. **A local
+verification that skips the build is not**, and the failure mode is the worst
+kind — a green suite over deleted code, and a test count that looks
+unchanged when it should have dropped. Every earlier slice in this step
+happened to run `build` in the same chain. **The DoD's "run the whole Mocha
+suite after every deletion" means `npm run build` first.**
+
+### ⚠️ A test that compared `undefined` to `undefined`
+
+`#handleNodeEviction`'s _"should kill itself if evicted node is itself"_ sets
+`message.nodeId = localNode.nodeId` and the subject checks
+`message.nodeId === this.localNode.nodeId`. The Mocha `ClusterNodeMock` **has no
+`nodeId`**, so both sides were `undefined` and the strict equality held on two
+absent values — while the real `ClusterNode.nodeId` is a getter that *throws*
+when the node has none. The fixture names one, and the test now compares an id.
+**A fourteenth form for the step's list**, and the first where the dead
+assertion is caused by the *mock* rather than by the assertion.
+
+### The one command the suite never sent
+
+`publisher` exposes seventeen `sendXxx` methods and the spec covered sixteen:
+`sendNodePreventEviction` had no test. It has one now — found by writing the
+sixteen `describe`/`it` pairs as one `it.each` table, where the missing row is
+visible.
+
+### Sixteen blocks, one shape
+
+Each of those pairs was 8 to 20 lines saying the same thing: the method calls
+`send` with one topic and one payload, and answers what `send` answered. One
+table states it once, and makes the two rows that genuinely differ — the
+notifications, whose `result` and `volatile` are JSON-stringified — visible at a
+glance. [L3d](#what-l3d-found)'s move, at the smallest useful scale: 349 lines
+of spec become 230.
+
+### Small things
+
+- `#send` gained a test for the disposed case: `send()` answers `Long.NEG_ONE`
+  and buffers nothing once `socket` and `protoroot` are null. Nothing covered
+  the guard.
+- `#checkHeartbeat`'s third test asserted the state and not that the node was
+  *left alone*; the eviction is what distinguishes it from the second test.
+- ⚠️ **A `vi.fn()` with no declared parameters types every recorded call as an
+  empty tuple**, so `mock.calls[0][0]` is a compile error (`TS2493`). Declare
+  the signature — `vi.fn<(a: A, b: B) => R>(...)` — on any stub whose arguments
+  a spec reads. Third time in L4.
