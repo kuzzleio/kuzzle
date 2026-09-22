@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#PR-L2B](https://github.com/kuzzleio/kuzzle/pull/PR-L2B) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -150,17 +150,26 @@ L3, L4, L5 and L6 are untouched by L1b and their numbers still hold.
 Five sub-slices of comparable size, because 11 765 lines is four times what a
 sitting reviews and the layers do not interleave:
 
-| Sub-slice   | Specs | Lines | Content                                                                                                                           |
-| ----------- | ----: | ----: | --------------------------------------------------------------------------------------------------------------------------------- |
-| **L2a** ✅ |     7 | 1 637 | the three strays + `service/storage/queryTranslator`, `kuzzle/event/pipeRunner`, `kerror/codes`, `kuzzle/event/KuzzleEventEmitter` |
-| **L2b**     |     6 | 3 293 | security: `model/security/{profile,role,user}`, `core/security/{profileRepository,userRepository}`, `core/shared/repository`       |
-| **L2c**     |     5 | 2 365 | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
-| **L2d**     |     5 | 2 038 | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
-| **L2e**     |     5 | 2 432 | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
+| Sub-slice   | Specs | Lines | Shape          | Content                                                                                                                           |
+| ----------- | ----: | ----: | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **L2a** ✅ |     7 | 1 637 | codemod        | the three strays + `service/storage/queryTranslator`, `kuzzle/event/pipeRunner`, `kerror/codes`, `kuzzle/event/KuzzleEventEmitter` |
+| **L2b** ✅ |     6 | 3 293 | **fixture**    | security: `model/security/{profile,role,user}`, `core/security/{profileRepository,userRepository}`, `core/shared/repository`       |
+| **L2c**     |     5 | 2 365 | **fixture**    | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
+| **L2d**     |     5 | 2 038 | **fixture**    | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
+| **L2e**     |     5 | 2 432 | **fixture**    | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
 
-L2a is deliberately the catch-all for the small ones: it closes the axis L1
-missed, and it is where the codemod meets the first specs that mock a package
-rather than a neighbour.
+⚠️ **The "shape" column is L2's own mis-cut, found while opening L2b, and it is
+the fifth in this step.** L2 was sized on lines and cut on "clean", where clean
+meant _neither `mock-require` nor `rewire`_ — the two idioms L4 and L6 are
+about. It does not mean the third thing [L1](#what-l1-found) discovered:
+**21 of L2's 28 specs are built on `test/mocks/kuzzle.mock.js`**, and so are
+5 of L3's 6. They are **L1b-shaped work** — one fixture derived per spec, from
+what the subject actually reads off `global.kuzzle` — not a codemod pass. L2a's
+seven were, by coincidence, exactly the specs that use none of the three.
+
+The cut stands, because the sub-slices are sized for review either way; what
+changes is the cost per spec, which is L1b's and not L1's. _Re-measure the axis,
+not just the size._
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
@@ -647,3 +656,45 @@ The entrypoint pulls in the whole application, and `lib/cluster/state.ts` still 
 `tests/kerror/codes/index.test.ts` is the mirror of `lib/kerror/codes/index.ts`. It did not show up in `git status`: `.gitignore` carried an **unanchored `codes/`**, added for the error-code pages `doc/build-error-codes` writes at the repo root. Anchored to `/codes/`, with the reason written next to it. _`git add` of a whole directory is not a check that anything was added_ — the file existed, passed lint, type-check and the suite, and would have reached review as a deletion with no replacement.
 
 (And two more mis-filings, after [L1b3](#what-l1b3-found)'s and [L1b4](#what-l1b4-found)'s: `queryTranslator` sat flat in `test/service/storage/` for a subject under `commons/`, and `kerror/codes` mirrors a **directory**, so the port lands at `tests/kerror/codes/index.test.ts`.)
+
+---
+
+## What L2b found
+
+**`mocha` 77 → 71**, vitest **861 → 1 037 tests** across **80 → 86 files**. Six specs, 3 293 lines. Per file, Mocha → vitest: `profile` 18 → 18, `role` 17 → 20, `user` 13 → 10, `profileRepository` 41 → 43, `userRepository` 43 → 45, `repository` 41 → 40.
+
+### The spec was asserting on a different subject
+
+`test/core/shared/repository.test.js` builds an `ObjectRepository` over `kuzzle.internalIndex` — the **real** `InternalIndexHandler`, with only `init` stubbed — and then asserts on `core:storage:private:document:get`, `…:mGet`, `…:createOrReplace`. `ObjectRepository` emits none of those. It calls `this.store.get(...)`, `this.store.mGet(...)`; the events are **the handler's**, one layer down. So 41 tests about a repository were, for every database path, tests of the handler underneath it — which has its own spec.
+
+The port stubs the store and asserts the calls the subject makes. _A spec that reaches its subject through a real collaborator is measuring both, and it will keep passing when the subject stops making the call._
+
+### Four assertions that could not fail
+
+| Where | What it said | Why it held regardless |
+| --- | --- | --- |
+| `role.checkRestrictions(req, restrictions)` | "should properly handle restrictions" | a `Request` where the index goes, a `Map` where the collection goes, **no third argument** — the method answers `true` before reading either. `TS2345`. |
+| two `profile` rate-limit tests | "should throw if the rate limit is not a valid integer" | assertions inside a `catch` with no `else`: accepting the value passes the test by not entering the block. |
+| `should(profileRepository.profiles).not.have.key(…)` | the deleted profile left the in-memory map | there is no `profiles` property on the repository; the assertion was on `undefined`. |
+| `userRepository.search` | called with `{ query: { term: { profileIds: "admin" } } }` | it is called with `{ size: 1 }` as well. **sinon's `calledWith` matches a prefix; vitest's `toHaveBeenCalledWith` matches the call.** |
+
+The last one is a translation-table entry and the counterpart of L1's `toThrow`: where `should`/`sinon` were laxer than vitest, a faithful port asserts **more**, and the diff is worth reading rather than silencing.
+
+### `private` is now the dominant cost of this slice, not `should`
+
+Third slice running ([L1b2](#what-l1b2-found), [L2a](#what-l2a-found), here), and this time six members in one PR: `optimizePolicy`, `optimizePolicies`, `areTargetsAllowed`, and `ObjectRepository`'s `collection`, `ObjectConstructor`, `cacheDb` and `store`. Two answers, and both are better than the access they replace:
+
+- **A private method is asserted through the public path that reaches it.** `optimizePolicies` is what turns a policy's `restrictedTo` array into a `Map`, and `load()` is where that becomes visible — so the assertion is on the loaded profile, not on a stub having been called.
+- **Protected configuration is set by a subclass.** Every repository in `lib/` declares its own `collection` and `ObjectConstructor` in its constructor; the spec now does the same instead of assigning them from outside.
+
+⚠️ And two tests did not survive the trip: `areTargetsAllowed` was called directly with **an empty target list**, which `isActionAllowed` never produces — with no targets it takes the other branch entirely. They tested a state the application cannot reach.
+
+### A fixture that answers the bus
+
+A repository's `init()` is a list of `global.kuzzle.onAsk(...)` registrations, and what its spec owes is that each event reaches the right method. The Mocha specs asserted it by calling **`kuzzle.ask.restore()`** in the middle of a test — un-stubbing the mock to let a real emitter answer, which works only because `KuzzleMock` had stubbed one.
+
+`tests/mocks/kuzzle.ts` grows `stubAsk(fallback?)`: `onAsk` records, `ask` dispatches, and an event **nothing registered and no fallback answers throws** — so a subject that grows a dependency says so in the spec that covers it. Nineteen "should register a X event" tests became two `it.each` tables.
+
+### `PolicyRestrictions.collections` is declared required and is not
+
+`{ index: "index" }` — a policy restricted to a whole index — is what `profileRepository`'s own fixture uses, and `optimizePolicy` has the guard for it (`if (!collections) { continue; }`). The type says `collections: string[]`, so the fixture needs `invalid<…>`. A restriction with no collections is a legitimate value the type cannot express; noted here rather than widened in a test-porting slice.
