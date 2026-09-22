@@ -1649,3 +1649,40 @@ Two things are wrong and they pull in opposite directions:
 - **Why 🟠 and not 🟡:** #2 is a hash collision on a value the API accepts, and channel names are derived from that hash. Two different channel configurations can share a name.
 - **Fix:** add `"none"` to `RealtimeScope`, then make `SCOPE_ALLOWED_VALUES` its own array derived from the type rather than an alias of the users' one, and give the `scope` switch its fourth case with a distinct digit. The `users` switch's `"out"`/`"none"` collision needs the same look.
 - **Not fixed here:** a test-porting slice must leave `lib/` untouched. `tests/core/realtime/notifier.test.ts` casts the four fixture channels and asserts current behaviour, with a pointer to this entry.
+
+### TD-75
+
+**`DateTypeOptions` describes what `validateFieldSpecification` returns, and is also the type of what it takes** · 🟡 low · `lib/core/validation/typeOptions.ts`, `lib/core/validation/types/date.ts`
+
+Found porting the `validation/types/date` spec ([step 13 L4d1](steps/13-sprint-10-test-closure.md#what-l4d1-found)), by TS2322 × 8.
+
+```ts
+// lib/core/validation/typeOptions.ts
+/**
+ * Bounds of a `date` range, as `validateFieldSpecification` leaves them: either
+ * a parsed moment, or the `NOW` literal kept verbatim …
+ */
+export type DateRangeBound = Moment | "NOW";
+
+export interface DateTypeOptions extends TypeOptions {
+  range?: { min?: DateRangeBound; max?: DateRangeBound };
+}
+
+// lib/core/validation/types/date.ts
+validateFieldSpecification(typeOptions: DateTypeOptions): DateTypeOptions
+```
+
+The doc comment is exact and that is the problem: it describes the shape **after** normalisation. `validateFieldSpecification` is the thing that normalises — it reads `range.min` as an ISO string or an epoch number, hands it to `convertRangeValue`, and writes a `Moment` back in place — so its **parameter** is a specification whose bounds are precisely what `DateRangeBound` excludes. A caller writing the documented API in TypeScript:
+
+```ts
+dateType.validateFieldSpecification({
+  formats: ["epoch_millis"],
+  range: { min: "2010-01-01", max: "2020-01-01" },  // ← TS2322 ×2
+});
+```
+
+is refused the input the method exists to accept. One type is doing duty for two shapes, before and after a conversion.
+
+- **Why 🟡 and not 🟠:** nothing is wrong at runtime, and the specification really is parsed from JSON at the boundary, so no production caller types it. The cost is that the API cannot be called from TypeScript as documented, and that a spec exercising the conversion needs a cast.
+- **Fix:** name the two shapes. A `DateSpecificationBound = string | number` for the input, `DateRangeBound = Moment | "NOW"` for the output, and a `validateFieldSpecification(input: DateSpecification): DateTypeOptions` that maps one to the other. `BaseType<T>` currently forces parameter and return to the same `T`, so this needs a second type parameter on the base class — which is why it is not a one-line change.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74) did. `tests/core/validation/types/date.test.ts` names the cast `specification()` and points at this entry.

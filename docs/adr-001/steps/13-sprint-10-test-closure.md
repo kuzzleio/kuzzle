@@ -218,7 +218,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
-| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` · **d2** `validation/init` · **d3** `plugin/context/context` · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
@@ -1713,3 +1713,85 @@ Its own finding — the cached mock factory — is the third distinct way
 globals ([L4b2](#what-l4b2-found)) and `instanceof` ([L4a](#what-l4a-found)).
 **Next: L4d (plugin + validation, 4 specs / 3 882 lines), L4e (the strays, 11 /
 2 982).**
+
+## What L4d1 found
+
+**`mocha` 31 → 30**, vitest **2 284 → 2 382 tests** across **124 → 125 files**.
+One spec, 476 lines, **98 `it`s in and 98 out** — the format table is the same
+75 entries, checked key by key.
+
+### ⚠️ A sixth conditional substitution the sizing did not list — and it was not one
+
+The [sizing](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)
+named five specs as *genuinely conditional* — `accessLogger`, `protocols/http`,
+`protocols/mqtt`, `internalIndexHandler`, `cluster/node`. **`validation/types/date`
+is a sixth and is not on the list**, because the grep behind that count reads
+the file's `mockrequire(…)` calls and this spec makes exactly **one**: a single
+registration, in the `before` of a *nested* describe. One call looks
+unconditional; *where* it sits is what makes it conditional. The spec's first
+three blocks run against the real `moment` and `#formatMap` alone re-requires
+the subject against a total stub. **Four times now in this step a count taken by
+grep has been wrong about the thing it was counting** — after
+[L3e](#what-l3e-found)'s `globalThis.kuzzle`, [L3f](#what-l3f-found)'s
+single-quoted `it` names and [L4's own sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)
+misreading `pluginContext`'s template literal.
+
+**It does not need to.** What `#formatMap` asserts is *which arguments each of
+the 75 formats hands `moment.utc`* — a question a **spy** answers. The Mocha
+spec had to phrase it as "replace the module, then reload everything that
+imports it" only because `mock-require` swaps a module wholesale: there is no
+smaller unit. So one `vi.mock` over `moment` whose three functions
+(`utc`, `invalid`, `unix`) are spies **delegating to the real implementation**
+serves every block in the file, and the re-require disappears.
+
+The one thing `#formatMap` genuinely needs is a **return** it controls —
+`"1234567890"` parses as a valid date under almost none of the 75 formats, and
+each test asserts that no error was recorded — so it pins the return value in
+its own `beforeEach` and `passThrough()` puts the real implementation back
+after it. A `describe`-scoped `mockReturnValue`, which is the vitest way of
+saying "conditional".
+
+This is [L4b1](#what-l4b1-found)'s finding from the other direction: there, two
+`pino` registrations turned out to be **one stub**; here, one registration turns
+out **not to be a stub at all**. Both times the Mocha idiom had inflated a
+narrow need into a whole-module swap, and both times the port is smaller than
+the original. **Of the conditional swaps this slice has reached so far —
+`accessLogger`, `protocols/http`, `protocols/mqtt`, `cluster/node` and now
+`date` — not one has needed a conditional `vi.mock`.** `internalIndexHandler`
+(L4e) is the last one left to check.
+
+### The mock is a `Proxy`, not a copy
+
+`moment` carries far more than the subject uses — `ISO_8601`, the locale
+machinery, the `Moment` prototype every returned object is built from — and a
+spread flattens exactly the parts that are not plain data. The factory returns
+a `Proxy` over the real module that answers the three spied names and forwards
+everything else, so `moment.ISO_8601` is the **real** sentinel. The Mocha spec
+could only compare that one format against its own `"ISO_8601_MOCK"` string.
+
+### ⚠️ `DateTypeOptions` describes the output and is used for the input — [TD-75](../type-debt-register.md#td-75)
+
+Eight TS2322s, all of the same shape: `DateRangeBound` is `Moment | "NOW"` —
+the shape `validateFieldSpecification` *returns*, after converting the bounds
+in place — and the same type names its **input**, where a moment is exactly
+what a caller does not have yet. Every fixture that exercises the conversion
+fails to type-check against the method whose job is to perform it.
+
+Filed, not fixed: widening the bound makes `checkRange`'s `max.isBefore(...)`
+illegal, which is a `lib/` change with its own coverage consequences, and a
+test-porting slice leaves `lib/` alone — the same line [TD-74](../type-debt-register.md#td-74)
+drew. The spec names the cast `specification()` and points at the entry.
+
+### Small things
+
+- The two `done`-driven tests — *"should call `moment.utc` if min/max equals
+  the string `NOW`"* — are one `it.each`-style loop over `min`/`max` now, and
+  they do not need [`settle`](../../../tests/helpers/settle.ts): nothing calls
+  back, the 100 ms wait is the test. What they check is worth naming, so they
+  are: *resolves `"NOW"` at validation time, not at specification time*.
+- The rejected fixtures each `it` already carried as two or three repeated
+  `should(() => …).throw(…)` calls — `formats: []` / `null`, `range: null` /
+  `[]` / `{ unknown }`, an invalid `min` / `max` — are loops over their inputs
+  now, so a failure says *which* value was accepted. The `it` count is
+  unchanged by that: 23 literal `it(`s become **22**, the one difference being
+  the `NOW` pair above, for the same **98** tests.
