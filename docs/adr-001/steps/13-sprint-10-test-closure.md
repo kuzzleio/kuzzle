@@ -216,7 +216,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | Sub-slice | Specs | Lines | Content |
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
-| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice |
+| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** `mqtt` · **b3** `httpRouter` · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
@@ -224,6 +224,11 @@ different stub per block — is rare: `network/accessLogger` (two different
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
 cheapest possible material.
+
+⚠️ **`test/mocks/uWS.mock.js` has exactly three users left and all three are in
+L4b** (`httpRouter`, `protocols/http`, `protocols/websocket`). L4b is therefore
+where it is promoted to `tests/mocks/uWS.ts`, with its smallest user — the note
+[L1b4](#what-l1b4-found) left when it retired the mock's fourth user.
 
 ##### What each of the remaining 23 re-requires — the sweep [L4a](#what-l4a-found) asks for
 
@@ -1313,3 +1318,52 @@ two Elasticsearch clients expose `maxRetries`: a plain property on 7, a symbol o
   real object: `loadConfig()` answers a shared singleton and `BackendConfig`
   mutates it in place ([L3b](#what-l3b-found)'s lesson, applied in the fixture
   rather than in each spec).
+
+## What L4b1 found
+
+**`mocha` 39 → 38**, vitest **1 994 → 2 004 tests** across **117 → 118 files**.
+One spec, 478 lines, 10 `it`s in and 10 out.
+
+### The "conditional substitution" was not conditional
+
+This spec was the reason L4b was expected to be the hard half: it registers
+`pino` twice, once in the file's outer `before` (`{ transport }`) and again in
+the `AccessLoggerWorker` block (`{ transport, pino }`), re-requiring the subject
+in between. That is the textbook case `vi.mock` cannot express — a different
+stub per block.
+
+**The second registration is the first plus a key.** Nothing in the file ever
+needs `pino` to be *absent*; the outer stub omits it only because the `#init`
+tests never reach the call. One `vi.mock("pino")` providing both exports serves
+the whole file, and the swap disappears. Together with
+[L4a](#what-l4a-found)'s finding, **two of the two "dynamic" cases examined so
+far turned out to be static once the reason for the reload was named.**
+
+### One stub where the Mocha spec registered two
+
+`mock-require` keys on the literal specifier, so the spec registered both
+`worker_threads` and `node:worker_threads`. The subject imports only the
+`node:`-prefixed name. Same for `net`/`node:net` in
+[`mqtt`](#slices) and `zlib`/`node:zlib` in `protocols/http` — **expect the
+duplicate registration in the rest of L4b, and drop it.**
+
+### `instanceof` across the reset, again
+
+The `#init` test asserts the worker rebuilds a `KuzzleRequest` from the
+serialized message. A statically imported `KuzzleRequest` is a different class
+once `vi.resetModules()` has run, so it is imported inside the test. **Third
+occurrence in two slices** — it is now the predictable cost of the L4a answer,
+not a surprise.
+
+### Small things
+
+- `accessLogger.ts` reads `global.kuzzle.id` in both `logAccess` branches, and
+  that is *correct*: the module's bottom sets `global.kuzzle = { id:
+  workerData.kuzzleId }` when it runs as a worker thread, and `kuzzleId` is
+  `global.nodeId` from the main thread. The spec asserted
+  `nodeId: global.kuzzle.id` — the same expression on both sides of the
+  assertion, so it could only fail if the property vanished. Pinned to the
+  literal now.
+- The three `calledWithMatch` on `postMessage` and `pino.transport` are exact
+  here: the `targets` array is the whole point of `initTransport`, and a
+  partial match said nothing about the two entries it did not name.

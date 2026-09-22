@@ -125,7 +125,7 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 
 ⚠️ **One behaviour change from K5 is not covered by a unit spec, and it is now merged:** `Kuzzle.id` was declared and never assigned, so `global.kuzzle.id` read `undefined` everywhere. It is now `global.nodeId`, or a fresh `knode-*` name when no `Backend` named the process. Three carriers go from absent to the node's name — the redis client name (`SETNAME`), the cluster ID card's `id`, and `node` on every realtime notification. It shipped in [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) with the functional suites green; **if a downstream consumer reads any of those three as `undefined`, this is the change that did it.**
 
-**Ratchet state:** `js` 5 · `mocha` **39** · `any` 178 · `casts` 84 · `cpd-exclusions` 6. All five fail-closed since [TD-71](type-debt-register.md#td-71). **`implicit-any` retired with K6** — `strict` subsumes `noImplicitAny`, and its last reading of 30 was an artefact of measuring with `strictNullChecks` off; under the program that builds the package, `lib/` has zero implicit any.
+**Ratchet state:** `js` 5 · `mocha` **38** · `any` 178 · `casts` 84 · `cpd-exclusions` 6. All five fail-closed since [TD-71](type-debt-register.md#td-71). **`implicit-any` retired with K6** — `strict` subsumes `noImplicitAny`, and its last reading of 30 was an artefact of measuring with `strictNullChecks` off; under the program that builds the package, `lib/` has zero implicit any.
 
 **The foundation is in place and has been re-hardened twice:** 5 CI ratchets, `strict` in the build itself, per-file coverage, ESLint with `consistent-type-imports` as an error, and a `pr-preflight.sh` that reads uncommitted work ([TD-66](type-debt-register.md#td-66)).
 
@@ -136,7 +136,7 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 | Ratchet              |                 Now |                             At the ADR's open | Floor                                                                             |
 | -------------------- | ------------------: | --------------------------------------------: | --------------------------------------------------------------------------------- |
 | `js`                 |               **5** |                                           111 | **5 — reached** (3 fixtures + 2 executables, [step 03](steps/03-sprint-2-bin.md)) |
-| `mocha` (spec files) |              **39** |                                           168 | 0 — [step 13](#step-table)                                                        |
+| `mocha` (spec files) |              **38** |                                           168 | 0 — [step 13](#step-table)                                                        |
 | `any`                |             **178** | 200 (metric later widened to `as unknown as`) | 0                                                                                 |
 | `implicit-any`       |           _retired_ |                                           520 | **retired with K6** — `strict` subsumes `noImplicitAny`                           |
 | `casts`              |              **84** |                 87 (ratchet added 2026-09-15) | 0                                                                                 |
