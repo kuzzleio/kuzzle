@@ -180,7 +180,7 @@ converted, and the sixth needs no fixture at all.
 | Sub-slice | Spec | Lines | `it`s | Leans on |
 | --------- | ---- | ----: | ----: | -------- |
 | **L3a** ✅ ([#2820](https://github.com/kuzzleio/kuzzle/pull/2820)) | `core/security/roleRepository` | 1 046 | 54 | `profileRepository`, `userRepository`, `shared/repository` ([L2b](#what-l2b-found)) |
-| **L3b** | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
+| **L3b** ✅ | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3c** | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3d** | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
@@ -841,7 +841,37 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
-**What is left: L3 (6 specs / 9 277 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+**What is left: L3c–L3f (4 specs / 6 841 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+
+## What L3b found
+
+**`mocha` 55 → 54**, vitest **1 493 → 1 562 tests** across **102 → 103 files**. One spec, 1 390 lines, 69 `it`s in and 69 out.
+
+### ⚠️ `calledWithMatch(event, {}, {})` — an empty object matches every object
+
+```js
+should(searchStub).be.calledWithMatch(searchEvent, {}, {});
+```
+
+`sinon.match({})` is satisfied by **any** object, so _"should handle empty body requests"_ asserted only that `core:security:user:search` had been asked at all: neither the empty search body nor the default options were checked. **An eighth form of assertion that asserts less than it reads**, after [L2's six](#l2-is-closed) and [L3a's](#what-l3a-found).
+
+Pinning the arguments is what said what the defaults actually are: **`size` defaults to `limits.documentsFetchCount` (10 000), not to the request's own `size`**. No spec in either runner had stated that.
+
+### The mapping actions go through the handler, not the bus — fifth and sixth time
+
+`getUserMapping` and `updateUserMapping` call `global.kuzzle.internalIndex.getMapping/updateMapping`; both Mocha tests asserted on `core:storage:private:mappings:*`, which `KuzzleMock`'s **real** `InternalIndexHandler` emits one layer below. Exactly [L2e](#what-l2e-found--and-l2-is-closed)'s finding on the `profiles` and `roles` halves of the same controller — the same six actions, the same cause, now **six specs in four slices**. And, as there, **`getUserMapping()` takes no argument** and was handed the request.
+
+### Five sinon prefix-matches, all dropping the same argument
+
+`_persistUser(request, profileIds, content, { humanReadableId })` takes four. `createUser`, `createRestrictedUser` (twice) and `createFirstAdmin` (twice) each asserted the first three and let the fourth through — so nothing in the suite said that `kuid=human` is the default, or that these five call sites pass it at all.
+
+### `loadConfig()` answers a shared object
+
+`restrictDefaultRights` iterates `config.security.standard`, so the honest fixture is the shipped default rather than a hand-written one that would agree with the assertion by construction ([L1b4](#what-l1b4-found) settled that). But `loadConfig()` returns the *same* object each call: pinning `limits.documentsFetchCount = 1` in one test made the next three fail. `KuzzleMock` deep-cloned it, which is the detail a fixture derived from it has to carry over. _A fixture may inherit a mock's bug fix as easily as its bug._
+
+### Five protected members the spec drives
+
+`anonymousId`, `_persistUser`, `_mDelete`, `restrictDefaultRights` and `translateKoncorde` are all `protected` or `private`, and the spec sets or stubs every one of them — `anonymousId` is what `getUserStrategies` compares against, and `_persistUser` has its own `describe` block. Named once in an `Internals` alias, as [L1b2](#what-l1b2-found) settled. The count now stands at **18**.
 
 ## What L3a found
 
