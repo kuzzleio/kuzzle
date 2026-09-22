@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · L2d [#PR-L2D](https://github.com/kuzzleio/kuzzle/pull/PR-L2D) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -155,7 +155,7 @@ sitting reviews and the layers do not interleave:
 | **L2a** ✅ |     7 | 1 637 | codemod        | the three strays + `service/storage/queryTranslator`, `kuzzle/event/pipeRunner`, `kerror/codes`, `kuzzle/event/KuzzleEventEmitter` |
 | **L2b** ✅ |     6 | 3 293 | **fixture**    | security: `model/security/{profile,role,user}`, `core/security/{profileRepository,userRepository}`, `core/shared/repository`       |
 | **L2c** ✅ |     5 | 2 365 | **fixture**    | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
-| **L2d**     |     5 | 2 038 | **fixture**    | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
+| **L2d** ✅ |     5 | 2 038 | **fixture**    | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
 | **L2e**     |     5 | 2 432 | **fixture**    | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
 
 ⚠️ **The "shape" column is L2's own mis-cut, found while opening L2b, and it is
@@ -746,3 +746,41 @@ _This is [L1b's finding](#what-l1b4-found--and-l1b-is-closed) in another form: t
 
 - `should(stats.startRequest).be.a.Function()` × 8 asserted the module's shape; the type system states it. Gone.
 - `idCardHandler`'s "should fork a worker file that exists on disk" carried a comment saying it could **not** catch the regression it was named after, because the Mocha suite runs from `dist/` where every file is a `.js`. **The vitest suite runs from source**, where the worker is a `.ts` and its parent is a `.ts` — so the port does cover the half its original could not.
+
+---
+
+## What L2d found
+
+**`mocha` 66 → 61**, vitest **1 148 → 1 255 tests** across **91 → 96 files**. Five specs, 2 038 lines. Per file, Mocha → vitest: `base` 17 → 20, `bulk` 14 → 14, `realtime` 20 → 20, `server` 23 → 22, `collection` 31 → 31.
+
+### ⚠️ Fourteen assertions in one slice that could not fail
+
+This is the largest concentration of the family in the step, and all three shapes are about **a promise nobody waited for**:
+
+| Where | Shape | Why it never failed |
+| --- | --- | --- |
+| `baseController`, 9 tests | `should((async () => { sync(); })()).rejectedWith(…)` | neither returned nor awaited; the `it` resolved first |
+| `realtimeController#subscribe`, 3 tests · `bulkController`, 2 | `should(promise).rejectedWith(…)` with no `return` | same, and the *same file's* other describes do have the `return` |
+| `bulkController#mWrite`, 1 | called `controller.import(request)` | wrong subject, and unasserted |
+
+And two of the nine would have **failed** had they been asserted: they pass the option as `emptyCollectionsAllowed`, while `assertTargetsAreValid` reads **`allowEmptyCollections`**. A dead test hides a wrong test.
+
+_`should(...)` returning a thenable is what makes this shape silent — the lesson L2a opened is now a pattern with fourteen instances, and it is worth a lint rule (`@typescript-eslint/no-floating-promises` over the spec trees, once they are all TypeScript)._
+
+### A second spec asserting on the layer below its subject
+
+`collectionController` builds its expectations on `core:storage:private:document:get` / `:search` / `:scroll` / `:createOrReplace` / `:delete`. The controller calls **`global.kuzzle.internalIndex.get(...)`**, `search`, `scroll`, `createOrReplace`, `delete`, `refreshCollection`. The events belong to `InternalIndexHandler`, which the `KuzzleMock` supplied for real.
+
+Exactly [L2b](#what-l2b-found)'s finding on `ObjectRepository`, in a second place, which makes it a pattern rather than an accident: **`KuzzleMock` hands out real collaborators, so a spec written against it cannot tell its subject's calls from its collaborator's.** The port stubs `internalIndex`.
+
+### Five more signature defects, all caught by `tsc`
+
+- `getLastStats()`, `getAllStats()` and `now()` take **no** argument; the spec handed each of them the request.
+- `_buildApiDefinition(controllers, routes)` takes two; the spec passed three.
+- `assertBodyHasNotAttributes(request, ...paths)` was given `["invalid"]` where a path goes — it worked because lodash reads an array as a deep path.
+
+That is 13 signature defects found by the type-checker across this step (3 in L1, 2 in L1b3, 4 in L1b4, 1 in L2b, 5 here). _Every one of them was invisible to a green JavaScript suite._
+
+### `mockAssertions`, again
+
+`test/mocks/mockAssertions.js` stubs six `assert*` methods on the subject. `bulkController` calls none of them — as `indexController` called none of them when [L1b1](#what-l1b1-found) dropped it. A mock of the subject's own surface is how that goes unnoticed; the mock is not ported.
