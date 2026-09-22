@@ -468,5 +468,3 @@ export type SerializedState = {
 
   rooms: SerializedRoomState[];
 };
-
-module.exports = State;

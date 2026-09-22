@@ -62,7 +62,10 @@ index-dump/*
 #doc framework
 doc/framework
 frontmatter-errors.json
-codes/
+# The error-code pages `doc/build-error-codes` writes, at the repo root.
+# Unanchored, this pattern also swallowed `tests/kerror/codes/` — a spec
+# directory that mirrors `lib/kerror/codes/`, silently.
+/codes/
 
 #vscode
 .vscode
