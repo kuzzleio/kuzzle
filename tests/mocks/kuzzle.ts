@@ -27,6 +27,40 @@ const asKuzzle = (fixture: JSONObject) => fixture as unknown as Kuzzle;
 
 let previous: { kuzzle: Kuzzle; nodeId: string | undefined } | null = null;
 
+/**
+ * ⚠️ `global.kuzzle` is not a plain property: `lib/kuzzle/kuzzle.ts` installs an
+ * accessor over a module-level `_kuzzle`, whose **getter throws** while no
+ * instance exists (`"Kuzzle instance not found"`) and whose **setter throws on
+ * the second write** (`"Cannot build a Kuzzle instance: another one already
+ * exists"`). `global.nodeId` is the same shape, installed by `backend.ts`.
+ *
+ * So both reading and assigning the global are unsafe, and *whether* they throw
+ * depends on whether the spec's import graph happens to reach those modules —
+ * which is not something a spec should have to know. This fixture therefore
+ * neither reads nor assigns: it redefines the properties outright (both are
+ * declared `configurable`), which is idempotent and independent of the guards.
+ *
+ * Same shape as the `global.app` singleton [step 13, L4a] found in
+ * `backend.ts`; found here by the first spec whose graph reached
+ * `lib/kuzzle/kuzzle.ts` before stubbing.
+ */
+function define(property: "kuzzle" | "nodeId", value: unknown): void {
+  Reflect.defineProperty(global, property, {
+    configurable: true,
+    value,
+    writable: true,
+  });
+}
+
+/** What was on the global before, without tripping the getter's guard. */
+function readGlobal(property: "kuzzle" | "nodeId"): unknown {
+  try {
+    return (global as unknown as Record<string, unknown>)[property];
+  } catch {
+    return undefined;
+  }
+}
+
 /** A logger whose `child()` returns another one, as `kuzzle-logger` does. */
 function stubLogger(): JSONObject {
   const logger: JSONObject = {
@@ -51,7 +85,10 @@ function stubLogger(): JSONObject {
  */
 export function stubKuzzle(overrides: JSONObject = {}): JSONObject {
   if (previous === null) {
-    previous = { kuzzle: global.kuzzle, nodeId: global.nodeId };
+    previous = {
+      kuzzle: readGlobal("kuzzle") as Kuzzle,
+      nodeId: readGlobal("nodeId") as string | undefined,
+    };
   }
 
   const kuzzle: JSONObject = {
@@ -70,8 +107,8 @@ export function stubKuzzle(overrides: JSONObject = {}): JSONObject {
     ...overrides,
   };
 
-  global.kuzzle = asKuzzle(kuzzle);
-  global.nodeId = "knode-test";
+  define("kuzzle", asKuzzle(kuzzle));
+  define("nodeId", "knode-test");
 
   return kuzzle;
 }
@@ -121,7 +158,7 @@ export function restoreKuzzle(): void {
     return;
   }
 
-  global.kuzzle = previous.kuzzle;
-  global.nodeId = previous.nodeId;
+  define("kuzzle", previous.kuzzle);
+  define("nodeId", previous.nodeId);
   previous = null;
 }
