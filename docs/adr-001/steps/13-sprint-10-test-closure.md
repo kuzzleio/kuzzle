@@ -121,7 +121,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
 | **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
-| **L3** 🚧  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
+| **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
@@ -184,7 +184,7 @@ converted, and the sixth needs no fixture at all.
 | **L3c** ✅ ([#2822](https://github.com/kuzzleio/kuzzle/pull/2822)) | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3d** ✅ ([#2823](https://github.com/kuzzleio/kuzzle/pull/2823)) | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** ✅ ([#2824](https://github.com/kuzzleio/kuzzle/pull/2824)) | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
-| **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
+| **L3f** ✅ | `api/controllers/documentController` | 2 143 | 90 | idem |
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
@@ -841,7 +841,70 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
-**What is left: L3f (1 spec / 2 143 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+**What is left: L4 (34 specs / 14 128 lines), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** L3 is closed — see _[L3 is closed](#l3-is-closed)_.
+
+## What L3f found — and L3 is closed
+
+**`mocha` 51 → 50**, vitest **1 821 → 1 911 tests** across **106 → 107 files**. One spec, 2 143 lines, 90 `it`s in and 90 out. The block hash found no duplicates.
+
+### ⚠️ Nine negative assertions pinned to a call that never happens
+
+Eleven blocks carry a `'should not notify with "silent" argument'` test, and all eleven were written the same way:
+
+```js
+should(kuzzle.ask).not.be.calledWithMatch(
+  "core:realtime:document:notify", request, actionEnum.CREATE, { _id: "_id", _source: "_source" });
+```
+
+It was copied out of `#create` into ten other blocks **without changing the action**. `update` notifies with `actionEnum.UPDATE`, `replace` with `REPLACE`, `delete`/`mDelete`/`deleteByQuery` with `DELETE`, `createOrReplace` with `WRITE`. So in **nine of the eleven**, the assertion names a call the subject never makes — with `silent` set _or unset_. They could not fail.
+
+What the flag owes is that **nothing** is notified, which is what the port says. **A twelfth form**, and the first where the dead assertion is a _negative_: `not.calledWith(…)` is satisfied by a call that differs in any argument, so over-specifying a negative is the same as deleting it.
+
+### `calledWithMatch` is partial, and five things were hiding in the gap
+
+Every write action asserted its storage call with `calledWithMatch`. Making those exact says what the subject actually does:
+
+| Hidden by the partial match | |
+| --- | --- |
+| The controller **injects `_kuzzle_info` into the body itself** and passes `injectKuzzleMeta: false` so the storage layer does not do it twice. Nothing in the suite said the metadata is added, or by whom. | 5 actions |
+| The shape differs per action: `create` stamps `{author, createdAt}` with `updatedAt: null`; `update`/`upsert` stamp only `{updatedAt, updater}`; `createOrReplace` and `replace` go through `_writeDocument` and stamp **both halves at once**. | — |
+| `upsert`'s **`default` values are stamped too**, with their own shorter `{author, createdAt}`. | — |
+| The `create` and `createOrReplace` notifications carry `_version`; `createOrReplace`'s carries **`created`** as well. | — |
+| The `update` notification carries the **merged** document — the stored `name: "gordon"` the request never sent — and no `_version`. The spec asserted `_source: content`, partially, and so said the opposite of what happens. | — |
+
+### Three more `rejectedWith` with no `return` or `await`
+
+In `#mExists`, `#mGet` and `#mDelete`. [L2d](#what-l2d-found) found fourteen of these; the family now stands at **17** across the step.
+
+### A `beforeEach` that mutated the fixture it was building
+
+`#mCreateOrReplace` registered two `withArgs` stubs, and built the second's answer with `items.map(item => { delete item._source; return item; })` — which **mutates the array the first stub had already captured**. Both ended up resolving documents with no `_source`. The test named _"…with `_source` for each documents"_ then asserted nothing about `_source` at all, and set `request.input.args._source` where the subject reads `source`. The port keys the answer on the option instead, and asserts the documents each branch returns.
+
+### `.match()` cannot say a field was dropped
+
+`#search` and `#scroll` both answer an object with an `other` key that the subject strips, and both asserted the result with `should(...).match({...})` — a partial match, which is satisfied whether `other` survives or not. `toEqual` is what states it.
+
+### Small things
+
+- Two `#search` tests shared the name `'should reject if the "lang" is not supported'`; one has a body and the other does not. Renamed.
+- **The step's own `it` count for this file was nearly wrong**: `grep -cE '^\s*it\("'` says 69, because **21 of the 90 tests use single-quoted names**. The table's 90 came from a regex that allows both. Worth remembering before L4 is sized the same way.
+
+## L3 is closed
+
+**6 specs, 9 277 lines, `mocha` 56 → 50, vitest 1 439 → 1 911 tests.** One PR per spec, ordered by how much of the fixture already existed. What it added to [L2's count](#l2-is-closed):
+
+| Found | L2 | L3 | First seen in L3 |
+| --- | ---: | ---: | --- |
+| Assertions that could not fail | 23 | **+15** | [L3a](#what-l3a-found) |
+| New *forms* of assertion that cannot fail | 6 | **+6** (7th–12th) | — |
+| Signature / declaration defects | 11 | **+9** | [L3b](#what-l3b-found) |
+| Specs asserting on a collaborator | 4 | **+3** | [L3b](#what-l3b-found) |
+| `sinon` prefix- or partial-matches completed | 5 | **+14** | [L3b](#what-l3b-found) |
+| `lib/` defects filed, not fixed | — | **3** | [L3a](#what-l3a-found) |
+
+The six new forms, in order of how much they hide: **`should(x).be.instanceof(Object)`** (true of every value), **an over-specified negative** (`not.calledWith` naming a call that never happens), **`should(() => {…})` with no matcher** (the callback never runs), **`calledWithMatch(event, {}, {})`** (an empty object matches every object), **`should(map).have.key(k, v)`** (the value is dropped), and **`should(x).be.exactly(x)`**.
+
+**What is left: L4 (34 specs / 14 128 lines), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **Run [L3d](#what-l3d-found)'s block hash before sizing any of them** — and grep for `(global as any)` and `globalThis.kuzzle` before believing a subject has no dependency on the global.
 
 ## What L3e found
 
