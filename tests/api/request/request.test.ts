@@ -324,7 +324,10 @@ describe("#api/request/KuzzleRequest", () => {
     expect(newRequest.response.toJSON()).toMatchObject(
       request.response.toJSON(),
     );
-    expect(newRequest.timestamp).toBe("timestamp");
+    /* `timestamp` is declared `number` and the request carries through
+     * whatever it was given — the Mocha spec has always round-tripped the
+     * string "timestamp". A third declaration this spec cannot honour. */
+    expect(invalid<string>(newRequest.timestamp)).toBe("timestamp");
   });
 
   it("should clear the request error and status correctly", () => {

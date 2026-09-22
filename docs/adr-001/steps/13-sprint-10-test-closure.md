@@ -877,6 +877,7 @@ Twice, in the two tests that build a request from an error and from a *serialize
 | --- | --- |
 | `getBodyArray`, `getArray` and `getArrayLegacy` declare their default as `def: [] \| undefined` — the empty **tuple**. No caller can pass a default with anything in it. Four tests do, at runtime, happily. | TS2345 × 4 |
 | `serialize()` returns a `headers` field (deprecated, a duplicate of `options.connection.misc.headers`) that its return type `{ data, options }` does not mention. | TS2339 |
+| `timestamp` is declared `number`, and the request carries through whatever it was handed — the spec has always round-tripped the **string** `"timestamp"`. `tsc` let it pass because `toBe` accepts anything; **SonarCloud's S5845 is what caught it**, as a new Critical. | the gate |
 
 Cast at the call sites with the reason, as the DoD requires; both are `lib/` fixes for a slice that is allowed to touch it.
 
