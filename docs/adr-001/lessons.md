@@ -138,6 +138,9 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 
 11. **Hash each `describe` block with its own name normalised away before porting a big spec.** [L3d](steps/13-sprint-10-test-closure.md#what-l3d-found)'s 1 484 lines were nine shapes across sixteen actions — two groups of four blocks were byte-identical — and stating each shape once took it to 465 lines with all 57 tests intact. It also made the subject's one real asymmetry visible, which 1 000 lines of copy had hidden. **Second application of [L1b4](steps/13-sprint-10-test-closure.md#the-es-twins-one-body-two-mirrors-no-duplication)'s answer; run the hash before sizing L4, L5 and L6.**
 
+12. **`should(x).be.instanceof(Object)` is true of every value** — `undefined`, `null`, `42`, `"str"` — while `instanceof` is correct for every other class. [L3e](steps/13-sprint-10-test-closure.md#what-l3e-found): four tests used it on a `responseObject` property the subject has never returned. **The eleventh dead-assertion form of this step, and the first that is a property of the assertion library rather than of how it was called** — which is the argument for the lint rules lesson 9 asks for, and for not carrying `should` into anything new.
+13. **Asserting a call argument-by-argument stops where the author stopped.** `createMyCredentials` and `updateMyCredentials` are told apart by `validate`'s FIFTH argument; the spec read `args[0]`–`args[3]` of each call, which are identical between them, so it saw neither the flag nor the call order — [L3e](steps/13-sprint-10-test-closure.md#what-l3e-found). Assert the whole `mock.calls` array.
+
 Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 
 Gated on 2026-09-16, and both were worth the hour:

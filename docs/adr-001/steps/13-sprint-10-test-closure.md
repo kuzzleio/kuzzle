@@ -183,7 +183,7 @@ converted, and the sixth needs no fixture at all.
 | **L3b** ✅ ([#2821](https://github.com/kuzzleio/kuzzle/pull/2821)) | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3c** ✅ ([#2822](https://github.com/kuzzleio/kuzzle/pull/2822)) | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3d** ✅ ([#2823](https://github.com/kuzzleio/kuzzle/pull/2823)) | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
-| **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
+| **L3e** ✅ | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
 | **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
@@ -841,7 +841,39 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
-**What is left: L3e–L3f (2 specs / 3 979 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+**What is left: L3f (1 spec / 2 143 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+
+## What L3e found
+
+**`mocha` 52 → 51**, vitest **1 750 → 1 821 tests** across **105 → 106 files**. One spec, 1 836 lines, 71 `it`s in and 71 out. [L3d](#what-l3d-found)'s hash was run first and found **no** duplicate blocks: the four `with cookies` halves genuinely differ from their siblings, so this one is a port, not a de-duplication.
+
+### ⚠️ `should(x).be.instanceof(Object)` holds for every value in the language
+
+```js
+should(response.responseObject).be.instanceof(Object);
+```
+
+`42 instanceof Object` is natively `false`; `should(42).be.instanceof(Object)` **passes**, and so does `should(undefined)`, `should(null)` and `should("str")`. The matcher is correct for every other class — `should(42).be.instanceof(Array)` fails as it should — and inert for `Object` alone.
+
+That is what hid the real defect: **`logout` answers `{ acknowledged: true }` and has no `responseObject`**, and four tests across `#logout` and `#logout with cookies` asserted on it. The port asserts what the method returns. **An eleventh form of assertion that asserts less than it reads**, and the first one that is a property of the assertion library rather than of how it was called.
+
+### ⚠️ Two credentials hooks that differ in one argument, asserted identically
+
+`createMyCredentials` and `updateMyCredentials` both call `validate` and then their own hook. The `validate` call takes **five** arguments, and the fifth — `isUpdate` — is `false` for one and `true` for the other. It is the only thing that tells the two apart.
+
+The Mocha spec read `methodStub.firstCall.args[0]` through `[3]` and `secondCall.args[0]` through `[3]`, for both methods. Those four arguments are **identical between the two calls**, so the assertions could see neither the flag nor the order — and the order is `validate` first, `create`/`update` second, the reverse of how the spec reads. Three tests, one defect.
+
+### An error class nothing was checking
+
+`refreshToken`'s `security.token.refresh_forbidden` is an `UnauthorizedError`; the Mocha spec asserted `rejectedWith({ id })` with no class, so the port's first attempt guessed `BadRequestError` and failed. Written down now.
+
+### TD-57's rule caught the port, which is the point of having it
+
+Two `should(...).be.rejected()` — that it rejects, not with what — became `rejects.toThrow()` with no matcher, and [TD-57](../type-debt-register.md#td-57)'s `no-restricted-syntax` rule refused them. The answer is that `login` forwards the strategy's error untouched, which is now what they say. _A gate written three steps ago paying for itself._
+
+### The fixture
+
+`authController` reads thirteen paths off the global, and **every one of them is spelled `globalThis.kuzzle`** — so [L3c](#what-l3c-found)'s warning about `(global as any)` generalises: `global.kuzzle` is not the only spelling, and a grep for it under-reports. `pipe(event, payload)` must answer the payload by default; a promise-of-`undefined` stub makes every `login` fail on a property of `undefined`, which is the [L1b3](#what-l1b3-found) trap in its second form.
 
 ## What L3d found
 
