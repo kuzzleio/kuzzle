@@ -182,7 +182,7 @@ converted, and the sixth needs no fixture at all.
 | **L3a** ✅ ([#2820](https://github.com/kuzzleio/kuzzle/pull/2820)) | `core/security/roleRepository` | 1 046 | 54 | `profileRepository`, `userRepository`, `shared/repository` ([L2b](#what-l2b-found)) |
 | **L3b** ✅ ([#2821](https://github.com/kuzzleio/kuzzle/pull/2821)) | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3c** ✅ ([#2822](https://github.com/kuzzleio/kuzzle/pull/2822)) | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
-| **L3d** ✅ | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
+| **L3d** ✅ ([#2823](https://github.com/kuzzleio/kuzzle/pull/2823)) | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
 | **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
 
