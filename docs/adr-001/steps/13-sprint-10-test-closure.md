@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · L2d [#2817](https://github.com/kuzzleio/kuzzle/pull/2817) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · L2d [#2817](https://github.com/kuzzleio/kuzzle/pull/2817) · L2e [#PR-L2E](https://github.com/kuzzleio/kuzzle/pull/PR-L2E) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -120,7 +120,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L0** ✅  | **The three specs that already had a vitest counterpart** — measured by coverage rather than by line count, completed where the coverage said so, then deleted; see _What L0 found_                                                                                                                                  |  **3** |  **3 385** | The only place the ratchet can be moved by _deleting_ rather than porting — and the only place it can be moved dishonestly. Doing it first sets the standard the rest is measured against. Two of the three also carry `mock-require`.                                                                                                |
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
 | **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
-| **L2**     | The clean specs at **201–1 000 lines**, by layer — sub-sliced below: **a** the strays + the small `kuzzle`/`service`/`kerror` specs ✅ (7)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
+| **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3**     | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
@@ -156,7 +156,7 @@ sitting reviews and the layers do not interleave:
 | **L2b** ✅ |     6 | 3 293 | **fixture**    | security: `model/security/{profile,role,user}`, `core/security/{profileRepository,userRepository}`, `core/shared/repository`       |
 | **L2c** ✅ |     5 | 2 365 | **fixture**    | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
 | **L2d** ✅ |     5 | 2 038 | **fixture**    | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
-| **L2e**     |     5 | 2 432 | **fixture**    | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
+| **L2e** ✅ |     5 | 2 432 | **fixture**    | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
 
 ⚠️ **The "shape" column is L2's own mis-cut, found while opening L2b, and it is
 the fifth in this step.** L2 was sized on lines and cut on "clean", where clean
@@ -784,3 +784,46 @@ That is 13 signature defects found by the type-checker across this step (3 in L1
 ### `mockAssertions`, again
 
 `test/mocks/mockAssertions.js` stubs six `assert*` methods on the subject. `bulkController` calls none of them — as `indexController` called none of them when [L1b1](#what-l1b1-found) dropped it. A mock of the subject's own surface is how that goes unnoticed; the mock is not ported.
+
+---
+
+## What L2e found — and L2 is closed
+
+**`mocha` 61 → 56**, vitest **1 255 → 1 439 tests** across **96 → 101 files**. Five specs, 2 432 lines. Per file, Mocha → vitest: `profiles` 39 → 54, `roles` 37 → 47, `checkRights` 21 → 21, `rateLimiter` 8 → 8, `requestResponse` 28 → 45.
+
+### ⚠️ `calledWithMatch(stub, …)` is an assertion that always holds
+
+```js
+should(getStub).calledWithMatch(getStub, request.input.args._id);
+//                              ^^^^^^^ the stub, where the event name goes
+```
+
+`sinon.match(fn)` treats **a function as a custom matcher**: it calls it with the actual value and reads the return as the verdict. So this called the stub with `"core:security:profile:get"`, got a promise back, and matched — for any first argument whatsoever. Four assertions in `profiles.test.js` were written that way (one in `createProfile`, one in `getProfile`, two in `scrollProfiles`), and none could fail. _The same typo in `toHaveBeenCalledWith` is a type error._
+
+### Two sibling methods, one `async` and one not
+
+`updateProfileMapping` reads the body and returns the handler's promise; `updateRoleMapping`, three methods further down the same file, is `async`. So a missing body **throws** from one and **rejects** from the other, and the two Mocha specs were each written against their own half without either noticing the asymmetry. Both ports state which one they are asserting; the asymmetry itself is a `lib/` question for another slice.
+
+### The mapping actions go through the handler, not the bus — third and fourth time
+
+`securityController`'s six mapping actions call `global.kuzzle.internalIndex.getMapping/updateMapping`. Both specs asserted on `core:storage:private:mappings:*`. After [L2b](#what-l2b-found)'s `ObjectRepository` and [L2d](#what-l2d-found)'s `collectionController`, that is **four specs in three slices** aiming one layer below their subject, always for the same reason: `KuzzleMock` supplies a real `InternalIndexHandler`.
+
+### Three more signature defects
+
+`getProfileMapping()` and `getRoleMapping()` take no argument and were handed the request. And `checkRights`'s spec asserted `should(getUserEvent).not.called()` — on the **event's name**, a string, not on the stub.
+
+## L2 is closed
+
+**28 specs, 11 765 lines, five sub-slices, `mocha` 84 → 56.** What it cost, and what it was not: L2 was planned as "the codemod at a size where review fits in one sitting", and [the axis turned out to be wrong](#how-l2s-28-are-cut-by-layer) — 21 of the 28 were `KuzzleMock`-shaped work. What it actually produced is a count worth keeping:
+
+| Found | Count | First seen |
+| --- | ---: | --- |
+| Assertions that could not fail | **23** | [L2a](#what-l2a-found) |
+| Signature defects caught by `tsc` | **11** | [L2b](#what-l2b-found) |
+| Specs asserting on a collaborator's calls | **4** | [L2b](#what-l2b-found) |
+| `sinon` prefix-matches completed | **5** | [L2b](#what-l2b-found) |
+| Private members re-asked through the public surface | **13** | [L2b](#what-l2b-found) |
+
+_None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
+
+**What is left: L3 (6 specs / 9 277 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
