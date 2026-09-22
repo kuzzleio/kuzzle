@@ -122,7 +122,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
-| **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
+| **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
@@ -185,6 +185,45 @@ converted, and the sixth needs no fixture at all.
 | **L3d** ✅ ([#2823](https://github.com/kuzzleio/kuzzle/pull/2823)) | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** ✅ ([#2824](https://github.com/kuzzleio/kuzzle/pull/2824)) | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
 | **L3f** ✅ ([#2825](https://github.com/kuzzleio/kuzzle/pull/2825)) | `api/controllers/documentController` | 2 143 | 90 | idem |
+
+#### How L4's 34 are cut, by subject — measured on `2-dev` (2026-09-22, `d377ec6fd`)
+
+Both pre-flight checks [L3 asked for](#l3-is-closed) were run before sizing this
+one, and both changed the answer.
+
+**The block hash found almost nothing: ~218 lines of copied `it` bodies across
+all 34 files**, and the duplication is intra-file (four identical *"should
+synchronize roles creation"* in `cluster/node`, three in
+`network/protocols/http`) rather than between files. The one cross-file pair is
+`BackendStorage-es7`/`-es8`. **L4 is not [L3d](#what-l3d-found)-shaped**: its
+cost is not copy, so de-duplication will not pay for it.
+
+**The `mock-require` calls are not what the slice is about either.** Across the
+34 specs there are **52** `mockrequire(…)` calls and **49** `reRequire(…)` — and
+the target of the re-require is the *subject*, not the mock. The idiom is
+overwhelmingly `mockrequire(dep, stub)` once, then `reRequire(subject)` in a
+`beforeEach`: `mock-require` can only affect a *later* `require`, so the subject
+has to be reloaded after the stub is registered. `vi.mock` is hoisted above the
+imports, so that reason disappears. Genuinely *conditional* substitution — a
+different stub per block — is rare: `network/accessLogger` (two different
+`pino`s), `network/protocols/http`, `network/protocols/mqtt`,
+`kuzzle/internalIndexHandler` and `cluster/node`.
+
+⚠️ **And the third idiom is here too, for the sixth time in this step: 28 of the
+34 also build on `test/mocks/kuzzle.mock.js`.** Ten of them substitute
+`lib/kuzzle` *with* it. So most of L4 is L1b-shaped work again.
+
+| Sub-slice | Specs | Lines | Content |
+| --------- | ----: | ----: | ------- |
+| **L4a** ✅ ([#2826](https://github.com/kuzzleio/kuzzle/pull/2826)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
+| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice |
+| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
+| **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
+
+**L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
+subject, and the mocking decision the whole slice turns on gets made once on the
+cheapest possible material.
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
@@ -1092,3 +1131,153 @@ A role that grants rights on a native controller **and** a plugin controller has
 - `_kuzzle_info` is written by `_createOrReplace` and `update` and asserted by six tests, and `Role` does not declare it — the metadata rides on the DTO and the model never names it. The port says so in one alias rather than six casts.
 - `new NativeController()` binds `global.kuzzle.pipe` in its constructor, so a fixture that builds real controllers to ask them their actions needs `pipe` even though the subject never pipes anything.
 - The ten _"should register an X event"_ tests were written as `kuzzle.ask.restore()` — un-stubbing the mock mid-test to reach a real emitter underneath. `stubAsk`'s `ask`/`onAsk` pair answers them directly, which is what that helper's `answerers` map was built for; **L3a is its first user**.
+
+## What L4a found
+
+**`mocha` 50 → 39**, vitest **1 911 → 1 994 tests** across **107 → 117 files**.
+Eleven specs, 1 336 lines, 79 `it`s in and **83** out. One PR, eleven deletions
+— the largest single move of the ratchet in this step.
+
+### ⚠️ The `beforeEach` was never about the mock
+
+Every one of the eleven opened with the same ten lines:
+
+```js
+beforeEach(() => {
+  mockrequire("../../../lib/kuzzle", KuzzleMock);
+  ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
+  application = new Backend("black-mesa");
+});
+afterEach(() => { mockrequire.stopAll(); });
+```
+
+It reads as a mocking idiom and half of it is: `mock-require` only affects a
+*later* `require`, so the subject had to be reloaded after the stub was
+registered. `vi.mock` is hoisted, so that half disappears — and dropping the
+whole thing for a plain import is the obvious port. **It fails every test after
+the first, in all eleven files.**
+
+`backend.ts` keeps `global.app` in a module-level `_app`, behind a setter that
+throws `"Cannot build an App instance: another one already exists"` on the
+second write. One `new Backend()` per module *evaluation* is all the subject
+allows — and `reRequire` was re-evaluating the module on every test. **The dance
+was what made a per-test `new Backend()` legal, and nothing in the spec said
+so.**
+
+So the re-evaluation stays, stated for what it is: `createBackend()` calls
+`vi.resetModules()` and imports the subject fresh (`tests/core/backend/backendFixture.ts`).
+`vi.mock` survives a reset — the registry is per test *file* — so the
+substitution is still in place on every re-import.
+
+**This is the answer L4 was carved out to find, and it is not the expected one.**
+The question was framed as "`vi.mock` is static where `mock-require` is
+dynamic". For this family the substitution is perfectly static; what is dynamic
+is the *subject's own module state*. ⚠️ **Before porting any of L4b–L4e, ask
+what the `reRequire` is resetting, not what the `mockrequire` is replacing.**
+
+### ⚠️ A mock factory must not import the mocked module — it deadlocks silently
+
+The first attempt put `FakeKuzzle` in the same file as `createBackend`, so the
+factory read:
+
+```ts
+vi.mock("../../../lib/kuzzle", async () => ({
+  default: (await import("./backendFixture")).FakeKuzzle,   // imports Backend…
+}));                                                        // …which imports lib/kuzzle
+```
+
+vitest has to settle the factory before it can resolve the mocked module, and
+the factory's own graph reaches back into it. **The run hangs at collection
+time — no test, no timeout, no error, no output.** Two Docker runs were killed
+at 24 and 10 minutes believing `npm ci` was slow. The fixture is now split:
+`fakeKuzzle.ts` imports nothing from `lib/`, and the warning is written at the
+top of it.
+
+**Also: answer every name the module exports.** `lib/kuzzle` exports the class
+twice, `export { Kuzzle }` and `export default`, and a factory returning only
+one leaves the other `undefined` for whoever imports it that way.
+
+### ⚠️ Module re-evaluation breaks `instanceof`, and three tests said so
+
+`toBeInstanceOf(EmbeddedSDK)` and `toBeInstanceOf(BadRequestError)` fail when
+the class is imported statically: `createBackend()` re-evaluated the graph, so
+the object the subject built came from a *different* copy of the module. Both
+are now imported with `await import(…)` inside the test, after the reset. The
+cost is real and it is the price of the answer above — **any L4 spec that
+re-evaluates its subject cannot compare classes across a static import.**
+
+### `server.http.enabled` is not a configuration key
+
+`BackendConfig`'s four tests drove `config.set("server.http.enabled", false)`
+and read it back. The server's HTTP settings live under
+`server.protocols.http`; there is no `server.http`. `_.set` creates whatever
+path it is handed, so the test wrote a branch nothing reads and then read it
+back — **it demonstrated lodash, not the subject**. `tsc` is what said so
+(`TS2339`, on a type that is right). Driven on the real key now.
+
+### ⚠️ A pipe asserting inside itself, that nothing ever ran — a thirteenth form
+
+`Backend#start`'s main test appended a pipe on `kuzzle:state:ready`:
+
+```js
+application._pipes["kuzzle:state:ready"] = [
+  ...application._pipes["kuzzle:state:ready"],
+  async () => should(application.started).be.true(),
+];
+```
+
+The pipes are handed to the `Kuzzle` that `start()` builds and reach its event
+bus. That object is the stub; its `start()` triggers nothing. **The callback was
+never called**, so the assertion could not fail — and could not pass either.
+Close kin to [L2a](#what-l2a-found)'s assertion-inside-a-callback, but a
+distinct shape: there the callback ran too early, here it never ran at all. The
+port asserts what `start()` itself does.
+
+### ⚠️ A deletion broke three tests in a file it did not touch — the second time
+
+`test/core/plugin/pluginsManager.test.js` `#_initApi` went red with
+`"App instance not found. Are you sure you have already started your
+application?"` the moment the eleven Backend specs were deleted. It never built
+an application: it passed because those specs ran **earlier in the same Mocha
+process** and left a `global.app` behind. The spec now defines its own, with a
+comment saying why. [L3a](#what-l3a-found) found the same shape through
+`global.NODE_ENV`; **39 specs left, and the only way to see this is to run the
+whole Mocha suite after every deletion** — which is what the DoD says and what
+caught it.
+
+**And the reason it can happen at all is a `lib/` question, filed not fixed:**
+`checkActionDefinition` reads `global.app.config.content` for **every**
+controller it checks, plugin controllers included, through a getter that throws
+when no application was built. It takes an `application: boolean` parameter and
+does not use it for this. A plugin registering a controller on a Kuzzle that was
+not started from a `Backend` crashes on a missing application.
+
+### The two `BackendStorage` specs were one test and a half
+
+`BackendStorage-es7` and `-es8` hold two tests each. The second is byte-identical
+between them — neither pins `majorVersion`, so both ran the *configured* default,
+twice. It is stated once now. The first genuinely differs, and only in how the
+two Elasticsearch clients expose `maxRetries`: a plain property on 7, a symbol on
+8. That is `it.each(["7", "8"])` over one body, which is
+[L1b4](#what-l1b4-found)'s `esWrapper` move at the smallest possible scale.
+
+### Small things
+
+- **+4 tests on 79.** `BackendPlugin`'s *"should throw an error if the plugin is
+  invalid"* was four `should(…).throwError()` in one `it`; split, each failure
+  mode now names itself. `BackendPipe` gains the `application === undefined`
+  branch and `Backend` the `already_started` one; `BackendStorage` loses the
+  duplicate above.
+- `Backend`'s *"should call kuzzle.start…"* asserted `plugin.instance` equals a
+  second read of `_instanceProxy`. It is a getter that builds a fresh object,
+  `init` closure included, so the two are never the same object — `should`'s
+  `eql` accepted it, `toEqual` does not. The port asserts what the proxy
+  carries.
+- Node's *"Cannot find module 'foo'"* is *"Cannot find package 'foo'"* under
+  vitest: the Mocha suite ran the emitted CommonJS, vitest runs the source as
+  ESM. **Any ported spec asserting on a module-resolution message will need
+  this.**
+- `FakeKuzzle` deep-copies the config it is handed, where production passes the
+  real object: `loadConfig()` answers a shared singleton and `BackendConfig`
+  mutates it in place ([L3b](#what-l3b-found)'s lesson, applied in the fixture
+  rather than in each spec).

@@ -33,6 +33,19 @@ describe("Plugin", () => {
   const createApplication = (name) => createPlugin(name, true);
 
   beforeEach(() => {
+    // `checkActionDefinition` reads `global.app.config.content` for every
+    // controller it checks, plugin controllers included, and `global.app` is a
+    // getter that THROWS when no application was built. This suite never
+    // builds one: it passed only because the `test/core/backend/*` specs ran
+    // first in the same Mocha process and left one behind, and those are now
+    // ported to vitest (ADR-0001 step 13, L4a). Defined rather than assigned,
+    // because `backend.ts`'s setter refuses a second write.
+    Reflect.defineProperty(global, "app", {
+      configurable: true,
+      value: { config: { content: {} } },
+      writable: true,
+    });
+
     kuzzle = new KuzzleMock();
 
     plugin = createPlugin("test-plugin");
