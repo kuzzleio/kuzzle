@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#PR-L2C](https://github.com/kuzzleio/kuzzle/pull/PR-L2C) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -154,7 +154,7 @@ sitting reviews and the layers do not interleave:
 | ----------- | ----: | ----: | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | **L2a** ✅ |     7 | 1 637 | codemod        | the three strays + `service/storage/queryTranslator`, `kuzzle/event/pipeRunner`, `kerror/codes`, `kuzzle/event/KuzzleEventEmitter` |
 | **L2b** ✅ |     6 | 3 293 | **fixture**    | security: `model/security/{profile,role,user}`, `core/security/{profileRepository,userRepository}`, `core/shared/repository`       |
-| **L2c**     |     5 | 2 365 | **fixture**    | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
+| **L2c** ✅ |     5 | 2 365 | **fixture**    | the rest of `core/` (`tokenManager`, `kuzzleDebugger`, `statistics`) and `cluster/` (`idCardHandler`, `state`)                     |
 | **L2d**     |     5 | 2 038 | **fixture**    | the `api` controllers: `base`, `bulk`, `realtime`, `server`, `collection`                                                          |
 | **L2e**     |     5 | 2 432 | **fixture**    | `securityController/{profiles,roles}`, `funnel/checkRights`, `rateLimiter`, `requestResponse`                                      |
 
@@ -698,3 +698,51 @@ A repository's `init()` is a list of `global.kuzzle.onAsk(...)` registrations, a
 ### `PolicyRestrictions.collections` is declared required and is not
 
 `{ index: "index" }` — a policy restricted to a whole index — is what `profileRepository`'s own fixture uses, and `optimizePolicy` has the guard for it (`if (!collections) { continue; }`). The type says `collections: string[]`, so the fixture needs `invalid<…>`. A restriction with no collections is a legitimate value the type cannot express; noted here rather than widened in a test-porting slice.
+
+---
+
+## What L2c found
+
+**`mocha` 71 → 66**, vitest **1 037 → 1 148 tests** across **86 → 91 files**. Five specs, 2 365 lines. Per file, Mocha → vitest: `statistics` 25 → 24, `kuzzleDebugger` 17 → 23, `tokenManager` 24 → 24, `idCardHandler` 18 → 19, `state` 21 → 21.
+
+### ⚠️ One line of `lib/` changed, and it is what [L2a](#what-l2a-found) had blamed the whole graph for
+
+`lib/cluster/state.ts` ended with **`module.exports = State;`** — sitting next to the file's own `export default class State`. Two export forms for one class, of which only the default is used (`import State from "./state"` in `node.ts` and `subscriber.ts`).
+
+Under vitest's ESM transform, that assignment is the error L2a reported:
+
+```
+TypeError: Cannot set property default of [object Module] which has only a getter
+  ❯ lib/cluster/state.ts:472  module.exports = State;
+```
+
+So **the module, and everything that imports it — up to `index.ts`** — could not be loaded from a spec at all. L2a's conclusion ("the package entrypoint cannot be imported from a vitest spec, it pulls in the whole application") was right about the symptom and wrong about the cause: it is one legacy line, and removing it makes `import { BadRequestError } from "../index"` work in a vitest spec. The CommonJS emit is unchanged, so no consumer sees a difference.
+
+_A porting slice that has to change `lib/` states it and stops there_ — which is what the DoD asks. This one is a deletion of dead syntax, and the mocha suite, the build and the functional matrix are the check.
+
+### A private-only spec gains coverage when it is ported to the public surface
+
+`kuzzleDebugger`'s Mocha spec asserted on `inspector`, `debuggerStatus`, `events`, `inspectorPost`, `notifyConnection` and `notifyGlobalListeners` — **every one of them `private`**. There was no way to translate it; it had to be re-asked from outside:
+
+| The Mocha spec asserted | The port asserts |
+| --- | --- |
+| `inspector.connect` called once | `core:debugger:isEnabled` answers `true`, and `cluster:node:preventEviction` was asked |
+| `events.clear()` called | a connection that was listening is no longer notified |
+| `notifyConnection` called with … | `entryPoint._notify` received the payload |
+
+17 tests became **23**, because the public surface has branches the private assertions never reached: the `reportProgress` segfault guard (it emits the progress event Chrome waits for, then turns the flag off), the eviction on a worker that closes unexpectedly, and the debug marker being dropped only once a socket's **last** listener goes.
+
+_This is [L1b's finding](#what-l1b4-found--and-l1b-is-closed) in another form: the question "what does this subject actually expose" pays for itself._
+
+### Two more sinon prefix-matches
+
+`koncorde.remove(roomId, index)` — the spec named only the room. Same shape as [L2b](#what-l2b-found)'s `search`. **Third occurrence; it is now a translation-table entry, not an anecdote:** a `calledWith` assertion carries no information about the arguments it does not mention, and `toHaveBeenCalledWith` does.
+
+### vitest's fake timers make a self-rescheduling loop infinite
+
+`TokenManager.checkTokensValidity` reschedules itself through `runTimer`. `vi.runAllTimers()` then runs that loop until vitest aborts it ("Aborting after running 10000 timers"). The Mocha spec stubbed `runTimer` **before** the links that arm it and reset the history afterwards, which reads like ceremony and is not: it is the only way the assertion "the timer was rearmed exactly once" can be made at all. The port keeps the shape and says why.
+
+### A decorative test, and a regression guard that now guards
+
+- `should(stats.startRequest).be.a.Function()` × 8 asserted the module's shape; the type system states it. Gone.
+- `idCardHandler`'s "should fork a worker file that exists on disk" carried a comment saying it could **not** catch the regression it was named after, because the Mocha suite runs from `dist/` where every file is a `.js`. **The vitest suite runs from source**, where the worker is a `.ts` and its parent is a `.ts` — so the port does cover the half its original could not.
