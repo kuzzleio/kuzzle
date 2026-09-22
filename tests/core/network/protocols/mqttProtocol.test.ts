@@ -44,11 +44,17 @@ class FakeClient {
  * tree has no bluebird, and the shape is four lines.
  */
 const promisify =
-  <T>(fn: (client: unknown, arg: unknown, done: Function) => void) =>
+  <T>(
+    fn: (
+      client: unknown,
+      arg: unknown,
+      done: (error: Error | null, value?: T) => void,
+    ) => void,
+  ) =>
   (client: unknown, arg: unknown) =>
     new Promise<T>((resolve, reject) =>
-      fn(client, arg, (error: Error | null, value: T) =>
-        error ? reject(error) : resolve(value),
+      fn(client, arg, (error, value) =>
+        error ? reject(error) : resolve(value as T),
       ),
     );
 
