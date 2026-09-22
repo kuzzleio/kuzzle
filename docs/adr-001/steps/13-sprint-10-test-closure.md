@@ -216,7 +216,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | Sub-slice | Specs | Lines | Content |
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
-| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** `mqtt` · **b3** `httpRouter` · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
+| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** `httpRouter` · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
@@ -1367,3 +1367,71 @@ not a surprise.
 - The three `calledWithMatch` on `postMessage` and `pino.transport` are exact
   here: the `targets` array is the whole point of `initTransport`, and a
   partial match said nothing about the two entries it did not name.
+
+## What L4b2 found
+
+**`mocha` 38 → 37**, vitest **2 004 → 2 027 tests** across **118 → 119 files**.
+One spec, 461 lines, 17 `it`s in and **23** out.
+
+### ⚠️ `global.kuzzle` is a write-once singleton, exactly like `global.app`
+
+`lib/kuzzle/kuzzle.ts` installs an accessor over a module-level `_kuzzle`. Its
+**getter throws** while no instance exists (`"Kuzzle instance not found. Did you
+try to use a live-only feature before starting your application?"`) and its
+**setter throws on the second write** (`"Cannot build a Kuzzle instance: another
+one already exists"`). `global.nodeId`, installed by `backend.ts`, is the same
+shape with a setter that always throws.
+
+`tests/mocks/kuzzle.ts` both *read* the global (to remember what was there) and
+*assigned* it. Neither is safe, and — this is the part that matters — **whether
+either throws depends on whether the spec's import graph happens to reach those
+modules**, which is not something a spec can be asked to know. Nine slices of
+specs never noticed because their graphs never pulled `lib/kuzzle/kuzzle.ts` in;
+this one imports the package entrypoint, so it did.
+
+The fixture now **redefines** both properties (`Reflect.defineProperty`, both
+are declared `configurable`) instead of assigning them, and reads them through a
+`try`. That is idempotent, independent of the guards, and it is the same move
+[L4a](#what-l4a-found) had to make by hand in `pluginsManager.test.js`.
+**Second singleton of this shape in two slices — assume the next global is one
+too.**
+
+### The order of the two setup steps is now load-bearing
+
+`loadSubject()` re-evaluates the module graph, and `lib/kuzzle/kuzzle.ts`
+**re-installs `global.kuzzle`'s accessor when it does** — discarding whatever
+was stubbed before it. So the subject must be loaded *first* and the global
+stubbed *second*. Stated in the spec, because nothing about the two lines says
+it.
+
+### The event the spec meant to test, and did not
+
+`#init`'s _"should attach events"_ walked the four `aedes.on` registrations by
+index — `getCall(0)`, `getCall(1)`, then **`getCall(1)` again** with the history
+reset in between, then `getCall(3)`. `getCall(2)` is `clientDisconnect`, and it
+was never exercised; `clientError`'s handler was asserted twice instead. Both
+handlers are named rather than indexed now, and `clientDisconnect` gains its
+first assertion. **A copy-paste in an index, which is what
+[L3e](#what-l3e-found) warned about — asserting `args[n]` by index stops where
+the author stopped.**
+
+### `publish` takes a callback the assertions never mentioned
+
+`client.publish(packet, done)` — `calledWithMatch` is partial, so the second
+argument was invisible in both `#onMessage` and `#_respond`. Named now.
+
+### Small things
+
+- `#broadcast` asserted `calledTwice()` and then named only `ch1`. Both
+  channels are stated.
+- `#onMessage`'s first test drove three distinct rejections — wrong topic, no
+  payload, no client id — through one `it` and one `callCount(0)`. Three tests.
+- The _"payload cannot be parsed"_ test looped over three `NODE_ENV` values
+  inside one `it`, resetting the spy between them; `it.each` makes each its own
+  test, and a failure now says which environment.
+- `#_respond` only covered `developmentMode: true`. The other branch — answer
+  the client directly — is the one that runs in production, and it had no test.
+- `Bluebird.promisify` is four lines of local helper; the vitest tree does not
+  take the dependency.
+- ⚠️ The Mocha spec registered `net` **and** `node:net`. As
+  [L4b1](#what-l4b1-found) predicted, one stub is enough.
