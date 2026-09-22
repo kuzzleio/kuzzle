@@ -11,10 +11,18 @@ import type { NetworkEntryPoint } from "../../lib/core/network/networkEntryPoint
  * `KuzzleMock`, it is not an application stub: it is the whole of the surface a
  * protocol sees, and naming it once is what makes that surface visible.
  */
-export function stubEntryPoint(config: Record<string, unknown> = {}) {
+export function stubEntryPoint<T extends Record<string, any>>(
+  config: T = {} as T,
+) {
   return {
     config,
-    execute: vi.fn(),
+    // Answers `{}` unless a spec says otherwise, as `entrypoint.mock.js` did:
+    // a protocol writes its response from this callback, and a stub that never
+    // calls it makes the socket look silent for the wrong reason.
+    execute: vi.fn(
+      (_connection: unknown, _request: unknown, cb?: (r: unknown) => void) =>
+        cb?.({}),
+    ),
     logAccess: vi.fn(),
     newConnection: vi.fn(),
     removeConnection: vi.fn(),

@@ -216,7 +216,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | Sub-slice | Specs | Lines | Content |
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
-| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
+| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
@@ -1501,3 +1501,75 @@ form — plus a re-import, and `vi.doUnmock` in a `finally`. **One test out of
   `message`. That subject has no spec of its own, so it is kept where it was
   found, with a note and with a `length > 0` guard: over an empty list, the
   loop asserted nothing.
+
+## What L4b4 found — and L4b is closed
+
+**`mocha` 36 → 34**, vitest **2 052 → 2 129 tests** across **120 → 121 files**.
+**Two** specs, 1 783 lines, 75 `it`s in and **77** out — and two mocks retired:
+`test/mocks/uWS.mock.js` and `test/mocks/entrypoint.mock.js` have no users left.
+
+### Two files, one subject, one mirror
+
+`protocols/http.test.js` and `protocols/websocket.test.js` both re-required
+`httpwsProtocol` and both built the same `HttpWs`. The `tests/` mirror maps one
+spec to one `lib/` file ([L1b1](#what-l1b1-found)), so they are **one** file
+here — the HTTP half and the WebSocket half of the same protocol — and
+`prepare-coverage.ts` attributes the subject once instead of losing one of the
+two. Two specs, one ratchet step each, in one PR.
+
+### A mocked module still needs its real constants
+
+`vi.mock("uWebSockets.js")` answers `App()` with the mock — and `DISABLED`,
+`SHARED_COMPRESSOR` and `getParts` with **`vi.importActual`'s**. The subject
+compares the configured compression against `uWS.DISABLED` by value, and a
+stubbed constant would make the assertion agree with itself. The same is true of
+`node:zlib` in the two compression-failure tests: everything but the one failing
+function is the real module.
+
+### `init()` builds a new server, so "the second call" is on a different object
+
+_"should start a websocket server according to the provided configuration"_
+calls `init()` twice and asserted `ws` was called with `compression: DISABLED`.
+`init()` assigns `this._server = uWS.App()`, so the second registration is
+**call 0 of a second app**, not call 1 of the first. The Mocha assertion happened
+to be right because `calledWithMatch` searches every call of whatever
+`httpWs.server` currently points at; written exactly, the index has to say which
+server it means.
+
+### A default a fixture must not drop
+
+`entrypoint.mock.js`'s `execute` was `sinon.stub().yields({})` — it *answers*.
+`tests/mocks/entryPoint.ts` first stubbed it as a bare `vi.fn()`, and the
+rate-limit test went red three calls later: a protocol writes its response from
+that callback, so a stub that never calls it makes the socket look silent for
+the wrong reason. **When a mock's method has a default behaviour, the behaviour
+is part of the mock.**
+
+### Small things
+
+- `maxBackPressure`, not `maxBackpressure`. `calledWithMatch` accepted the
+  misspelling silently because it never looked for the key; `toMatchObject` on
+  the recorded options says which one exists.
+- Sixteen `it`s collapse into six `it.each` — four content-type rejections, two
+  encoding rejections, two backpressure shapes, four compression algorithms,
+  six raw-response payload types, two `disconnect` messages and the
+  `joinChannel`/`leaveChannel` pair.
+- The applicative-PING test drove two messages and two assertions through one
+  `it`; the second — that a PING carrying a request is routed rather than
+  ponged — is its own test now.
+- The `for (let i = 0; !tryEnd.calledOnce && i < 10; i++)` poll that four tests
+  copied is one named helper.
+
+## L4b is closed
+
+**5 specs, 3 301 lines, `mocha` 39 → 34, vitest 1 994 → 2 129 tests.** Four PRs,
+one per subject. What it settled:
+
+| | |
+| --- | --- |
+| **The slice's premise was wrong three times out of three.** | L4 was carved out because `vi.mock` is static where `mock-require` is dynamic. In [L4a](#what-l4a-found) the dynamic thing was `global.app`'s singleton; in [L4b1](#what-l4b1-found) the "two pino stubs" were one stub plus a key; in [L4b3](#what-l4b3-found) and [L4b4](#what-l4b4-found) exactly **three tests out of 79** need `vi.doMock`. |
+| **The real cost is the globals.** | `global.kuzzle`, `global.app` and `global.nodeId` are all write-once accessors installed by module evaluation, and `vi.resetModules()` re-installs them. Load the subject first, stub the global second, import nothing later. |
+| **Two mocks retired, two promoted.** | `test/mocks/uWS.mock.js` → `tests/mocks/uWS.ts`, `test/mocks/entrypoint.mock.js` → `tests/mocks/entryPoint.ts`. `test/mocks/` is down to `kuzzle.mock.js` and its remaining L4c–L4e users. |
+
+**Next: L4c (cluster, 3 specs / 2 627 lines), L4d (plugin + validation, 4 /
+3 882), L4e (the strays, 11 / 2 982).**

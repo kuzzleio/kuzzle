@@ -97,9 +97,7 @@ describe("MqttProtocol", () => {
 
   describe("#init", () => {
     it("answers false when the protocol is disabled", async () => {
-      (
-        entryPoint.config as { protocols: { mqtt: { enabled: boolean } } }
-      ).protocols.mqtt.enabled = false;
+      entryPoint.config.protocols.mqtt.enabled = false;
 
       await expect(init()).resolves.toBe(false);
     });
