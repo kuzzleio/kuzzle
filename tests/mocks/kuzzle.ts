@@ -12,6 +12,7 @@
  * it is about without restating the rest.
  */
 import type { JSONObject } from "kuzzle-sdk";
+import { vi } from "vitest";
 
 import type { Kuzzle } from "../../lib/kuzzle";
 
@@ -73,6 +74,45 @@ export function stubKuzzle(overrides: JSONObject = {}): JSONObject {
   global.nodeId = "knode-test";
 
   return kuzzle;
+}
+
+/**
+ * An `onAsk` / `ask` pair that behaves like the real bus: whatever a subject
+ * registers under an event is what answering that event calls.
+ *
+ * A repository's `init()` is a list of `onAsk` registrations, and what its
+ * spec has to state is that each event reaches the right method. The Mocha
+ * specs did it by un-stubbing `kuzzle.ask` mid-test (`kuzzle.ask.restore()`),
+ * which only works because the mock had stubbed a real emitter underneath.
+ *
+ * `fallback` answers the events nothing registered — the storage and cache
+ * events a subject asks *for* rather than answers. Left out, an unregistered
+ * event throws, so a spec that grows a dependency says so.
+ */
+export function stubAsk(
+  fallback?: (event: string, ...args: unknown[]) => unknown,
+) {
+  const answerers = new Map<string, (...args: unknown[]) => unknown>();
+
+  const onAsk = vi.fn((event: string, fn: (...args: unknown[]) => unknown) => {
+    answerers.set(event, fn);
+  });
+
+  const ask = vi.fn(async (event: string, ...args: unknown[]) => {
+    const answerer = answerers.get(event);
+
+    if (answerer) {
+      return answerer(...args);
+    }
+
+    if (fallback) {
+      return fallback(event, ...args);
+    }
+
+    throw new Error(`unexpected ask("${event}")`);
+  });
+
+  return { answerers, ask, onAsk };
 }
 
 /** Puts back whatever was on the global before the first {@link stubKuzzle}. */
