@@ -216,7 +216,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | Sub-slice | Specs | Lines | Content |
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
-| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** `httpRouter` · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
+| **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** the `httpwsProtocol` pair (`http` + `websocket`, one subject, one mirror) |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
@@ -1435,3 +1435,69 @@ argument was invisible in both `#onMessage` and `#_respond`. Named now.
   take the dependency.
 - ⚠️ The Mocha spec registered `net` **and** `node:net`. As
   [L4b1](#what-l4b1-found) predicted, one stub is enough.
+
+## What L4b3 found
+
+**`mocha` 37 → 36**, vitest **2 027 → 2 052 tests** across **119 → 120 files**.
+One spec, 579 lines, 24 `it`s in and **25** out. `test/mocks/uWS.mock.js`'s
+`MockHttpRequest` is promoted to `tests/mocks/uWS.ts`; the socket, the response
+and the `App` stay behind until [L4b4](#slices) needs them.
+
+### ⚠️ Import order is the whole difficulty of this spec
+
+Two tests failed with `"Kuzzle instance not found"`, thrown from a stub that had
+been installed correctly. The cause is the corollary of
+[L4b2](#what-l4b2-found)'s finding: `vi.resetModules()` empties the registry,
+and **the first module to pull `lib/kuzzle/kuzzle.ts` back in re-installs
+`global.kuzzle`'s accessor over a null instance.** A test that reaches for the
+package entrypoint mid-way — `await import("../../../../index")`, to get
+`Request` for an `instanceof` — does exactly that, and throws the spec's own
+global away between the arrange and the assert.
+
+Every module this file needs is therefore loaded in one place, before the global
+is stubbed, and nothing is imported from inside a test. **The rule for the rest
+of L4: after a reset, load first, stub second, and import nothing later.**
+
+### ⚠️ `kuzzle.pipe`'s second calling convention, for the third time
+
+`http:options` is piped as `pipe(event, request, callback)`. A promise-only stub
+does not fail the test — **it hangs it**, for the full 20-second timeout, with
+no error. [L1b3](#what-l1b3-found) found this in `Router._executeFromHttp` and
+[L1b](#what-l1b1-found) wrote it down; it is now the third slice to pay for it.
+The fixture's `pipe` answers both shapes.
+
+### Three tests that were reading a config the suite had not set yet
+
+`#default headers`'s three tests disagree about `Access-Control-Allow-Credentials`,
+and the reason is ordering: the Mocha `beforeEach` set
+`kuzzle.config.http.cookieAuthentication = false` **after** constructing the
+suite's `router`, and `defaultHeaders` is assembled in the constructor. So the
+first test saw the packaged default (`true`, credentials header present) and the
+other two, which build their own `Router`, saw `false`. Each test now sets what
+it depends on, and the fixture uses the **real** configuration — deep-copied,
+per [L3b](#what-l3b-found) — because three of these tests are about which
+configured value lands in a header, and a hand-written config would agree with
+the assertion by construction.
+
+### The one genuinely per-test substitution in L4 so far
+
+_"should return an error if an exception is thrown"_ swaps `routeHandler` for a
+class whose `request` getter throws, for that test alone. `vi.mock` is hoisted
+and would apply to the whole file, so this is `vi.doMock` — the non-hoisted
+form — plus a re-import, and `vi.doUnmock` in a `finally`. **One test out of
+34 specs so far actually needs the dynamic form.**
+
+### Small things
+
+- Six `it`s adding one route each, two pairs differing only in a URL, and two
+  parametric-route tests that the [block hash](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)
+  had already flagged as duplicates, collapse into four `it.each`. The
+  duplicate-url test covered two distinct cases in one `it`; they are two.
+- Every routing test was `done` + `try`/`catch`; `settle` (from
+  [L1b](#what-l1b1-found)) plus an `await` is what they are now, and an
+  assertion that fails reports as a failure rather than as a timeout.
+- The last test in the file is not about the router at all — it asserts that
+  every deprecated route in `lib/api/httpRoutes` declares `since` and
+  `message`. That subject has no spec of its own, so it is kept where it was
+  found, with a note and with a `length > 0` guard: over an empty list, the
+  loop asserted nothing.
