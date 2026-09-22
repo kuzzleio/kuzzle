@@ -121,7 +121,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L1** ✅  | **The codemod, proven on the specs that mock nothing shared**: `should` → `expect`, `sinon` → `vi`, `require` → `import` — **27 specs, not 60**; see _What L1 found_                                                                                                                                                 | **27** |  **2 049** | 41% of the files for 9% of the lines. It is where the codemod gets written and proven, and it shrinks the remaining file list to the specs that need thought.                                                                                                                                                                         |
 | **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
-| **L3**     | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
+| **L3** 🚧  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4**     | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
@@ -170,6 +170,21 @@ seven were, by coincidence, exactly the specs that use none of the three.
 The cut stands, because the sub-slices are sized for review either way; what
 changes is the cost per spec, which is L1b's and not L1's. _Re-measure the axis,
 not just the size._
+
+#### How L3's 6 are ordered
+
+One PR per spec, as planned. The order is not size but **how much of the
+fixture already exists**: five of the six sit next to a spec L2 already
+converted, and the sixth needs no fixture at all.
+
+| Sub-slice | Spec | Lines | `it`s | Leans on |
+| --------- | ---- | ----: | ----: | -------- |
+| **L3a** ✅ | `core/security/roleRepository` | 1 046 | 54 | `profileRepository`, `userRepository`, `shared/repository` ([L2b](#what-l2b-found)) |
+| **L3b** | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
+| **L3c** | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
+| **L3d** | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
+| **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
+| **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
@@ -827,3 +842,53 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
 **What is left: L3 (6 specs / 9 277 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+
+## What L3a found
+
+**`mocha` 56 → 55**, vitest **1 439 → 1 493 tests** across **101 → 102 files**. One spec, 1 046 lines, 54 `it`s in and 54 out — but one of the 54 that went in had an empty body, so the port is 53 real tests → 54.
+
+### ⚠️ `should(map).have.key(k, v)` silently ignores its second argument
+
+```js
+should(roleRepository.roles).have.key(fakeRole._id, fakeRole);
+//                                                  ^^^^^^^^ read as a second KEY, then dropped
+```
+
+`should`'s `.key` takes key names, not a key and a value, and extra arguments do not tighten it: `have.key("foo", {a: 999})` passes on a one-entry `Map` holding `{a: 1}`, and `have.key("foo")` passes on a two-entry map. The test was named _"should load the role directly from DB if it is not in memory"_ and meant to assert **the cache now holds that role**; what it asserted was that the cache has a key called `"foo"`. The port states the value. **A seventh form of assertion that asserts less than it reads**, after [L2's six](#l2-is-closed).
+
+### An `it` with an empty body
+
+```js
+it("should throw on an unknown plugin action, if not forced", () => {});
+```
+
+It duplicated the test three above it, so nothing was lost by it being empty — but nothing was gained either, and the suite counted it as passing. Rather than delete it, the port gives it the claim its neighbour does not make: **the suggestion the error carries**. Which is how the next one was found.
+
+### `didYouMean` is inert outside development, and no spec had ever reached it
+
+`lib/util/didYouMean.ts` returns `""` unless `global.NODE_ENV === "development"`. The unit suites run under `NODE_ENV=test`, so every `unknown_action` / `unknown_controller` error asserted in either runner carried an empty suggestion, and the branch that builds one has never been exercised by a spec. The ported test sets `global.NODE_ENV` for its duration and asserts the real message. _This is the branch [L1b3](#what-l1b3-found) predicted existed but did not name._
+
+### A fifth spec asserting on a collaborator instead of its subject
+
+`should(kuzzle.log.warn).be.not.called()` — the subject warns through `this.logger`, which is `global.kuzzle.log.child("core:security:roleRepository")`. `KuzzleMock`'s `child()` answers a **different** stub, so the assertion watched an object the subject never touches. It joins the four counted in [L2](#l2-is-closed). Two more of the same kind: `should(kuzzle.emit).not.be.called()`, twice in `#delete`, on a path where the subject never emits at all. The port replaces them with what the refusals actually owe — that nothing was looked up, and that nothing was deleted.
+
+### ⚠️ `checkRolePluginsRights` `return`s where it means `continue` — and that is a `lib/` defect
+
+```ts
+for (const roleController of Object.keys(role.controllers)) {
+  if (roleController === "*" || global.kuzzle.funnel.isNativeController(roleController)) {
+    return;                       // <- leaves the method, not the iteration
+  }
+  ...
+}
+```
+
+A role that grants rights on a native controller **and** a plugin controller has its plugin half validated only if the plugin controller is listed first. The Mocha spec's _"should skip non-plugins or wildcarded controllers"_ passed one controller at a time and could not see it. **Not changed here** — a porting slice leaves `lib/` alone (see the DoD), and this needs its own PR with its own regression test. Filed as a finding, not carried along.
+
+### Small things
+
+- Two `sinon` prefix-matches completed: `deleteFromDatabase(id)` is called with `(id, { refresh: "false" })`, and `persistToDatabase(role)` with `(role, options)`. Plus `validateAndSaveRole`'s second argument, which carries a `force` the three `calledWithMatch` assertions never mentioned.
+- `checkRoleNativeRights` and `checkRolePluginsRights` are **synchronous and return nothing**; two tests stubbed them with `.resolves()`.
+- `_kuzzle_info` is written by `_createOrReplace` and `update` and asserted by six tests, and `Role` does not declare it — the metadata rides on the DTO and the model never names it. The port says so in one alias rather than six casts.
+- `new NativeController()` binds `global.kuzzle.pipe` in its constructor, so a fixture that builds real controllers to ask them their actions needs `pipe` even though the subject never pipes anything.
+- The ten _"should register an X event"_ tests were written as `kuzzle.ask.restore()` — un-stubbing the mock mid-test to reach a real emitter underneath. `stubAsk`'s `ask`/`onAsk` pair answers them directly, which is what that helper's `answerers` map was built for; **L3a is its first user**.

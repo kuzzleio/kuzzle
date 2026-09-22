@@ -128,6 +128,9 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 4. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
 5. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
 
+6. **A `should` assertion can take arguments it silently drops.** `should(map).have.key(k, v)` reads `v` as a second key name and then ignores it, so a test that meant "the cache holds this role" only ever checked that a key existed — [L3a](steps/13-sprint-10-test-closure.md#what-l3a-found). `.key`/`.keys` is the third `should` API in this step whose extra argument is not what it looks like, after `sinon`'s prefix-matching and `calledWithMatch(stub, …)`. **The lesson is not about `should`**: it is that an assertion library which accepts anything cannot tell you when you have asserted nothing, and that is the whole reason the 23 + 1 dead assertions of this step were found by rewriting them rather than by running them.
+7. **A branch gated on `NODE_ENV === "development"` is a branch no unit suite has ever run.** `didYouMean` returns `""` under `NODE_ENV=test`, so every "did you mean" suggestion asserted in either runner was empty — found in [L3a](steps/13-sprint-10-test-closure.md#what-l3a-found) only because an empty `it` had to be given something real to say. Worth a grep for the other environment-gated branches before L7 claims the suite covers them.
+
 Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 
 Gated on 2026-09-16, and both were worth the hour:
