@@ -217,7 +217,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
-| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** `node` |
+| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
@@ -1635,3 +1635,81 @@ of spec become 230.
   empty tuple**, so `mock.calls[0][0]` is a compile error (`TS2493`). Declare
   the signature — `vi.fn<(a: A, b: B) => R>(...)` — on any stub whose arguments
   a spec reads. Third time in L4.
+
+## What L4c2 found — and L4c is closed
+
+**`mocha` 32 → 31**, vitest **2 205 → 2 284 tests** across **123 → 124 files**.
+One spec, 1 394 lines, 71 `it`s in and **79** out — the largest single file of
+L4, and the one with the most substitutions: six sibling modules plus `os`.
+
+### ⚠️ A `vi.mock` factory's result is cached per registration, not per registry
+
+The stubs live in `tests/cluster/nodeFixture.ts`, and the factories load them
+with `await import("./nodeFixture")`. The spec then read static state off that
+same file — the list of mutexes taken, the flag that makes
+`waitForSubscription` answer false.
+
+**It was reading a second copy.** `loadSubject()` calls `vi.resetModules()`, and
+a later `import("./nodeFixture")` after a reset answers a *fresh* module, while
+the factory keeps handing the subject the classes it resolved the first time.
+So the spec set a flag on one class and the subject consulted another, and read
+a mutex list that nothing had ever pushed to.
+
+Three tests failed, and the failure mode is the point: **an empty list and an
+unheeded flag both read as "the subject did nothing"**, which is exactly what
+two of those three tests were asserting the *absence* of. The rule: **after
+mocking a module, reach its stub through the mocked specifier**
+(`await import("../../lib/util/mutex")`), never through the file the factory
+loaded.
+
+### ⚠️ A test that never called the subject — a fifteenth form
+
+`#topology check`'s _"should do nothing if the cluster is consistent"_ built a
+consistent topology, and then asserted `kuzzle.shutdown` had not been called.
+It never called `enforceClusterConsistency()`. The assertion is true of a
+subject that was never asked anything, which is what it was testing.
+
+### `lib/`'s bare `os` import is now held in place by a Mocha-era reason
+
+`lib/cluster/node.ts` imports `assert`, `util`, `net` and `os` with **bare**
+specifiers and carries a comment saying why: `mock-require` keys on the literal
+specifier and would not see `require("node:os")`. `vi.mock` has the same
+constraint, so nothing changes here — but the reason is now about a runner this
+step is removing. **When [L7](#slices) deletes `mock-require`, those four can go
+back to their `node:` prefixes.** Filed, not done: a porting slice leaves `lib/`
+alone.
+
+### Three `it.each` tables out of twenty-seven `it`s
+
+The [block hash](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)
+had flagged four identical _"should synchronize roles creation"_ bodies and
+three more against another. They are all one shape — *this kuzzle event becomes
+that `publisher.send` topic* — and are now one table of twelve rows. The eight
+IP-selection cases, which the Mocha spec drove as eight `new ClusterNode()` in a
+**single** `it`, are eight tests: a failure now says which configuration broke.
+The seven network-split cases become two tables.
+
+### Small things
+
+- `SerializedIdCard` declares `id`, `ip`, `birthdate` and `topology` all
+  required, and the spec built partial ones in nineteen places — each test
+  naming only the fields it is about. Harmless at runtime; the defaults live in
+  one helper now.
+- The event bus is a fixture behaviour, not a field: `cluster/node` registers on
+  **four** buses (`on`/`emit`, `onAsk`/`ask`, `onCall`/`call`, `onPipe`/`pipe`),
+  and the only way to test a registration is to fire it. `tests/mocks/kuzzle.ts`
+  grows `stubBus()`, which backs all four with real registries — `emit` fans out
+  to every listener, the three request/response buses throw on an event nothing
+  registered.
+- `ClusterSubscriberMock.prototype.__waitForSubscription = false` … `delete`
+  became a static flag restored in a `finally`: a prototype property removed by
+  a `delete` on the happy path survives a failing test and leaks into the next.
+
+## L4c is closed
+
+**3 specs, 2 627 lines, `mocha` 34 → 31, vitest 2 129 → 2 284 tests.** Two PRs.
+Its own finding — the cached mock factory — is the third distinct way
+`vi.resetModules()` has cost this step a debugging session, after the write-once
+globals ([L4b2](#what-l4b2-found)) and `instanceof` ([L4a](#what-l4a-found)).
+**Next: L4d (plugin + validation, 4 specs / 3 882 lines), L4e (the strays, 11 /
+2 982).**
