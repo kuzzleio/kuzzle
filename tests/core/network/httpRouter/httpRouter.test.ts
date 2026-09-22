@@ -479,8 +479,8 @@ describe("core/network/httpRouter", () => {
         await import("../../../../lib/api/httpRoutes");
 
       const deprecated = httpRoutes
-        .filter((route: any) => route.deprecated)
-        .map((route: any) => route.deprecated);
+        .filter((entry: any) => entry.deprecated)
+        .map((entry: any) => entry.deprecated);
 
       expect(deprecated.length).toBeGreaterThan(0);
 
