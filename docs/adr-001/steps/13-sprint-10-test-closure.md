@@ -225,6 +225,29 @@ different stub per block — is rare: `network/accessLogger` (two different
 subject, and the mocking decision the whole slice turns on gets made once on the
 cheapest possible material.
 
+##### What each of the remaining 23 re-requires — the sweep [L4a](#what-l4a-found) asks for
+
+Every spec's `reRequire` targets, minus the modules it actually substitutes.
+What is left is **module state being reset**, which is the thing L4a found has
+nothing to do with mocking:
+
+| Class | Specs | Port |
+| --- | ---: | --- |
+| **Reset only — no substitution at all** | **3** (`validation/init`, `util/mutex`, `plugin/pluginsManager`) | `vi.resetModules()` and nothing else. They import `mock-require` purely to call `reRequire`; **`vi.mock` never appears in the port.** |
+| Substitution **and** reset of the subject | 18 | `vi.mock` at module level + the L4a fixture shape |
+| Substitution, **no** reset | **2** (`plugin/context/context`, `api/funnel/processRequest`) | ⚠️ `plugin/context` registers a `mutex` stub and never reloads anything — check whether the stub was ever reached before porting it faithfully. |
+
+Three pairs of specs share a subject and therefore a mirror, and must land in
+one PR each: `protocols/{http,websocket}` both reset `httpwsProtocol`;
+`storage/storageEngine`, `model/storage/baseModel` and `model/storage/apiKey`
+all reset `storageEngine` over a stubbed `clientAdapter`;
+`plugin/pluginsManager` and `api/funnel/processRequest` share the
+`pluginContext` / `privilegedContext` / `pluginsManager` trio.
+
+⚠️ **The sub-slice table above cuts `processRequest` (L4e) away from
+`pluginsManager` (L4d), and `storageEngine` is in L4e with its two model
+specs.** The first split is the one to revisit when L4d is opened.
+
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
 **Read L4, L5 and L6's line counts as the one thing they are not: a budget.** Their cost is not proportional to their size — that is the whole point of separating them from L1–L3 — and [step 12 K0](12-sprint-9-strict-flip.md#what-k0-found) is the precedent: its own estimate was low by a quarter because a per-class estimate under-counts whatever the class boundary cuts through. Re-measure before picking one up.
