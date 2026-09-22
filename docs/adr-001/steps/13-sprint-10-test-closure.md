@@ -217,8 +217,8 @@ different stub per block — is rare: `network/accessLogger` (two different
 | --------- | ----: | ----: | ------- |
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
-| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** `node` |
-| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date` |
+| **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** `plugin/context/context` · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
@@ -1635,3 +1635,275 @@ of spec become 230.
   empty tuple**, so `mock.calls[0][0]` is a compile error (`TS2493`). Declare
   the signature — `vi.fn<(a: A, b: B) => R>(...)` — on any stub whose arguments
   a spec reads. Third time in L4.
+
+## What L4c2 found — and L4c is closed
+
+**`mocha` 32 → 31**, vitest **2 205 → 2 284 tests** across **123 → 124 files**.
+One spec, 1 394 lines, 71 `it`s in and **79** out — the largest single file of
+L4, and the one with the most substitutions: six sibling modules plus `os`.
+
+### ⚠️ A `vi.mock` factory's result is cached per registration, not per registry
+
+The stubs live in `tests/cluster/nodeFixture.ts`, and the factories load them
+with `await import("./nodeFixture")`. The spec then read static state off that
+same file — the list of mutexes taken, the flag that makes
+`waitForSubscription` answer false.
+
+**It was reading a second copy.** `loadSubject()` calls `vi.resetModules()`, and
+a later `import("./nodeFixture")` after a reset answers a *fresh* module, while
+the factory keeps handing the subject the classes it resolved the first time.
+So the spec set a flag on one class and the subject consulted another, and read
+a mutex list that nothing had ever pushed to.
+
+Three tests failed, and the failure mode is the point: **an empty list and an
+unheeded flag both read as "the subject did nothing"**, which is exactly what
+two of those three tests were asserting the *absence* of. The rule: **after
+mocking a module, reach its stub through the mocked specifier**
+(`await import("../../lib/util/mutex")`), never through the file the factory
+loaded.
+
+### ⚠️ A test that never called the subject — a fifteenth form
+
+`#topology check`'s _"should do nothing if the cluster is consistent"_ built a
+consistent topology, and then asserted `kuzzle.shutdown` had not been called.
+It never called `enforceClusterConsistency()`. The assertion is true of a
+subject that was never asked anything, which is what it was testing.
+
+### `lib/`'s bare `os` import is now held in place by a Mocha-era reason
+
+`lib/cluster/node.ts` imports `assert`, `util`, `net` and `os` with **bare**
+specifiers and carries a comment saying why: `mock-require` keys on the literal
+specifier and would not see `require("node:os")`. `vi.mock` has the same
+constraint, so nothing changes here — but the reason is now about a runner this
+step is removing. **When [L7](#slices) deletes `mock-require`, those four can go
+back to their `node:` prefixes.** Filed, not done: a porting slice leaves `lib/`
+alone.
+
+### Three `it.each` tables out of twenty-seven `it`s
+
+The [block hash](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)
+had flagged four identical _"should synchronize roles creation"_ bodies and
+three more against another. They are all one shape — *this kuzzle event becomes
+that `publisher.send` topic* — and are now one table of twelve rows. The eight
+IP-selection cases, which the Mocha spec drove as eight `new ClusterNode()` in a
+**single** `it`, are eight tests: a failure now says which configuration broke.
+The seven network-split cases become two tables.
+
+### Small things
+
+- `SerializedIdCard` declares `id`, `ip`, `birthdate` and `topology` all
+  required, and the spec built partial ones in nineteen places — each test
+  naming only the fields it is about. Harmless at runtime; the defaults live in
+  one helper now.
+- The event bus is a fixture behaviour, not a field: `cluster/node` registers on
+  **four** buses (`on`/`emit`, `onAsk`/`ask`, `onCall`/`call`, `onPipe`/`pipe`),
+  and the only way to test a registration is to fire it. `tests/mocks/kuzzle.ts`
+  grows `stubBus()`, which backs all four with real registries — `emit` fans out
+  to every listener, the three request/response buses throw on an event nothing
+  registered.
+- `ClusterSubscriberMock.prototype.__waitForSubscription = false` … `delete`
+  became a static flag restored in a `finally`: a prototype property removed by
+  a `delete` on the happy path survives a failing test and leaks into the next.
+
+## L4c is closed
+
+**3 specs, 2 627 lines, `mocha` 34 → 31, vitest 2 129 → 2 284 tests.** Two PRs.
+Its own finding — the cached mock factory — is the third distinct way
+`vi.resetModules()` has cost this step a debugging session, after the write-once
+globals ([L4b2](#what-l4b2-found)) and `instanceof` ([L4a](#what-l4a-found)).
+**Next: L4d (plugin + validation, 4 specs / 3 882 lines), L4e (the strays, 11 /
+2 982).**
+
+## What L4d1 found
+
+**`mocha` 31 → 30**, vitest **2 284 → 2 382 tests** across **124 → 125 files**.
+One spec, 476 lines, **98 `it`s in and 98 out** — the format table is the same
+75 entries, checked key by key.
+
+### ⚠️ A sixth conditional substitution the sizing did not list — and it was not one
+
+The [sizing](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)
+named five specs as *genuinely conditional* — `accessLogger`, `protocols/http`,
+`protocols/mqtt`, `internalIndexHandler`, `cluster/node`. **`validation/types/date`
+is a sixth and is not on the list**, because the grep behind that count reads
+the file's `mockrequire(…)` calls and this spec makes exactly **one**: a single
+registration, in the `before` of a *nested* describe. One call looks
+unconditional; *where* it sits is what makes it conditional. The spec's first
+three blocks run against the real `moment` and `#formatMap` alone re-requires
+the subject against a total stub. **Four times now in this step a count taken by
+grep has been wrong about the thing it was counting** — after
+[L3e](#what-l3e-found)'s `globalThis.kuzzle`, [L3f](#what-l3f-found)'s
+single-quoted `it` names and [L4's own sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)
+misreading `pluginContext`'s template literal.
+
+**It does not need to.** What `#formatMap` asserts is *which arguments each of
+the 75 formats hands `moment.utc`* — a question a **spy** answers. The Mocha
+spec had to phrase it as "replace the module, then reload everything that
+imports it" only because `mock-require` swaps a module wholesale: there is no
+smaller unit. So one `vi.mock` over `moment` whose three functions
+(`utc`, `invalid`, `unix`) are spies **delegating to the real implementation**
+serves every block in the file, and the re-require disappears.
+
+The one thing `#formatMap` genuinely needs is a **return** it controls —
+`"1234567890"` parses as a valid date under almost none of the 75 formats, and
+each test asserts that no error was recorded — so it pins the return value in
+its own `beforeEach` and `passThrough()` puts the real implementation back
+after it. A `describe`-scoped `mockReturnValue`, which is the vitest way of
+saying "conditional".
+
+This is [L4b1](#what-l4b1-found)'s finding from the other direction: there, two
+`pino` registrations turned out to be **one stub**; here, one registration turns
+out **not to be a stub at all**. Both times the Mocha idiom had inflated a
+narrow need into a whole-module swap, and both times the port is smaller than
+the original. **Of the conditional swaps this slice has reached so far —
+`accessLogger`, `protocols/http`, `protocols/mqtt`, `cluster/node` and now
+`date` — not one has needed a conditional `vi.mock`.** `internalIndexHandler`
+(L4e) is the last one left to check.
+
+### The mock is a `Proxy`, not a copy
+
+`moment` carries far more than the subject uses — `ISO_8601`, the locale
+machinery, the `Moment` prototype every returned object is built from — and a
+spread flattens exactly the parts that are not plain data. The factory returns
+a `Proxy` over the real module that answers the three spied names and forwards
+everything else, so `moment.ISO_8601` is the **real** sentinel. The Mocha spec
+could only compare that one format against its own `"ISO_8601_MOCK"` string.
+
+### ⚠️ `DateTypeOptions` describes the output and is used for the input — [TD-75](../type-debt-register.md#td-75)
+
+Eight TS2322s, all of the same shape: `DateRangeBound` is `Moment | "NOW"` —
+the shape `validateFieldSpecification` *returns*, after converting the bounds
+in place — and the same type names its **input**, where a moment is exactly
+what a caller does not have yet. Every fixture that exercises the conversion
+fails to type-check against the method whose job is to perform it.
+
+Filed, not fixed: widening the bound makes `checkRange`'s `max.isBefore(...)`
+illegal, which is a `lib/` change with its own coverage consequences, and a
+test-porting slice leaves `lib/` alone — the same line [TD-74](../type-debt-register.md#td-74)
+drew. The spec names the cast `specification()` and points at the entry.
+
+### Small things
+
+- The two `done`-driven tests — *"should call `moment.utc` if min/max equals
+  the string `NOW`"* — are one `it.each`-style loop over `min`/`max` now, and
+  they do not need [`settle`](../../../tests/helpers/settle.ts): nothing calls
+  back, the 100 ms wait is the test. What they check is worth naming, so they
+  are: *resolves `"NOW"` at validation time, not at specification time*.
+- The rejected fixtures each `it` already carried as two or three repeated
+  `should(() => …).throw(…)` calls — `formats: []` / `null`, `range: null` /
+  `[]` / `{ unknown }`, an invalid `min` / `max` — are loops over their inputs
+  now, so a failure says *which* value was accepted. The `it` count is
+  unchanged by that: 23 literal `it(`s become **22**, the one difference being
+  the `NOW` pair above, for the same **98** tests.
+
+## What L4d2 found
+
+**`mocha` 30 → 29**, vitest **2 382 → 2 433 tests** across **125 → 126 files**.
+One spec, 1 198 lines, 50 `it`s in and **51** out. The port is
+`tests/core/validation/validation.test.ts` — the Mocha file was named after a
+method (`init`) rather than after its subject, and it tests nine of them.
+
+### ⚠️ The "reset only" classification was right about the outcome and wrong about the spec
+
+[The sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)
+put `validation/init` in the class *"reset only — no substitution at all …
+`vi.mock` never appears in the port"*. `vi.mock` indeed never appears. But the
+spec **does** substitute — thirteen modules at once:
+
+```js
+["anything", "boolean", "date", …].forEach((fileName) => {
+  mockRequire("../../../lib/core/validation/types/" + fileName, validationStub);
+});
+```
+
+a **concatenated specifier**, which the sweep's regex — looking for a quoted
+string — does not see. That is the same failure mode as
+[`pluginContext`'s template literal](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for),
+in the same sweep, and the **fifth** count this step has taken by grep that was
+wrong about the thing it was counting.
+
+### The thirteen-module swap was proving something directly observable
+
+What that test asserted was *the stub was constructed thirteen times, and
+`addType` was called thirteen times*. Two counts, and nothing about **which**
+types were registered — it could not say more, because every type was the same
+anonymous stub.
+
+`init()` fills `validation.types`, keyed by each type's own `typeName`. So the
+port asserts the thirteen **names**, which tests `init` *and* `addType` against
+the public surface, needs no mock at all, and catches a type dropped from
+`BUILT_IN_TYPES` — something the call count would have reported only as
+"twelve". A second test pins `typeAllowsChildren`, which is the other half of
+what `init` does and which nothing asserted.
+
+**The generalisable part:** the sweep asks *what does this `reRequire` reset*.
+The question that dissolved this one is the next one along — **what is the
+substitution proving, and can the subject be asked directly?**
+
+### ⚠️ Ten arrangement lines wired to nothing
+
+`#curateCollectionSpecification` opens with `const checkAllowedPropertiesStub =
+sinon.stub();` and then calls `checkAllowedPropertiesStub.returns(true)` or
+`.returns(false)` in **ten** of its eleven tests. The stub is never attached to
+anything. `checkAllowedProperties` is a module-private *function* in
+`validation.ts`, not a method — it was never stubbable, in either runner — so
+every one of those tests has always run against the real check, including the
+two that set it to `false` and then assert the rejection the real check
+produces anyway. Deleted.
+
+### ⚠️ A sixteenth dead-assertion form: assertions that only run in a `catch`
+
+All six of `#addType`'s rejection tests were written as
+
+```js
+try {
+  validation.addType(validationType);
+} catch (error) {
+  should(error.id).be.eql("validation.types.missing_type_name");
+}
+```
+
+**A subject that accepted the type passes every one of them.** It is the first
+form on this step's list that is a control-flow shape rather than a weak
+matcher, and it is the most complete: there is no assertion at all on the path
+that matters.
+
+### ⚠️ And one test that was already on the wrong side of it
+
+`"should reject an error if the field specification returns an error in verbose
+mode"` asserted inside a `.catch(error => …)` on a promise the subject
+**resolves** — answering the errors instead of throwing is the entire point of
+verbose mode — so the callback never ran. Its three assertions described an
+`error.details` array no path in `validation.ts` produces. The port asserts what
+the subject answers.
+
+### `internalIndex.search`, not an `ask` answerer
+
+The Mocha spec arranged `kuzzle.ask.withArgs("core:storage:private:document:search")`,
+an event the subject never names: `getValidationConfiguration` calls
+`global.kuzzle.internalIndex.search`, and `internalIndex` is a `Store` whose
+methods are *generated* as calls onto that bus. The arrangement was live, but
+only through a `KuzzleMock` whose `internalIndex` subclasses the real `Store` —
+two indirections that both had to be right for the fixture to reach the subject.
+The port stubs the method the subject calls.
+
+### `stubLogger` is promoted to `tests/mocks/kuzzle.ts`
+
+Three specs had already written the same seven-line `kuzzle-logger` stub
+locally ([L3a](#what-l3a-found), [L3b](#what-l3b-found), [L3e](#what-l3e-found));
+this would have been the fourth. It is one export now, and the fixture's own
+default logger is the same spied object — a subject that logs its way past a
+failure has said something, and the only place it said it is there.
+
+### Small things
+
+- Four `it` names covered eleven tests: *"should throw an error if the
+  multivalued field is malformed"* named **five**, and three more named two
+  each. The five malformed cases plus the non-boolean `value` are one
+  `it.each` table of six rows now, so a failure says which shape was accepted.
+- **Eleven assertions were pinned on the literal string
+  `"undefined.undefined.undefined"`** — `curateFieldSpecificationFormat` takes
+  an index, a collection and a field name, and the spec called it with none of
+  them, so its error messages named three missing arguments. TypeScript refuses
+  that call (the three are `string`), and naming them makes the assertions about
+  the message rather than about the absence of the arguments.

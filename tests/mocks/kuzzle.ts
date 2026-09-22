@@ -61,17 +61,23 @@ function readGlobal(property: "kuzzle" | "nodeId"): unknown {
   }
 }
 
-/** A logger whose `child()` returns another one, as `kuzzle-logger` does. */
-function stubLogger(): JSONObject {
-  const logger: JSONObject = {
-    debug: () => {},
-    error: () => {},
-    info: () => {},
-    trace: () => {},
-    warn: () => {},
+/**
+ * A `kuzzle-logger` whose `child()` answers the same spied instance.
+ *
+ * Spied because a subject that logs its way past a failure — a specification
+ * that does not curate, a plugin pipe that threw — has said something, and the
+ * only place it said it is here. Four specs had written this same object
+ * locally before it was worth promoting.
+ */
+export function stubLogger() {
+  const logger = {
+    child: () => logger,
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    trace: vi.fn(),
+    warn: vi.fn(),
   };
-
-  logger.child = () => logger;
 
   return logger;
 }
@@ -161,4 +167,68 @@ export function restoreKuzzle(): void {
   define("kuzzle", previous.kuzzle);
   define("nodeId", previous.nodeId);
   previous = null;
+}
+
+/**
+ * The whole event surface of `global.kuzzle`, backed by real registries.
+ *
+ * {@link stubAsk} answers the `onAsk`/`ask` pair; a subject that *registers*
+ * listeners on several buses at once — `cluster/node` registers on four — needs
+ * all of them to behave, because the only way to test a registration is to
+ * fire it.
+ *
+ * `on`/`emit` allows several listeners per event, as an emitter does.
+ * `onAsk`, `onCall` and `onPipe` are one answerer per event, as Kuzzle's are.
+ * Firing an event nothing registered is a no-op for `emit` and a throw for the
+ * three request/response buses, so a spec that grows a dependency says so.
+ */
+export function stubBus() {
+  const listeners = new Map<string, ((...args: any[]) => unknown)[]>();
+  const answerers = new Map<string, (...args: any[]) => unknown>();
+
+  const answer =
+    (kind: string) =>
+    (event: string, ...args: unknown[]) => {
+      const answerer = answerers.get(`${kind}:${event}`);
+
+      if (!answerer) {
+        throw new Error(`unexpected ${kind}("${event}")`);
+      }
+
+      return answerer(...args);
+    };
+
+  const register =
+    (kind: string) => (event: string, fn: (...args: any[]) => unknown) => {
+      answerers.set(`${kind}:${event}`, fn);
+    };
+
+  return {
+    answerers,
+    listeners,
+
+    on: vi.fn((event: string, fn: (...args: any[]) => unknown) => {
+      listeners.set(event, [...(listeners.get(event) ?? []), fn]);
+    }),
+    emit: vi.fn((event: string, ...args: unknown[]) => {
+      for (const fn of listeners.get(event) ?? []) {
+        fn(...args);
+      }
+    }),
+
+    onAsk: vi.fn(register("ask")),
+    ask: vi.fn(async (event: string, ...args: unknown[]) =>
+      answer("ask")(event, ...args),
+    ),
+
+    onCall: vi.fn(register("call")),
+    call: vi.fn((event: string, ...args: unknown[]) =>
+      answer("call")(event, ...args),
+    ),
+
+    onPipe: vi.fn(register("pipe")),
+    pipe: vi.fn(async (event: string, ...args: unknown[]) =>
+      answer("pipe")(event, ...args),
+    ),
+  };
 }

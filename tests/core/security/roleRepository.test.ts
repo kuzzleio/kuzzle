@@ -10,7 +10,12 @@ import { PreconditionError } from "../../../lib/kerror/errors/preconditionError"
 import kuzzleStateEnum from "../../../lib/kuzzle/kuzzleStateEnum";
 import { Role } from "../../../lib/model/security/role";
 import { invalid } from "../../helpers/invalid";
-import { restoreKuzzle, stubAsk, stubKuzzle } from "../../mocks/kuzzle";
+import {
+  restoreKuzzle,
+  stubAsk,
+  stubKuzzle,
+  stubLogger,
+} from "../../mocks/kuzzle";
 
 /**
  * `_kuzzle_info` is written by `_createOrReplace` and `update` and read back by
@@ -26,20 +31,6 @@ type RoleWithMeta = Role & {
     updater?: string | null;
   };
 };
-
-/** A `kuzzle-logger` whose `child()` answers the same spied instance. */
-function stubLogger() {
-  const logger = {
-    child: () => logger,
-    debug: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    trace: vi.fn(),
-    warn: vi.fn(),
-  };
-
-  return logger;
-}
 
 /** A role with an `_id`, which the constructor deliberately leaves unset. */
 function roleNamed(id: string, controllers: Role["controllers"] = {}): Role {
