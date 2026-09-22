@@ -182,7 +182,7 @@ converted, and the sixth needs no fixture at all.
 | **L3a** ✅ ([#2820](https://github.com/kuzzleio/kuzzle/pull/2820)) | `core/security/roleRepository` | 1 046 | 54 | `profileRepository`, `userRepository`, `shared/repository` ([L2b](#what-l2b-found)) |
 | **L3b** ✅ ([#2821](https://github.com/kuzzleio/kuzzle/pull/2821)) | `api/controllers/securityController/users` | 1 390 | 69 | `securityController/{profiles,roles}` ([L2e](#what-l2e-found--and-l2-is-closed)) |
 | **L3c** ✅ ([#2822](https://github.com/kuzzleio/kuzzle/pull/2822)) | `api/request/request` | 1 378 | 131 | `request/requestResponse` ([L2e](#what-l2e-found--and-l2-is-closed)) |
-| **L3d** | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
+| **L3d** ✅ | `api/documentExtractor` | 1 484 | 57 | nothing — the only one of the six that is **codemod-shaped** |
 | **L3e** | `api/controllers/authController` | 1 836 | 71 | the five controllers of [L2d](#what-l2d-found) |
 | **L3f** | `api/controllers/documentController` | 2 143 | 90 | idem |
 
@@ -841,7 +841,35 @@ should(getStub).calledWithMatch(getStub, request.input.args._id);
 
 _None of the 23 dead assertions was found by running the suite_ — they are green in both runners. They were found by writing the assertion a second time, in a language that checks it.
 
-**What is left: L3d–L3f (3 specs / 5 463 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+**What is left: L3e–L3f (2 specs / 3 979 lines), L4 (34 / 14 128), L5 (2 / 12 431), L6 (14 / 6 319), then L7's closure.** ⚠️ **5 of L3's 6 are `KuzzleMock`-based**, so L3 is fixture work too, at a size where each spec is its own PR.
+
+## What L3d found
+
+**`mocha` 53 → 52**, vitest **1 693 → 1 750 tests** across **104 → 105 files**. One spec, **1 484 lines in, 465 out**, 57 `it`s in and 57 out.
+
+### Sixteen `describe` blocks, nine shapes
+
+The spec read as sixteen actions, one block each. Hashing each block with its own action name normalised away says otherwise:
+
+| Shape | Actions | Lines each |
+| --- | --- | ---: |
+| one document in `_id` + `body` | `create`, `createOrReplace`, `replace`, `update` | 84 |
+| many in `body.documents`, out via `result.successes` | `mCreate`, `mCreateOrReplace`, `mReplace`, `mUpdate` | 154 |
+| one document, `_id` only | `delete`, `get` | 53 |
+| one-offs | `updateByQuery`, `mDelete`, `mGet`, `search`, `deleteByQuery` | 63–91 |
+
+**Four blocks were byte-identical to each other, and so were another four** — those three differed from `mCreate` only in having lost the word "should" from three test names, which is the whole diff across 462 lines. Stating a shape once and naming the actions that share it is [L1b4](#what-l1b4-found)'s `esWrapper` move at eight times the scale: **the duplication was in the spec, not in the subject**, so there is nothing to add to `sonar.cpd.exclusions` and nothing for a reader to diff by eye.
+
+**57 tests in, 57 out** — each action still runs every case of its shape. What goes is 1 019 lines of copy.
+
+### The one real difference the copies hid
+
+`updateByQuery`, `search` and `deleteByQuery` have **no request-side extractor** — they are in `documentEventAliases.notBefore`, so the "before" pass never asks for one, and their blocks carry two tests where the write actions carry four. That is a genuine asymmetry in the subject, and in the Mocha spec it was indistinguishable from the ~1 000 lines of copy around it. Naming the shapes is what makes it visible.
+
+### Small things
+
+- `#mGet`'s last test wrapped its `ids` in an `args` key, which lands as `input.args.args`; what actually selects the argument branch is the **empty body**. The test passed for the right reason by accident. Written as it reads now.
+- The Mocha spec used `new DocumentExtractor(req)` as a bare statement to assert its constructor throws — `no-new` in the vitest tree, so the port names the thunk.
 
 ## What L3c found
 
