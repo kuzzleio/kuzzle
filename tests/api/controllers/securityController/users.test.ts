@@ -11,7 +11,7 @@ import { SizeLimitError } from "../../../../lib/kerror/errors/sizeLimitError";
 import * as kerror from "../../../../lib/kerror";
 import { User } from "../../../../lib/model/security/user";
 import { invalid } from "../../../helpers/invalid";
-import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
+import { restoreKuzzle, stubKuzzle, stubLogger } from "../../../mocks/kuzzle";
 
 /**
  * `anonymousId` and `getStrategyMethod` are `protected` on the controller and
@@ -30,20 +30,6 @@ type Internals = {
 
 const internalsOf = (controller: SecurityController) =>
   invalid<Internals>(controller);
-
-/** A `kuzzle-logger` whose `child()` answers the same spied instance. */
-function stubLogger() {
-  const logger = {
-    child: () => logger,
-    debug: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    trace: vi.fn(),
-    warn: vi.fn(),
-  };
-
-  return logger;
-}
 
 describe("#api/controllers/securityController — users", () => {
   let controller: SecurityController;

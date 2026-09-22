@@ -13,27 +13,13 @@ import { UnauthorizedError } from "../../../lib/kerror/errors/unauthorizedError"
 import { Token } from "../../../lib/model/security/token";
 import { User } from "../../../lib/model/security/user";
 import { invalid } from "../../helpers/invalid";
-import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
 
 /** The cookie every `cookieAuth` path writes, with its token interpolated. */
 const setCookie = (token: string) =>
   new RegExp(
     `^authToken=${token}; Path=/; Expires=[^;]+; HttpOnly; SameSite=Strict$`,
   );
-
-/** A `kuzzle-logger` whose `child()` answers the same instance. */
-function stubLogger() {
-  const logger = {
-    child: () => logger,
-    debug: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    trace: vi.fn(),
-    warn: vi.fn(),
-  };
-
-  return logger;
-}
 
 describe("#api/controllers/authController", () => {
   let controller: AuthController;

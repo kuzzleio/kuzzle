@@ -218,7 +218,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
-| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** `validation/init` · **d3** `plugin/context/context` · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` · **d3** `plugin/context/context` · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
@@ -1795,3 +1795,115 @@ drew. The spec names the cast `specification()` and points at the entry.
   now, so a failure says *which* value was accepted. The `it` count is
   unchanged by that: 23 literal `it(`s become **22**, the one difference being
   the `NOW` pair above, for the same **98** tests.
+
+## What L4d2 found
+
+**`mocha` 30 → 29**, vitest **2 382 → 2 433 tests** across **125 → 126 files**.
+One spec, 1 198 lines, 50 `it`s in and **51** out. The port is
+`tests/core/validation/validation.test.ts` — the Mocha file was named after a
+method (`init`) rather than after its subject, and it tests nine of them.
+
+### ⚠️ The "reset only" classification was right about the outcome and wrong about the spec
+
+[The sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)
+put `validation/init` in the class *"reset only — no substitution at all …
+`vi.mock` never appears in the port"*. `vi.mock` indeed never appears. But the
+spec **does** substitute — thirteen modules at once:
+
+```js
+["anything", "boolean", "date", …].forEach((fileName) => {
+  mockRequire("../../../lib/core/validation/types/" + fileName, validationStub);
+});
+```
+
+a **concatenated specifier**, which the sweep's regex — looking for a quoted
+string — does not see. That is the same failure mode as
+[`pluginContext`'s template literal](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for),
+in the same sweep, and the **fifth** count this step has taken by grep that was
+wrong about the thing it was counting.
+
+### The thirteen-module swap was proving something directly observable
+
+What that test asserted was *the stub was constructed thirteen times, and
+`addType` was called thirteen times*. Two counts, and nothing about **which**
+types were registered — it could not say more, because every type was the same
+anonymous stub.
+
+`init()` fills `validation.types`, keyed by each type's own `typeName`. So the
+port asserts the thirteen **names**, which tests `init` *and* `addType` against
+the public surface, needs no mock at all, and catches a type dropped from
+`BUILT_IN_TYPES` — something the call count would have reported only as
+"twelve". A second test pins `typeAllowsChildren`, which is the other half of
+what `init` does and which nothing asserted.
+
+**The generalisable part:** the sweep asks *what does this `reRequire` reset*.
+The question that dissolved this one is the next one along — **what is the
+substitution proving, and can the subject be asked directly?**
+
+### ⚠️ Ten arrangement lines wired to nothing
+
+`#curateCollectionSpecification` opens with `const checkAllowedPropertiesStub =
+sinon.stub();` and then calls `checkAllowedPropertiesStub.returns(true)` or
+`.returns(false)` in **ten** of its eleven tests. The stub is never attached to
+anything. `checkAllowedProperties` is a module-private *function* in
+`validation.ts`, not a method — it was never stubbable, in either runner — so
+every one of those tests has always run against the real check, including the
+two that set it to `false` and then assert the rejection the real check
+produces anyway. Deleted.
+
+### ⚠️ A sixteenth dead-assertion form: assertions that only run in a `catch`
+
+All six of `#addType`'s rejection tests were written as
+
+```js
+try {
+  validation.addType(validationType);
+} catch (error) {
+  should(error.id).be.eql("validation.types.missing_type_name");
+}
+```
+
+**A subject that accepted the type passes every one of them.** It is the first
+form on this step's list that is a control-flow shape rather than a weak
+matcher, and it is the most complete: there is no assertion at all on the path
+that matters.
+
+### ⚠️ And one test that was already on the wrong side of it
+
+`"should reject an error if the field specification returns an error in verbose
+mode"` asserted inside a `.catch(error => …)` on a promise the subject
+**resolves** — answering the errors instead of throwing is the entire point of
+verbose mode — so the callback never ran. Its three assertions described an
+`error.details` array no path in `validation.ts` produces. The port asserts what
+the subject answers.
+
+### `internalIndex.search`, not an `ask` answerer
+
+The Mocha spec arranged `kuzzle.ask.withArgs("core:storage:private:document:search")`,
+an event the subject never names: `getValidationConfiguration` calls
+`global.kuzzle.internalIndex.search`, and `internalIndex` is a `Store` whose
+methods are *generated* as calls onto that bus. The arrangement was live, but
+only through a `KuzzleMock` whose `internalIndex` subclasses the real `Store` —
+two indirections that both had to be right for the fixture to reach the subject.
+The port stubs the method the subject calls.
+
+### `stubLogger` is promoted to `tests/mocks/kuzzle.ts`
+
+Three specs had already written the same seven-line `kuzzle-logger` stub
+locally ([L3a](#what-l3a-found), [L3b](#what-l3b-found), [L3e](#what-l3e-found));
+this would have been the fourth. It is one export now, and the fixture's own
+default logger is the same spied object — a subject that logs its way past a
+failure has said something, and the only place it said it is there.
+
+### Small things
+
+- Four `it` names covered eleven tests: *"should throw an error if the
+  multivalued field is malformed"* named **five**, and three more named two
+  each. The five malformed cases plus the non-boolean `value` are one
+  `it.each` table of six rows now, so a failure says which shape was accepted.
+- **Eleven assertions were pinned on the literal string
+  `"undefined.undefined.undefined"`** — `curateFieldSpecificationFormat` takes
+  an index, a collection and a field name, and the spec called it with none of
+  them, so its error messages named three missing arguments. TypeScript refuses
+  that call (the three are `string`), and naming them makes the assertions about
+  the message rather than about the absence of the arguments.

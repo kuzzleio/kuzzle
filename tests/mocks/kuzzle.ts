@@ -61,17 +61,23 @@ function readGlobal(property: "kuzzle" | "nodeId"): unknown {
   }
 }
 
-/** A logger whose `child()` returns another one, as `kuzzle-logger` does. */
-function stubLogger(): JSONObject {
-  const logger: JSONObject = {
-    debug: () => {},
-    error: () => {},
-    info: () => {},
-    trace: () => {},
-    warn: () => {},
+/**
+ * A `kuzzle-logger` whose `child()` answers the same spied instance.
+ *
+ * Spied because a subject that logs its way past a failure — a specification
+ * that does not curate, a plugin pipe that threw — has said something, and the
+ * only place it said it is here. Four specs had written this same object
+ * locally before it was worth promoting.
+ */
+export function stubLogger() {
+  const logger = {
+    child: () => logger,
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    trace: vi.fn(),
+    warn: vi.fn(),
   };
-
-  logger.child = () => logger;
 
   return logger;
 }
