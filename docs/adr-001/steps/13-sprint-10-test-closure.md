@@ -124,7 +124,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
-| **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
+| **L6**     | The **`rewire` specs** — **12** since [L4e2](#what-l4e2-found) deleted two of them as already-ported duplicates                                                                                                                                                                                                      | **12** |  **6 070** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
 ### Re-measured on `2-dev` after L1b (2026-09-21, `089ef8160`)
@@ -138,7 +138,7 @@ The table above is the plan as it stood at 148 specs. L1b closed at **84 specs /
 | Clean, > 1 000 lines               |     6 |  9 277 | **L3** (unchanged)                       |
 | `mock-require`, minus the ES twins |    34 | 14 128 | **L4** (unchanged)                       |
 | The two Elasticsearch twins        |     2 | 12 431 | **L5** (unchanged)                       |
-| `rewire`                           |    14 |  6 319 | **L6** (unchanged)                       |
+| `rewire`                           |    12 |  6 083 | **L6** (−2: [L4e2](#what-l4e2-found))    |
 | **Total**                          | **84** | **53 920** |                                      |
 
 L2 is therefore **28 specs / 11 765 lines**, not 29 / 12 995. The three strays are `core/auth/passportResponse` (26), `util/memoize` (61) and `kuzzle/vault` (178) — under 200 lines, no KuzzleMock, no `mock-require`, no `rewire`: they fit L1's axis and were missed by it. _A fourth demonstration that a slice's axis is a hypothesis;_ here the cost is three cheap files rather than a re-cut.
@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 10 | 2 560 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** `model/storage/{baseModel,apiKey}` + `core/storage/storageEngine` (they share the `clientAdapter` → `storageEngine` substitution) · **e3** `kuzzle/internalIndexHandler` (the conditional one) · **e4** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates**, `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** `model/storage/{baseModel,apiKey}` · **e4** `kuzzle/internalIndexHandler` (the conditional one) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2192,3 +2192,60 @@ Both are pinned as they are — the message asserted verbatim, `500` asserted as
   for that precedence and nothing asserted it.
 - **A single limit that is not a number.** The Mocha spec only replaced the
   whole `limits` section; each limit is read through a guard of its own.
+
+## What L4e2 found
+
+**`mocha` 25 → 22** and **[L6](#slices) 14 → 12**, with no port written: three of
+the Mocha specs this step counted as remaining work **were already ported, and
+the original was never deleted**.
+
+| Mocha spec | vitest twin | since |
+| --- | --- | --- |
+| `test/core/storage/storageEngine.test.js` (2 `it`s) | `tests/core/storage/storageEngine.test.ts` (5) | `c49d3214f`, _"vitest specs for the converted lib/core modules"_ |
+| `test/core/shared/abstractManifest.test.js` (9) | `tests/core/shared/abstractManifest.test.ts` (10) | `c7fcc84ba`, [L1b3](#what-l1b3-found) |
+| `test/core/shared/sdk/impersonatedSdk.test.js` (4) | `tests/core/shared/sdk/impersonatedSdk.test.ts` (8) | `555264df9` |
+
+Each twin covers strictly more than its original, **except one case**:
+`abstractManifest`'s _"should throw if kuzzleVersion is not a string"_, which
+feeds `semver.satisfies` a range it cannot parse and gets a mismatch rather
+than a type error. It is now a test of the vitest spec, and the three Mocha
+files are deleted.
+
+**Two of the three are `rewire` specs**, so L6 — [budgeted as redesigns rather
+than ports](#slices) — loses two of its fourteen before it opens.
+
+### ⚠️ The count was never wrong; nothing was ever asked to compare the two trees
+
+The step's inventory is `find test -type f -name '*.test.js'`, which is exactly
+what the `mocha` ratchet counts, and it is the right question for _"how much
+Mocha is left"_. It is the wrong question for _"how much work is left"_, and
+nothing else asked: the vitest tree is addressed by [`specTarget()`](#slices)
+from spec to **subject**, never from subject back to spec, so a subject with
+two specs is invisible in both directions.
+
+The check is one line and worth keeping for the rest of the step:
+
+```bash
+for f in $(find test -name '*.test.js'); do
+  t="tests/${f#test/}"; [ -f "${t%.js}.ts" ] && echo "DUPLICATE $f"
+done
+```
+
+It is the same shape as [L3d](#what-l3d-found)'s block hash and as the
+[unmirrored-spec warning](#slices): **this step keeps finding that its own
+inventory is a `find` nobody cross-checked.**
+
+### ⚠️ `build:tests` never cleaned its output, so a deleted spec kept passing
+
+Deleting the three files and running `npm run test:unit:mocha` reported
+**804 passing** — the same count as before the deletion. `.mocharc` globs
+`./dist/test/**/*.test.js` and `build:tests` was a bare `tsc -p`, which emits
+over the previous output without removing anything: the compiled copies of the
+three deleted specs were still there, and still ran. After `rm -rf dist/test`,
+789 — the 15 tests that had just been deleted.
+
+CI never saw it (a fresh checkout has no `dist/`), and it is invisible in the
+direction that matters least: a spec that is deleted keeps *passing*. `npm run
+build:tests` now removes `dist/test` and `dist/tests` first. ⚠️ **Every slice
+of this step deletes specs, so every local Mocha run before this one was
+reporting a stale count.**

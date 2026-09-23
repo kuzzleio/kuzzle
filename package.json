@@ -5,7 +5,7 @@
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
     "build": "rm -Rf ./dist && tsc && node -r ts-node/register/transpile-only ./bin/copy-binaries.ts",
-    "build:tests": "tsc -p tsconfig.tests.json",
+    "build:tests": "rm -Rf ./dist/test ./dist/tests && tsc -p tsconfig.tests.json",
     "cucumber": "cucumber.js --fail-fast",
     "dev": "tsx watch start-kuzzle-dev.ts",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
