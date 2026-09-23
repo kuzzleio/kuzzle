@@ -1,1 +1,5 @@
-{ "name": "invalid-errors", "version": "1.0.0", "main": "index.cjs" }
+{
+  "name": "invalid-errors",
+  "version": "1.0.0",
+  "main": "index.cjs"
+}
