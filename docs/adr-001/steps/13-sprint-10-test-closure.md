@@ -404,16 +404,16 @@ assertions** ([L0](#what-l0-found)), so a sub-slice still owes the Mocha spec's
 _tests_, per the [DoD](#definition-of-done-per-pr). `didYouMean.ts`'s 100% is
 incidental — its callers load it; no vitest spec asserts it.
 
-| Sub-slice               | Specs | Lines | Content                                                                                           |
-| ----------------------- | ----: | ----: | ------------------------------------------------------------------------------------------------- |
-| **L6a** ✅ (PR pending) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
-| **L6b**                 |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
-| **L6c**                 |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
-| **L6d**                 |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
-| **L6e**                 |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
-| **L6f**                 |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
-| **L6g**                 |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
-| **L6h**                 |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
+| Sub-slice                                                          | Specs | Lines | Content                                                                                           |
+| ------------------------------------------------------------------ | ----: | ----: | ------------------------------------------------------------------------------------------------- |
+| **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
+| **L6b**                                                            |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
+| **L6c**                                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
+| **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
+| **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
+| **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
+| **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
+| **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
 1 611 + 857 + 520 = **6 083**. Ordered cheapest first so the ratchet moves in
