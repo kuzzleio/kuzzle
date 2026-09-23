@@ -413,7 +413,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6e** ✅ ([#2859](https://github.com/kuzzleio/kuzzle/pull/2859)) |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f** ✅ ([#2860](https://github.com/kuzzleio/kuzzle/pull/2860)) |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
 | **L6g** ✅ ([#2861](https://github.com/kuzzleio/kuzzle/pull/2861)) |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
-| **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
+| **L6h** ✅ (PR pending)                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
 1 611 + 857 + 520 = **6 083**. Ordered cheapest first so the ratchet moves in
@@ -2745,6 +2745,69 @@ deletedRoles }` is the API's response body.
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
 
+## What L6h found — and L6 is closed
+
+**`mocha` 26 → 0 tests and 1 → 0 spec files.** vitest **3 734 → 3 764** across
+153 files. 26 Mocha tests in, 30 out.
+
+**The ratchet this step exists for reads zero.** `✅ 'mocha' ratchet: 0 (= baseline 0)`.
+
+### ⚠️ The only `rewire` in the suite that `vi.mock` genuinely could not replace
+
+```js
+Rewired.__with__({ require: requireStub })(() =>
+  new Rewired().loadMoreProtocols(),
+);
+```
+
+`loadMoreProtocols` reads `protocols/enabled/`, and `require`s every directory
+in it at a path it computes from `__dirname`. The Mocha spec replaced **both
+halves** — `fs` through `mock-require`, and the module's own `require` through
+`rewire` — which is why it could assert only that `require` had been called
+twice. **Nothing about loading a protocol was under test**: not the manifest,
+not the name it registers under, not what happens when two protocols claim the
+same one.
+
+The answer is [L6b](#what-l6b-found)'s, again: the fixtures are **real
+directories**, written into the very place the subject looks and removed
+afterwards, so `require` resolves a real module and the manifest is read off
+disk. The spec asserts the directory is empty before it starts and after it
+finishes — an operator's protocol must never be what a test loaded.
+
+_Stated once, for [L7](#slices):_ across L6's twelve specs, **`rewire` was
+irreplaceable exactly once, and the replacement was not a mocking technique but
+a fixture.**
+
+### The mocha runner leaves CI in this slice, and only the runner
+
+With no spec left, `mocha` exits 2 — its glob matches nothing and that is an
+error, not an empty run. So this PR takes `mocha` out of the unit-test matrix
+and drops the `Mocha coverage` step from the `sonarqube` job; the coverage
+normalisation keeps both arguments and simply finds no mocha report, which is
+what it already did for a runner that had not run.
+
+Everything else is [L7](#slices)'s: the dependencies (`mocha`, `should`,
+`should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`),
+`.mocharc.json`, `test/` itself, the `test:unit:mocha*` scripts,
+`npm run build:tests`, the ratchet and its baseline, and shrinking
+`tsconfig.tests.json` to the cucumber directories.
+
+### What the Mocha suite never covered
+
+- **The stack trace being stripped from an error on its way to a client.** The
+  subject does it on every response; nothing asserted it.
+- **A protocol whose `init` rejects**, reported by name, and **two protocols
+  claiming the same name** — a mistake an operator makes by copying a
+  directory. Both were unreachable while `require` was a stub answering a fresh
+  anonymous class each time.
+- **`init()` not starting the other two protocols.** A protocol that listened
+  before the API is up would accept traffic it cannot serve, and the ordering
+  was asserted only through `startListening`.
+- **`removeConnection` on a connection that is not there** — a double
+  disconnection, which the network layer sees routinely.
+- **The funnel not being called at all once shutting down**, rather than being
+  called and its answer discarded.
+
 ## What L6g found
 
 **`mocha` 80 → 26 tests and 2 → 1 spec _file_**, vitest **3 669 → 3 734**
@@ -3710,7 +3773,8 @@ together" dissolved on that question, and three specs turned out to be
 
 **Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines) —
 [cut into a–e](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f),
-**L5 is closed**; then **L6** (12 `rewire` specs / 6 083 lines —
-[cut into a–h](#how-l6s-12-are-cut--measured-on-this-branch-2026-09-23-20052a2b3),
-and **five of the twelve turn out to be ports, not redesigns**), then **L7**
-(closure).
+**L5 is closed**, and **L6 is closed**: twelve specs, eight sub-slices,
+[cut a–h](#how-l6s-12-are-cut--measured-on-this-branch-2026-09-23-20052a2b3) —
+**five of the twelve were ports, not redesigns**, `rewire` was irreplaceable
+exactly once ([L6h](#what-l6h-found--and-l6-is-closed)), and **the `mocha`
+ratchet reads 0**. What is left is **L7** (closure).
