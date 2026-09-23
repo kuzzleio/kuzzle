@@ -409,7 +409,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
 | **L6b** ✅ ([#2856](https://github.com/kuzzleio/kuzzle/pull/2856)) |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
 | **L6c** ✅ ([#2857](https://github.com/kuzzleio/kuzzle/pull/2857)) |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
-| **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
+| **L6d** ✅ (PR pending)                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
 | **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
@@ -2744,6 +2744,85 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6d found
+
+**`mocha` 182 → 154 tests and 6 → 5 spec _files_**, vitest
+**3 564 → 3 591** across 147 files. 27 Mocha tests in, 27 out — and this
+one needed `rewire` for a single line.
+
+### The whole `rewire` was one `instanceof`
+
+```js
+should(funnel.pendingRequestsById.get(request.internalId)).be.instanceOf(
+  FunnelController.__get__("PendingRequest"),
+);
+```
+
+`PendingRequest` is a three-field class declared beside `Funnel`: the request to
+replay, the function that replays it, and the receiver to replay it on. The
+port asserts those three, which is what the queue entry _is_ — no export, no
+`lib/` change, and the class stays private because nothing outside the module
+has a use for its identity.
+
+_Worth stating because it is the cheap end of L6's spectrum:_ **a private
+binding reached once, for an identity check, costs a `lib/` change only if the
+test insists on identity.** Here the value's shape is the contract.
+
+### ⚠️ `calledWith` matches a prefix, so the overload percentage was never asserted
+
+```js
+should(kuzzle.emit).be.calledOnce().be.calledWith("core:overload");
+```
+
+The subject emits `("core:overload", overloadPercentage)` — the number an
+operator's alerting reads. `sinon`'s `calledWith` succeeds on a **prefix** of
+the call, so three tests watched this event fire and none of them said anything
+about what it reported. `toHaveBeenCalledWith` is exact, so the port had to
+name the second argument to pass.
+
+_This is a different shape from the vacuous assertions found so far_ — the
+assertion does hold something, it just holds less than it reads as. Every
+`calledWith` in a ported spec is a place where trailing arguments went
+unasserted, and the port is what surfaces them.
+
+### ⚠️ `execute` answers its caller before it has finished
+
+The callback runs from _inside_ the promise chain — `request:afterExecution` is
+awaited around it — and the overload hook fires from a path with no callback at
+all. A spec that tears its fixture down as soon as the callback has answered
+therefore leaves the subject running against a `global.kuzzle` that is no
+longer there, which surfaces as **an unhandled rejection attributed to whatever
+test runs next**.
+
+Mocha never showed this: its `KuzzleMock` is a fresh object per test but
+`global.kuzzle` is never taken away, so the trailing work found a usable global
+and failed silently. The vitest fixture puts the global back, which is what
+made the trailing work visible at all. The port waits for the subject to be
+done rather than for its answer — and the same is true of the replayer, a
+background loop that reschedules itself with `setTimeout` for as long as
+anything is queued.
+
+_The generalisable part:_ **a fixture that restores what it replaced turns
+"work that outlives its answer" into a test failure.** That is a property worth
+having, and it means a port can inherit tests that were only ever passing
+because nothing was watching after the assertion.
+
+### What the Mocha suite never covered
+
+- **`execute`'s return code.** It answers `1` for a refusal, `0` for a request
+  that is being processed and `-1` for one that was queued — the caller's whole
+  view of what happened — and exactly one of 27 tests asserted it. Every test
+  in the port does.
+- **The request the `request:beforeExecution` pipe answers.** The pipe may hand
+  back a _different_ request, and that one is what `checkRights` and
+  `processRequest` receive; the Mocha spec stubbed the pipe to echo its payload
+  and never varied it, so the subject could have used either and passed.
+- **`log:error` on a discarded request.** A full buffer is an operational
+  event and that emit is the only place it is reported.
+- **An origin check that does not happen.** A request with no `origin` header
+  must not reach `_isOriginAuthorized` at all — the Mocha spec asserted the
+  outcome, not the absence of the call.
 
 ## What L6c found
 
