@@ -22,6 +22,7 @@
  * | delete-by-query limit | `size` | `max_docs` |
  * | a query failure | `{ shardId, reason }` | `{ id, cause: { reason } }` |
  * | a scrolled batch | a callback the client calls back | a promise |
+ * | one active shard | `"1"` | `1` |
  *
  * ## Why it is a table rather than a helper
  *
@@ -103,6 +104,13 @@ export interface ESEnvelope {
   readonly reportedFailure: JSONObject;
 
   /**
+   * `wait_for_active_shards` for a single-node cluster. ES 7 answers the
+   * string, ES 8 the number — `_getWaitForActiveShards` differs in its last
+   * line and nowhere else.
+   */
+  readonly singleShard: "1" | 1;
+
+  /**
    * Arms a scroll-driving command to answer `payload`.
    *
    * ⚠️ The one entry here that is a **calling convention** rather than a
@@ -123,6 +131,7 @@ export const ES7_ENVELOPE: ESEnvelope = {
   sourceEnabled: "true",
   bulkOperations: "body",
   deleteLimit: "size",
+  singleShard: "1",
   queryFailure: { shardId: 42, reason: "error", foo: "bar" },
   reportedFailure: { shardId: 42, reason: "error" },
   answerScroll: (stub, payload) =>
@@ -140,6 +149,7 @@ export const ES8_ENVELOPE: ESEnvelope = {
   sourceEnabled: true,
   bulkOperations: "operations",
   deleteLimit: "max_docs",
+  singleShard: 1,
   queryFailure: { id: "_id2", cause: { reason: "error" }, foo: "bar" },
   reportedFailure: { id: "_id2", reason: "error" },
   answerScroll: (stub, payload) => stub.mockResolvedValue(payload),
