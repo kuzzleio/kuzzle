@@ -1,0 +1,18 @@
+{
+  "name": "with-errors",
+  "kuzzleVersion": ">=2.x",
+  "errors": {
+    "some_error": {
+      "class": "BadRequestError",
+      "code": 1,
+      "description": "foo",
+      "message": "Some error occured %s"
+    },
+    "some_other_error": {
+      "class": "ForbiddenError",
+      "code": 2,
+      "description": "bar",
+      "message": "Some other error occured %s"
+    }
+  }
+}

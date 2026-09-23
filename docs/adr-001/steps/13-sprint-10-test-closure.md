@@ -407,13 +407,13 @@ incidental — its callers load it; no vitest spec asserts it.
 | Sub-slice                                                          | Specs | Lines | Content                                                                                           |
 | ------------------------------------------------------------------ | ----: | ----: | ------------------------------------------------------------------------------------------------- |
 | **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
-| **L6b**                                                            |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
-| **L6c**                                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
-| **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
-| **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
-| **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
-| **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
-| **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
+| **L6b** ✅ ([#2856](https://github.com/kuzzleio/kuzzle/pull/2856)) |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
+| **L6c** ✅ ([#2857](https://github.com/kuzzleio/kuzzle/pull/2857)) |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
+| **L6d** ✅ ([#2858](https://github.com/kuzzleio/kuzzle/pull/2858)) |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
+| **L6e** ✅ ([#2859](https://github.com/kuzzleio/kuzzle/pull/2859)) |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
+| **L6f** ✅ ([#2860](https://github.com/kuzzleio/kuzzle/pull/2860)) |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
+| **L6g** ✅ ([#2861](https://github.com/kuzzleio/kuzzle/pull/2861)) |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
+| **L6h** ✅ ([#2862](https://github.com/kuzzleio/kuzzle/pull/2862)) |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
 1 611 + 857 + 520 = **6 083**. Ordered cheapest first so the ratchet moves in
@@ -2745,6 +2745,534 @@ deletedRoles }` is the API's response body.
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
 
+## What L6h found — and L6 is closed
+
+**`mocha` 26 → 0 tests and 1 → 0 spec files.** vitest **3 734 → 3 764** across
+153 files. 26 Mocha tests in, 30 out.
+
+**The ratchet this step exists for reads zero.** `✅ 'mocha' ratchet: 0 (= baseline 0)`.
+
+### ⚠️ The only `rewire` in the suite that `vi.mock` genuinely could not replace
+
+```js
+Rewired.__with__({ require: requireStub })(() =>
+  new Rewired().loadMoreProtocols(),
+);
+```
+
+`loadMoreProtocols` reads `protocols/enabled/`, and `require`s every directory
+in it at a path it computes from `__dirname`. The Mocha spec replaced **both
+halves** — `fs` through `mock-require`, and the module's own `require` through
+`rewire` — which is why it could assert only that `require` had been called
+twice. **Nothing about loading a protocol was under test**: not the manifest,
+not the name it registers under, not what happens when two protocols claim the
+same one.
+
+The answer is [L6b](#what-l6b-found)'s, again: the fixtures are **real
+directories**, written into the very place the subject looks and removed
+afterwards, so `require` resolves a real module and the manifest is read off
+disk. The spec asserts the directory is empty before it starts and after it
+finishes — an operator's protocol must never be what a test loaded.
+
+_Stated once, for [L7](#slices):_ across L6's twelve specs, **`rewire` was
+irreplaceable exactly once, and the replacement was not a mocking technique but
+a fixture.**
+
+### The mocha runner leaves CI in this slice, and only the runner
+
+With no spec left, `mocha` exits 2 — its glob matches nothing and that is an
+error, not an empty run. So this PR takes `mocha` out of the unit-test matrix
+and drops the `Mocha coverage` step from the `sonarqube` job; the coverage
+normalisation keeps both arguments and simply finds no mocha report, which is
+what it already did for a runner that had not run.
+
+Everything else is [L7](#slices)'s: the dependencies (`mocha`, `should`,
+`should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`),
+`.mocharc.json`, `test/` itself, the `test:unit:mocha*` scripts,
+`npm run build:tests`, the ratchet and its baseline, and shrinking
+`tsconfig.tests.json` to the cucumber directories.
+
+### What the Mocha suite never covered
+
+- **The stack trace being stripped from an error on its way to a client.** The
+  subject does it on every response; nothing asserted it.
+- **A protocol whose `init` rejects**, reported by name, and **two protocols
+  claiming the same name** — a mistake an operator makes by copying a
+  directory. Both were unreachable while `require` was a stub answering a fresh
+  anonymous class each time.
+- **`init()` not starting the other two protocols.** A protocol that listened
+  before the API is up would accept traffic it cannot serve, and the ordering
+  was asserted only through `startListening`.
+- **`removeConnection` on a connection that is not there** — a double
+  disconnection, which the network layer sees routinely.
+- **The funnel not being called at all once shutting down**, rather than being
+  called and its answer discarded.
+
+## What L6g found
+
+**`mocha` 80 → 26 tests and 2 → 1 spec _file_**, vitest **3 669 → 3 734**
+across 152 files. 54 Mocha tests in, 63 out. **The sixty `__set__` call sites
+are gone and nothing replaced them.**
+
+### Sixty stubs asserted delegation, not validation
+
+```js
+const isPointStub = sinon.stub().returns(true);
+GeoShapeType.__set__("isPoint", isPointStub);
+
+should(
+  geoShapeType.recursiveShapeValidation(
+    ["point"],
+    {
+      type: "point",
+      coordinates: ["some coordinates"],
+    },
+    [],
+  ),
+).be.true();
+should(isPointStub.callCount).be.eql(1);
+```
+
+`["some coordinates"]` is not a coordinate pair, and the shape validates
+because the predicate was replaced by one that answers `true`. What the test
+established is that validating a point **calls `isPoint` once** — a fact about
+the subject's internal wiring, and the only fact available once the predicate
+is gone.
+
+The predicates are pure functions of two numbers. Given real coordinates they
+run for free, so the port replaces nothing: every case is a shape a user could
+send, and each answer is what Elasticsearch would have accepted or refused.
+Six of them moved to `geoShapeUtils.ts` — the same `export =` problem
+[L6f](#what-l6f-found) found — and have [their own spec](../../tests/core/validation/types/geoShapeUtils.test.ts),
+where `isLine` is tested by handing it points rather than by counting how often
+it called a stub.
+
+_Generalisable, and it is the other half of L6f's lesson:_ **a stub is only
+worth its cost when the real thing is expensive or unavailable.** A pure
+function of two numbers is neither, and replacing it converts a test about
+behaviour into a test about call order. Sixty times.
+
+### ⚠️ A whole branch was unreachable to the Mocha suite
+
+A multi-shape — `multipoint`, `multilinestring`, `multipolygon` — reports a
+**different message** from its single-shape sibling:
+
+```
+One of the shapes in  the shape type "multipoint" has bad coordinates.
+```
+
+double space included. No Mocha test ever produced it, because every
+multi-shape case there had its predicate stubbed to answer `true`, so the
+failure path could not be entered. Pinned as it ships, typo and all — a
+porting slice does not change a user-visible string.
+
+### What the Mocha suite never covered
+
+- **The six orientations Elasticsearch accepts** (`right`, `ccw`,
+  `counterclockwise`, `left`, `cw`, `clockwise`). One invalid value was
+  tested; the list itself was not, and it is the kind of list a refactor drops
+  an entry from.
+- **A circle's radius as a number**, and as a distance with a space (`"10 km"`).
+  Only `"10m"` through a stubbed `convertDistance` was exercised — and one
+  Mocha test asserted `convertDistance` _returning a string_, which the real
+  library cannot do.
+- **`validate()` with no `shapeTypes` at all**: the option is optional, and an
+  absent one means _no shape is allowed_, not _every shape_.
+- **The boundaries of a point** — `[-180, -90]` and `[180, 90]` are valid,
+  `[-190, 20]` and `[20, -100]` are not. The Mocha spec tested one side of
+  each.
+- **A polygon part that does not close on itself**, with real points: the
+  closing rule was asserted through a stubbed `isPointEqual`.
+
+## What L6f found
+
+**`mocha` 133 → 80 tests and 4 → 2 spec _files_**, vitest **3 615 → 3 669**
+across 150 files. 53 Mocha tests in, 54 out — and **L6's first `lib/` change**.
+
+### The redesign, and why it is the only honest one here
+
+`validation.ts` ends with `export = Validation`, which **cannot carry named
+exports beside it**. So six functions the specs test by name — `checkAllowedProperties`,
+`curateStructuredFields`, `getParent`, `storeErrorMessage`, `throwErrorMessage`,
+`manageErrorMessage`, plus `getValidationConfiguration` and its helper — had no
+address a test could use, and `rewire`'s `__get__` was not a shortcut but the
+only door.
+
+They now live in `lib/core/validation/validationUtils.ts` and are exported.
+That is the change, and it is small: a move, an import, and two names dropped
+from `validation.ts`'s import list. **The subject shrank by 250 lines and
+nothing about its behaviour changed** — which is what makes the port's coverage
+comparable to what it replaces.
+
+_The generalisable part:_ **`export =` and a private helper are the two halves
+of the same problem.** A module with a single default export has no place to
+put anything else, so everything else becomes unreachable — and a spec that
+needs it reaches through the compiled scope. Moving the helpers is not
+"exporting internals for the tests": it is giving a unit an address.
+
+### ⚠️ Seven tests asserted their own stub
+
+```js
+Validation.__set__(
+  "manageErrorMessage",
+  sinon.spy(function () {
+    throw new Error(arguments[2]);
+  }),
+);
+
+return should(validation.validate(request, verbose)).be.rejectedWith(
+  "The document does not match validation filters.",
+);
+```
+
+The message reaches the assertion **because the stub put it there**. The real
+`manageErrorMessage` already throws a `BadRequestError` carrying that text, so
+what the seven tests established was that the subject called the stub with the
+string the test then read back — not that the API answers anything in
+particular.
+
+The port replaces nothing and asserts the error the subject produces, which
+also pins its `id` (`validation.check.failed_document`,
+`validation.check.failed_field`) — the part a client actually branches on, and
+the part a stubbed helper can never report.
+
+_And the verbose case is the same finding from the other side:_ one test
+stubbed `manageErrorMessage` and asserted **the argument it received**, so the
+verbose report — the object an API client reads — was never checked at all. The
+port asserts the report.
+
+### What the Mocha suite never covered
+
+- **`checkAllowedProperties` against an array or `null`.** Both pass a naive
+  `typeof === "object"` and neither is a specification; only the string case
+  was tested.
+- **A document-scope message being collected** rather than thrown —
+  `manageErrorMessage`'s fourth branch.
+- **A stored specification missing `index`, `collection` or `validation`.** The
+  refusal names the collection it came from, and it is what stands between a
+  malformed document in `%kuzzle/validations` and a silently wrong validator.
+- **The difference the verbose flag makes to how much work is done**:
+  fail-fast stops at the first invalid field, verbose checks them all. The two
+  Mocha tests asserted the same return value and differed only in a call count
+  nobody had named.
+
+## What L6e found
+
+**`mocha` 154 → 133 tests and 5 → 4 spec _files_**, vitest **3 591 → 3 615**
+across 148 files. 21 Mocha tests in, 24 out, and `test/mocks/mutex.mock.js`
+with them — this spec was its last caller.
+
+### ⚠️ The spec rewired the compiler's variable names
+
+```js
+Kuzzle.__with__({
+  koncorde_1: { Koncorde },
+  vault_1: { default: { load: () => {} } },
+});
+```
+
+`koncorde_1` and `vault_1` are **the names `tsc` emits** for
+`import { Koncorde } from "koncorde"` and `import vault from "./vault"`. Nothing
+in `lib/` is spelled that way; the spec addressed the _compiled output_, which
+is the plainest statement in this whole step of why the Mocha suite has to run
+out of `dist/test` at all — and [L7](#slices) deletes `build:tests` for exactly
+that reason.
+
+`vi.mock("koncorde")` names the dependency instead. **This is the one place in
+L6 where the port is not just equivalent but simpler**: a module id a reader can
+grep for, replacing a variable name that only exists after compilation and that
+a rename in `lib/` would have silently broken.
+
+_Generalisable:_ `rewire` cannot tell a module's _dependencies_ from its
+_locals_ — both are bindings in the compiled scope. `vi.mock` only offers the
+former, and the former is what a test should be replacing.
+
+### ⚠️ `calledWith` matched a prefix again — twice more
+
+[L6d](#what-l6d-found) found the first (`core:overload`'s percentage). Two more
+here:
+
+- `should(kuzzle.entryPoint.dispatch).calledWith("shutdown")` — the subject
+  dispatches `("shutdown", {})`, and the payload reached no assertion.
+- The start-order test asserted `kuzzle.ask.withArgs("core:security:verify")`
+  and friends through `sinon.assert.callOrder`, which says _these happened in
+  this relative order_ and nothing about what happened between them.
+
+The port replaces the ordering assertion with **the sequence itself** — a list
+of sixteen strings the fixture appends to as the subject initialises. It says
+what `callOrder` said, plus what it could not: that nothing else happened, and
+that nothing happened twice.
+
+### `global.kuzzle`'s write-once setter, stated where it bites
+
+`lib/kuzzle/kuzzle.ts` installs `global.kuzzle` as an accessor whose setter
+throws on the second write, so a spec cannot build two instances — and three
+tests here need to. The Mocha spec handled it inside a helper called
+`_mockKuzzle`, with `Reflect.deleteProperty(global, "kuzzle")` as its first
+line and no explanation: **deleting the property removes the accessor**, so the
+constructor's `global.kuzzle = this` becomes a plain assignment. The port keeps
+the trick and says why, which is the same finding [L4a](#what-l4a-found) filed
+for `global.app`.
+
+### What the Mocha suite never covered
+
+- **The cluster being initialised when it _is_ enabled.** One test asserted the
+  disabled half and nothing asserted the other, so a subject that never
+  initialised the cluster would have passed.
+- **What `vault.load` is called with** — the vault key and secrets file come
+  from the start options, and a subject ignoring them would have passed.
+- **`dump()`'s argument.** The suffix is what names the dump directory;
+  `calledOnce()` was the whole assertion.
+- **`start()`'s options reaching what consumes them**: `installations` to
+  `install`, `support` to `loadInitialState`, the application to the plugins
+  manager.
+
+## What L6d found
+
+**`mocha` 182 → 154 tests and 6 → 5 spec _files_**, vitest
+**3 564 → 3 591** across 147 files. 27 Mocha tests in, 27 out — and this
+one needed `rewire` for a single line.
+
+### The whole `rewire` was one `instanceof`
+
+```js
+should(funnel.pendingRequestsById.get(request.internalId)).be.instanceOf(
+  FunnelController.__get__("PendingRequest"),
+);
+```
+
+`PendingRequest` is a three-field class declared beside `Funnel`: the request to
+replay, the function that replays it, and the receiver to replay it on. The
+port asserts those three, which is what the queue entry _is_ — no export, no
+`lib/` change, and the class stays private because nothing outside the module
+has a use for its identity.
+
+_Worth stating because it is the cheap end of L6's spectrum:_ **a private
+binding reached once, for an identity check, costs a `lib/` change only if the
+test insists on identity.** Here the value's shape is the contract.
+
+### ⚠️ `calledWith` matches a prefix, so the overload percentage was never asserted
+
+```js
+should(kuzzle.emit).be.calledOnce().be.calledWith("core:overload");
+```
+
+The subject emits `("core:overload", overloadPercentage)` — the number an
+operator's alerting reads. `sinon`'s `calledWith` succeeds on a **prefix** of
+the call, so three tests watched this event fire and none of them said anything
+about what it reported. `toHaveBeenCalledWith` is exact, so the port had to
+name the second argument to pass.
+
+_This is a different shape from the vacuous assertions found so far_ — the
+assertion does hold something, it just holds less than it reads as. Every
+`calledWith` in a ported spec is a place where trailing arguments went
+unasserted, and the port is what surfaces them.
+
+### ⚠️ `execute` answers its caller before it has finished
+
+The callback runs from _inside_ the promise chain — `request:afterExecution` is
+awaited around it — and the overload hook fires from a path with no callback at
+all. A spec that tears its fixture down as soon as the callback has answered
+therefore leaves the subject running against a `global.kuzzle` that is no
+longer there, which surfaces as **an unhandled rejection attributed to whatever
+test runs next**.
+
+Mocha never showed this: its `KuzzleMock` is a fresh object per test but
+`global.kuzzle` is never taken away, so the trailing work found a usable global
+and failed silently. The vitest fixture puts the global back, which is what
+made the trailing work visible at all. The port waits for the subject to be
+done rather than for its answer — and the same is true of the replayer, a
+background loop that reschedules itself with `setTimeout` for as long as
+anything is queued.
+
+_The generalisable part:_ **a fixture that restores what it replaced turns
+"work that outlives its answer" into a test failure.** That is a property worth
+having, and it means a port can inherit tests that were only ever passing
+because nothing was watching after the assertion.
+
+### What the Mocha suite never covered
+
+- **`execute`'s return code.** It answers `1` for a refusal, `0` for a request
+  that is being processed and `-1` for one that was queued — the caller's whole
+  view of what happened — and exactly one of 27 tests asserted it. Every test
+  in the port does.
+- **The request the `request:beforeExecution` pipe answers.** The pipe may hand
+  back a _different_ request, and that one is what `checkRights` and
+  `processRequest` receive; the Mocha spec stubbed the pipe to echo its payload
+  and never varied it, so the subject could have used either and passed.
+- **`log:error` on a discarded request.** A full buffer is an operational
+  event and that emit is the only place it is reported.
+- **An origin check that does not happen.** A request with no `origin` header
+  must not reach `_isOriginAuthorized` at all — the Mocha spec asserted the
+  outcome, not the absence of the call.
+
+## What L6c found
+
+**`mocha` 186 → 182 tests and 7 → 6 spec _files_**, vitest
+**3 558 → 3 564**. Seventy lines of spec, four Mocha tests in, six out —
+and **the last `import … = require()` in `lib/` with them**.
+
+### The spec was holding a `lib/` shape hostage, and the register had said so
+
+[TD-49](../type-debt-register.md#td-49) replaced 24 of the 25
+`import x = require()` forms in `lib/` a year's worth of steps ago. The
+twenty-fifth stayed, with a comment naming the reason:
+
+```ts
+/*
+ * The one `import … = require()` left in `lib/` … `test/util/didYouMean.test.js`
+ * rewires this module and calls `__set__("didYouMean", …)`, which addresses the
+ * compiled variable by name. A default import compiles to `didyoumean_1.default`
+ * and the stub would silently miss. It goes when that spec moves to vitest.
+ */
+```
+
+That is `rewire`'s cost stated exactly: **a test reaching a private binding
+pins the shape of the compiled output**, so the subject cannot be written the
+way the other 24 are. `vi.mock("didyoumean")` replaces the _module_ instead of
+the compiled variable, the wrapper takes a default import like everything else,
+and **`lib/` now holds no `import … = require()` at all**.
+
+_Generalisable, and it is the argument for L6 as a whole:_ what a `rewire` spec
+costs is not the porting effort — this one is seventy lines — it is the
+constraint it leaves on `lib/` for as long as it exists. The register is what
+made that cost visible; without the entry, the comment would read like a
+preference.
+
+### ⚠️ One of its two `__set__`s did nothing, and the other one had a side effect
+
+```js
+processStub = Object.assign(process, {
+  env: Object.assign(process.env, { NODE_ENV: "development" }),
+});
+didYouMean.__set__("process", processStub);
+```
+
+`Object.assign(process, …)` mutates `process` and answers it, so the `__set__`
+assigns the real `process` over itself: a no-op. What the line _did_ do is set
+`process.env.NODE_ENV` to `"development"` **for the rest of the Mocha run**,
+since `Object.assign(process.env, …)` writes through to the real environment —
+a spec leaving a global behind for whatever ran next, which is the same failure
+mode [L1b4](#what-l1b4-found--and-l1b-is-closed) found here from the other side
+(these tests passed only because `deprecate.test.js` had set `global.NODE_ENV`
+earlier in the same process).
+
+And the subject reads **`global.NODE_ENV`**, not `process.env.NODE_ENV`. So the
+one `__set__` that was not a no-op was writing to a place the subject never
+reads.
+
+### What the Mocha suite never covered
+
+- **That the library is not called at all outside development.** The guard's
+  purpose is to skip the work, not just the string; the Mocha spec asserted the
+  empty answer only.
+- **`NODE_ENV` unset**, which is every process that does not set it.
+- **An empty suggestion** — `didyoumean` answers `""` for an empty candidate
+  list, and the wrapper's falsy check is what stops `Did you mean ""?` from
+  reaching a user.
+
+## What L6b found
+
+**`mocha` 209 → 186 tests and 9 → 7 spec _files_**, vitest
+**3 512 → 3 558** across 145 files. Two specs out, 23 Mocha tests in,
+**46 vitest tests out**, and `test/mocks/fs.mock.js` with them — these two were
+its only callers.
+
+Both specs were the other half of [L6a](#what-l6a-found)'s finding: `rewire`
+used as `require`, and here **redundantly twice over** — the line above it is
+already `mockrequire.reRequire(<same path>)`, which returns the reloaded module
+the `rewire` then loads again.
+
+### ⚠️ `loadFromDirectory` was tested with the filesystem taken away
+
+The method's entire job is to read a plugin off disk: it `require`s the plugin
+directory, its `manifest.json` (through `AbstractManifest`) and its
+`package.json`, at three paths known only at runtime. The Mocha spec replaced
+`fs` and all three module ids with `mock-require`, so what ran was never a
+plugin being loaded — it was a set of stubs answering each other.
+
+`vi.mock` cannot substitute a runtime `require(path)` anyway, and **it does not
+have to: runtime `require` works under vitest.** The port hands the subject
+real directories — `tests/fixtures/plugins/{lambda-core,with-errors,invalid-errors,no-manifest,not-a-plugin}`,
+each an actual `index.cjs` + `manifest.json` + `package.json` — and asserts
+what came back. The subject runs unmodified, and the five refusals
+(`cannot_load` for a non-directory, `manifest.cannot_load`, `invalid_errors`,
+`init_not_found`, `runtime.unexpected_error`) are each a directory on disk
+rather than a `mockrequire.stop()` in the middle of a test.
+
+_Generalisable, and it revises a premise:_ `mock-require` is not always
+replaced by `vi.mock`. **When a subject reads the real world, the honest port
+gives it a real one** — a fixture directory is smaller, more readable and
+strictly more truthful than four module substitutions, and it is available
+because [L4](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)'s
+constraint is about the _module graph_, not about `fs`.
+
+### ⚠️ `dump()` never gives its lock back — [TD-81](../type-debt-register.md#td-81)
+
+Found by calling `dump()` twice in one test. The lock is taken **before** the
+argument is validated and released only on the success path:
+
+```ts
+this._dump = true;               // taken here
+if (!suffixRegex.test(suffix)) {
+  throw new BadRequestError(…);  // and never given back
+}
+…
+this._dump = false;              // the only release
+```
+
+So one malformed `admin:dump` — a bad suffix, a dump path outside the
+configured directory, an unwritable folder — disables dumping **for the
+lifetime of the process**, and every later call is answered
+`Cannot execute action "dump": already executing.` about a dump that is not
+running. Reachable from the API, process-wide, and it misreports the state to
+the operator at the moment they most need the tool. Pinned in a test that names
+the entry; the fix is a `try/finally` in `lib/`, which a porting slice does not
+do.
+
+### ⚠️ Two tests asserted a method the subject has never called
+
+```js
+should(fsStub.removeSync).not.be.called();
+```
+
+`removeSync` is `fs-extra`'s. The subject removes directories with `fs.rmSync`
+and core files with `fs.unlinkSync`. Both _"should do nothing if…"_ tests
+therefore asserted that something which cannot happen did not happen —
+**the negative form of the vacuous assertion**, and it is worth naming apart
+from the positive one: a negative assertion on the wrong name is invisible
+even to a reader who checks that the method exists somewhere, because the
+whole point of the line is that it was not called.
+
+### ⚠️ `plugins.json` was asserted against the wrong object
+
+The subject dumps `pluginsManager.getPluginsDescription()`. The Mocha spec set
+`pluginsManager.plugins` **and** `getPluginsDescription()` to the same `{foo:{}}`
+and asserted on `plugins` — so a subject dumping the other one, or the raw
+plugin objects rather than their description, would have passed. The port gives
+the two different values.
+
+### What the Mocha suite never covered
+
+- **Both halves of privileged mode's handshake.** It takes two
+  acknowledgements — the manifest's and the operator's configuration — and the
+  subject refuses each one alone (`privileged_not_supported`,
+  `privileged_not_set`). Only the agreeing case was tested.
+- **The configuration being copied rather than aliased**: a plugin that mutates
+  its own config must not reach into `kuzzle.config`.
+- **The kebab-case deprecation warning**, and `deprecationWarning: false`
+  silencing it — the only notice a plugin author gets about a name Kuzzle will
+  refuse in a future version.
+- **`info()` for a plugin that registers nothing**: it feeds `server:info`, and
+  the empty shape is what an operator reads.
+- **`Plugin.checkName`**, five rows.
+- **The configured `dump.gcore` command** — the Mocha spec only ever saw the
+  `"gcore"` default.
+- **A dump with no core file produced**: the subject warns instead, and nothing
+  asserted the empty half of that branch.
+- **The lock being released after a successful dump** — the other side of
+  TD-81, and what makes a second dump possible at all.
+
 ## What L6a found
 
 **`mocha` 256 → 209 tests and 12 → 9 spec _files_**, vitest
@@ -3245,7 +3773,8 @@ together" dissolved on that question, and three specs turned out to be
 
 **Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines) —
 [cut into a–e](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f),
-**L5 is closed**; then **L6** (12 `rewire` specs / 6 083 lines —
-[cut into a–h](#how-l6s-12-are-cut--measured-on-this-branch-2026-09-23-20052a2b3),
-and **five of the twelve turn out to be ports, not redesigns**), then **L7**
-(closure).
+**L5 is closed**, and **L6 is closed**: twelve specs, eight sub-slices,
+[cut a–h](#how-l6s-12-are-cut--measured-on-this-branch-2026-09-23-20052a2b3) —
+**five of the twelve were ports, not redesigns**, `rewire` was irreplaceable
+exactly once ([L6h](#what-l6h-found--and-l6-is-closed)), and **the `mocha`
+ratchet reads 0**. What is left is **L7** (closure).

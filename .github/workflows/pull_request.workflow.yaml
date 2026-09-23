@@ -125,8 +125,8 @@ jobs:
   # jobs that hung off `needs: [sonarqube]` (a skipped `needs` skips its
   # dependents). See ADR-0001 type-debt register, TD-38 (#2725).
   #
-  # `sonarqube` keeps a build step of its own: its Mocha coverage run executes
-  # against `dist/`, and artifacts are not shared between jobs here.
+  # `sonarqube` keeps a build step of its own: artifacts are not shared between
+  # jobs here, and its coverage run needs the package built.
   build:
     name: Build and payload gate
     runs-on: ubuntu-24.04
@@ -194,21 +194,12 @@ jobs:
         run: ./.ci/scripts/check-build-payload.sh
         shell: bash
 
-      # Both unit runners feed the scanner: each writes its own lcov (coverage/mocha,
-      # coverage/vitest) and sonar-project.properties lists both. Before ADR-0001
-      # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
-      # every JS->TS conversion silently left the coverage gate (TD-24).
-      # The npm script runs c8 and then re-derives its lcov with
-      # .ci/scripts/merge-coverage.ts. A module loaded twice in one process
-      # (43 specs use mock-require's reRequire) yields several V8
-      # ScriptCoverage entries for one file, and c8's range-level merge loses
-      # coverage between them — it reported validation.js at 36% of lines
-      # against 93% of branches, and the five files left to convert in sprint 6
-      # were all understated by 30 to 60 points (TD-50).
-      - name: Mocha coverage
-        run: npm run test:unit:mocha:coverage
-        shell: bash
-
+      # One runner feeds the scanner since step 13 L6h emptied the Mocha suite:
+      # vitest writes coverage/vitest/lcov.info, and the mocha half of the
+      # normalisation below simply finds no report. Before ADR-0001 step 06 only
+      # mocha ran here, and `.ts` was coverage-excluded outright, so every
+      # JS->TS conversion silently left the coverage gate (TD-24) — that is the
+      # debt this pairing paid off, and it is now paid.
       - name: Vitest coverage
         run: npm run test:unit:vitest
         shell: bash
@@ -252,7 +243,11 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22, 24]
-        test-suits: ["mocha", "vitest"]
+        # `mocha` left the matrix with the last Mocha spec (step 13, L6h): the
+        # runner errors out when its glob matches nothing. The apparatus it
+        # belongs to — the dependency, `.mocharc.json`, `test/` and the
+        # `test:unit:mocha*` scripts — goes with L7.
+        test-suits: ["vitest"]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
