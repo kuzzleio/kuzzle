@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 10 | 2 560 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
+| **L4e** | 10 | 2 560 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` · **e2** `model/storage/{baseModel,apiKey}` + `core/storage/storageEngine` (they share the `clientAdapter` → `storageEngine` substitution) · **e3** `kuzzle/internalIndexHandler` (the conditional one) · **e4** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2109,3 +2109,86 @@ stored in one layer down. Named once each as `byName()` and `asPipe()`.
   passport not at all before `init`. The Mocha suite ended instead on
   `describe("#loadPlugin", () => it("", () => {}))` — an empty test with an
   empty name, reported as a passing case called _"Plugin #loadPlugin "_.
+
+## What L4e1 found
+
+**`mocha` 26 → 25**, vitest **2 661 → 2 799 tests** across **129 → 130 files**.
+One spec, 586 lines, **31 `it`s in and 138 out**. The port is
+`tests/config/index.test.ts`.
+
+The 31 → 138 is not a rewrite: eleven of the Mocha tests were `for` loops over
+a list of bad values inside a single `it`, so a failure named the test and not
+the value. They are `it.each` tables now — the ten limits, the six bad values
+per HTTP option, the six per WebSocket option — and the case that fails says
+which one it is.
+
+### The substitution is `rc`, and it is the whole fixture
+
+This spec is the cleanest `reRequire` in the slice: one `mockRequire("rc", …)`
+and a re-require, because `mock-require` only affects a *later* `require`.
+`vi.mock` is hoisted, so the subject is imported normally and both halves
+disappear — including the `afterEach` that re-required `lib/config` a second
+time to undo the first.
+
+### ⚠️ `loadConfig` mutates what `rc` hands it, and the spec's fixture was the packaged defaults
+
+`loadConfig` rewrites its input in place: it splits
+`http.accessControlAllowOrigin` into an array, replaces
+`server.protocols.http.maxFormFileSize` with its parsed byte count, and
+assigns `config.internal`. The Mocha stub answered
+`Object.assign({}, defaults, overrides)` — a **shallow** copy of the imported
+`default.config` module — so every one of those writes landed in the real
+packaged-defaults object and stayed there for the rest of the process.
+
+That is visible in the suite itself: *"should convert string separated coma to
+an array"* asserts on `mockedConfigContent.http.accessControlAllowOrigin`, the
+object the test handed *in*, not on what `loadConfig` answered. It passes
+because by then the two are the same object. The port clones the defaults per
+call and asserts the result.
+
+### ⚠️ A test that called the subject and then asserted on something else
+
+*"should use storage engine default settings for the imports collection"*
+calls `config.loadConfig()`, discards it, and asserts on
+`defaultConfig.default.services.storageEngine.internalIndex.collections.imports.settings`
+— the packaged module. Whatever `loadConfig` did to those settings, the
+assertion could not see it; the call is decoration. Not a new form —
+[the fifteenth](#slices) is its neighbour — but the first where the subject
+*is* called and the result is simply dropped. The port reads the loaded
+configuration.
+
+### ⚠️ Two messages that describe something other than what they check — [TD-79](../type-debt-register.md#td-79)
+
+Found by writing the two assertions the Mocha spec never had:
+
+- `checkHttpOptions` **checks** `config.http.accessControlAllowOriginUseRegExp`
+  and **prints** `cfg.accessControlAllowOriginUseRegExp`, where `cfg` is
+  `server.protocols.http` — a section that never carries the key. The message
+  reads `invalid value "undefined"` whatever was configured. Every other
+  assert in the function reads and prints the same object.
+- `checkWebSocketOptions` accepts `idleTimeout >= 0` and says
+  `(integer >= 1000 expected)`. `idleTimeout: 500` is accepted while being
+  told it is not allowed.
+
+Both are pinned as they are — the message asserted verbatim, `500` asserted as
+*accepted* — so whichever way they are fixed, the spec says so.
+
+### What the Mocha suite never covered
+
+- **`checkClusterOptions` — the whole function.** Eleven assertions on the
+  section that decides whether a node joins its cluster, and a `.kuzzlerc` is
+  the only place any of them is ever set. Now eleven tests, including the two
+  spellings an environment variable uses for "no IP selector" (`""` and the
+  string `"null"`), which the checker normalises before validating.
+- **`preprocessProtocolsOptions`** — `internal.notifiableProtocols` is what
+  the realtime notifier iterates, so a protocol missing from it is a protocol
+  whose subscribers are never notified.
+- **The `accessControlAllowOriginUseRegExp` path**, which compiles every
+  configured origin into a `RegExp`.
+- **`maxFormFileSize` being replaced by its parsed value** — the checker does
+  not only validate it, and every reader downstream expects the number rather
+  than the `"1mb"` a `.kuzzlerc` writes.
+- **`options.db` winning over the deprecated `database`** — the spread exists
+  for that precedence and nothing asserted it.
+- **A single limit that is not a number.** The Mocha spec only replaced the
+  whole `limits` section; each limit is read through a guard of its own.
