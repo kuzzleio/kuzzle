@@ -413,7 +413,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6e** ✅ ([#2859](https://github.com/kuzzleio/kuzzle/pull/2859)) |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f** ✅ ([#2860](https://github.com/kuzzleio/kuzzle/pull/2860)) |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
 | **L6g** ✅ ([#2861](https://github.com/kuzzleio/kuzzle/pull/2861)) |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
-| **L6h** ✅ (PR pending)                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
+| **L6h** ✅ ([#2862](https://github.com/kuzzleio/kuzzle/pull/2862)) |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
 1 611 + 857 + 520 = **6 083**. Ordered cheapest first so the ratchet moves in
