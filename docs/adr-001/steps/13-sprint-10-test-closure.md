@@ -411,7 +411,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6c** ✅ ([#2857](https://github.com/kuzzleio/kuzzle/pull/2857)) |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
 | **L6d** ✅ ([#2858](https://github.com/kuzzleio/kuzzle/pull/2858)) |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e** ✅ ([#2859](https://github.com/kuzzleio/kuzzle/pull/2859)) |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
-| **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
+| **L6f** ✅ (PR pending)                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
 | **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
 | **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
@@ -2744,6 +2744,78 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6f found
+
+**`mocha` 133 → 80 tests and 4 → 2 spec _files_**, vitest **3 615 → 3 669**
+across 150 files. 53 Mocha tests in, 54 out — and **L6's first `lib/` change**.
+
+### The redesign, and why it is the only honest one here
+
+`validation.ts` ends with `export = Validation`, which **cannot carry named
+exports beside it**. So six functions the specs test by name — `checkAllowedProperties`,
+`curateStructuredFields`, `getParent`, `storeErrorMessage`, `throwErrorMessage`,
+`manageErrorMessage`, plus `getValidationConfiguration` and its helper — had no
+address a test could use, and `rewire`'s `__get__` was not a shortcut but the
+only door.
+
+They now live in `lib/core/validation/validationUtils.ts` and are exported.
+That is the change, and it is small: a move, an import, and two names dropped
+from `validation.ts`'s import list. **The subject shrank by 250 lines and
+nothing about its behaviour changed** — which is what makes the port's coverage
+comparable to what it replaces.
+
+_The generalisable part:_ **`export =` and a private helper are the two halves
+of the same problem.** A module with a single default export has no place to
+put anything else, so everything else becomes unreachable — and a spec that
+needs it reaches through the compiled scope. Moving the helpers is not
+"exporting internals for the tests": it is giving a unit an address.
+
+### ⚠️ Seven tests asserted their own stub
+
+```js
+Validation.__set__(
+  "manageErrorMessage",
+  sinon.spy(function () {
+    throw new Error(arguments[2]);
+  }),
+);
+
+return should(validation.validate(request, verbose)).be.rejectedWith(
+  "The document does not match validation filters.",
+);
+```
+
+The message reaches the assertion **because the stub put it there**. The real
+`manageErrorMessage` already throws a `BadRequestError` carrying that text, so
+what the seven tests established was that the subject called the stub with the
+string the test then read back — not that the API answers anything in
+particular.
+
+The port replaces nothing and asserts the error the subject produces, which
+also pins its `id` (`validation.check.failed_document`,
+`validation.check.failed_field`) — the part a client actually branches on, and
+the part a stubbed helper can never report.
+
+_And the verbose case is the same finding from the other side:_ one test
+stubbed `manageErrorMessage` and asserted **the argument it received**, so the
+verbose report — the object an API client reads — was never checked at all. The
+port asserts the report.
+
+### What the Mocha suite never covered
+
+- **`checkAllowedProperties` against an array or `null`.** Both pass a naive
+  `typeof === "object"` and neither is a specification; only the string case
+  was tested.
+- **A document-scope message being collected** rather than thrown —
+  `manageErrorMessage`'s fourth branch.
+- **A stored specification missing `index`, `collection` or `validation`.** The
+  refusal names the collection it came from, and it is what stands between a
+  malformed document in `%kuzzle/validations` and a silently wrong validator.
+- **The difference the verbose flag makes to how much work is done**:
+  fail-fast stops at the first invalid field, verbose checks them all. The two
+  Mocha tests asserted the same return value and differed only in a call count
+  nobody had named.
 
 ## What L6e found
 
