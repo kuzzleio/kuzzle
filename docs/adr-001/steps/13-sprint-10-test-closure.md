@@ -313,7 +313,7 @@ asked for.
 | --------- | -----: | ----------: | ------- |
 | **L5a** ✅ ([#2849](https://github.com/kuzzleio/kuzzle/pull/2849)) | 16 | ~600 | harness + envelope table + the small blocks, **11 of them byte-identical**: wiring, listings, existence, naming |
 | **L5b** ✅ ([#2850](https://github.com/kuzzleio/kuzzle/pull/2850)) | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
-| **L5c** ✅ (PR pending) | 9 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
+| **L5c** ✅ ([#2851](https://github.com/kuzzleio/kuzzle/pull/2851)) | 9 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
 | **L5d** | 11 | ~1 600 | index/collection lifecycle: `createIndex`, `createCollection` (388 L), mappings, settings, `import`, `_createHiddenCollection`, `_checkMappings` |
 | **L5e** | 11 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) |
 
