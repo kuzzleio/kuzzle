@@ -342,7 +342,7 @@ describe("#api/funnel.execute", () => {
       expect(code).toBe(-1);
       expect(funnel.overloaded).toBe(true);
       expect(funnel.processRequest).not.toHaveBeenCalled();
-      expect(funnel.pendingRequestsQueue.length).toBe(1);
+      expect(funnel.pendingRequestsQueue).toHaveLength(1);
       expect(funnel.pendingRequestsQueue.shift()).toBe(request.internalId);
 
       /* `PendingRequest` is module-private, so what is asserted is what it
@@ -375,7 +375,7 @@ describe("#api/funnel.execute", () => {
       funnel.execute(request, () => {});
 
       expect(funnel.overloaded).toBe(true);
-      expect(funnel.pendingRequestsQueue.length).toBe(1);
+      expect(funnel.pendingRequestsQueue).toHaveLength(1);
       expect(internalsOf(funnel)._playPendingRequests).not.toHaveBeenCalled();
     });
 
@@ -387,7 +387,7 @@ describe("#api/funnel.execute", () => {
         funnel.execute(request, () => {});
       }
 
-      expect(funnel.pendingRequestsQueue.length).toBe(1);
+      expect(funnel.pendingRequestsQueue).toHaveLength(1);
       expect(funnel.pendingRequestsById.size).toBe(1);
     });
 
@@ -401,7 +401,7 @@ describe("#api/funnel.execute", () => {
       expect(funnel.overloaded).toBe(true);
       expect(internalsOf(funnel)._playPendingRequests).not.toHaveBeenCalled();
       expect(funnel.processRequest).not.toHaveBeenCalled();
-      expect(funnel.pendingRequestsQueue.length).toBe(0);
+      expect(funnel.pendingRequestsQueue).toHaveLength(0);
       expect(error).toBeInstanceOf(ServiceUnavailableError);
       expect(error).toMatchObject({ status: 503 });
       expect(response.status).toBe(503);
