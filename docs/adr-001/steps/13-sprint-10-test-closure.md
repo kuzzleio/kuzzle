@@ -218,7 +218,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
-| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** `plugin/context/context` · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
 | **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
@@ -1907,3 +1907,84 @@ failure has said something, and the only place it said it is there.
   them, so its error messages named three missing arguments. TypeScript refuses
   that call (the three are `string`), and naming them makes the assertions about
   the message rather than about the absence of the arguments.
+
+## What L4d3 found
+
+**`mocha` 29 → 28**, vitest **2 433 → 2 484 tests** across **126 → 127 files**.
+One spec, 669 lines, 36 `it`s in and **51** out. The port is
+`tests/core/plugin/pluginContext.test.ts`.
+
+### The substitution is real, and the spec never said so
+
+After [L4d1](#what-l4d1-found) and [L4d2](#what-l4d2-found), both of which
+turned out to need no mock at all, this one does. `lib/util/mutex` was
+registered in a bare `beforeEach` with no comment, and **nothing in the four
+hundred lines that follow it needs a mutex** — which is why the first port
+deleted it, on the reading that `MutexMock` extends the real `Mutex` and stubs
+only `lock`/`unlock`, neither of which the spec calls.
+
+Four tests then hung for the full 20-second timeout. What needs the mock is
+`#accessors.strategies`, five hundred lines down: `curryAddStrategy` takes a
+real `new Mutex("auth:strategies:add").lock()`, which **retries against the
+cache until it wins or times out**, so against a fixture that answers nothing
+it never returns. The failure is a timeout rather than an error, which is the
+worst shape for a missing dependency to take.
+
+**The lesson is the placement, not the mock.** A substitution registered at the
+top of a file for the sake of one block at the bottom cannot be read as either
+necessary or unnecessary — and this one had a second signal that nobody used:
+`MutexMock.__getLastMutex()` exists precisely so a spec can check which lock was
+taken, and no spec ever called it. The port declares the stub next to the
+`vi.mock` that installs it, says which block needs it, records the resources,
+and **asserts them** — the two strategy tests now state that a lock is taken and
+which one.
+
+### ⚠️ A seventeenth dead-assertion form: an expectation computed from the same wrong accessor as the actual
+
+`#accessors.subscription`'s register test asserted, through `sinon.match`:
+
+```js
+input: {
+  body: customRequest.input.body,
+  collection: customRequest.input.collection,
+  index: customRequest.input.index,
+}
+```
+
+`RequestInput` has **no** `index` or `collection` getters — they live on
+`input.args` (and on the deprecated `input.resource`). So two of those three
+expected values are `undefined`, and they were compared against the subject's
+`input.index` and `input.collection`, also `undefined`. **`undefined ===
+undefined` twice**, and a subject that dropped the index entirely passed.
+
+This is the first form on the list where the assertion is wrong on *both*
+sides, and it is the reason it survived: reading the expectation off the same
+accessor as the actual makes any accessor look right. The port asserts
+`input.args` against literals.
+
+### ⚠️ `PluginContext.constructors` is declared as instances — [TD-76](../type-debt-register.md#td-76)
+
+Six TS2351s. Four of the seven entries — `Koncorde`, `Request`,
+`RequestContext`, `RequestInput` — are typed as the **instances** they build,
+while `Mutex`, `Repository` and `ESClient` are typed as constructors. So the
+shape is not a convention the file follows; it is a mistake in four places, each
+hidden by the `as any` it carries at its assignment.
+
+It lands on the **public plugin API**: `new context.constructors.Request(…)`,
+what every plugin writes, does not type-check. Filed, not fixed — a porting
+slice leaves `lib/` alone. The spec names the cast `constructorOf()`.
+
+### Small things
+
+- The log-level test drove five levels through one `it` whose `calledOnce`
+  held only because each happened to reach a different logger method. That
+  stops being true the moment `silly` is included — which is exactly the level
+  it left untested. Six tests now, one per level, `silly` and `verbose` both
+  landing on `trace`.
+- `should(context.accessors).have.properties([…])` listed seven of the nine
+  accessors: `cluster` was missing outright, and `nodeId` was covered only by a
+  test of its own. The port asserts the key set, so an accessor added or dropped
+  is named.
+- The `process.nextTick` in *"should add the plugin name in logs"* waited for
+  nothing — `context.log.info` calls the logger synchronously. Folded into the
+  per-level table.

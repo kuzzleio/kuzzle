@@ -1686,3 +1686,37 @@ is refused the input the method exists to accept. One type is doing duty for two
 - **Why 🟡 and not 🟠:** nothing is wrong at runtime, and the specification really is parsed from JSON at the boundary, so no production caller types it. The cost is that the API cannot be called from TypeScript as documented, and that a spec exercising the conversion needs a cast.
 - **Fix:** name the two shapes. A `DateSpecificationBound = string | number` for the input, `DateRangeBound = Moment | "NOW"` for the output, and a `validateFieldSpecification(input: DateSpecification): DateTypeOptions` that maps one to the other. `BaseType<T>` currently forces parameter and return to the same `T`, so this needs a second type parameter on the base class — which is why it is not a one-line change.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74) did. `tests/core/validation/types/date.test.ts` names the cast `specification()` and points at this entry.
+
+### TD-76
+
+**Four of `PluginContext.constructors`' seven entries are declared as the instances they build** · 🟠 medium · `lib/core/plugin/pluginContext.ts`
+
+Found porting the `plugin/context/context` spec ([step 13 L4d3](steps/13-sprint-10-test-closure.md#what-l4d3-found)), by TS2351 × 6.
+
+```ts
+public constructors: {
+  BaseValidationType: any;
+  Koncorde: Koncorde;                                              // ← instance
+  Mutex: typeof Mutex;                                             //   correct
+  Repository: new (collection: string, objectConstructor: any) => Repository;  // correct
+  Request: KuzzleRequest;                                          // ← instance
+  RequestContext: RequestContext;                                  // ← instance
+  RequestInput: RequestInput;                                      // ← instance
+  ESClient: new () => any;                                         //   correct
+};
+```
+
+`Mutex`, `Repository` and `ESClient` are declared as constructors, so the shape is not a convention the file follows — it is a mistake in the other four, and each is hidden by the `as any` it carries at its assignment (`Koncorde: Koncorde as any`, `Request: instantiateRequest as any`, …).
+
+The consequence is on the **public plugin API**: the documented use of this object is
+
+```ts
+const request = new context.constructors.Request(originalRequest, { action: "…" });
+//                  ^ TS2351: Type 'KuzzleRequest' has no construct signatures.
+```
+
+which is what every plugin writes, and which does not type-check.
+
+- **Why 🟠 and not 🟡:** this is the surface Kuzzle hands third-party code, and the four wrong entries include the one plugins use most. A plugin author in TypeScript has to cast around the framework's own type.
+- **Fix:** `Koncorde: typeof Koncorde`, `RequestContext: typeof RequestContext`, `RequestInput: typeof RequestInput`, and for `Request` a call signature matching `instantiateRequest` — `new (request?: KuzzleRequest | JSONObject | null, data?: JSONObject, options?: JSONObject) => KuzzleRequest`. The four `as any`s at the assignment site go with them, which is how the mistake stayed invisible.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74) and [TD-75](#td-75) did. `tests/core/plugin/pluginContext.test.ts` names the cast `constructorOf()` and points at this entry.
