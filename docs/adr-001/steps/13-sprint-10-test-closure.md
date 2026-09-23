@@ -218,8 +218,8 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4a** ✅ ([#2827](https://github.com/kuzzleio/kuzzle/pull/2827)) | 11 | 1 336 | **the `Backend` family** — all eleven re-require the same subject, `lib/core/backend/backend`, and each mirrors a real `lib/core/backend/*.ts` |
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
-| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** `plugin/pluginsManager` **+ `api/funnel/processRequest`**, which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulls one spec out of L4e |
-| **L4e** | 11 | 2 982 | **the strays**: `config/index`, `api/funnel/processRequest`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
+| **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
+| **L4e** | 10 | 2 560 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -1988,3 +1988,124 @@ slice leaves `lib/` alone. The spec names the cast `constructorOf()`.
 - The `process.nextTick` in *"should add the plugin name in logs"* waited for
   nothing — `context.log.info` calls the logger synchronously. Folded into the
   per-level table.
+
+## What L4d4 found
+
+**`mocha` 28 → 26**, vitest **2 484 → 2 661 tests** across **127 → 129 files**.
+Two specs, 1 974 lines, **97 `it`s in and 177 out**. The ports are
+`tests/core/plugin/pluginsManager.test.ts` and
+`tests/api/funnel/processRequest.test.ts`, and `test/mocks/controller.mock.js`
+retires with them.
+
+### The pairing the sweep insisted on turned out to cost nothing — and to be unnecessary
+
+[The sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)
+put these two specs in one slice because both re-require the same trio —
+`pluginContext`, `privilegedContext`, `pluginsManager` — and a shared subject
+means a shared mirror. Both re-requires are **resets with no substitution
+underneath**, exactly as the sweep's own table said for `pluginsManager`, so
+neither port declares a single `vi.mock`: `processRequest` builds its
+controllers itself, and `pluginsManager` needs nothing more than a `global`.
+**The trio was never a coupling between the two specs; it was the same
+`reRequire` habit written twice.** They still land together, because splitting
+them after the fact would have cost a second review of the same fixture.
+
+⚠️ And `processRequest` opened with `mockrequire("elasticsearch", { Client: … })`
+— **a substitution of a package that is not a dependency and is not installed**
+(`sdk-es7`/`sdk-es8` are the aliases this repo uses). Nothing imported it,
+nothing could have. Another arrangement wired to nothing, and the first that names
+a module that does not exist.
+
+### ⚠️ An eighteenth dead-assertion form: a promise assertion nobody returned
+
+Four of `_initApi`'s six tests read
+
+```js
+it("should throw an error if the openAPI specification is invalid", () => {
+  plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: "specification" };
+
+  should(pluginsManager._initApi(plugin)).be.rejectedWith({
+    id: "plugin.controller.invalid_openapi_schema",
+  });
+});
+```
+
+No `return`, and the test function is not `async`. `should`'s promise
+assertions **answer** a promise rather than throwing; unreturned, Mocha ends
+the test before it settles and the rejection is reported — if at all — as an
+unhandled rejection attributed to no test. All four were green against any
+behaviour whatsoever, which is how the next finding survived.
+
+### ⚠️ `invalid_openapi_schema` is documented, coded twice, and raised nowhere — [TD-77](../type-debt-register.md#td-77)
+
+Two of those four tests assert an error id that **`lib/` never produces**.
+`plugin.assert.invalid_openapi_schema` and
+`plugin.controller.invalid_openapi_schema` are both declared in
+`lib/kerror/codes/4-plugin.json` and both published in
+`doc/2/api/errors/error-codes/plugin/`; `grep -rn invalid_openapi_schema lib`
+matches the codes file and nothing else. A route's `openapi` member is not
+validated at all — `checkHttpRoute` splices the name out of the property list
+before complaining about unknown properties, and `registerApiAction` copies the
+value into the route verbatim, object or `true` alike.
+
+So a validation nobody wrote has had two green tests and a documentation page
+for as long as the codes have existed. Filed, not fixed: the port states what
+the subject *does*, in two tests named
+_"carries an openapi declaration that is not a valid specification, unchecked"_.
+
+### ⚠️ A nineteenth form: the subject called outside the assertion
+
+Three of `_checkSdkVersion`'s cases read `should(funnel._checkSdkVersion(request)).not.throw()`
+— the subject invoked **as the argument**, so the matcher applies to its return
+value, `undefined`. If the call had thrown, the throw would have escaped the
+test rather than being caught by `.not.throw()`, so the assertion could neither
+pass nor fail on its own terms: it was `should(undefined).not.throw()`, seven
+characters away from `should(() => …)`.
+
+It is the mirror image of the fifteenth form — _a test that never called the
+subject_ — which this slice hits again: `_initControllers`' sixth invalid-route case
+was written `should(() => { pluginsManager._initControllers(plugin); });` — a
+wrapper with no matcher, so the subject was **never called**. It is the case
+that proves a typo in a route's property *name* is caught, and it had never run.
+The port asserts it, with the `Did you mean "controller"?` suggestion.
+
+### ⚠️ The plugin-facing hook and pipe types admit neither form the spec needed — [TD-78](../type-debt-register.md#td-78)
+
+18 TS2322s, all of one shape. `PluginHookDefinition` and `PluginPipeDefinition`
+declare their values as handler **functions**, and `resolveEventHandler` takes
+two more shapes: **the name of a plugin method** (deprecated, warned about, and
+what half of these tests are *about*), and, for pipes, the **callback form** —
+which `lib/types/EventHandler.ts` already models as `CallbackPipeHandler`, and
+which the emitter's own `RegisteredPipeHandler` admits. The plugin-facing type
+is the one that does not, so it is narrower than the type the value ends up
+stored in one layer down. Named once each as `byName()` and `asPipe()`.
+
+### Small things
+
+- **`plugins` answers an array, and the spec called `.keys()` on it.**
+  `should(Array.from(pluginsManager.plugins.keys())).be.length(1)` reads the
+  *indices* of an array, so the assertion was "one plugin came back", said
+  through an accessor that would answer the same for any single element. The
+  port compares the array.
+- **`pluginsManager._plugins.set(plugin)`** — one argument, in the alias-pipe
+  test. `Map.set(k)` stores the plugin as its own key with the value
+  `undefined`; `_initPipes` reads the argument it is handed, so the line was
+  wired to nothing either way.
+- **`NODE_ENV` was set to `"development"` and never put back**, by four tests
+  that need `didYouMean` to answer. In a single-process Mocha run that is a
+  global left flipped for every file that follows. The port restores it.
+- **Assertions comparing two separately-bound functions.** The action registered
+  for a method name was compared with a fresh `plugin.instance.functionName.bind(plugin.instance)`.
+  What the binding is *for* is the receiver, so the port calls the action and
+  asserts what `this` was.
+- **Forty-eight assertions on twelve routes** became one table: every declared
+  route is published twice, under the deprecated `/_plugin/<name>` prefix and
+  under `/_`, in declaration order.
+- **Seven tests the Mocha suite did not have**, on public methods next to the
+  ones it drove: `unregisterPipe` (a pipe stops being called), `exists`,
+  `getActions`/`isAction`/`isController` on an unregistered controller,
+  `listStrategies`, `_initAuthenticators`' copy under the plugin's name, the
+  `application` setter's second assertion, and `registerStrategy` reaching
+  passport not at all before `init`. The Mocha suite ended instead on
+  `describe("#loadPlugin", () => it("", () => {}))` — an empty test with an
+  empty name, reported as a passing case called _"Plugin #loadPlugin "_.
