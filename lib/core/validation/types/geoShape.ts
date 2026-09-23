@@ -24,6 +24,7 @@ import { Koncorde } from "koncorde";
 import * as kerror from "../../../kerror";
 import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
+import { isEnvelope, isLine, isPoint, isPolygon } from "./geoShapeUtils";
 import type { GeoShapeTypeOptions } from "../typeOptions";
 
 const allowedShapeProperties = [
@@ -368,56 +369,6 @@ function checkCoordinates(
   }
 
   return true;
-}
-
-function isPoint(point: unknown): boolean {
-  if (!Array.isArray(point) || point.length !== 2) {
-    return false;
-  }
-
-  return !(
-    point[0] < -180 ||
-    point[0] > 180 ||
-    point[1] < -90 ||
-    point[1] > 90
-  );
-}
-
-function isPointEqual(pointA: unknown[], pointB: unknown[]): boolean {
-  return pointA[0] === pointB[0] && pointA[1] === pointB[1];
-}
-
-function isLine(line: unknown): boolean {
-  if (!Array.isArray(line) || line.length < 2) {
-    return false;
-  }
-
-  return line.every((point) => isPoint(point));
-}
-
-function isPolygonPart(polygonPart: unknown): boolean {
-  return (
-    Array.isArray(polygonPart) &&
-    polygonPart.length >= 4 &&
-    isLine(polygonPart) &&
-    isPointEqual(polygonPart[0], polygonPart.at(-1))
-  );
-}
-
-function isPolygon(polygon: unknown): boolean {
-  if (!Array.isArray(polygon)) {
-    return false;
-  }
-
-  return polygon.every((polygonPart) => isPolygonPart(polygonPart));
-}
-
-function isEnvelope(envelope: unknown): boolean {
-  if (!Array.isArray(envelope) || envelope.length !== 2) {
-    return false;
-  }
-
-  return isPoint(envelope[0]) && isPoint(envelope[1]);
 }
 
 export = GeoShapeType;

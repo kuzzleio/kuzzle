@@ -412,7 +412,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6d** ✅ ([#2858](https://github.com/kuzzleio/kuzzle/pull/2858)) |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e** ✅ ([#2859](https://github.com/kuzzleio/kuzzle/pull/2859)) |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f** ✅ ([#2860](https://github.com/kuzzleio/kuzzle/pull/2860)) |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
-| **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
+| **L6g** ✅ (PR pending)                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
 | **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
@@ -2744,6 +2744,82 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6g found
+
+**`mocha` 80 → 26 tests and 2 → 1 spec _file_**, vitest **3 669 → 3 734**
+across 152 files. 54 Mocha tests in, 63 out. **The sixty `__set__` call sites
+are gone and nothing replaced them.**
+
+### Sixty stubs asserted delegation, not validation
+
+```js
+const isPointStub = sinon.stub().returns(true);
+GeoShapeType.__set__("isPoint", isPointStub);
+
+should(
+  geoShapeType.recursiveShapeValidation(
+    ["point"],
+    {
+      type: "point",
+      coordinates: ["some coordinates"],
+    },
+    [],
+  ),
+).be.true();
+should(isPointStub.callCount).be.eql(1);
+```
+
+`["some coordinates"]` is not a coordinate pair, and the shape validates
+because the predicate was replaced by one that answers `true`. What the test
+established is that validating a point **calls `isPoint` once** — a fact about
+the subject's internal wiring, and the only fact available once the predicate
+is gone.
+
+The predicates are pure functions of two numbers. Given real coordinates they
+run for free, so the port replaces nothing: every case is a shape a user could
+send, and each answer is what Elasticsearch would have accepted or refused.
+Six of them moved to `geoShapeUtils.ts` — the same `export =` problem
+[L6f](#what-l6f-found) found — and have [their own spec](../../tests/core/validation/types/geoShapeUtils.test.ts),
+where `isLine` is tested by handing it points rather than by counting how often
+it called a stub.
+
+_Generalisable, and it is the other half of L6f's lesson:_ **a stub is only
+worth its cost when the real thing is expensive or unavailable.** A pure
+function of two numbers is neither, and replacing it converts a test about
+behaviour into a test about call order. Sixty times.
+
+### ⚠️ A whole branch was unreachable to the Mocha suite
+
+A multi-shape — `multipoint`, `multilinestring`, `multipolygon` — reports a
+**different message** from its single-shape sibling:
+
+```
+One of the shapes in  the shape type "multipoint" has bad coordinates.
+```
+
+double space included. No Mocha test ever produced it, because every
+multi-shape case there had its predicate stubbed to answer `true`, so the
+failure path could not be entered. Pinned as it ships, typo and all — a
+porting slice does not change a user-visible string.
+
+### What the Mocha suite never covered
+
+- **The six orientations Elasticsearch accepts** (`right`, `ccw`,
+  `counterclockwise`, `left`, `cw`, `clockwise`). One invalid value was
+  tested; the list itself was not, and it is the kind of list a refactor drops
+  an entry from.
+- **A circle's radius as a number**, and as a distance with a space (`"10 km"`).
+  Only `"10m"` through a stubbed `convertDistance` was exercised — and one
+  Mocha test asserted `convertDistance` _returning a string_, which the real
+  library cannot do.
+- **`validate()` with no `shapeTypes` at all**: the option is optional, and an
+  absent one means _no shape is allowed_, not _every shape_.
+- **The boundaries of a point** — `[-180, -90]` and `[180, 90]` are valid,
+  `[-190, 20]` and `[20, -100]` are not. The Mocha spec tested one side of
+  each.
+- **A polygon part that does not close on itself**, with real points: the
+  closing rule was asserted through a stubbed `isPointEqual`.
 
 ## What L6f found
 
