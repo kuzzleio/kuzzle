@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** `kuzzle/internalIndexHandler` (the conditional one) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2329,3 +2329,70 @@ slice's to change, and every current caller serialises once, at the end.
 - **`BaseModel.batchExecute`, `register`'s misuse guard, the `_source`
   setter's field filter, and both "must be defined" getters** had no test at
   all.
+
+## What L4e4 found
+
+**`mocha` 20 → 19**, vitest **2 840 → 2 857 tests** across **132 → 133 files**.
+One spec, 419 lines, **12 `it`s in and 17 out**. The port is
+`tests/kuzzle/internalIndexHandler.test.ts`.
+
+### The two-step mock becomes one declaration
+
+This is the slice's genuinely conditional spec, and the reason is the base
+class: `InternalIndexHandler` takes a mutex named `InternalIndexBootstrap`,
+and `Store.init` — which it calls first — takes one named
+`Store.init(%kuzzle)`. Under `mock-require` that needs **two** steps, because
+the substitution only reaches a module required *after* it:
+
+```js
+mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
+// the shared object "Store" also uses mutexes that we need to mock
+mockrequire.reRequire("../../lib/core/shared/store");
+InternalIndexHandler = mockrequire.reRequire("../../lib/kuzzle/internalIndexHandler");
+```
+
+`vi.mock` replaces the module for the whole graph, so the second and third
+lines go. **The `reRequire` was never about the handler; it was about its base
+class** — the same question [L4a](#what-l4a-found) asked and answered for
+`global.app`.
+
+### ⚠️ `MutexMock.__getLastMutex()` could not say which lock it was reading
+
+The mock kept a module-level `lastMutex`, and the bootstrap test asserted on
+it — `resource`, `lock`, `unlock`. Two mutexes are taken on that path, and
+which one is "last" depends on the order the subject happens to take them in.
+The port records **all** of them and asserts the sequence
+`["Store.init(%kuzzle)", "InternalIndexBootstrap"]`, then reads the bootstrap
+one by name.
+
+### ⚠️ `calledWith` matches a prefix, so a fourth argument went unmentioned
+
+```js
+should(kuzzle.ask).calledWith(
+  "core:storage:private:collection:create", "fooindex", "foo", { mappings: collections.foo });
+```
+
+`createCollections` passes a fourth argument, `{ indexCacheOnly }` — and
+sinon's `calledWith` is satisfied by a call that passed *more* arguments than
+it was given. That flag is the difference between the node that won the
+`Store.init` lock and writes the mappings, and the ones that waited and only
+fill their cache; it was invisible to the assertion. **A `calledWith` is a
+prefix match, and the arguments a spec does not mention are the ones nobody
+is watching** — the second matcher-shaped hole in this step, after
+`not.calledWith` in [L1b](#what-l1b-found).
+
+### What the Mocha suite never covered
+
+- **The lock is released when the bootstrap fails.** That is what the
+  `finally` is for: a node that fails to bootstrap and keeps the lock makes
+  every other node wait out its 30-second TTL.
+- **`authToken.secret` winning over the deprecated `jwt.secret`.** The
+  fallback is written `authToken?.secret ?? jwt?.secret`, and only the
+  deprecated half was tested.
+- **A restart finding its seed already stored** — it must not generate a
+  second one, and must read the stored value back, or every restart
+  invalidates every token in circulation.
+- **`createInitialValidations` with nothing configured**, which is the
+  packaged default.
+- **Only the `admin` profile carrying `rateLimit: 0`** — the unlimited rate is
+  what lets an operator recover a node that is rate-limiting everyone else.
