@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` · **e6** `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely) · **e7** `api/controllers/adminController`, the last one |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2396,3 +2396,73 @@ is watching** — the second matcher-shaped hole in this step, after
   packaged default.
 - **Only the `admin` profile carrying `rateLimit: 0`** — the unlimited rate is
   what lets an operator recover a node that is rate-limiting everyone else.
+
+## What L4e5 found
+
+**`mocha` 19 → 17**, vitest **2 857 → 2 880 tests** across **133 → 135 files**.
+Two specs, 323 lines, **18 `it`s in and 23 out**. The ports are
+`tests/util/mutex.test.ts` and `tests/util/asyncStore.test.ts`.
+
+### ⚠️ `asyncStore`'s stub made the suite describe the wrapper instead of the store
+
+The Mocha spec replaced `async_hooks` with
+
+```js
+class AsyncLocalStorageStub {
+  constructor() {
+    this._store = new Map();
+    this.run = sinon.stub();            // ← does not call its callback
+    this.getStore = sinon.stub().returns(this._store);
+  }
+}
+```
+
+**`run` never runs anything**, and `getStore` answers the same Map forever —
+outside any asynchronous context. So `#set` and `#get` asserted against a Map
+the stub invented, `#run` asserted only that *a* Map and *a* callback were
+handed over, and nothing could tell whether a value set inside a context is
+visible to the code running in it. That is the single thing an
+`AsyncLocalStorage` wrapper exists to do.
+
+`AsyncLocalStorage` is a Node builtin with no I/O. The port uses the real one
+and asserts the real property: a value set inside `run` is still there on a
+later tick, and two runs do not see each other's store.
+
+The spec also carried a `process.version >= "v12.18.1"` branch whose `else`
+half asserted on an `AsyncStoreStub` class that **no longer exists in the
+subject** — dead since the minimum supported Node became 20, and unreachable
+long before that.
+
+### The mutex's fake clock becomes four answer queues
+
+The Mocha spec drove `lock()`'s retry loop with `sinon.useFakeTimers()` and
+`clock.tick(1000)` in a `for` loop, twelve lines per case — and its last
+assertion, `should(mutexPromise).be.fulfilledWith(false)`, was **never
+awaited**. What those tests are about is the sequence of answers the cache
+gives: the port arranges that sequence (`stored = [false, false, true]`) with
+a 1 ms attempt delay and real timers, and asserts the number of attempts. Same
+property, deterministic, and the assertion runs.
+
+### ⚠️ `instanceof` across `vi.resetModules()`, for the fifth time
+
+`delScriptRegistered` is module-level, so "the LUA script is defined once" is
+a question about the module and the port re-imports it per test. The two
+rejection tests then failed with _"expected InternalError … to be an instance
+of InternalError"_: a statically imported error class is a **different class
+object** from the one the re-evaluated graph raises. The error class is now
+imported from the same fresh graph as the subject. Fifth occurrence, after
+[L4a](#what-l4a-found)'s and [L4b](#what-l4b-found)'s.
+
+### What the Mocha suite never covered
+
+- **The node half of a mutex id.** `mutexId` is `<node>/<random>`, and the
+  Mocha spec only asserted that two ids differ — the part that makes a lock
+  traceable to the node holding it, when a cluster deadlocks, was untested.
+- **`wait()` never writing.** It reads the cache; a `wait` that stored
+  anything would be taking the lock it is only supposed to be watching.
+- **`unlock` passing its own id to the script**, which is the whole reason the
+  LUA script exists: a lock whose TTL expired and was re-taken by another node
+  must not be deleted by this one.
+- **`AsyncStore` refusing to `get`/`set`/`has` outside a run.** The subject
+  asserts `"Associated AsyncStore is not set"`; the stub always answered a
+  Map, so that branch could never be reached.
