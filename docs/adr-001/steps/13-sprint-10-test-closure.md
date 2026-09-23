@@ -404,16 +404,16 @@ assertions** ([L0](#what-l0-found)), so a sub-slice still owes the Mocha spec's
 _tests_, per the [DoD](#definition-of-done-per-pr). `didYouMean.ts`'s 100% is
 incidental — its callers load it; no vitest spec asserts it.
 
-| Sub-slice | Specs | Lines | Content                                                                                           |
-| --------- | ----: | ----: | ------------------------------------------------------------------------------------------------- |
-| **L6a**   |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
-| **L6b**   |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
-| **L6c**   |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
-| **L6d**   |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
-| **L6e**   |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
-| **L6f**   |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
-| **L6g**   |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
-| **L6h**   |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
+| Sub-slice               | Specs | Lines | Content                                                                                           |
+| ----------------------- | ----: | ----: | ------------------------------------------------------------------------------------------------- |
+| **L6a** ✅ (PR pending) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
+| **L6b**                 |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
+| **L6c**                 |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
+| **L6d**                 |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
+| **L6e**                 |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
+| **L6f**                 |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
+| **L6g**                 |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
+| **L6h**                 |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
 
 3 + 2 + 1 + 1 + 1 + 2 + 1 + 1 = **12**, and 1 056 + 558 + 70 + 566 + 845 +
 1 611 + 857 + 520 = **6 083**. Ordered cheapest first so the ratchet moves in
@@ -2744,6 +2744,113 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6a found
+
+**`mocha` 256 → 209 tests and 12 → 9 spec _files_**, vitest
+**3 441 → 3 512** across 143 files. Three specs out, 47 Mocha tests in,
+**71 vitest tests out** — and `test/mocks/service/` with them: the two Redis
+client mocks were this spec's alone, so the directory the Elasticsearch twins
+emptied at [L5e](#what-l5e-found) is now gone.
+
+**The whole remaining Mocha suite is L6.** Nine files, and every one of them
+reaches a private binding.
+
+### `rewire` was decoration in all three
+
+None of the three ever called `__set__`, `__get__` or `__with__`. Removing
+`rewire(…)` in favour of an import changes nothing about what they assert —
+which is the whole of the porting cost these three were budgeted for.
+
+### ⚠️ `#refresh` asserted an event the controller does not emit
+
+```js
+should(kuzzle.ask).calledWith(
+  "core:storage:private:collection:refresh",
+  kuzzle.internalIndex.index,
+  collection,
+);
+```
+
+The subject calls `global.kuzzle.internalIndex.refreshCollection(collection)`.
+That event is what the real `Store` wrapper emits one layer below, and the
+assertion held only because `KuzzleMock.internalIndex` **extends the real
+`InternalIndexHandler`** — so the spec was asserting the internals of a
+collaborator it had not stubbed. Replace that collaborator with a `vi.fn` and
+the assertion has nothing to stand on; assert the call the controller makes and
+it does.
+
+_The general form:_ a mock that inherits from the real thing lets a spec assert
+through it. What the assertion then pins is the pair, and the spec is silent
+about which half changed.
+
+### ⚠️ The fifth argument of `validate` is the create/update distinction, and nothing asserted it
+
+`createCredentials` and `updateCredentials` both call a strategy's `validate`
+hook; the only thing that tells the plugin which one it is, is the fifth
+argument — `false` for a creation, `true` for an update. The Mocha spec
+asserted `args[0]` through `args[3]` of both calls in both actions, so **the two
+tests were, assertion for assertion, the same test**, and the boolean they
+existed to distinguish was in neither. The port asserts the whole call.
+
+### ⚠️ `new Redis(config)` — one argument where the signature takes two
+
+The constructor is `(config, name)`, and `name` is what the adapter calls
+itself to the server:
+
+```ts
+await client.client("SETNAME", `${this.adapterName}/${global.kuzzle.id}`);
+```
+
+Every client the Mocha spec built was therefore named `undefined/undefined`,
+and that line was asserted nowhere. TypeScript refuses the call outright —
+the same way [L4e6](#what-l4e6-found) found `use()` being called with the wrong
+arity, and the fourth time in this step that the port's compiler has found what
+the port's assertions were not looking at.
+
+### ⚠️ The Redis spec never had a cluster, so half of `searchKeys` never ran
+
+The spec stubbed `Redis.prototype._buildClient` and `_buildClusterClient` — the
+subject's two `private` factories — so the client under test was a stand-in the
+subject never builds. `searchKeys()` splits on `client instanceof Cluster`, and
+a stand-in that is not one **cannot enter the cluster branch**: the scan of
+every master and the merge of their keys were dead code to this suite, while
+`_buildClusterClient` being _called_ was asserted four times.
+
+Mocking `ioredis` instead of the factories (`tests/mocks/redis.ts`) means the
+subject builds its client exactly as it does in production, `instanceof`
+answers what it answers there, and the branch is now covered. The fixture also
+had `exec()` answering synchronously, where ioredis answers a promise.
+
+_This is the L6 thesis in its cheapest form:_ **a spec that replaces the
+subject's own internals tests the replacement.** Here the fix is to substitute
+one layer lower — the module the subject imports — and nothing about the
+subject has to change. `geoShape` and `validation` ([L6f](#slices),
+[L6g](#slices)) are the same question with no layer below to move to.
+
+### What the Mocha suite never covered
+
+- **An unregistered strategy**, on all nine credentials actions. Every Mocha
+  test registered exactly the strategy it then asked for, so
+  `assertIsStrategyRegistered` — the guard between an API call and an unknown
+  plugin — was asserted nowhere. One row per action now.
+- **`validateCredentials` without an `_id`**: the only credentials action whose
+  id is optional (`getId({ ifMissing: "ignore" })`), because it validates a
+  payload for a user who may not exist yet.
+- **`searchUsersByCredentials`'s pagination** — the second argument to the
+  plugin's `search`, which a plugin that ignores it answers the whole
+  collection for.
+- **`_mDelete`'s log line past a thousand ids**, a branch that writes a
+  different message: the audit trail of a bulk security deletion.
+- **`store` answering `false`** — `SET … NX` on an existing key answers `null`,
+  and the method's return value is the whole point of the `onlyIfNew` option.
+- **A failed keep-alive ping**, which runs from a `setInterval` where nothing
+  would catch a rejection, and **no keep-alive at all** when the delay is 0.
+- **A command issued while disconnected** (`services.cache.not_connected`), and
+  **`exec()` on a command the client does not have** — the two guards
+  `setCommands()` and `exec()` exist for.
+- **The DNS override actually answering**: the AWS ElastiCache workaround was
+  asserted as "is a function".
 
 ## What L5e found
 
