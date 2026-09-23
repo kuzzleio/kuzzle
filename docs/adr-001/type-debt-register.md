@@ -1720,3 +1720,52 @@ which is what every plugin writes, and which does not type-check.
 - **Why 🟠 and not 🟡:** this is the surface Kuzzle hands third-party code, and the four wrong entries include the one plugins use most. A plugin author in TypeScript has to cast around the framework's own type.
 - **Fix:** `Koncorde: typeof Koncorde`, `RequestContext: typeof RequestContext`, `RequestInput: typeof RequestInput`, and for `Request` a call signature matching `instantiateRequest` — `new (request?: KuzzleRequest | JSONObject | null, data?: JSONObject, options?: JSONObject) => KuzzleRequest`. The four `as any`s at the assignment site go with them, which is how the mistake stayed invisible.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74) and [TD-75](#td-75) did. `tests/core/plugin/pluginContext.test.ts` names the cast `constructorOf()` and points at this entry.
+
+### TD-77
+
+**Both `invalid_openapi_schema` error codes are declared, documented — and raised nowhere** · 🟠 medium · `lib/core/plugin/plugin.ts`, `lib/kerror/codes/4-plugin.json`
+
+Found porting the `plugin/pluginsManager` spec ([step 13 L4d4](steps/13-sprint-10-test-closure.md#what-l4d4-found)), by two tests that passed against a subject that does nothing.
+
+`lib/kerror/codes/4-plugin.json` declares the id twice — `plugin.assert.invalid_openapi_schema` (0x04010010) and `plugin.controller.invalid_openapi_schema` (0x0404000a) — and `doc/2/api/errors/error-codes/plugin/index.md` publishes both. Neither string appears anywhere else in `lib/`:
+
+```console
+$ grep -rn "invalid_openapi_schema" lib
+lib/kerror/codes/4-plugin.json:97
+lib/kerror/codes/4-plugin.json:353
+```
+
+A route's `openapi` member is not validated at all. `checkHttpRoute` polices a route's *property names* and splices `openapi` out of the list before complaining, so any value passes — an object that is not a specification, and `true` just the same — and `registerApiAction` copies it verbatim into `this.routes`, from where the OpenAPI document is built.
+
+The Mocha suite asserted the opposite, in two tests that had no way to fail: `should(pluginsManager._initApi(plugin)).be.rejectedWith({ id: "plugin.controller.invalid_openapi_schema" })`, unreturned from a non-async test (see the slice's finding on that form). **So a validation nobody wrote has had two green tests and a documentation page for as long as the error codes have existed.**
+
+- **Why 🟠 and not 🟡:** an application declares its OpenAPI in the same object as its routes, the framework advertises that it checks it, and a malformed specification reaches the generated document instead of the plugin author.
+- **Fix:** decide which of the two it is. Either validate the member where the route is checked (`checkHttpRoute`, raising `plugin.assert.invalid_openapi_schema`) and drop the unused `controller` twin, or drop both codes and their documentation rows. The error-codes documentation is generated (`npm run doc-error-codes`), so removing a code is cheap; adding the check is the larger half.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74), [TD-75](#td-75) and [TD-76](#td-76) did. `tests/core/plugin/pluginsManager.test.ts` states what the subject *does* — the declaration is carried through unchecked — in two tests that point at this entry.
+
+### TD-78
+
+**`PluginHookDefinition` and `PluginPipeDefinition` admit neither of the two handler forms the runtime also accepts** · 🟡 low · `lib/types/Plugin.ts`, `lib/types/EventHandler.ts`
+
+Found porting the `plugin/pluginsManager` spec ([step 13 L4d4](steps/13-sprint-10-test-closure.md#what-l4d4-found)), by TS2322 × 18.
+
+```ts
+// lib/types/Plugin.ts
+export type PluginHookDefinition = {
+  [event: string]: HookEventHandler | HookEventHandler[];
+};
+export type PluginPipeDefinition = {
+  [event: string]: PipeEventHandler | PipeEventHandler[];
+};
+```
+
+`PluginsManager.resolveEventHandler` accepts two more shapes than those:
+
+1. **The name of a plugin method**, as a string — `{ "document:beforeCreate": "myHandler" }`. Deprecated, warned about at registration (`printDeprecation`), still supported, and the form roughly half of the Mocha suite's hook and pipe tests used.
+2. **A pipe in callback form** — `(payload, callback) => …`. `lib/types/EventHandler.ts` already models it (`CallbackPipeHandler`) and the emitter's own `RegisteredPipeHandler` is the union of both forms; the plugin-facing type is the one that is not.
+
+So a TypeScript plugin that writes either form — the second of which the pipe runner always hands over — has to cast, and a `.js` plugin gets no signal at all. `PluginPipeDefinition` is narrower than the type the emitter stores its values in, one layer down.
+
+- **Why 🟡 and not 🟠:** both forms work, and the first is on its way out. The cost is a cast at the plugin's own declaration and a type that reads as an intentional restriction while being an omission.
+- **Fix:** widen the two definitions — `HookEventHandler | string`, and `RegisteredPipeHandler | string` for pipes (the union `EventHandler.ts` already exports) — or, for the string form, deprecate it in the type with a comment naming the release that removes it.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/core/plugin/pluginsManager.test.ts` names the two casts `byName()` and `asPipe()` once, at the top, and points at this entry.
