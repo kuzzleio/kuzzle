@@ -123,7 +123,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
-| **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
+| **L5** 🚧  | The **two Elasticsearch twins** (they carry `mock-require` too) — sub-sliced [by action group](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f) into **a**–**e**; **a landed**                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs** — **12** since [L4e2](#what-l4e2-found) deleted two of them as already-ported duplicates                                                                                                                                                                                                      | **12** |  **6 070** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
@@ -261,6 +261,70 @@ all reset `storageEngine` over a stubbed `clientAdapter`;
 ⚠️ **The sub-slice table above cuts `processRequest` (L4e) away from
 `pluginsManager` (L4d), and `storageEngine` is in L4e with its two model
 specs.** The first split is the one to revisit when L4d is opened.
+
+#### How L5's 2 are cut, by action group — measured on `2-dev` (2026-09-23, `623676e7f`)
+
+**The twins are far closer than the raw diff says, and far less identical than
+[L1b4](#the-es-twins-one-body-two-mirrors-no-duplication) assumed.** Both
+pre-flight checks were run before cutting, and both changed the plan.
+
+| Measure | |
+| --- | --- |
+| Raw `diff` | 1 279 lines over **205 hunks** — ~10% |
+| Per block, non-blank lines | 5 392 per twin, **499 divergent → 4.6%** |
+| Structure | **54 action blocks, same names, same order, in both.** 11 of 54 **byte-identical** |
+| `it`s | 222 vs 223 — the single extra is in `#deleteFields` |
+| [L3d](#what-l3d-found)'s block hash, within a twin | **~81 redundant lines of 6 293** (`mGet`≈`mExists`, `isIndexNameValid`≈`isCollectionNameValid`) |
+
+So **L5 is not L3d-shaped either** — like [L4](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd), its cost is not copy *within* a file. The
+copy is entirely *between* the two, and the 4.6% that is not copy falls into
+four systematic classes, every one of them the ES 7/ES 8 wire format:
+
+| | ES 7 | ES 8 |
+| --- | --- | --- |
+| response | `{ body: payload }` | `payload` |
+| search request body | `body: searchBody` | `...searchBody` |
+| document body | `body: { … }` | `document: { … }` |
+| total-hits flag | `trackTotalHits` | `track_total_hits` |
+| `_source` filter | `"true"` | `true` |
+
+⚠️ **The subject is one file, not two.** Both Mocha specs construct
+`lib/service/storage/Elasticsearch.ts` — a dispatcher that reads
+`config.majorVersion` and delegates to `ES7` or `ES8`. The twins are therefore
+not two specs: they are **the same spec run with one config value changed**,
+which is what makes shared cases the honest shape rather than a saving.
+
+**But `describeESWrapper(version, Subject)` does not transfer as-is.** The
+envelope is what distinguishes ES 7 from ES 8; hide it behind a helper and the
+suite stops asserting the one thing these subjects do not agree on. So the
+cases are shared and the delta is a **value they read** —
+`tests/service/storage/elasticsearchCases/envelope.ts`, the whole ES 7/ES 8
+difference on one screen instead of 205 hunks across 12 431 lines. Each
+version's spec still pins its own wire format, because the table is what the
+assertion runs *through*, not something it skips.
+
+Two independent ports were the alternative and are ruled out: 95% copy in front
+of SonarCloud, and [TD-23](../type-debt-register.md#td-23) says
+`sonar.cpd.exclusions` may only shrink — the third and fourth exclusion this
+step's [risk list](#risks) flagged as a decision for a human never has to be
+asked for.
+
+| Sub-slice | Blocks | ~Lines/twin | Content |
+| --------- | -----: | ----------: | ------- |
+| **L5a** ✅ ([#2849](https://github.com/kuzzleio/kuzzle/pull/2849)) | 16 | ~600 | harness + envelope table + the small blocks, **11 of them byte-identical**: wiring, listings, existence, naming |
+| **L5b** | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
+| **L5c** | 8 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
+| **L5d** | 11 | ~1 600 | index/collection lifecycle: `createIndex`, `createCollection` (388 L), mappings, settings, `import`, `_createHiddenCollection`, `_checkMappings` |
+| **L5e** | 11 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) |
+
+⚠️ **The ratchet cannot move until L5e.** It counts spec *files*, and the two
+twins are one file each however much of them is ported. So each sub-slice
+**removes the blocks it ported from both Mocha twins in the same PR** — the
+twins shrink to nothing and L5e deletes two empty files, rather than four PRs
+leaving the same assertions running in both suites and the fifth deleting 12 431
+lines on trust. The number each PR owes is therefore Mocha's **test** count, not
+its file count, which is what the [DoD](#definition-of-done-per-pr) asks for
+anyway.
 
 The seven work slices partitioned the original 148 specs and 64 295 lines exactly: 3 + 60 + 29 + 6 + 34 + 2 + 14 = **148**, and 3 385 + 5 773 + 12 995 + 9 277 + 14 128 + 12 431 + 6 306 = **64 295**. See the re-measurement above for what remains.
 
@@ -2574,6 +2638,88 @@ both workarounds disappear.
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
 
+## What L5a found
+
+**`mocha` 701 → 623 tests** (the two twins shrink; the ratchet's file count
+stays 14 until L5e), vitest **2 943 → 3 087 tests** across **138 → 140 files**.
+Sixteen blocks, **39 `it`s per twin in, 72 tests per version out**.
+
+The whole Mocha suite was run before and after: **701 → 623 is exactly −78**,
+so nothing else was leaning on what these blocks left behind — the check
+[L1b4](#the-finding-that-matters-most-a-spec-was-passing-because-of-another-file)
+made mandatory, paying nothing this time.
+
+### The shape holds, and the envelope is one line per case
+
+Eleven of the sixteen blocks are byte-identical between the twins, which is why
+they went first: if shared cases plus a wire table cannot express the blocks
+that already agree, the plan for the other 38 is wrong. They can. The five that
+differ — `#stats`, `#listCollections`, `#listIndexes`, `#listAliases`,
+`#deleteIndexes`, `#getSchema` — differ in exactly one thing,
+`harness.envelope.respond(payload)`, and nothing else in the case body changes.
+
+### ⚠️ `#init` asserted three things and all three were vacuous
+
+```js
+should(elasticsearch.client._client).not.be.null();
+should(elasticsearch.client._esWrapper).not.be.null();
+should(elasticsearch.client.esVersion).not.be.null();
+```
+
+The first two hold **because the fixture assigned them**, not because `init()`
+did: `_initSequence`'s first line is `if (this._client) { return; }`, and
+presetting `_client` is the only way a spec gets a stub in at all — the real
+sequence builds an `@elastic/elasticsearch` `Client` and waits for a live
+cluster.
+
+The third reads a property **that does not exist**. The field is `_esVersion`;
+`esVersion` is `undefined`, and `undefined` is not `null`, so the assertion
+passed. **Had it been spelled right it would have failed** — `_esVersion` is
+`null` from the constructor and the early return never overwrites it. _A typo
+is what kept this test green_, in both twins, for the whole life of the file.
+
+The port states what `init()` does under this fixture: nothing, idempotently.
+One test, where three were worth none.
+
+### Two more dead or misdirected cases
+
+- **`#deleteIndexes`' failure case called `listIndexes()`**, not
+  `deleteIndexes()` — a copy-paste from the block above, in both twins, so
+  `#deleteIndexes` had no failure path of its own. It passes when pointed at
+  the right subject, because both read the same `cat.aliases`.
+- **`#deleteCollection`'s second case asserted a strict subset of its first**
+  and its name — _"should create the hidden collection if the index is empty"_ —
+  described a condition it never set up. Merged into one case that states both
+  halves: the indice goes, and the hidden collection keeps the index alive.
+
+### The ES client mock is a proxy, not a declaration list
+
+`test/mocks/service/elasticsearchClient.mock.js` declares ~40 stubs by hand, so
+a spec that exercises a call the mock never heard of fails on `undefined is not
+a function` rather than on its own assertion. `tests/mocks/elasticsearchClient.ts`
+auto-vivifies a memoised `vi.fn` per name instead — [L1b3](#three-mocks-retired-one-fixture-relocated)'s
+`stubRedis()` move, at the scale that needs it. **Nothing is pre-armed**,
+including `info()` and `cluster.health()`: `_initSequence` returns early, so
+arming them would be fixture no test reaches.
+
+### Where the real config is the right fixture, again
+
+`ES7`'s constructor runs `_loadMsConfig`, which *asserts* that
+`maxScrollDuration` and `defaults.scrollTTL` are present and parseable. So the
+harness clones `loadConfig()` and writes `majorVersion` on the copy — L3d's
+[route-table precedent](#where-the-real-config-is-the-right-fixture): when the
+real config is what the subject reads, a fixture would be testing the
+invention.
+
+### TD-57 paid for itself again
+
+Six `should(promise).be.rejected()` — that it rejects, not with what — became
+`rejects.toThrow()` with no matcher, and [TD-57](../type-debt-register.md#td-57)'s
+rule refused them. Every one is now `rejects.toBe(harness.esClientError)`: the
+subject re-throws `_esWrapper.formatESError(error)` untouched, so the identity
+is assertable and the `formatESError` spy states the route rather than standing
+in for the result. _Third slice in a row that gate has caught something._
+
 ## L4 is closed
 
 **34 specs, 14 128 lines, `mocha` 50 → 14, vitest 1 911 → 2 943 tests.**
@@ -2595,6 +2741,7 @@ takes ([L4e4](#what-l4e4-found)) — and, four times, nothing at all
 together" dissolved on that question, and three specs turned out to be
 [already ported](#what-l4e2-found).
 
-**Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines), then
-**L6** (12 `rewire` specs / 6 083 lines — redesigns, not ports), then
-**L7** (closure).
+**Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines) —
+[cut into a–e](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f),
+**L5a landed**; then **L6** (12 `rewire` specs / 6 083 lines — redesigns, not
+ports), then **L7** (closure).
