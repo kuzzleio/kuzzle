@@ -410,7 +410,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | **L6b** ✅ ([#2856](https://github.com/kuzzleio/kuzzle/pull/2856)) |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
 | **L6c** ✅ ([#2857](https://github.com/kuzzleio/kuzzle/pull/2857)) |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
 | **L6d** ✅ ([#2858](https://github.com/kuzzleio/kuzzle/pull/2858)) |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
-| **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
+| **L6e** ✅ (PR pending)                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
 | **L6g**                                                            |     1 |   857 | `validation/types/geoShape` — the same redesign, 60 call sites, plus `mock-require` on `koncorde` |
 | **L6h**                                                            |     1 |   520 | `network/entryPoint` — the dynamic `require(protocolPath)`, the only module-loading redesign left |
@@ -2744,6 +2744,77 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6e found
+
+**`mocha` 154 → 133 tests and 5 → 4 spec _files_**, vitest **3 591 → 3 615**
+across 148 files. 21 Mocha tests in, 24 out, and `test/mocks/mutex.mock.js`
+with them — this spec was its last caller.
+
+### ⚠️ The spec rewired the compiler's variable names
+
+```js
+Kuzzle.__with__({
+  koncorde_1: { Koncorde },
+  vault_1: { default: { load: () => {} } },
+});
+```
+
+`koncorde_1` and `vault_1` are **the names `tsc` emits** for
+`import { Koncorde } from "koncorde"` and `import vault from "./vault"`. Nothing
+in `lib/` is spelled that way; the spec addressed the _compiled output_, which
+is the plainest statement in this whole step of why the Mocha suite has to run
+out of `dist/test` at all — and [L7](#slices) deletes `build:tests` for exactly
+that reason.
+
+`vi.mock("koncorde")` names the dependency instead. **This is the one place in
+L6 where the port is not just equivalent but simpler**: a module id a reader can
+grep for, replacing a variable name that only exists after compilation and that
+a rename in `lib/` would have silently broken.
+
+_Generalisable:_ `rewire` cannot tell a module's _dependencies_ from its
+_locals_ — both are bindings in the compiled scope. `vi.mock` only offers the
+former, and the former is what a test should be replacing.
+
+### ⚠️ `calledWith` matched a prefix again — twice more
+
+[L6d](#what-l6d-found) found the first (`core:overload`'s percentage). Two more
+here:
+
+- `should(kuzzle.entryPoint.dispatch).calledWith("shutdown")` — the subject
+  dispatches `("shutdown", {})`, and the payload reached no assertion.
+- The start-order test asserted `kuzzle.ask.withArgs("core:security:verify")`
+  and friends through `sinon.assert.callOrder`, which says _these happened in
+  this relative order_ and nothing about what happened between them.
+
+The port replaces the ordering assertion with **the sequence itself** — a list
+of sixteen strings the fixture appends to as the subject initialises. It says
+what `callOrder` said, plus what it could not: that nothing else happened, and
+that nothing happened twice.
+
+### `global.kuzzle`'s write-once setter, stated where it bites
+
+`lib/kuzzle/kuzzle.ts` installs `global.kuzzle` as an accessor whose setter
+throws on the second write, so a spec cannot build two instances — and three
+tests here need to. The Mocha spec handled it inside a helper called
+`_mockKuzzle`, with `Reflect.deleteProperty(global, "kuzzle")` as its first
+line and no explanation: **deleting the property removes the accessor**, so the
+constructor's `global.kuzzle = this` becomes a plain assignment. The port keeps
+the trick and says why, which is the same finding [L4a](#what-l4a-found) filed
+for `global.app`.
+
+### What the Mocha suite never covered
+
+- **The cluster being initialised when it _is_ enabled.** One test asserted the
+  disabled half and nothing asserted the other, so a subject that never
+  initialised the cluster would have passed.
+- **What `vault.load` is called with** — the vault key and secrets file come
+  from the start options, and a subject ignoring them would have passed.
+- **`dump()`'s argument.** The suffix is what names the dump directory;
+  `calledOnce()` was the whole assertion.
+- **`start()`'s options reaching what consumes them**: `installations` to
+  `install`, `support` to `loadInitialState`, the application to the plugins
+  manager.
 
 ## What L6d found
 
