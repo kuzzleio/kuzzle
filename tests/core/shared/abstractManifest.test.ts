@@ -103,6 +103,19 @@ describe("#core/shared/AbstractManifest", () => {
       expectKerror(() => manifest.load(), "plugin.manifest.version_mismatch");
     });
 
+    /*
+     * The one case the Mocha spec had and this one did not, kept when that
+     * spec was deleted as a duplicate (step 13, L4e2): a `kuzzleVersion` that
+     * is not a string at all reaches `semver.satisfies` as a range it cannot
+     * parse, and comes back as a mismatch rather than as a type error.
+     */
+    it("throws plugin.manifest.version_mismatch when kuzzleVersion is not a string", () => {
+      const dir = writeManifest({ kuzzleVersion: 123, name: "my-plugin" });
+      const manifest = new AbstractManifest(dir);
+
+      expectKerror(() => manifest.load(), "plugin.manifest.version_mismatch");
+    });
+
     it("accepts a prerelease running version — includePrerelease is set", () => {
       (globalThis as { kuzzle?: unknown }).kuzzle = {
         config: { version: "2.57.0-beta.1" },

@@ -1769,3 +1769,63 @@ So a TypeScript plugin that writes either form — the second of which the pipe 
 - **Why 🟡 and not 🟠:** both forms work, and the first is on its way out. The cost is a cast at the plugin's own declaration and a type that reads as an intentional restriction while being an omission.
 - **Fix:** widen the two definitions — `HookEventHandler | string`, and `RegisteredPipeHandler | string` for pipes (the union `EventHandler.ts` already exports) — or, for the string form, deprecate it in the type with a comment naming the release that removes it.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/core/plugin/pluginsManager.test.ts` names the two casts `byName()` and `asPipe()` once, at the top, and points at this entry.
+
+### TD-79
+
+**Two of the configuration checker's messages describe something other than what they check** · 🟡 low · `lib/config/index.ts`
+
+Found porting the `config/index` spec ([step 13 L4e1](steps/13-sprint-10-test-closure.md#what-l4e1-found)), by writing the two assertions the Mocha spec never had.
+
+**1. The message names a value the operator never wrote.**
+
+```ts
+// lib/config/index.ts, checkHttpOptions
+assert(
+  typeof config.http.accessControlAllowOriginUseRegExp === "boolean",
+  `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${cfg.accessControlAllowOriginUseRegExp}" (boolean expected)`,
+);
+```
+
+It **checks** `config.http.…` and **prints** `cfg.…`, where `cfg` is `config.server.protocols.http` — a section that never carries this key. So the message reads `invalid value "undefined"` whatever was configured, and points the operator at the wrong place in their `.kuzzlerc`. Every other assert in the function reads and prints the same object.
+
+**2. The message promises a floor the check does not enforce.**
+
+```ts
+assert(
+  Number.isInteger(cfg.idleTimeout) && cfg.idleTimeout >= 0,
+  `[websocket] "idleTimeout" parameter: invalid value "${cfg.idleTimeout}" (integer >= 1000 expected)`,
+);
+```
+
+`idleTimeout: 500` is accepted while the message says it must be at least 1000. One of the two is wrong and the file does not say which: uWebSockets' own contract is "0, or at least 8 seconds", which matches neither.
+
+- **Why 🟡:** neither misleads the running server — the first only degrades a diagnostic, the second only admits values the operator was told not to use. Both are the kind of thing that costs an afternoon exactly once.
+- **Fix:** print `config.http.accessControlAllowOriginUseRegExp`; and decide the `idleTimeout` floor — either enforce `>= 1000` or correct the message to the range actually allowed.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/config/index.test.ts` pins both as they are — the message asserted verbatim, `idleTimeout: 500` asserted as *accepted* — so whichever way they are fixed, the spec says so.
+
+### TD-80
+
+**`PassportWrapper.authenticate` never passes `next`, so passport's own errors surface as `next is not a function`** · 🟡 low · `lib/core/auth/passportWrapper.ts`
+
+Found porting the `core/auth/passportWrapper` spec ([step 13 L4e6](steps/13-sprint-10-test-closure.md#what-l4e6-found)), by asserting on an unknown strategy — which the Mocha spec could not do, having replaced passport with a stub.
+
+```ts
+passport.authenticate(strategyName, this.options[strategyName] || {}, authCB)(
+  request,
+  response,
+);
+//        ^ two arguments: passport middleware takes (req, res, next)
+```
+
+Passport reports anything it decides itself — first among them **an unknown strategy name** — by calling `next(error)`. With no `next`, the middleware throws `TypeError: next is not a function`, which the wrapper's own `catch` then wraps into `plugin.runtime.unexpected_error`. So a plugin that mistypes a strategy name, or an `auth:login` naming a strategy that was never registered, is answered:
+
+```
+Caught an unexpected plugin error: next is not a function
+This is probably not a Kuzzle error, but a problem with a plugin implementation.
+```
+
+instead of `Unknown authentication strategy "foobar"`.
+
+- **Why 🟡:** the request fails either way, and it fails with a 500 that says a plugin is at fault — which is true. Only the message is useless, and it is useless in exactly the case an operator is most likely to hit while writing an authentication plugin.
+- **Fix:** pass a third argument — `(error) => reject(error instanceof KuzzleError ? error : wrapped(error))` — so passport's own errors take the same path as a strategy's.
+- **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/core/auth/passportWrapper.test.ts` pins the current message and points at this entry, so the fix will show up as a failing assertion naming it.

@@ -124,7 +124,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
 | **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5**     | The **two Elasticsearch twins** (they carry `mock-require` too)                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
-| **L6**     | The **`rewire` specs**                                                                                                                                                                                                                                                                                               | **14** |  **6 306** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
+| **L6**     | The **`rewire` specs** — **12** since [L4e2](#what-l4e2-found) deleted two of them as already-ported duplicates                                                                                                                                                                                                      | **12** |  **6 070** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
 ### Re-measured on `2-dev` after L1b (2026-09-21, `089ef8160`)
@@ -138,7 +138,7 @@ The table above is the plan as it stood at 148 specs. L1b closed at **84 specs /
 | Clean, > 1 000 lines               |     6 |  9 277 | **L3** (unchanged)                       |
 | `mock-require`, minus the ES twins |    34 | 14 128 | **L4** (unchanged)                       |
 | The two Elasticsearch twins        |     2 | 12 431 | **L5** (unchanged)                       |
-| `rewire`                           |    14 |  6 319 | **L6** (unchanged)                       |
+| `rewire`                           |    12 |  6 083 | **L6** (−2: [L4e2](#what-l4e2-found))    |
 | **Total**                          | **84** | **53 920** |                                      |
 
 L2 is therefore **28 specs / 11 765 lines**, not 29 / 12 995. The three strays are `core/auth/passportResponse` (26), `util/memoize` (61) and `kuzzle/vault` (178) — under 200 lines, no KuzzleMock, no `mock-require`, no `rewire`: they fit L1's axis and were missed by it. _A fourth demonstration that a slice's axis is a hypothesis;_ here the cost is three cheap files rather than a re-cut.
@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 10 | 2 560 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine` |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` ([#2844](https://github.com/kuzzleio/kuzzle/pull/2844)) · **e6** ✅ `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely, [#2845](https://github.com/kuzzleio/kuzzle/pull/2845)) · **e7** ✅ `api/controllers/adminController`, the last one ([#2846](https://github.com/kuzzleio/kuzzle/pull/2846)) |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2109,3 +2109,492 @@ stored in one layer down. Named once each as `byName()` and `asPipe()`.
   passport not at all before `init`. The Mocha suite ended instead on
   `describe("#loadPlugin", () => it("", () => {}))` — an empty test with an
   empty name, reported as a passing case called _"Plugin #loadPlugin "_.
+
+## What L4e1 found
+
+**`mocha` 26 → 25**, vitest **2 661 → 2 799 tests** across **129 → 130 files**.
+One spec, 586 lines, **31 `it`s in and 138 out**. The port is
+`tests/config/index.test.ts`.
+
+The 31 → 138 is not a rewrite: eleven of the Mocha tests were `for` loops over
+a list of bad values inside a single `it`, so a failure named the test and not
+the value. They are `it.each` tables now — the ten limits, the six bad values
+per HTTP option, the six per WebSocket option — and the case that fails says
+which one it is.
+
+### The substitution is `rc`, and it is the whole fixture
+
+This spec is the cleanest `reRequire` in the slice: one `mockRequire("rc", …)`
+and a re-require, because `mock-require` only affects a *later* `require`.
+`vi.mock` is hoisted, so the subject is imported normally and both halves
+disappear — including the `afterEach` that re-required `lib/config` a second
+time to undo the first.
+
+### ⚠️ `loadConfig` mutates what `rc` hands it, and the spec's fixture was the packaged defaults
+
+`loadConfig` rewrites its input in place: it splits
+`http.accessControlAllowOrigin` into an array, replaces
+`server.protocols.http.maxFormFileSize` with its parsed byte count, and
+assigns `config.internal`. The Mocha stub answered
+`Object.assign({}, defaults, overrides)` — a **shallow** copy of the imported
+`default.config` module — so every one of those writes landed in the real
+packaged-defaults object and stayed there for the rest of the process.
+
+That is visible in the suite itself: *"should convert string separated coma to
+an array"* asserts on `mockedConfigContent.http.accessControlAllowOrigin`, the
+object the test handed *in*, not on what `loadConfig` answered. It passes
+because by then the two are the same object. The port clones the defaults per
+call and asserts the result.
+
+### ⚠️ A test that called the subject and then asserted on something else
+
+*"should use storage engine default settings for the imports collection"*
+calls `config.loadConfig()`, discards it, and asserts on
+`defaultConfig.default.services.storageEngine.internalIndex.collections.imports.settings`
+— the packaged module. Whatever `loadConfig` did to those settings, the
+assertion could not see it; the call is decoration. Not a new form —
+[the fifteenth](#slices) is its neighbour — but the first where the subject
+*is* called and the result is simply dropped. The port reads the loaded
+configuration.
+
+### ⚠️ Two messages that describe something other than what they check — [TD-79](../type-debt-register.md#td-79)
+
+Found by writing the two assertions the Mocha spec never had:
+
+- `checkHttpOptions` **checks** `config.http.accessControlAllowOriginUseRegExp`
+  and **prints** `cfg.accessControlAllowOriginUseRegExp`, where `cfg` is
+  `server.protocols.http` — a section that never carries the key. The message
+  reads `invalid value "undefined"` whatever was configured. Every other
+  assert in the function reads and prints the same object.
+- `checkWebSocketOptions` accepts `idleTimeout >= 0` and says
+  `(integer >= 1000 expected)`. `idleTimeout: 500` is accepted while being
+  told it is not allowed.
+
+Both are pinned as they are — the message asserted verbatim, `500` asserted as
+*accepted* — so whichever way they are fixed, the spec says so.
+
+### What the Mocha suite never covered
+
+- **`checkClusterOptions` — the whole function.** Eleven assertions on the
+  section that decides whether a node joins its cluster, and a `.kuzzlerc` is
+  the only place any of them is ever set. Now eleven tests, including the two
+  spellings an environment variable uses for "no IP selector" (`""` and the
+  string `"null"`), which the checker normalises before validating.
+- **`preprocessProtocolsOptions`** — `internal.notifiableProtocols` is what
+  the realtime notifier iterates, so a protocol missing from it is a protocol
+  whose subscribers are never notified.
+- **The `accessControlAllowOriginUseRegExp` path**, which compiles every
+  configured origin into a `RegExp`.
+- **`maxFormFileSize` being replaced by its parsed value** — the checker does
+  not only validate it, and every reader downstream expects the number rather
+  than the `"1mb"` a `.kuzzlerc` writes.
+- **`options.db` winning over the deprecated `database`** — the spread exists
+  for that precedence and nothing asserted it.
+- **A single limit that is not a number.** The Mocha spec only replaced the
+  whole `limits` section; each limit is read through a guard of its own.
+
+## What L4e2 found
+
+**`mocha` 25 → 22** and **[L6](#slices) 14 → 12**, with no port written: three of
+the Mocha specs this step counted as remaining work **were already ported, and
+the original was never deleted**.
+
+| Mocha spec | vitest twin | since |
+| --- | --- | --- |
+| `test/core/storage/storageEngine.test.js` (2 `it`s) | `tests/core/storage/storageEngine.test.ts` (5) | `c49d3214f`, _"vitest specs for the converted lib/core modules"_ |
+| `test/core/shared/abstractManifest.test.js` (9) | `tests/core/shared/abstractManifest.test.ts` (10) | `c7fcc84ba`, [L1b3](#what-l1b3-found) |
+| `test/core/shared/sdk/impersonatedSdk.test.js` (4) | `tests/core/shared/sdk/impersonatedSdk.test.ts` (8) | `555264df9` |
+
+Each twin covers strictly more than its original, **except one case**:
+`abstractManifest`'s _"should throw if kuzzleVersion is not a string"_, which
+feeds `semver.satisfies` a range it cannot parse and gets a mismatch rather
+than a type error. It is now a test of the vitest spec, and the three Mocha
+files are deleted.
+
+**Two of the three are `rewire` specs**, so L6 — [budgeted as redesigns rather
+than ports](#slices) — loses two of its fourteen before it opens.
+
+### ⚠️ The count was never wrong; nothing was ever asked to compare the two trees
+
+The step's inventory is `find test -type f -name '*.test.js'`, which is exactly
+what the `mocha` ratchet counts, and it is the right question for _"how much
+Mocha is left"_. It is the wrong question for _"how much work is left"_, and
+nothing else asked: the vitest tree is addressed by [`specTarget()`](#slices)
+from spec to **subject**, never from subject back to spec, so a subject with
+two specs is invisible in both directions.
+
+The check is one line and worth keeping for the rest of the step:
+
+```bash
+for f in $(find test -name '*.test.js'); do
+  t="tests/${f#test/}"; [ -f "${t%.js}.ts" ] && echo "DUPLICATE $f"
+done
+```
+
+It is the same shape as [L3d](#what-l3d-found)'s block hash and as the
+[unmirrored-spec warning](#slices): **this step keeps finding that its own
+inventory is a `find` nobody cross-checked.**
+
+### ⚠️ `build:tests` never cleaned its output, so a deleted spec kept passing
+
+Deleting the three files and running `npm run test:unit:mocha` reported
+**804 passing** — the same count as before the deletion. `.mocharc` globs
+`./dist/test/**/*.test.js` and `build:tests` was a bare `tsc -p`, which emits
+over the previous output without removing anything: the compiled copies of the
+three deleted specs were still there, and still ran. After `rm -rf dist/test`,
+789 — the 15 tests that had just been deleted.
+
+CI never saw it (a fresh checkout has no `dist/`), and it is invisible in the
+direction that matters least: a spec that is deleted keeps *passing*. `npm run
+build:tests` now removes `dist/test` and `dist/tests` first. ⚠️ **Every slice
+of this step deletes specs, so every local Mocha run before this one was
+reporting a stale count.**
+
+## What L4e3 found
+
+**`mocha` 22 → 20**, vitest **2 800 → 2 840 tests** across **130 → 132 files**.
+Two specs, 613 lines, **29 `it`s in and 40 out**. The ports are
+`tests/model/storage/baseModel.test.ts` and
+`tests/model/storage/apiKey.test.ts`; `test/mocks/clientAdapter.mock.js`
+retires with them, and `test/mocks/elasticsearch.mock.js` goes too — it had no
+user left at all.
+
+### ⚠️ The substitution these two specs shared was wired to nothing — and the sweep's third pair dissolves
+
+Both opened with the same four lines: `mockrequire` the `clientAdapter`,
+`reRequire` `storageEngine`, build one, `init()` it. **Neither spec touches a
+storage engine again.** `BaseModel` persists through
+`global.kuzzle.internalIndex.<method>()` and `ApiKey` asks two security-token
+events; the engine is not on either path.
+
+So [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)'s third pair —
+_"`storage/storageEngine`, `model/storage/baseModel` and `model/storage/apiKey`
+all reset `storageEngine` over a stubbed `clientAdapter`"_ — was a shared
+*arrangement*, not a shared subject, and it dissolves the same way the
+`pluginsManager` / `processRequest` pair did in [L4d4](#what-l4d4-found).
+**All three of the sweep's "must land together" pairs turned out not to be
+couplings**; two were re-require habits copied between files, and the third
+([the `httpwsProtocol` pair](#what-l4b4-found--and-l4b-is-closed)) was the only real one.
+
+### ⚠️ The assertions were one layer below the subject — for the seventh time
+
+`BaseModel.load` calls `global.kuzzle.internalIndex.get(...)`. The Mocha spec
+asserted `kuzzle.ask("core:storage:private:document:get", kuzzle.internalIndex.index, "models", "mylehuong")`
+— four arguments, of which the subject passes two, because **those events are
+`InternalIndexHandler`'s**, one layer down, and `KuzzleMock` supplied a real
+handler that emits them.
+
+That is [L2b](#what-l2b-found)'s `ObjectRepository` finding, [L2d](#what-l2d-found)'s
+`collectionController`, [L2e](#what-l2e-found--and-l2-is-closed)'s and
+[L3b](#what-l3b-found)'s `securityController` halves — **seven specs across
+five slices, always the same cause**: a mock that supplies a real
+collaborator makes the layer below reachable, and a spec that reaches it
+cannot tell you when its subject stops calling it. The ports assert on
+`internalIndex` and take a nine-method fixture in exchange.
+
+### ⚠️ `serialize()` deletes the token from the model, not from a copy
+
+```ts
+serialize({ includeToken = false } = {}) {
+  const serialized = super.serialize();       // { _id, _source: this.__source }
+  if (!includeToken && this.token) {
+    delete serialized._source.token;          // ← the model's own __source
+  }
+  return serialized;
+}
+```
+
+`BaseModel.serialize()` answers `{ _id: this._id, _source: this._source }`,
+and `_source` is the backing object rather than a copy — so hiding the token
+from one caller **removes it from the ApiKey instance**. The Mocha spec built
+*two* instances to assert the two cases, which is exactly what kept the order
+from mattering; the port asserts the aliasing on one instance, so a future
+`serialize()` that stops mutating says so. Left as it is: `lib/` is not this
+slice's to change, and every current caller serialises once, at the end.
+
+### Small things
+
+- **`kuzzle.hash.returns("hashed-jwt-token")`** arranged the wrong function:
+  the fingerprint is `sha256(token.jwt)` from `lib/util/crypto`. The test that
+  needed it asserted `apiKey._id === apiKey._source.fingerprint` — true of any
+  two equal values, and it never said what the id *is*. The port asserts both
+  against `sha256(TOKEN.jwt)`.
+- **`ApiKey.load` had no test for the case that works** — only for the one
+  that throws.
+- **`loadFromRequest`'s precedence was untested**: `_id` over `key` over
+  `fingerprint`, and a request may carry two of them.
+- **`_afterDelete`'s guard was untested**: the token may already be expired or
+  revoked, and the `if (token)` is what keeps deleting an API key from failing
+  on it.
+- **`BaseModel.batchExecute`, `register`'s misuse guard, the `_source`
+  setter's field filter, and both "must be defined" getters** had no test at
+  all.
+
+## What L4e4 found
+
+**`mocha` 20 → 19**, vitest **2 840 → 2 857 tests** across **132 → 133 files**.
+One spec, 419 lines, **12 `it`s in and 17 out**. The port is
+`tests/kuzzle/internalIndexHandler.test.ts`.
+
+### The two-step mock becomes one declaration
+
+This is the slice's genuinely conditional spec, and the reason is the base
+class: `InternalIndexHandler` takes a mutex named `InternalIndexBootstrap`,
+and `Store.init` — which it calls first — takes one named
+`Store.init(%kuzzle)`. Under `mock-require` that needs **two** steps, because
+the substitution only reaches a module required *after* it:
+
+```js
+mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
+// the shared object "Store" also uses mutexes that we need to mock
+mockrequire.reRequire("../../lib/core/shared/store");
+InternalIndexHandler = mockrequire.reRequire("../../lib/kuzzle/internalIndexHandler");
+```
+
+`vi.mock` replaces the module for the whole graph, so the second and third
+lines go. **The `reRequire` was never about the handler; it was about its base
+class** — the same question [L4a](#what-l4a-found) asked and answered for
+`global.app`.
+
+### ⚠️ `MutexMock.__getLastMutex()` could not say which lock it was reading
+
+The mock kept a module-level `lastMutex`, and the bootstrap test asserted on
+it — `resource`, `lock`, `unlock`. Two mutexes are taken on that path, and
+which one is "last" depends on the order the subject happens to take them in.
+The port records **all** of them and asserts the sequence
+`["Store.init(%kuzzle)", "InternalIndexBootstrap"]`, then reads the bootstrap
+one by name.
+
+### ⚠️ `calledWith` matches a prefix, so a fourth argument went unmentioned
+
+```js
+should(kuzzle.ask).calledWith(
+  "core:storage:private:collection:create", "fooindex", "foo", { mappings: collections.foo });
+```
+
+`createCollections` passes a fourth argument, `{ indexCacheOnly }` — and
+sinon's `calledWith` is satisfied by a call that passed *more* arguments than
+it was given. That flag is the difference between the node that won the
+`Store.init` lock and writes the mappings, and the ones that waited and only
+fill their cache; it was invisible to the assertion. **A `calledWith` is a
+prefix match, and the arguments a spec does not mention are the ones nobody
+is watching** — the second matcher-shaped hole in this step, after
+`not.calledWith` in [L1b](#what-l1b-found).
+
+### What the Mocha suite never covered
+
+- **The lock is released when the bootstrap fails.** That is what the
+  `finally` is for: a node that fails to bootstrap and keeps the lock makes
+  every other node wait out its 30-second TTL.
+- **`authToken.secret` winning over the deprecated `jwt.secret`.** The
+  fallback is written `authToken?.secret ?? jwt?.secret`, and only the
+  deprecated half was tested.
+- **A restart finding its seed already stored** — it must not generate a
+  second one, and must read the stored value back, or every restart
+  invalidates every token in circulation.
+- **`createInitialValidations` with nothing configured**, which is the
+  packaged default.
+- **Only the `admin` profile carrying `rateLimit: 0`** — the unlimited rate is
+  what lets an operator recover a node that is rate-limiting everyone else.
+
+## What L4e5 found
+
+**`mocha` 19 → 17**, vitest **2 857 → 2 880 tests** across **133 → 135 files**.
+Two specs, 323 lines, **18 `it`s in and 23 out**. The ports are
+`tests/util/mutex.test.ts` and `tests/util/asyncStore.test.ts`.
+
+### ⚠️ `asyncStore`'s stub made the suite describe the wrapper instead of the store
+
+The Mocha spec replaced `async_hooks` with
+
+```js
+class AsyncLocalStorageStub {
+  constructor() {
+    this._store = new Map();
+    this.run = sinon.stub();            // ← does not call its callback
+    this.getStore = sinon.stub().returns(this._store);
+  }
+}
+```
+
+**`run` never runs anything**, and `getStore` answers the same Map forever —
+outside any asynchronous context. So `#set` and `#get` asserted against a Map
+the stub invented, `#run` asserted only that *a* Map and *a* callback were
+handed over, and nothing could tell whether a value set inside a context is
+visible to the code running in it. That is the single thing an
+`AsyncLocalStorage` wrapper exists to do.
+
+`AsyncLocalStorage` is a Node builtin with no I/O. The port uses the real one
+and asserts the real property: a value set inside `run` is still there on a
+later tick, and two runs do not see each other's store.
+
+The spec also carried a `process.version >= "v12.18.1"` branch whose `else`
+half asserted on an `AsyncStoreStub` class that **no longer exists in the
+subject** — dead since the minimum supported Node became 20, and unreachable
+long before that.
+
+### The mutex's fake clock becomes four answer queues
+
+The Mocha spec drove `lock()`'s retry loop with `sinon.useFakeTimers()` and
+`clock.tick(1000)` in a `for` loop, twelve lines per case — and its last
+assertion, `should(mutexPromise).be.fulfilledWith(false)`, was **never
+awaited**. What those tests are about is the sequence of answers the cache
+gives: the port arranges that sequence (`stored = [false, false, true]`) with
+a 1 ms attempt delay and real timers, and asserts the number of attempts. Same
+property, deterministic, and the assertion runs.
+
+### ⚠️ `instanceof` across `vi.resetModules()`, for the fifth time
+
+`delScriptRegistered` is module-level, so "the LUA script is defined once" is
+a question about the module and the port re-imports it per test. The two
+rejection tests then failed with _"expected InternalError … to be an instance
+of InternalError"_: a statically imported error class is a **different class
+object** from the one the re-evaluated graph raises. The error class is now
+imported from the same fresh graph as the subject. Fifth occurrence, after
+[L4a](#what-l4a-found)'s and [L4b](#what-l4b-found)'s.
+
+### What the Mocha suite never covered
+
+- **The node half of a mutex id.** `mutexId` is `<node>/<random>`, and the
+  Mocha spec only asserted that two ids differ — the part that makes a lock
+  traceable to the node holding it, when a cluster deadlocks, was untested.
+- **`wait()` never writing.** It reads the cache; a `wait` that stored
+  anything would be taking the lock it is only supposed to be watching.
+- **`unlock` passing its own id to the script**, which is the whole reason the
+  LUA script exists: a lock whose TTL expired and was re-taken by another node
+  must not be deleted by this one.
+- **`AsyncStore` refusing to `get`/`set`/`has` outside a run.** The subject
+  asserts `"Associated AsyncStore is not set"`; the stub always answered a
+  Map, so that branch could never be reached.
+
+## What L4e6 found
+
+**`mocha` 17 → 15**, vitest **2 880 → 2 919 tests** across **135 → 137 files**.
+Two specs, 255 lines, **14 `it`s in and 39 out**. The ports are
+`tests/core/auth/passportWrapper.test.ts` and
+`tests/core/shared/sdk/embeddedSdk.test.ts`. **Neither declares a single
+`vi.mock`.**
+
+### Both substitutions were replacing something that needs no replacing
+
+`passportWrapper`'s spec replaced the `passport` module with four stubs —
+and then **un-replaced it** for its one redirect test, which is the only one
+that exercised passport's protocol rather than the stub's. `passport` is a
+registry with no I/O: the port registers real strategies, each one taking one
+of the four outcomes the wrapper exists to translate (`success`, `fail`,
+`error`, `redirect`), and asserts what the wrapper answers.
+
+`embeddedSdk`'s spec replaced `impersonatedSdk` with a `sinon.spy()` and
+asserted it had been *called* with the kuid — which says the constructor ran,
+not that the result impersonates anyone. The port asserts the object that
+comes back: an `ImpersonatedSDK` whose `kuid` and `checkRights` are what
+`as()` was given.
+
+### ⚠️ `use()` was called with the wrong arity, and it worked
+
+```js
+passportWrapper.use(new MockupStrategy("mockup", stub));
+```
+
+The signature is `use(name, strategy, opts)`. It worked because `passport.use`
+accepts the one-argument form and reads the name off the strategy — but the
+wrapper then ran `this.options[name] = opts` with `name` being **the strategy
+object**, so the options were stored under the key `"[object Object]"` and
+the next `authenticate("mockup")` found none. TypeScript refuses the call
+outright, which is how the port found it.
+
+### ⚠️ An unknown strategy is reported as `next is not a function` — [TD-80](../type-debt-register.md#td-80)
+
+The port's first new assertion — authenticate against a strategy that was
+just unregistered — did not answer `Unknown authentication strategy "foobar"`.
+It answered `Caught an unexpected plugin error: next is not a function`.
+
+`passport.authenticate(...)` returns Express middleware, which the wrapper
+invokes as `(request, response)`; passport reports everything it decides
+itself, an unknown strategy first among them, by calling **`next(error)`**.
+With no `next`, the middleware throws a `TypeError` that the wrapper's own
+`catch` wraps. Pinned as it is, and filed.
+
+The Mocha spec could not have found this: with `passport.authenticate`
+replaced by a stub, the middleware whose arity is wrong never ran.
+
+### What the Mocha suite never covered
+
+- **The other fourteen forbidden `auth` actions.** The list is the API surface
+  a plugin may not reach as itself, and one test named one of them; an entry
+  dropped from that list is a privilege the embedded SDK silently gains. All
+  fifteen are a table now.
+- **`propagate` being set on `realtime:subscribe` and on nothing else** — the
+  Mocha spec asserted the two values of the flag, never its absence
+  elsewhere.
+- **A warned action still running.** _"should warn if the action is not
+  supported"_ called `query` without awaiting it and asserted only the
+  warning, so nothing said whether `auth:login` still works.
+- **`as()`'s `checkRights` defaulting to false**, which is the safe half of
+  the option.
+- **A strategy throwing a non-`Error`** — plugin code may throw anything, and
+  the subject wraps it before reading `.message` off it.
+
+## What L4e7 found — and L4 is closed
+
+**`mocha` 15 → 14**, vitest **2 919 → 2 943 tests** across **137 → 138 files**.
+One spec, 305 lines, **16 `it`s in and 24 out**. The port is
+`tests/api/controllers/adminController.test.ts`.
+
+### `__getLastMutex()` again, and this time it was load-bearing
+
+The same `test/mocks/mutex.mock.js` accessor [L4e4](#what-l4e4-found) found —
+one module-level `lastMutex`, one module-level `__canLock()` switch — and here
+the spec had to work around both: _"should unlock the action even if the
+promise rejects"_ reads `__getLastMutex()` twice and ends with
+`should(mutex2).not.eql(mutex1)`, an assertion whose only job is to check that
+the accessor moved on. The lock-refused tests wrap themselves in
+`try { … } finally { MutexMock.__canLock(true) }`, because the switch is
+process-global and a test that throws before restoring it breaks the next
+file.
+
+The port records the mutexes in a list and reads the one it means by name, so
+both workarounds disappear.
+
+### What the Mocha suite never covered
+
+- **`resetSecurity`'s return value.** It asserted the three truncations and
+  dropped what they answered — and `{ deletedUsers, deletedProfiles,
+  deletedRoles }` is the API's response body.
+- **`resetDatabase` releasing its lock when the deletion fails**, which is
+  what its `finally` is for. The `resetSecurity` half was tested; its twin
+  was not.
+- **Nothing being flushed when `resetCache` refuses an unknown database.**
+- **`dump`'s default suffix** (`manual-api-action`).
+- **The nine-action list**, which is what `_isAction` answers from: an action
+  missing from it is an action the API refuses although the method exists.
+- **⚠️ `_waitForAction`, the branch three actions share.** `refresh: "false"`
+  means *do not wait*: the action answers `{ acknowledge: true }` immediately
+  and the work runs on, detached. The failure of that promise is swallowed
+  into a single `logger.error` line — the only place it is ever reported —
+  and nothing asserted either half. Both are tested now.
+
+## L4 is closed
+
+**34 specs, 14 128 lines, `mocha` 50 → 14, vitest 1 911 → 2 943 tests.**
+Thirteen PRs, a–e.
+
+Its premise — _"`vi.mock` is hoisted and static where `mock-require` is
+dynamic"_ — turned out to be the wrong question in **every** sub-slice. What
+the `beforeEach` + `reRequire` pairs were actually holding up, in order:
+`global.app`'s write-once singleton ([L4a](#what-l4a-found)), one `pino` stub
+plus a key ([L4b1](#what-l4b1-found)), three tests out of 79 that genuinely
+need `vi.doMock` ([L4b3](#what-l4b3-found), [L4b4](#what-l4b4-found--and-l4b-is-closed)),
+a cached mock factory ([L4c1](#what-l4c1-found)), a mutex the **base class**
+takes ([L4e4](#what-l4e4-found)) — and, four times, nothing at all
+([L4d1](#what-l4d1-found), [L4d2](#what-l4d2-found), [L4d4](#what-l4d4-found),
+[L4e3](#what-l4e3-found)).
+
+**The lesson, stated once: ask what a `reRequire` is resetting, not what the
+`mockrequire` is replacing.** Three of the sweep's "pairs that must land
+together" dissolved on that question, and three specs turned out to be
+[already ported](#what-l4e2-found).
+
+**Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines), then
+**L6** (12 `rewire` specs / 6 083 lines — redesigns, not ports), then
+**L7** (closure).
