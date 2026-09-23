@@ -1,0 +1,10 @@
+{
+  "name": "invalid-errors",
+  "kuzzleVersion": ">=2.x",
+  "errors": {
+    "some_error": {
+      "class": "BadRequestError",
+      "message": "Some error occured %s"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "lambda-core",
+  "kuzzleVersion": ">=2.x"
+}

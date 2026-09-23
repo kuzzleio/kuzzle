@@ -407,7 +407,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | Sub-slice                                                          | Specs | Lines | Content                                                                                           |
 | ------------------------------------------------------------------ | ----: | ----: | ------------------------------------------------------------------------------------------------- |
 | **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
-| **L6b**                                                            |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
+| **L6b** ✅ (PR pending)                                            |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
 | **L6c**                                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
 | **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
@@ -2744,6 +2744,108 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6b found
+
+**`mocha` 209 → 186 tests and 9 → 7 spec _files_**, vitest
+**3 512 → 3 558** across 145 files. Two specs out, 23 Mocha tests in,
+**46 vitest tests out**, and `test/mocks/fs.mock.js` with them — these two were
+its only callers.
+
+Both specs were the other half of [L6a](#what-l6a-found)'s finding: `rewire`
+used as `require`, and here **redundantly twice over** — the line above it is
+already `mockrequire.reRequire(<same path>)`, which returns the reloaded module
+the `rewire` then loads again.
+
+### ⚠️ `loadFromDirectory` was tested with the filesystem taken away
+
+The method's entire job is to read a plugin off disk: it `require`s the plugin
+directory, its `manifest.json` (through `AbstractManifest`) and its
+`package.json`, at three paths known only at runtime. The Mocha spec replaced
+`fs` and all three module ids with `mock-require`, so what ran was never a
+plugin being loaded — it was a set of stubs answering each other.
+
+`vi.mock` cannot substitute a runtime `require(path)` anyway, and **it does not
+have to: runtime `require` works under vitest.** The port hands the subject
+real directories — `tests/fixtures/plugins/{lambda-core,with-errors,invalid-errors,no-manifest,not-a-plugin}`,
+each an actual `index.cjs` + `manifest.json` + `package.json` — and asserts
+what came back. The subject runs unmodified, and the five refusals
+(`cannot_load` for a non-directory, `manifest.cannot_load`, `invalid_errors`,
+`init_not_found`, `runtime.unexpected_error`) are each a directory on disk
+rather than a `mockrequire.stop()` in the middle of a test.
+
+_Generalisable, and it revises a premise:_ `mock-require` is not always
+replaced by `vi.mock`. **When a subject reads the real world, the honest port
+gives it a real one** — a fixture directory is smaller, more readable and
+strictly more truthful than four module substitutions, and it is available
+because [L4](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd)'s
+constraint is about the _module graph_, not about `fs`.
+
+### ⚠️ `dump()` never gives its lock back — [TD-81](../type-debt-register.md#td-81)
+
+Found by calling `dump()` twice in one test. The lock is taken **before** the
+argument is validated and released only on the success path:
+
+```ts
+this._dump = true;               // taken here
+if (!suffixRegex.test(suffix)) {
+  throw new BadRequestError(…);  // and never given back
+}
+…
+this._dump = false;              // the only release
+```
+
+So one malformed `admin:dump` — a bad suffix, a dump path outside the
+configured directory, an unwritable folder — disables dumping **for the
+lifetime of the process**, and every later call is answered
+`Cannot execute action "dump": already executing.` about a dump that is not
+running. Reachable from the API, process-wide, and it misreports the state to
+the operator at the moment they most need the tool. Pinned in a test that names
+the entry; the fix is a `try/finally` in `lib/`, which a porting slice does not
+do.
+
+### ⚠️ Two tests asserted a method the subject has never called
+
+```js
+should(fsStub.removeSync).not.be.called();
+```
+
+`removeSync` is `fs-extra`'s. The subject removes directories with `fs.rmSync`
+and core files with `fs.unlinkSync`. Both _"should do nothing if…"_ tests
+therefore asserted that something which cannot happen did not happen —
+**the negative form of the vacuous assertion**, and it is worth naming apart
+from the positive one: a negative assertion on the wrong name is invisible
+even to a reader who checks that the method exists somewhere, because the
+whole point of the line is that it was not called.
+
+### ⚠️ `plugins.json` was asserted against the wrong object
+
+The subject dumps `pluginsManager.getPluginsDescription()`. The Mocha spec set
+`pluginsManager.plugins` **and** `getPluginsDescription()` to the same `{foo:{}}`
+and asserted on `plugins` — so a subject dumping the other one, or the raw
+plugin objects rather than their description, would have passed. The port gives
+the two different values.
+
+### What the Mocha suite never covered
+
+- **Both halves of privileged mode's handshake.** It takes two
+  acknowledgements — the manifest's and the operator's configuration — and the
+  subject refuses each one alone (`privileged_not_supported`,
+  `privileged_not_set`). Only the agreeing case was tested.
+- **The configuration being copied rather than aliased**: a plugin that mutates
+  its own config must not reach into `kuzzle.config`.
+- **The kebab-case deprecation warning**, and `deprecationWarning: false`
+  silencing it — the only notice a plugin author gets about a name Kuzzle will
+  refuse in a future version.
+- **`info()` for a plugin that registers nothing**: it feeds `server:info`, and
+  the empty shape is what an operator reads.
+- **`Plugin.checkName`**, five rows.
+- **The configured `dump.gcore` command** — the Mocha spec only ever saw the
+  `"gcore"` default.
+- **A dump with no core file produced**: the subject warns instead, and nothing
+  asserted the empty half of that branch.
+- **The lock being released after a successful dump** — the other side of
+  TD-81, and what makes a second dump possible at all.
 
 ## What L6a found
 
