@@ -315,7 +315,7 @@ asked for.
 | **L5b** ✅ ([#2850](https://github.com/kuzzleio/kuzzle/pull/2850)) | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
 | **L5c** ✅ ([#2851](https://github.com/kuzzleio/kuzzle/pull/2851)) | 9 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
 | **L5d** ✅ ([#2852](https://github.com/kuzzleio/kuzzle/pull/2852)) | 11 | ~1 600 | index/collection lifecycle: `createIndex`, `createCollection` (388 L), mappings, settings, `import`, `_createHiddenCollection`, `_checkMappings` |
-| **L5e** ✅ (PR pending) | 10 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) — **and the twins themselves** |
+| **L5e** ✅ ([#2853](https://github.com/kuzzleio/kuzzle/pull/2853)) | 10 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) — **and the twins themselves** |
 
 ⚠️ **The ratchet could not move until L5e, and did.** (Baseline 14 → **12**.) It counts spec *files*, and the two
 twins are one file each however much of them is ported. So each sub-slice
