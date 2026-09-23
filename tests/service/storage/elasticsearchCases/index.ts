@@ -18,10 +18,12 @@
  * | Group | Blocks | Slice |
  * | --- | --- | --- |
  * | `inventory` | 16 — wiring, listings, existence, naming | L5a |
+ * | `crud` | 8 — the single-document actions | L5b |
  */
 import { describe } from "vitest";
 
 import { setupElasticsearch, type ESVersion } from "./harness";
+import { describeCrud } from "./crud";
 import { describeInventory } from "./inventory";
 
 export function describeElasticsearch(version: ESVersion) {
@@ -29,5 +31,6 @@ export function describeElasticsearch(version: ESVersion) {
     const harness = setupElasticsearch(version);
 
     describeInventory(harness);
+    describeCrud(harness);
   });
 }

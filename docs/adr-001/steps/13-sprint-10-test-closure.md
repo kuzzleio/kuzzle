@@ -312,7 +312,7 @@ asked for.
 | Sub-slice | Blocks | ~Lines/twin | Content |
 | --------- | -----: | ----------: | ------- |
 | **L5a** ✅ ([#2849](https://github.com/kuzzleio/kuzzle/pull/2849)) | 16 | ~600 | harness + envelope table + the small blocks, **11 of them byte-identical**: wiring, listings, existence, naming |
-| **L5b** | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
+| **L5b** ✅ ([#2850](https://github.com/kuzzleio/kuzzle/pull/2850)) | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
 | **L5c** | 8 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
 | **L5d** | 11 | ~1 600 | index/collection lifecycle: `createIndex`, `createCollection` (388 L), mappings, settings, `import`, `_createHiddenCollection`, `_checkMappings` |
 | **L5e** | 11 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) |
@@ -2638,6 +2638,76 @@ both workarounds disappear.
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
 
+## What L5b found
+
+**`mocha` 623 → 569 tests**, vitest **3 087 → 3 141** across 140 files. Eight
+blocks, **27 `it`s per twin in, 27 cases per version out**. The whole Mocha
+suite was run after the deletion: **−54 exactly**, nothing else leaning.
+
+### The envelope needed one rename, and the rename is the finding
+
+[L5a](#what-l5a-found)'s table called the request-nesting field `searchRequest`,
+because `search` was the only case in sight. L5b found the same nesting on
+`count`'s filter and on `update`/`upsert`'s `doc`/`upsert` pair, so it is the
+general rule: **ES 7 nests a request payload under `body`, ES 8 puts it at the
+root.** Renamed to `request`. Nothing else in the table moved across eight more
+actions, which is the evidence the shape was right.
+
+### ⚠️ Three actions answer the document they *sent*, not the one ES echoed
+
+Every assertion in these eight blocks was `calledWithMatch` — partial, the
+idiom [L3f](#calledwithmatch-is-partial-and-five-things-were-hiding-in-the-gap)
+showed is where behaviour hides. Asserting the whole request and the whole
+result showed it immediately:
+
+```ts
+return { _id: body._id, _source: esRequest.body, _version: body._version };
+```
+
+`create`, `createOrReplace` and `replace` answer **`esRequest.body`** — the
+document that went out, `_kuzzle_info` included. The caller therefore receives
+metadata Elasticsearch never returned, and would receive the *stale* body if a
+mapping or an ingest pipeline had changed it. Under `.match()` the extra key
+was invisible; under `toEqual` the port has to name all four stamp fields,
+which is now what it does.
+
+**⚠️ Filed, not fixed** (this is a porting slice, and [the DoD](#definition-of-done-per-pr)
+says `lib/` stays untouched): `esRequest.body = content` followed by
+`esRequest.body._kuzzle_info = …` writes the stamp **onto the caller's own
+object**. A caller's document comes back mutated, and nothing in either suite
+said so.
+
+### `#replace`'s failure case was named the opposite of what it does
+
+> _"should throw a NotFoundError Exception if document already exists"_
+
+It arms `exists → false` and asserts `services.storage.not_found`. `replace`
+refuses to **create**: it checks existence first and never reaches
+`client.index`. The name says the reverse, in both twins. Renamed, and the
+"never reached the client" half — which the Mocha version did assert — kept.
+
+### `id: undefined` is on the wire, and a negative said otherwise
+
+`create` with no id builds its request with `id` in the object literal either
+way, so the key **is** sent, holding `undefined`, and the client drops it. The
+port's first attempt asserted `not.toHaveProperty("id")` and failed. Small, but
+it is the third time in this step that writing an assertion in a language that
+checks it has corrected the author's model of the subject.
+
+### The stamp is split three ways, and now each is stated
+
+| Action | `_kuzzle_info` written |
+| --- | --- |
+| `create` | `author` + `createdAt`, with `updatedAt`/`updater` explicitly `null` |
+| `update` | `updatedAt` + `updater` only |
+| `createOrReplace`, `replace` | **both halves at once** |
+| `upsert` | updater half onto `doc`, author half onto `upsert` — two different destinations in one request |
+
+`upsert`'s `defaultValues` go to the `upsert` branch **only**, which is the one
+thing about that action a reader cannot guess: they describe a document that
+does not exist yet, so they must not reach the partial update applied to one
+that does.
+
 ## What L5a found
 
 **`mocha` 701 → 623 tests** (the two twins shrink; the ratchet's file count
@@ -2743,5 +2813,5 @@ together" dissolved on that question, and three specs turned out to be
 
 **Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines) —
 [cut into a–e](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f),
-**L5a landed**; then **L6** (12 `rewire` specs / 6 083 lines — redesigns, not
+**L5a–b landed**; then **L6** (12 `rewire` specs / 6 083 lines — redesigns, not
 ports), then **L7** (closure).

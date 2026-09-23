@@ -14,7 +14,7 @@
  * | | ES 7 | ES 8 |
  * | --- | --- | --- |
  * | response | `{ body: payload }` | `payload` |
- * | search request body | `body: searchBody` | `...searchBody` |
+ * | request payload | `body: { … }` | `…` at the root |
  * | document body | `body: { … }` | `document: { … }` |
  * | total-hits flag | `trackTotalHits` | `track_total_hits` |
  * | `_source` filter | `"true"` | `true` |
@@ -49,10 +49,14 @@ export interface ESEnvelope {
   respond<T>(payload: T): T | { body: T };
 
   /**
-   * How a search body is carried in a request. ES 7 nests it under `body`,
-   * ES 8 spreads it at the root.
+   * How a request payload is carried. ES 7 nests it under `body`; ES 8 puts
+   * it at the root.
+   *
+   * ⚠️ Named `searchRequest` in L5a, when `search` was the only case in sight.
+   * L5b found the same nesting on `count`'s filter and on `update`'s
+   * `doc`/`upsert` pair, so it is the general rule and not a search one.
    */
-  searchRequest(searchBody: JSONObject): JSONObject;
+  request(payload: JSONObject): JSONObject;
 
   /**
    * How a single document's content is carried in a write request. ES 7 calls
@@ -76,7 +80,7 @@ export interface ESEnvelope {
 export const ES7_ENVELOPE: ESEnvelope = {
   version: "7",
   respond: (payload) => ({ body: payload }),
-  searchRequest: (searchBody) => ({ body: searchBody }),
+  request: (payload) => ({ body: payload }),
   documentRequest: (document) => ({ body: document }),
   trackTotalHits: "trackTotalHits",
   sourceEnabled: "true",
@@ -85,7 +89,7 @@ export const ES7_ENVELOPE: ESEnvelope = {
 export const ES8_ENVELOPE: ESEnvelope = {
   version: "8",
   respond: (payload) => payload,
-  searchRequest: (searchBody) => ({ ...searchBody }),
+  request: (payload) => ({ ...payload }),
   documentRequest: (document) => ({ document }),
   trackTotalHits: "track_total_hits",
   sourceEnabled: true,

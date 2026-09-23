@@ -10,7 +10,7 @@
  * What is *not* shared is the wire format, which is stated in
  * {@link ESEnvelope} and read by the cases rather than hidden from them.
  */
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { loadConfig } from "../../../../lib/config";
 import { Elasticsearch } from "../../../../lib/service/storage/Elasticsearch";
@@ -40,6 +40,17 @@ export interface ESHarness {
   envelope: ESEnvelope;
   /** The rejection every "if client fails" case arms and then asserts on. */
   esClientError: Error;
+  /**
+   * Frozen for the duration of a case: every write stamps `_kuzzle_info`
+   * with `Date.now()`, and an assertion on the whole request has to name it.
+   */
+  timestamp: number;
+  /**
+   * The single request a client stub was given. Fails the case if the stub
+   * was called any number of times other than once, so an assertion on the
+   * request also states that exactly one was sent.
+   */
+  sent: (stub: { mock: { calls: unknown[][] } }) => any;
   /** Builds a second instance — `#constructor` is the only case that needs one. */
   build: (scope?: storeScopeEnum) => Elasticsearch;
   config: any;
@@ -70,7 +81,16 @@ export function setupElasticsearch(version: ESVersion): ESHarness {
 
     stubKuzzle({ config });
 
+    harness.timestamp = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(harness.timestamp);
+
     harness.esClientError = new Error("es client fail");
+
+    harness.sent = (stub) => {
+      expect(stub.mock.calls).toHaveLength(1);
+
+      return stub.mock.calls[0][0];
+    };
 
     harness.build = (scope = storeScopeEnum.PUBLIC) => {
       const built = new Elasticsearch(harness.config, scope);
