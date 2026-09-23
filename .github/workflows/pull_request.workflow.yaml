@@ -41,7 +41,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
 
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -67,7 +67,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       - name: ESLint
@@ -98,7 +98,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       # Ratchets: the .js / explicit-any / cast counts may only decrease.
@@ -149,7 +149,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       - name: Build
@@ -184,7 +184,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       - name: Build

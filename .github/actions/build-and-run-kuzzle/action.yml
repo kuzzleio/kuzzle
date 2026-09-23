@@ -16,7 +16,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: npm ci
+    - run: ./.ci/scripts/with-retry.sh npm ci
       shell: bash
 
     - run: npm run build

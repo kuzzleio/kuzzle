@@ -56,7 +56,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
     
       - name: Build
         run: npm run build
