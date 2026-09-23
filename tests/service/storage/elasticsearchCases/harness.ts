@@ -54,6 +54,18 @@ export interface ESHarness {
   /** Builds a second instance — `#constructor` is the only case that needs one. */
   build: (scope?: storeScopeEnum) => Elasticsearch;
   config: any;
+  /**
+   * `global.kuzzle.ask`. Every scroll-bearing action keeps its cursor in the
+   * internal cache through this bus, so the cases both arm it and assert on
+   * it. Armed per case rather than here: what a scroll answers *is* the case.
+   */
+  ask: ReturnType<typeof vi.fn>;
+  /**
+   * `global.kuzzle.config.limits`, the real defaults. `deleteByQuery`,
+   * `updateByQuery` and `_mExecute` all read it, and the cases that pin a
+   * limit write it here.
+   */
+  limits: any;
 }
 
 /**
@@ -78,8 +90,17 @@ export function setupElasticsearch(version: ESVersion): ESHarness {
 
     config.services.storageEngine.majorVersion = version;
     harness.config = config.services.storageEngine;
+    harness.limits = config.limits;
 
-    stubKuzzle({ config });
+    harness.ask = vi.fn(async () => undefined);
+
+    /*
+     * `hash` is the real Kuzzle's, reduced to what the subject uses it for:
+     * a scroll id turned into a cache key. The cases never assert the digest,
+     * only that the key a `store` used is the key the matching `del` deletes,
+     * so an identity is enough and a stable one keeps the failure readable.
+     */
+    stubKuzzle({ ask: harness.ask, config, hash: (value: unknown) => value });
 
     harness.timestamp = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(harness.timestamp);

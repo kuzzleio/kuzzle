@@ -122,8 +122,8 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L1b** ✅ | **The specs built on `test/mocks/kuzzle.mock.js`** — one fixture derived per spec, never that mock. Sub-sliced by subject area: **b1** `api/` ✅ (8) · **b2** `hotelClerk` ✅ (7, incl. 2 taken from L2 to close the mirror) · **b2b** `notifier` ✅ (7, idem) · **b3** the rest of `core/` ✅ (8 specs → 7 files) · **b4** `service/` + `util` ✅ (4); see _What L1b1/L1b2/L1b2b/L1b3/L1b4 found_                                                                                                                                                                                                                   | **30** |  **3 459** | Not a translation: the vitest tree refuses the ~600-line application stub on purpose, so each spec has to state what its subject actually reads from `global.kuzzle`. Found by L1; it had no slice before.                                                                                                                            |
 | **L2** ✅ | The clean specs at **201–1 000 lines**, by layer — sub-sliced below into **a**–**e**, all landed (28 specs, 11 765 lines)                                                                                                                                                                                                                                                                     | **29** | **12 995** | Same transformation at a size where review still fits in one sitting.                                                                                                                                                                                                                                                                 |
 | **L3** ✅  | The **six clean specs over 1 000 lines** — `documentController` 2 143, `authController` 1 836, `documentExtractor` 1 484, `securityController/users` 1 390, `request` 1 378, `roleRepository` 1 046                                                                                                                  |  **6** |  **9 277** | Still only the codemod, but each one is a PR's worth of review on its own, and five of the six are `api`. After L3 the suite is **52 files and all of them are hard**.                                                                                                                                                                |
-| **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
-| **L5** 🚧  | The **two Elasticsearch twins** (they carry `mock-require` too) — sub-sliced [by action group](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f) into **a**–**e**; **a landed**                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
+| **L4** 🚧  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **a–c landed**                                                                                                                                                                                                                                      | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
+| **L5** 🚧  | The **two Elasticsearch twins** (they carry `mock-require` too) — sub-sliced [by action group](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f) into **a**–**e**; **a–c landed**                                                                                                                                                                                                                                                      |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs** — **12** since [L4e2](#what-l4e2-found) deleted two of them as already-ported duplicates                                                                                                                                                                                                      | **12** |  **6 070** | **Not ports — redesigns.** Each needs its subject to expose what is tested, or the test rewritten against the public surface. Expect `lib/` changes, expect the coverage gate to have opinions, one PR per subject rather than per spec.                                                                                              |
 | **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
@@ -313,7 +313,7 @@ asked for.
 | --------- | -----: | ----------: | ------- |
 | **L5a** ✅ ([#2849](https://github.com/kuzzleio/kuzzle/pull/2849)) | 16 | ~600 | harness + envelope table + the small blocks, **11 of them byte-identical**: wiring, listings, existence, naming |
 | **L5b** ✅ ([#2850](https://github.com/kuzzleio/kuzzle/pull/2850)) | 8 | ~900 | single-document CRUD: `get`, `count`, `create`, `createOrReplace`, `update`, `upsert`, `replace`, `delete` |
-| **L5c** | 8 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
+| **L5c** ✅ (PR pending) | 9 | ~1 300 | query-wide: `scroll`, `search`, `updateByQuery`, `bulkUpdateByQuery`, `deleteByQuery`, `deleteFields`, both `_mExecute` |
 | **L5d** | 11 | ~1 600 | index/collection lifecycle: `createIndex`, `createCollection` (388 L), mappings, settings, `import`, `_createHiddenCollection`, `_checkMappings` |
 | **L5e** | 11 | ~1 800 | the `m*` family + `Collection emulation utils` (671 L) |
 
@@ -2638,6 +2638,91 @@ both workarounds disappear.
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
 
+## What L5c found
+
+**`mocha` 569 → 480 tests**, vitest **3 141 → 3 233** across 140 files. Nine
+blocks — the eight planned actions plus the *second* `_mExecute` — **44 `it`s
+in the ES 7 twin and 45 in the ES 8 one, 92 cases per version out**. The whole
+Mocha suite was run after the deletion: **−89 exactly**, nothing else leaning.
+
+### `_mExecute` was declared twice in each twin, 2 400 lines apart
+
+`#_mExecute` near the top and a bare `_mExecute` after `#mDelete`, each with
+its own `beforeEach`, neither mentioning the other. Nine `it`s between them for
+seven distinct behaviours, and they looked contradictory: the first says a
+bulk answer row with no matching document is **skipped**, the second says an
+errored row is **reported**. Both are true, of different rows — which only
+reading them side by side shows. They are one group here.
+
+The merge also states what neither twin did: the shape of a reported error
+**depends on the status**. A 404 answers `{ document: { _id, body } }`; every
+other status answers the document **whole**, `_source` and all. Two shapes
+under one key, and the port's first attempt asserted the wrong one.
+
+### ⚠️ The subject writes on both things the caller lends it
+
+Two more instances of what [L5b](#three-actions-answer-the-document-they-sent-not-the-one-es-echoed)
+found on `_kuzzle_info`, both surfaced by the port failing:
+
+- **`partialErrors` is pushed onto, not copied.** `result.errors` **is** the
+  array the caller handed in, now holding the subject's own findings. The
+  port's first expectation read `[...partialErrors, found]` and failed with
+  three entries against two.
+- **`_extractMDocuments` rewrites each document in place** — `_source` out,
+  `body` in — so a fixture declared once in a `describe` is a different object
+  by the second case that uses it. The twins only ever handed it fresh
+  literals, so neither could say so. The port's fixture is a factory, and says
+  why.
+
+**⚠️ Filed, not fixed** in both cases: this is a porting slice, and
+[the DoD](#definition-of-done-per-pr) says `lib/` stays untouched.
+
+### Both twins' `maxScrollDuration` case tested nothing
+
+> `elasticsearch._config.maxScrollDuration = "21m";` (ES 7)
+> `elasticsearch.client._config.maxScrollDuration = "21m";` (ES 8)
+
+The subject reads `this.maxScrollDuration`, a number resolved **once in the
+constructor** by `_loadMsConfig`. Assigning the config afterwards — on the
+dispatcher in one twin, on the client in the other, neither of which is where
+the value lives — changes nothing. Four cases (two per twin, `scroll` and
+`search`) passed against the real default of `1m`, and would have passed with
+the line deleted. It is deleted, and the configurability it meant to state is
+now a case of its own: rebuild with `maxScrollDuration: "1h"` and watch the
+same `42m` scroll get past the guard.
+
+### `deleteFields` genuinely diverges, and only ES 8 had the case
+
+ES 8 checks that the client's answer carries a `_source` and raises
+`services.storage.not_found`; ES 7 walks into `_.has(undefined, field)` and
+then assigns onto it, so its caller gets whatever `formatESError` makes of a
+`TypeError`. This is the **only behaviour** divergence L5c found — everything
+else is transport — which is why it is written as a branch on
+`envelope.version` and not as an envelope entry.
+
+### The envelope grew four rows, and one of them is not a payload shape
+
+| | ES 7 | ES 8 |
+| --- | --- | --- |
+| bulk operations | `body: [...]` | `operations: [...]` |
+| delete-by-query limit | `size` | `max_docs` |
+| a query failure | `{ shardId, reason }` | `{ id, cause: { reason } }` |
+| a scrolled batch | a callback the client calls back | a promise |
+
+The last is a **calling convention**: `mExecute` drives the ES 7 client
+Node-style, handing `search` a callback it calls again for each page, while the
+ES 8 subject awaits and loops. A case cannot arm one the way it arms the other,
+so the arming is named in the table like every other delta (`answerScroll`).
+The third is the one entry that changes what a *caller* sees, not just what the
+wire carries: the two subjects normalise a failed shard differently.
+
+### The harness grew a cache bus
+
+Everything in this slice carries a cursor, and the cursor lives in the internal
+cache behind `global.kuzzle.ask`. The harness now stubs `ask` as a spy and
+`hash` as the identity, so a case can both arm what a scroll remembers and
+assert that the key a `store` wrote is the key the matching `del` deletes.
+
 ## What L5b found
 
 **`mocha` 623 → 569 tests**, vitest **3 087 → 3 141** across 140 files. Eight
@@ -2813,5 +2898,5 @@ together" dissolved on that question, and three specs turned out to be
 
 **Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines) —
 [cut into a–e](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f),
-**L5a–b landed**; then **L6** (12 `rewire` specs / 6 083 lines — redesigns, not
+**L5a–c landed**; then **L6** (12 `rewire` specs / 6 083 lines — redesigns, not
 ports), then **L7** (closure).

@@ -19,12 +19,14 @@
  * | --- | --- | --- |
  * | `inventory` | 16 — wiring, listings, existence, naming | L5a |
  * | `crud` | 8 — the single-document actions | L5b |
+ * | `queries` | 8 — the query-wide actions, and the cursor they carry | L5c |
  */
 import { describe } from "vitest";
 
 import { setupElasticsearch, type ESVersion } from "./harness";
 import { describeCrud } from "./crud";
 import { describeInventory } from "./inventory";
+import { describeQueries } from "./queries";
 
 export function describeElasticsearch(version: ESVersion) {
   describe(`#service/storage/${version}/elasticsearch`, () => {
@@ -32,5 +34,6 @@ export function describeElasticsearch(version: ESVersion) {
 
     describeInventory(harness);
     describeCrud(harness);
+    describeQueries(harness);
   });
 }

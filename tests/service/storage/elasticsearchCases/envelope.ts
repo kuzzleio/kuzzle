@@ -18,6 +18,10 @@
  * | document body | `body: { … }` | `document: { … }` |
  * | total-hits flag | `trackTotalHits` | `track_total_hits` |
  * | `_source` filter | `"true"` | `true` |
+ * | bulk operations | `body: [...]` | `operations: [...]` |
+ * | delete-by-query limit | `size` | `max_docs` |
+ * | a query failure | `{ shardId, reason }` | `{ id, cause: { reason } }` |
+ * | a scrolled batch | a callback the client calls back | a promise |
  *
  * ## Why it is a table rather than a helper
  *
@@ -75,6 +79,39 @@ export interface ESEnvelope {
    * client accepted the string; ES 8 takes the boolean.
    */
   readonly sourceEnabled: "true" | true;
+
+  /**
+   * The field a `bulk` request carries its operation list in. Renamed from
+   * `body` to `operations` in the ES 8 client.
+   */
+  readonly bulkOperations: "body" | "operations";
+
+  /**
+   * The field `deleteByQuery` carries its document limit in. ES 7 reused
+   * `size`; ES 8 has a dedicated `max_docs`.
+   */
+  readonly deleteLimit: "size" | "max_docs";
+
+  /**
+   * A `deleteByQuery` failure as the client reports it — the ES 8 client
+   * moved the reason under `cause` and reports the document's `id` where
+   * ES 7 reported the `shardId`.
+   */
+  readonly queryFailure: JSONObject;
+
+  /** The same failure, as the subject answers it. */
+  readonly reportedFailure: JSONObject;
+
+  /**
+   * Arms a scroll-driving command to answer `payload`.
+   *
+   * ⚠️ The one entry here that is a **calling convention** rather than a
+   * payload shape: `mExecute` drives the ES 7 client Node-style, handing
+   * `search` a callback it calls again for each page, while the ES 8 client
+   * answers a promise and the subject loops. A case cannot arm one the way it
+   * arms the other, so the arming is named here like every other delta.
+   */
+  answerScroll(stub: any, payload: JSONObject): void;
 }
 
 export const ES7_ENVELOPE: ESEnvelope = {
@@ -84,6 +121,14 @@ export const ES7_ENVELOPE: ESEnvelope = {
   documentRequest: (document) => ({ body: document }),
   trackTotalHits: "trackTotalHits",
   sourceEnabled: "true",
+  bulkOperations: "body",
+  deleteLimit: "size",
+  queryFailure: { shardId: 42, reason: "error", foo: "bar" },
+  reportedFailure: { shardId: 42, reason: "error" },
+  answerScroll: (stub, payload) =>
+    stub.mockImplementation((request: unknown, callback: any) =>
+      callback(null, { body: payload }),
+    ),
 };
 
 export const ES8_ENVELOPE: ESEnvelope = {
@@ -93,6 +138,11 @@ export const ES8_ENVELOPE: ESEnvelope = {
   documentRequest: (document) => ({ document }),
   trackTotalHits: "track_total_hits",
   sourceEnabled: true,
+  bulkOperations: "operations",
+  deleteLimit: "max_docs",
+  queryFailure: { id: "_id2", cause: { reason: "error" }, foo: "bar" },
+  reportedFailure: { id: "_id2", reason: "error" },
+  answerScroll: (stub, payload) => stub.mockResolvedValue(payload),
 };
 
 export const ENVELOPES: Record<"7" | "8", ESEnvelope> = {
