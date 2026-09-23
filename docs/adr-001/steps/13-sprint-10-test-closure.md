@@ -407,7 +407,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | Sub-slice                                                          | Specs | Lines | Content                                                                                           |
 | ------------------------------------------------------------------ | ----: | ----: | ------------------------------------------------------------------------------------------------- |
 | **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
-| **L6b** ✅ (PR pending)                                            |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
+| **L6b** ✅ ([#2856](https://github.com/kuzzleio/kuzzle/pull/2856)) |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
 | **L6c**                                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
 | **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
