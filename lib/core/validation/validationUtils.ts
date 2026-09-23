@@ -145,19 +145,13 @@ export function storeErrorMessage(
   message: string,
 ): void {
   if (errorContext === "document") {
-    if (!errorHolder.documentScope) {
-      errorHolder.documentScope = [];
-    }
+    const documentScope = (errorHolder.documentScope ??= []);
 
-    errorHolder.documentScope.push(message);
+    documentScope.push(message);
     return;
   }
 
-  if (!errorHolder.fieldScope) {
-    errorHolder.fieldScope = {};
-  }
-
-  let pointer: FieldErrorScope = errorHolder.fieldScope;
+  let pointer: FieldErrorScope = (errorHolder.fieldScope ??= {});
 
   for (const segment of errorContext) {
     const children = (pointer.children ??= {});
