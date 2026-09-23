@@ -408,7 +408,7 @@ incidental — its callers load it; no vitest spec asserts it.
 | ------------------------------------------------------------------ | ----: | ----: | ------------------------------------------------------------------------------------------------- |
 | **L6a** ✅ ([#2854](https://github.com/kuzzleio/kuzzle/pull/2854)) |     3 | 1 056 | `rewire`-as-`require`, nothing else: `securityController/{credentials,security}`, `cache/redis`   |
 | **L6b** ✅ ([#2856](https://github.com/kuzzleio/kuzzle/pull/2856)) |     2 |   558 | `rewire`-as-`require` over `mock-require`: `plugin/plugin`, `kuzzle/dumpGenerator` — L4's idiom   |
-| **L6c**                                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
+| **L6c** ✅ (PR pending)                                            |     1 |    70 | `util/didYouMean` **+ the `import = require()` it forces on `lib/util/didYouMean.ts`**            |
 | **L6d**                                                            |     1 |   566 | `api/funnel/execute` — one `__get__("PendingRequest")` behind one `instanceof`                    |
 | **L6e**                                                            |     1 |   845 | `kuzzle/kuzzle` — `koncorde_1` / `vault_1` / `process` become `vi.mock` and `vi.spyOn`            |
 | **L6f**                                                            |     2 | 1 611 | `validation/{util,validate}` — the private-helper redesign, one `lib/` decision for both          |
@@ -2744,6 +2744,71 @@ deletedRoles }` is the API's response body.
   and the work runs on, detached. The failure of that promise is swallowed
   into a single `logger.error` line — the only place it is ever reported —
   and nothing asserted either half. Both are tested now.
+
+## What L6c found
+
+**`mocha` 186 → 182 tests and 7 → 6 spec _files_**, vitest
+**3 558 → 3 564**. Seventy lines of spec, four Mocha tests in, six out —
+and **the last `import … = require()` in `lib/` with them**.
+
+### The spec was holding a `lib/` shape hostage, and the register had said so
+
+[TD-49](../type-debt-register.md#td-49) replaced 24 of the 25
+`import x = require()` forms in `lib/` a year's worth of steps ago. The
+twenty-fifth stayed, with a comment naming the reason:
+
+```ts
+/*
+ * The one `import … = require()` left in `lib/` … `test/util/didYouMean.test.js`
+ * rewires this module and calls `__set__("didYouMean", …)`, which addresses the
+ * compiled variable by name. A default import compiles to `didyoumean_1.default`
+ * and the stub would silently miss. It goes when that spec moves to vitest.
+ */
+```
+
+That is `rewire`'s cost stated exactly: **a test reaching a private binding
+pins the shape of the compiled output**, so the subject cannot be written the
+way the other 24 are. `vi.mock("didyoumean")` replaces the _module_ instead of
+the compiled variable, the wrapper takes a default import like everything else,
+and **`lib/` now holds no `import … = require()` at all**.
+
+_Generalisable, and it is the argument for L6 as a whole:_ what a `rewire` spec
+costs is not the porting effort — this one is seventy lines — it is the
+constraint it leaves on `lib/` for as long as it exists. The register is what
+made that cost visible; without the entry, the comment would read like a
+preference.
+
+### ⚠️ One of its two `__set__`s did nothing, and the other one had a side effect
+
+```js
+processStub = Object.assign(process, {
+  env: Object.assign(process.env, { NODE_ENV: "development" }),
+});
+didYouMean.__set__("process", processStub);
+```
+
+`Object.assign(process, …)` mutates `process` and answers it, so the `__set__`
+assigns the real `process` over itself: a no-op. What the line _did_ do is set
+`process.env.NODE_ENV` to `"development"` **for the rest of the Mocha run**,
+since `Object.assign(process.env, …)` writes through to the real environment —
+a spec leaving a global behind for whatever ran next, which is the same failure
+mode [L1b4](#what-l1b4-found--and-l1b-is-closed) found here from the other side
+(these tests passed only because `deprecate.test.js` had set `global.NODE_ENV`
+earlier in the same process).
+
+And the subject reads **`global.NODE_ENV`**, not `process.env.NODE_ENV`. So the
+one `__set__` that was not a no-op was writing to a place the subject never
+reads.
+
+### What the Mocha suite never covered
+
+- **That the library is not called at all outside development.** The guard's
+  purpose is to skip the work, not just the string; the Mocha spec asserted the
+  empty answer only.
+- **`NODE_ENV` unset**, which is every process that does not set it.
+- **An empty suggestion** — `didyoumean` answers `""` for an empty candidate
+  list, and the wrapper's falsy check is what stops `Did you mean ""?` from
+  reaching a user.
 
 ## What L6b found
 

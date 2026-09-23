@@ -987,6 +987,7 @@ Require stack:
   3. **a lazy `require()` in a constructor body** — `pluginContext`'s `require("../validation/baseType")`, now a static import (`baseType` has no runtime import of its own, so there was no cycle to break). One other survives, `backend.ts`'s `require("../plugin/plugin")`, and it cannot be static until H5 converts `plugin.js`.
 - **The witness is a test, not a count.** `tests/core/plugin/privilegedContext.test.ts` is back, this time with **no mock of any kind** — the shape TD-46 wanted and could not have — and it replaces the Mocha spec rather than sitting beside it, so **mocha 150 → 149**. Without it nothing would fail if wall (1) came back, since `tsc` is blind to all of this by construction.
 - **The generalisable part, second half:** _"this is a style rule" and "this is what makes the program loadable" can be the same rule._ `consistent-type-imports` reads as a lint preference right up until a runner that actually executes the import graph asks for it.
+- ✅ **The twenty-fifth is gone** (2026-09-23, [step 13 L6c](steps/13-sprint-10-test-closure.md#what-l6c-found)). `test/util/didYouMean.test.js` moved to vitest, where the library is replaced with `vi.mock("didyoumean")` — the module, not the compiled variable — so `lib/util/didYouMean.ts` takes a default import like the other 24. **`lib/` holds no `import … = require()` at all.** _A spec can hold a `lib/` shape hostage, and the entry that records the exception is what makes it cost something later._
 
 ### TD-50
 
