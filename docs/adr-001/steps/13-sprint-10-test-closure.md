@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` ([#2844](https://github.com/kuzzleio/kuzzle/pull/2844)) · **e6** ✅ `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely, [#2845](https://github.com/kuzzleio/kuzzle/pull/2845)) · **e7** `api/controllers/adminController`, the last one |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` ([#2844](https://github.com/kuzzleio/kuzzle/pull/2844)) · **e6** ✅ `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely, [#2845](https://github.com/kuzzleio/kuzzle/pull/2845)) · **e7** ✅ `api/controllers/adminController`, the last one |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2534,3 +2534,67 @@ replaced by a stub, the middleware whose arity is wrong never ran.
   the option.
 - **A strategy throwing a non-`Error`** — plugin code may throw anything, and
   the subject wraps it before reading `.message` off it.
+
+## What L4e7 found — and L4 is closed
+
+**`mocha` 15 → 14**, vitest **2 919 → 2 943 tests** across **137 → 138 files**.
+One spec, 305 lines, **16 `it`s in and 24 out**. The port is
+`tests/api/controllers/adminController.test.ts`.
+
+### `__getLastMutex()` again, and this time it was load-bearing
+
+The same `test/mocks/mutex.mock.js` accessor [L4e4](#what-l4e4-found) found —
+one module-level `lastMutex`, one module-level `__canLock()` switch — and here
+the spec had to work around both: _"should unlock the action even if the
+promise rejects"_ reads `__getLastMutex()` twice and ends with
+`should(mutex2).not.eql(mutex1)`, an assertion whose only job is to check that
+the accessor moved on. The lock-refused tests wrap themselves in
+`try { … } finally { MutexMock.__canLock(true) }`, because the switch is
+process-global and a test that throws before restoring it breaks the next
+file.
+
+The port records the mutexes in a list and reads the one it means by name, so
+both workarounds disappear.
+
+### What the Mocha suite never covered
+
+- **`resetSecurity`'s return value.** It asserted the three truncations and
+  dropped what they answered — and `{ deletedUsers, deletedProfiles,
+  deletedRoles }` is the API's response body.
+- **`resetDatabase` releasing its lock when the deletion fails**, which is
+  what its `finally` is for. The `resetSecurity` half was tested; its twin
+  was not.
+- **Nothing being flushed when `resetCache` refuses an unknown database.**
+- **`dump`'s default suffix** (`manual-api-action`).
+- **The nine-action list**, which is what `_isAction` answers from: an action
+  missing from it is an action the API refuses although the method exists.
+- **⚠️ `_waitForAction`, the branch three actions share.** `refresh: "false"`
+  means *do not wait*: the action answers `{ acknowledge: true }` immediately
+  and the work runs on, detached. The failure of that promise is swallowed
+  into a single `logger.error` line — the only place it is ever reported —
+  and nothing asserted either half. Both are tested now.
+
+## L4 is closed
+
+**34 specs, 14 128 lines, `mocha` 50 → 14, vitest 1 911 → 2 943 tests.**
+Thirteen PRs, a–e.
+
+Its premise — _"`vi.mock` is hoisted and static where `mock-require` is
+dynamic"_ — turned out to be the wrong question in **every** sub-slice. What
+the `beforeEach` + `reRequire` pairs were actually holding up, in order:
+`global.app`'s write-once singleton ([L4a](#what-l4a-found)), one `pino` stub
+plus a key ([L4b1](#what-l4b1-found)), three tests out of 79 that genuinely
+need `vi.doMock` ([L4b3](#what-l4b3-found), [L4b4](#what-l4b4-found--and-l4b-is-closed)),
+a cached mock factory ([L4c1](#what-l4c1-found)), a mutex the **base class**
+takes ([L4e4](#what-l4e4-found)) — and, four times, nothing at all
+([L4d1](#what-l4d1-found), [L4d2](#what-l4d2-found), [L4d4](#what-l4d4-found),
+[L4e3](#what-l4e3-found)).
+
+**The lesson, stated once: ask what a `reRequire` is resetting, not what the
+`mockrequire` is replacing.** Three of the sweep's "pairs that must land
+together" dissolved on that question, and three specs turned out to be
+[already ported](#what-l4e2-found).
+
+**Next: L5** (the two Elasticsearch twins, 2 specs / 12 431 lines), then
+**L6** (12 `rewire` specs / 6 083 lines — redesigns, not ports), then
+**L7** (closure).
