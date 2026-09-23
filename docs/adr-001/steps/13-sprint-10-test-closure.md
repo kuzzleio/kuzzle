@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** `model/storage/{baseModel,apiKey}` · **e4** `kuzzle/internalIndexHandler` (the conditional one) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` · **e4** `kuzzle/internalIndexHandler` (the conditional one) · **e5** the five small: `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk` |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2249,3 +2249,83 @@ direction that matters least: a spec that is deleted keeps *passing*. `npm run
 build:tests` now removes `dist/test` and `dist/tests` first. ⚠️ **Every slice
 of this step deletes specs, so every local Mocha run before this one was
 reporting a stale count.**
+
+## What L4e3 found
+
+**`mocha` 22 → 20**, vitest **2 800 → 2 840 tests** across **130 → 132 files**.
+Two specs, 613 lines, **29 `it`s in and 40 out**. The ports are
+`tests/model/storage/baseModel.test.ts` and
+`tests/model/storage/apiKey.test.ts`; `test/mocks/clientAdapter.mock.js`
+retires with them, and `test/mocks/elasticsearch.mock.js` goes too — it had no
+user left at all.
+
+### ⚠️ The substitution these two specs shared was wired to nothing — and the sweep's third pair dissolves
+
+Both opened with the same four lines: `mockrequire` the `clientAdapter`,
+`reRequire` `storageEngine`, build one, `init()` it. **Neither spec touches a
+storage engine again.** `BaseModel` persists through
+`global.kuzzle.internalIndex.<method>()` and `ApiKey` asks two security-token
+events; the engine is not on either path.
+
+So [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for)'s third pair —
+_"`storage/storageEngine`, `model/storage/baseModel` and `model/storage/apiKey`
+all reset `storageEngine` over a stubbed `clientAdapter`"_ — was a shared
+*arrangement*, not a shared subject, and it dissolves the same way the
+`pluginsManager` / `processRequest` pair did in [L4d4](#what-l4d4-found).
+**All three of the sweep's "must land together" pairs turned out not to be
+couplings**; two were re-require habits copied between files, and the third
+([the `httpwsProtocol` pair](#what-l4b4-found--and-l4b-is-closed)) was the only real one.
+
+### ⚠️ The assertions were one layer below the subject — for the seventh time
+
+`BaseModel.load` calls `global.kuzzle.internalIndex.get(...)`. The Mocha spec
+asserted `kuzzle.ask("core:storage:private:document:get", kuzzle.internalIndex.index, "models", "mylehuong")`
+— four arguments, of which the subject passes two, because **those events are
+`InternalIndexHandler`'s**, one layer down, and `KuzzleMock` supplied a real
+handler that emits them.
+
+That is [L2b](#what-l2b-found)'s `ObjectRepository` finding, [L2d](#what-l2d-found)'s
+`collectionController`, [L2e](#what-l2e-found--and-l2-is-closed)'s and
+[L3b](#what-l3b-found)'s `securityController` halves — **seven specs across
+five slices, always the same cause**: a mock that supplies a real
+collaborator makes the layer below reachable, and a spec that reaches it
+cannot tell you when its subject stops calling it. The ports assert on
+`internalIndex` and take a nine-method fixture in exchange.
+
+### ⚠️ `serialize()` deletes the token from the model, not from a copy
+
+```ts
+serialize({ includeToken = false } = {}) {
+  const serialized = super.serialize();       // { _id, _source: this.__source }
+  if (!includeToken && this.token) {
+    delete serialized._source.token;          // ← the model's own __source
+  }
+  return serialized;
+}
+```
+
+`BaseModel.serialize()` answers `{ _id: this._id, _source: this._source }`,
+and `_source` is the backing object rather than a copy — so hiding the token
+from one caller **removes it from the ApiKey instance**. The Mocha spec built
+*two* instances to assert the two cases, which is exactly what kept the order
+from mattering; the port asserts the aliasing on one instance, so a future
+`serialize()` that stops mutating says so. Left as it is: `lib/` is not this
+slice's to change, and every current caller serialises once, at the end.
+
+### Small things
+
+- **`kuzzle.hash.returns("hashed-jwt-token")`** arranged the wrong function:
+  the fingerprint is `sha256(token.jwt)` from `lib/util/crypto`. The test that
+  needed it asserted `apiKey._id === apiKey._source.fingerprint` — true of any
+  two equal values, and it never said what the id *is*. The port asserts both
+  against `sha256(TOKEN.jwt)`.
+- **`ApiKey.load` had no test for the case that works** — only for the one
+  that throws.
+- **`loadFromRequest`'s precedence was untested**: `_id` over `key` over
+  `fingerprint`, and a request may carry two of them.
+- **`_afterDelete`'s guard was untested**: the token may already be expired or
+  revoked, and the `if (token)` is what keeps deleting an API key from failing
+  on it.
+- **`BaseModel.batchExecute`, `register`'s misuse guard, the `_source`
+  setter's field filter, and both "must be defined" getters** had no test at
+  all.
