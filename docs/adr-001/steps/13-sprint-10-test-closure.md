@@ -219,7 +219,7 @@ different stub per block — is rare: `network/accessLogger` (two different
 | **L4b** | 5 | 3 301 | **network**: `accessLogger`, `httpRouter`, `protocols/{http,websocket,mqtt}` — the node builtins (`zlib`, `net`, `uWebSockets.js`, `aedes`, `worker_threads`, `pino`) and every conditional swap in the slice. Sub-split one PR per subject: **b1** ✅ `accessLogger` ([#2828](https://github.com/kuzzleio/kuzzle/pull/2828)) · **b2** ✅ `mqtt` ([#2829](https://github.com/kuzzleio/kuzzle/pull/2829)) · **b3** ✅ `httpRouter` ([#2830](https://github.com/kuzzleio/kuzzle/pull/2830)) · **b4** ✅ the `httpwsProtocol` pair ([#2831](https://github.com/kuzzleio/kuzzle/pull/2831)) — `http` + `websocket`, one subject, one mirror |
 | **L4c** | 3 | 2 627 | **cluster**: `node`, `subscriber`, `publisher` — `zeromq` plus the sibling cluster modules. Sub-split: **c1** ✅ `publisher` + `subscriber` ([#2832](https://github.com/kuzzleio/kuzzle/pull/2832)) · **c2** ✅ `node` ([#2833](https://github.com/kuzzleio/kuzzle/pull/2833)) |
 | **L4d** | 4 | 3 882 | **plugin + validation**: `plugin/pluginsManager`, `plugin/context/context`, `validation/init`, `validation/types/date`. Sub-split: **d1** ✅ `validation/types/date` ([#2835](https://github.com/kuzzleio/kuzzle/pull/2835)) · **d2** ✅ `validation/init` ([#2836](https://github.com/kuzzleio/kuzzle/pull/2836)) · **d3** ✅ `plugin/context/context` ([#2837](https://github.com/kuzzleio/kuzzle/pull/2837)) · **d4** ✅ `plugin/pluginsManager` + `api/funnel/processRequest` ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838)), which [the sweep](#what-each-of-the-remaining-23-re-requires--the-sweep-l4a-asks-for) says share the `pluginContext` / `privilegedContext` / `pluginsManager` trio and must therefore land together — so d4 pulled one spec out of L4e, leaving it 10 |
-| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` ([#2844](https://github.com/kuzzleio/kuzzle/pull/2844)) · **e6** `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely) · **e7** `api/controllers/adminController`, the last one |
+| **L4e** | 9 | 2 501 | **the strays** (`api/funnel/processRequest` left with [L4d4](#what-l4d4-found)): `config/index`, `kuzzle/internalIndexHandler`, `model/storage/{baseModel,apiKey}`, `api/controllers/adminController`, `util/{mutex,asyncStore}`, `core/auth/passportWrapper`, `core/shared/sdk/embeddedSdk`, `core/storage/storageEngine`. Sub-split: **e1** ✅ `config/index` ([#2840](https://github.com/kuzzleio/kuzzle/pull/2840)) · **e2** ✅ **the three already-ported duplicates** ([#2841](https://github.com/kuzzleio/kuzzle/pull/2841)), `core/storage/storageEngine` among them — see [what L4e2 found](#what-l4e2-found) · **e3** ✅ `model/storage/{baseModel,apiKey}` ([#2842](https://github.com/kuzzleio/kuzzle/pull/2842)) · **e4** ✅ `kuzzle/internalIndexHandler` (the conditional one, [#2843](https://github.com/kuzzleio/kuzzle/pull/2843)) · **e5** ✅ `util/{mutex,asyncStore}` ([#2844](https://github.com/kuzzleio/kuzzle/pull/2844)) · **e6** ✅ `core/auth/passportWrapper` + `core/shared/sdk/embeddedSdk` (both drop their substitution entirely) · **e7** `api/controllers/adminController`, the last one |
 
 **L4a first, and deliberately**: eleven of the 34 specs for 9% of the lines, one
 subject, and the mocking decision the whole slice turns on gets made once on the
@@ -2466,3 +2466,71 @@ imported from the same fresh graph as the subject. Fifth occurrence, after
 - **`AsyncStore` refusing to `get`/`set`/`has` outside a run.** The subject
   asserts `"Associated AsyncStore is not set"`; the stub always answered a
   Map, so that branch could never be reached.
+
+## What L4e6 found
+
+**`mocha` 17 → 15**, vitest **2 880 → 2 919 tests** across **135 → 137 files**.
+Two specs, 255 lines, **14 `it`s in and 39 out**. The ports are
+`tests/core/auth/passportWrapper.test.ts` and
+`tests/core/shared/sdk/embeddedSdk.test.ts`. **Neither declares a single
+`vi.mock`.**
+
+### Both substitutions were replacing something that needs no replacing
+
+`passportWrapper`'s spec replaced the `passport` module with four stubs —
+and then **un-replaced it** for its one redirect test, which is the only one
+that exercised passport's protocol rather than the stub's. `passport` is a
+registry with no I/O: the port registers real strategies, each one taking one
+of the four outcomes the wrapper exists to translate (`success`, `fail`,
+`error`, `redirect`), and asserts what the wrapper answers.
+
+`embeddedSdk`'s spec replaced `impersonatedSdk` with a `sinon.spy()` and
+asserted it had been *called* with the kuid — which says the constructor ran,
+not that the result impersonates anyone. The port asserts the object that
+comes back: an `ImpersonatedSDK` whose `kuid` and `checkRights` are what
+`as()` was given.
+
+### ⚠️ `use()` was called with the wrong arity, and it worked
+
+```js
+passportWrapper.use(new MockupStrategy("mockup", stub));
+```
+
+The signature is `use(name, strategy, opts)`. It worked because `passport.use`
+accepts the one-argument form and reads the name off the strategy — but the
+wrapper then ran `this.options[name] = opts` with `name` being **the strategy
+object**, so the options were stored under the key `"[object Object]"` and
+the next `authenticate("mockup")` found none. TypeScript refuses the call
+outright, which is how the port found it.
+
+### ⚠️ An unknown strategy is reported as `next is not a function` — [TD-80](../type-debt-register.md#td-80)
+
+The port's first new assertion — authenticate against a strategy that was
+just unregistered — did not answer `Unknown authentication strategy "foobar"`.
+It answered `Caught an unexpected plugin error: next is not a function`.
+
+`passport.authenticate(...)` returns Express middleware, which the wrapper
+invokes as `(request, response)`; passport reports everything it decides
+itself, an unknown strategy first among them, by calling **`next(error)`**.
+With no `next`, the middleware throws a `TypeError` that the wrapper's own
+`catch` wraps. Pinned as it is, and filed.
+
+The Mocha spec could not have found this: with `passport.authenticate`
+replaced by a stub, the middleware whose arity is wrong never ran.
+
+### What the Mocha suite never covered
+
+- **The other fourteen forbidden `auth` actions.** The list is the API surface
+  a plugin may not reach as itself, and one test named one of them; an entry
+  dropped from that list is a privilege the embedded SDK silently gains. All
+  fifteen are a table now.
+- **`propagate` being set on `realtime:subscribe` and on nothing else** — the
+  Mocha spec asserted the two values of the flag, never its absence
+  elsewhere.
+- **A warned action still running.** _"should warn if the action is not
+  supported"_ called `query` without awaiting it and asserted only the
+  warning, so nothing said whether `auth:login` still works.
+- **`as()`'s `checkRights` defaulting to false**, which is the safe half of
+  the option.
+- **A strategy throwing a non-`Error`** — plugin code may throw anything, and
+  the subject wraps it before reading `.message` off it.
