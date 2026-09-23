@@ -21,13 +21,17 @@
  * | `crud` | 8 — the single-document actions | L5b |
  * | `queries` | 8 — the query-wide actions, and the cursor they carry | L5c |
  * | `lifecycle` | 11 — index and collection lifecycle, mappings, settings | L5d |
+ * | `multi` | 9 — the `m*` family and the extraction they share | L5e |
+ * | `internals` | the collection-emulation name arithmetic and query guards | L5e |
  */
 import { describe } from "vitest";
 
 import { setupElasticsearch, type ESVersion } from "./harness";
 import { describeCrud } from "./crud";
 import { describeInventory } from "./inventory";
+import { describeInternals } from "./internals";
 import { describeLifecycle } from "./lifecycle";
+import { describeMulti } from "./multi";
 import { describeQueries } from "./queries";
 
 export function describeElasticsearch(version: ESVersion) {
@@ -38,5 +42,7 @@ export function describeElasticsearch(version: ESVersion) {
     describeCrud(harness);
     describeQueries(harness);
     describeLifecycle(harness);
+    describeMulti(harness);
+    describeInternals(harness);
   });
 }
