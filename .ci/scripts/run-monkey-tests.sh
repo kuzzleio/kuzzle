@@ -1,3 +1,6 @@
+# Absolute, because the monkey-tester install below runs from another directory.
+WITH_RETRY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/with-retry.sh"
+
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 if [ "$ES_VERSION" == "7" ]; then
@@ -12,7 +15,9 @@ fi
 docker compose -f $YML_FILE down -v
 
 echo "Installing dependencies..."
-docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
+# Retried, same reason as run-test-cluster.sh: .ci/scripts/with-retry.sh (TD-83).
+"$WITH_RETRY" \
+  docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
 
 if [ "$REBUILD" == "true" ]; then
     docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm rebuild
@@ -37,7 +42,7 @@ KUZZLE_PORT=17512 ./bin/wait-kuzzle
 echo "Installing Kuzzle Monkey Tester..."
 
 cd kuzzle-monkey-tests
-npm ci
+"$WITH_RETRY" npm ci
 
 # The trap stays on for the run, for the same reason as run-test-cluster.sh: the
 # monkey failures in TD-33 (#2715) — `core.realtime.room_not_found`, seeds

@@ -1893,3 +1893,36 @@ unsubscribe(roomId, clientName, waitForResponse = false) {
 - **Fix:** throw, or answer a resolved promise carrying the reason, instead of `undefined`. Both change what the scenarios see, so this is a behaviour change in the test harness and does not belong in a typing slice.
 - **Not fixed here:** [step 14](steps/14-test-program-strict.md)'s M1b declares the union that is true today (`Promise<ApiResponse> | undefined`) and files this. The declaration is where the fix will show up as a type error.
 - **Half answered by [M2](steps/14-test-program-strict.md#what-m2-found):** the declaration did exactly that at its one caller. `Then I unsubscribe` now names the absent case and fails the step on it, so the false *pass* is gone from the scenario path. The wrappers still return `undefined`, and `unsubscribeAll` still pushes it into `Bluebird.all`, so **the debt stays open on the harness side** — what M2 removed is the caller that could not tell the two outcomes apart.
+
+---
+
+### TD-83
+
+**The Node headers node-gyp fetches at install time are CI's one un-retried network dependency, and both of its failure shapes kill the job outright** · 🟠 med · `.ci/scripts/`, `.github/`
+
+`npm ci` builds several native addons here — nine packages carry an install script, and `boost-geospatial-index`, `dumpme`, `re2` and `zeromq` are the ones that reach a compiler — and node-gyp downloads the headers for the running Node from `nodejs.org` before it can configure any of them. That download failed twice in two days during [step 13](steps/13-sprint-10-test-closure.md), each time on a `Functional tests` variant, each time green on a re-run of the same commit — and it failed in **two different shapes**, which is why it took two PRs to recognise as one thing.
+
+**Shape 1 — the fetch fails outright** ([#2846](https://github.com/kuzzleio/kuzzle/pull/2846), L4e7, `legacy:http, 22, 8`):
+
+```
+npm error gyp http GET https://nodejs.org/download/release/v22.23.0/node-v22.23.0-headers.tar.gz
+npm error gyp http fetch GET ... attempt 1 failed with ECONNRESET
+npm error gyp WARN install got an error, rolling back install
+```
+
+`attempt 1` is also the last attempt: npm's `fetch-retries` governs the **registry** client, and node-gyp's downloader is a separate one that does not retry.
+
+**Shape 2 — the fetch half-succeeds and the cache is poisoned** ([#2838](https://github.com/kuzzleio/kuzzle/pull/2838), L4d4, `http, 20, 7`):
+
+```
+npm error /root/.cache/node-gyp/20.20.2/include/node/v8config.h:694: error: unterminated #ifdef
+npm error /root/.cache/node-gyp/20.20.2/include/node/v8-internal.h:476:1: error: 'V8_EXPORT' does not name a type
+npm error gyp ERR! stack Error: `make` failed with exit code: 2
+```
+
+Truncated headers, unpacked into the cache and then handed to the compiler — so the job dies with a **C++ syntax error inside V8** for a repository that contains no C++. Nothing in that output names the network, which is the expensive part: the first reading of it was that `dumpme` had broken against Node 20.
+
+- **Why not a runner-side cache.** The obvious palliative — `actions/cache` on `~/.cache/node-gyp` — reaches neither loss: both happened on the `npm ci` that runs **inside** the test-cluster container (`docker compose run … kuzzle_node_1 npm ci`, cwd `/var/app`, cache at `/root/.cache`), which never sees the runner's home. It would have covered the host jobs only, and left the 36 containerised installs exactly as exposed. Worse, against shape 2 a cache is actively harmful: it is the thing that would make a truncated header set permanent instead of one-shot.
+- **Fix, shipped here:** `.ci/scripts/with-retry.sh` — three attempts, 10 s doubling — wrapped around **every** `npm ci` in CI, host and container alike (5 in the PR workflow, 1 in `semantic-release`, the `unit-tests` and `build-and-run-kuzzle` actions, and the three in `run-test-cluster.sh` / `run-monkey-tests.sh`). It answers both shapes for the same reason: `npm ci` deletes `node_modules` before doing anything, and the containerised attempts each get a fresh `--rm` container, so neither a rolled-back install nor a poisoned header cache survives into the retry.
+- **Why retry rather than remove the download.** Pinning `npm_config_devdir` into the mounted tree, or shipping headers in `kuzzleio/kuzzle-runner`, would remove the dependency outright — but both pin a Node patch version in a matrix that spans three majors, and go stale silently. A retry is version-agnostic and has no state to go stale.
+- **The generalisable part:** _a retry setting protects the client it belongs to, not the step it sits in._ `fetch-retries` was configured, looked like coverage of "the install", and covered none of the bytes that actually failed. Its corollary, from shape 2: _a download that fails loudly and a download that fails quietly are the same defect, and only the loud one gets filed._

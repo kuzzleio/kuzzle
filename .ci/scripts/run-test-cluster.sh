@@ -8,6 +8,9 @@ then
   export NODE_VERSION=$NODE_20_VERSION
 fi
 
+# Resolved absolutely, once, so it does not depend on the caller's cwd.
+WITH_RETRY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/with-retry.sh"
+
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 if [ "$ES_VERSION" == "7" ]; then
@@ -22,7 +25,10 @@ fi
 docker compose -f $YML_FILE down -v
 
 echo "Installing dependencies..."
-docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
+# Retried: node-gyp's header download is the install's one network dependency
+# and it does not retry itself. See .ci/scripts/with-retry.sh (TD-83).
+"$WITH_RETRY" \
+  docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
