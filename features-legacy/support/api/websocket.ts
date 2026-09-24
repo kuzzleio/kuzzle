@@ -16,7 +16,7 @@ type Subscription = {
 class WebSocketApi extends WebSocketApiBase {
   sockets: Record<string, WebSocket>;
   requests: Record<string, (data: any) => void>;
-  protected subscribedRooms: Record<string, Record<string, Subscription>>;
+  subscribedRooms: Record<string, Record<string, Subscription>>;
 
   constructor(world: any) {
     super(world);

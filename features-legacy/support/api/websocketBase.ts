@@ -12,7 +12,7 @@ type Subscription = {
 
 abstract class WebSocketApiBase extends ApiBase {
   protected sockets!: Record<string, any>;
-  protected subscribedRooms!: Record<string, Record<string, Subscription>>;
+  subscribedRooms!: Record<string, Record<string, Subscription>>;
 
   protected abstract _initSocket(name?: string): Bluebird<void>;
 

@@ -22,8 +22,12 @@ type ApiResponse = Record<string, any>;
 export default abstract class ApiBase {
   protected world: any;
   protected clientId: string | null;
-  protected subscribedRooms: Record<string, any>;
-  protected responses: any;
+  // Public because the realtime step definitions assert on them: the room a
+  // scenario opened and the notification it received are what `features-legacy`
+  // is testing, not an implementation detail of the wrapper. Marking them
+  // `protected` in M1 was a guess about a caller set M1 could not see.
+  subscribedRooms: Record<string, any>;
+  responses: any;
   protected isRealTimeCapable: boolean;
 
   constructor(world: any) {
@@ -47,6 +51,14 @@ export default abstract class ApiBase {
     socketName?: string,
   ): Promise<ApiResponse>;
 
+  /**
+   * Both realtime protocols implement this identically, and the `@realtime`
+   * teardown hook calls it on whichever one the run is using. It belongs to
+   * the realtime contract, so it is declared here rather than being reachable
+   * only through one of the two concrete classes.
+   */
+  abstract unsubscribeAll(): Promise<unknown>;
+
   adminResetDatabase() {
     const msg = {
       action: "resetDatabase",
@@ -65,7 +77,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  bulkImport(bulk: JSONObject[], index: string, collection: string) {
+  bulkImport(bulk: JSONObject[], index?: string, collection?: string) {
     const msg = {
       action: "import",
       body: { bulkData: bulk },
@@ -162,7 +174,7 @@ export default abstract class ApiBase {
       });
   }
 
-  count(query: JSONObject, index: string, collection: string) {
+  count(query: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "count",
       body: query,
@@ -223,7 +235,11 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createCollection(index: string, collection: string, mappings: JSONObject) {
+  createCollection(
+    index: string | undefined,
+    collection: string,
+    mappings?: JSONObject,
+  ) {
     const msg = {
       action: "create",
       body: mappings,
@@ -270,7 +286,7 @@ export default abstract class ApiBase {
     });
   }
 
-  createOrReplace(body: JSONObject, index: string, collection: string) {
+  createOrReplace(body: JSONObject, index?: string, collection?: string) {
     const msg: any = {
       action: "createOrReplace",
       body: body,
@@ -309,7 +325,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createRestrictedUser(body: JSONObject, id: string) {
+  createRestrictedUser(body: JSONObject, id?: string) {
     const msg: any = {
       action: "createRestrictedUser",
       body: body,
@@ -322,7 +338,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createUser(body: JSONObject, id: string) {
+  createUser(body: JSONObject, id?: string) {
     const msg: any = {
       action: "createUser",
       body,
@@ -337,7 +353,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createFirstAdmin(body: JSONObject, id: string, reset: boolean) {
+  createFirstAdmin(body: JSONObject, id?: string, reset?: boolean) {
     const msg: any = {
       action: "createFirstAdmin",
       body: body,
@@ -364,7 +380,7 @@ export default abstract class ApiBase {
     });
   }
 
-  deleteById(id: string, index: string) {
+  deleteById(id: string, index?: string) {
     const msg = {
       _id: id,
       action: "delete",
@@ -376,7 +392,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteByQuery(query: JSONObject, index: string, collection: string) {
+  deleteByQuery(query: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "deleteByQuery",
       body: query,
@@ -524,7 +540,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  exists(id: string, index: string) {
+  exists(id: string, index?: string) {
     const msg = {
       _id: id,
       action: "exists",
@@ -536,7 +552,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  get(id: string, index: string, collection: string) {
+  get(id: string, index?: string, collection?: string) {
     const msg = {
       _id: id,
       action: "get",
@@ -607,7 +623,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getMyRights(id: string) {
+  getMyRights(id?: string) {
     return this.send({
       _id: id,
       action: "getMyRights",
@@ -724,7 +740,7 @@ export default abstract class ApiBase {
     });
   }
 
-  refreshCollection(index: string, collection: string) {
+  refreshCollection(index?: string, collection?: string) {
     const msg = {
       action: "refresh",
       collection: collection || this.world.fakeCollection,
@@ -794,9 +810,9 @@ export default abstract class ApiBase {
 
   mCreate(
     body: JSONObject,
-    index: string,
-    collection: string,
-    jwtToken: string,
+    index?: string,
+    collection?: string,
+    jwtToken?: string,
   ) {
     const msg: ApiMessage = {
       action: "mCreate",
@@ -815,7 +831,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mCreateOrReplace(body: JSONObject, index: string, collection: string) {
+  mCreateOrReplace(body: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "mCreateOrReplace",
       body: body,
@@ -827,7 +843,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mDelete(body: JSONObject, index: string, collection: string) {
+  mDelete(body: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "mDelete",
       body,
@@ -839,7 +855,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mGet(body: JSONObject, index: string, collection: string) {
+  mGet(body: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "mGet",
       body,
@@ -871,7 +887,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mReplace(body: JSONObject, index: string, collection: string) {
+  mReplace(body: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "mReplace",
       body: body,
@@ -883,7 +899,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mUpdate(body: JSONObject, index: string, collection: string) {
+  mUpdate(body: JSONObject, index?: string, collection?: string) {
     const msg = {
       action: "mUpdate",
       body: body,
@@ -914,7 +930,7 @@ export default abstract class ApiBase {
     });
   }
 
-  publish(body: JSONObject, index: string) {
+  publish(body: JSONObject, index?: string) {
     const msg = {
       action: "publish",
       body: body,
@@ -933,7 +949,7 @@ export default abstract class ApiBase {
     });
   }
 
-  replace(body: JSONObject, index: string, collection: string) {
+  replace(body: JSONObject, index?: string, collection?: string) {
     const msg: ApiMessage = {
       action: "replace",
       body: body,
@@ -967,7 +983,7 @@ export default abstract class ApiBase {
     });
   }
 
-  scroll(scrollId: string, scroll: string) {
+  scroll(scrollId: string, scroll?: string) {
     const msg = {
       action: "scroll",
       controller: "document",
@@ -1004,9 +1020,9 @@ export default abstract class ApiBase {
 
   search(
     query: JSONObject,
-    index: string,
-    collection: string,
-    args: JSONObject,
+    index?: string,
+    collection?: string,
+    args?: JSONObject,
   ) {
     const msg: ApiMessage = {
       action: "search",
@@ -1025,7 +1041,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchProfiles(roles: string[], args: JSONObject) {
+  searchProfiles(roles: string[], args?: JSONObject) {
     const msg: ApiMessage = {
       action: "searchProfiles",
       body: {
@@ -1043,7 +1059,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchRoles(body: JSONObject, args: JSONObject) {
+  searchRoles(body: JSONObject, args?: JSONObject) {
     const msg: ApiMessage = {
       action: "searchRoles",
       body,
@@ -1059,7 +1075,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchSpecifications(body: JSONObject, args: JSONObject) {
+  searchSpecifications(body: JSONObject, args?: JSONObject) {
     const msg: ApiMessage = {
       action: "searchSpecifications",
       body: body,
@@ -1073,7 +1089,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchUsers(query: JSONObject, args: JSONObject) {
+  searchUsers(query: JSONObject, args?: JSONObject) {
     const msg: ApiMessage = {
       action: "searchUsers",
       body: {
@@ -1089,7 +1105,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  subscribe(filters: JSONObject, client: string, authentified = false) {
+  subscribe(filters: JSONObject, client?: string, authentified = false) {
     const msg: ApiMessage = {
       action: "subscribe",
       body: null,
@@ -1110,7 +1126,7 @@ export default abstract class ApiBase {
     return this.sendAndListen(msg, client);
   }
 
-  truncateCollection(index: string, collection: string) {
+  truncateCollection(index?: string, collection?: string) {
     const msg = {
       action: "truncate",
       collection: collection || this.world.fakeCollection,
@@ -1154,7 +1170,7 @@ export default abstract class ApiBase {
     return this.send(msg, false);
   }
 
-  update(id: string, body: JSONObject, index: string, collection: string) {
+  update(id: string, body: JSONObject, index?: string, collection?: string) {
     const msg = {
       _id: id,
       action: "update",
@@ -1177,7 +1193,7 @@ export default abstract class ApiBase {
     });
   }
 
-  updateMapping(index: string, collection: string, mapping: JSONObject) {
+  updateMapping(index?: string, collection?: string, mapping?: JSONObject) {
     const msg = {
       action: "updateMapping",
       body: mapping || this.world.mapping,
