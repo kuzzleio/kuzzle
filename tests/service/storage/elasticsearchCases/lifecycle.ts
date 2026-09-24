@@ -38,7 +38,7 @@ export function describeLifecycle(harness: ESHarness) {
    * is, so both halves are spies rather than no-ops.
    */
   const stubMutex = () => ({
-    lock: vi.spyOn(Mutex.prototype, "lock").mockResolvedValue(undefined),
+    lock: vi.spyOn(Mutex.prototype, "lock").mockResolvedValue(true),
     unlock: vi.spyOn(Mutex.prototype, "unlock").mockResolvedValue(undefined),
   });
 

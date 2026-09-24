@@ -111,10 +111,14 @@ describe("#core/validation/types/enum", () => {
       );
 
       expect(() =>
-        enumType.validateFieldSpecification({ values: ["a string", null] }),
+        enumType.validateFieldSpecification({
+          values: invalid<string[]>(["a string", null]),
+        }),
       ).toThrow(PreconditionError);
       expect(() =>
-        enumType.validateFieldSpecification({ values: ["a string", null] }),
+        enumType.validateFieldSpecification({
+          values: invalid<string[]>(["a string", null]),
+        }),
       ).toThrow(
         expect.objectContaining({ id: "validation.assert.invalid_type" }),
       );

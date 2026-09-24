@@ -69,7 +69,9 @@ describe("#service/Service", () => {
     it("rejects when the init sequence outlives the timeout", async () => {
       const service = serviceWith({ initTimeout: 10 });
       /* A sequence that never settles is what the timeout exists for. */
-      service.sequence = vi.fn(() => new Promise<void>(() => {}));
+      // `Promise<undefined>`, which is what `sequence` is declared to
+      // answer; `Promise<void>` is not the same type to an assignment.
+      service.sequence = vi.fn(() => new Promise<undefined>(() => {}));
 
       await expect(service.init()).rejects.toMatchObject({
         id: "core.fatal.service_timeout",

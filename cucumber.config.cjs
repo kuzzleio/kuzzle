@@ -4,17 +4,18 @@
 // loads them, and ts-node reads `tsconfig.json` unless told otherwise. Since the strict
 // flip (docs/adr-001/steps/12-sprint-9-strict-flip.md, K6) that file is the PRODUCTION
 // program — `strict: true`, and `features/` not even in its `include`. Pointing ts-node
-// at the test program is what keeps the step definitions compiling under the same
-// settings they were written for; without it every functional shard dies at load time
-// on a strict error in a step definition, with Kuzzle itself perfectly healthy.
+// at a test program is what keeps the step definitions compiling under the settings they
+// were written for; without it every functional shard dies at load time on a strict error
+// in a step definition, with Kuzzle itself perfectly healthy.
 //
-// ⚠️ Step 14 is moving that code, directory by directory, into the STRICT test program
-// (tsconfig.tests.strict.json). ts-node reads this file for its compiler options only —
-// not for `include`/`exclude` — so a directory that has already moved still loads under
-// `strict: false` here, which is the more permissive of the two and cannot fail. When
-// step 14's M7 deletes `tsconfig.tests.json`, this pointer has to follow it.
+// It points at `tsconfig.cucumber.json` rather than at `tsconfig.tests.json` directly:
+// ts-node reads a project's `compilerOptions` but not its `include`, and since step 14's
+// M7 left one strict test program, `noImplicitAny` is on here too — so the ambient
+// declarations under `tests/types/` have to reach ts-node by another route. That file
+// extends the test program and adds them. See its own comment.
 process.env.TS_NODE_PROJECT =
-  process.env.TS_NODE_PROJECT || require("path").join(__dirname, "tsconfig.tests.json");
+  process.env.TS_NODE_PROJECT ||
+  require("path").join(__dirname, "tsconfig.cucumber.json");
 
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const defaultConfig = {

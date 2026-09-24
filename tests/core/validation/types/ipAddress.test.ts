@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import BaseType from "../../../../lib/core/validation/baseType";
 import IpAddressType from "../../../../lib/core/validation/types/ipAddress";
 import { PreconditionError } from "../../../../lib/kerror/errors/preconditionError";
+import { invalid } from "../../../helpers/invalid";
 
 describe("#core/validation/types/ipAddress", () => {
   const ipAddressType = new IpAddressType();
@@ -90,10 +91,14 @@ describe("#core/validation/types/ipAddress", () => {
 
     it('should throw if "notEmpty" is not set properly', () => {
       expect(() =>
-        ipAddressType.validateFieldSpecification({ notEmpty: null }),
+        ipAddressType.validateFieldSpecification({
+          notEmpty: invalid<boolean>(null),
+        }),
       ).toThrow(PreconditionError);
       expect(() =>
-        ipAddressType.validateFieldSpecification({ notEmpty: null }),
+        ipAddressType.validateFieldSpecification({
+          notEmpty: invalid<boolean>(null),
+        }),
       ).toThrow(
         expect.objectContaining({ id: "validation.assert.invalid_type" }),
       );

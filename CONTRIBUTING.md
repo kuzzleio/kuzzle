@@ -31,19 +31,35 @@ moving it** — no `!`, no `as`, no widening a parameter to silence a call site.
 `casts` and `any` ratchets below are what enforce that.
 
 `strict` applies to a whole *program*, not to a file, so **the test code has its
-own — two of them**, and `npm run typecheck:tests` runs both:
+own**: `tsconfig.tests.json`, `strict: true`, run by `npm run typecheck:tests`.
+It covers `tests/`, `features/`, `features-legacy/`, `.ci/scripts/`, `scripts/`
+and the `start-kuzzle-*` entrypoints.
 
-| Program | `strict` | Holds |
-|---|---|---|
-| `tsconfig.tests.strict.json` | on | what has been taken to strict, **growing** |
-| `tsconfig.tests.json` | off | the rest, **shrinking** |
+⚠️ **`npm run typecheck:tests` is not that config's only reader.** Cucumber's
+`ts-node` compiles the functional step definitions with it too, through
+`tsconfig.cucumber.json` — and **ts-node honours a project's `compilerOptions`
+but not its `include`**. That is why the ambient declarations under
+`tests/types/` are re-listed there with `ts-node.files: true`: without them every
+functional shard dies at load on `TS7016` while `typecheck:tests` stays green.
+If you change either config, check it with both entrypoints — the second takes
+two seconds and needs no Docker:
 
-That split is ADR-0001 [step 14](docs/adr-001/steps/14-test-program-strict.md),
-which is taking the test code to `strict` one directory at a time: a directory
-changes standard by moving from the second file's `exclude` to the first file's
-`include`, in one PR, with its errors fixed. When the non-strict file is empty it
-is deleted. **Put a new spec in the strict program** unless it lives in a
-directory that is still on the other side of the line.
+```bash
+node -r ts-node/register -e 'require("./features/step_definitions/controllers-steps.ts")'
+```
+
+There were two of them while ADR-0001
+[step 14](docs/adr-001/steps/14-test-program-strict.md) was taking the test code
+to `strict` one directory at a time — a directory changed standard by moving
+program, so nothing was unchecked in between. The last one moved on 2026-09-24
+and the non-strict program was deleted.
+
+⚠️ **The specs are not in `tsconfig.json`, and that is not an oversight**: that
+program is what `npm run build` emits `dist/` from. Step 14's M7 measured the
+alternative — adding `tests/**` to it takes the published payload from 770 to
+1 311 files, which is the regression step 12's K6 fixed, arriving from the other
+side. One program to emit from and one to check is a different question from one
+standard for both.
 
 Note what this means in practice: `npm run build` does not compile the tests, so a
 type error in a spec surfaces in `typecheck:tests`, not in the build.

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import InternalProtocol from "../../../../lib/core/network/protocols/internalProtocol";
 import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
+import { present } from "../../../helpers/present";
 
 /*
  * The Mocha spec lived at `test/core/network/protocols/internal.test.js` while
@@ -68,9 +69,13 @@ describe("#core/network/protocols/InternalProtocol", () => {
        * Not asserted by the Mocha spec, which checked the event's name only:
        * the handler has to hand back this protocol's connection id.
        */
-      expect(await asked.get("core:network:internal:connectionId:get")()).toBe(
-        protocol.connection.id,
+      const connectionId = asked.get("core:network:internal:connectionId:get");
+
+      present(
+        connectionId,
+        "handler for core:network:internal:connectionId:get",
       );
+      expect(await connectionId()).toBe(protocol.connection.id);
     });
   });
 

@@ -10,6 +10,7 @@ import { InternalError } from "../../../lib/kerror/errors/internalError";
 import { KuzzleError } from "../../../lib/kerror/errors/kuzzleError";
 import { invalid } from "../../helpers/invalid";
 import { present } from "../../helpers/present";
+import { bodyOf } from "../../helpers/request";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 /**
@@ -37,18 +38,6 @@ const throws = (
   expect(caught).toBeInstanceOf(error);
   expect(caught).toMatchObject(match);
 };
-
-/**
- * The body the enclosing `beforeEach` has just set. `input.body` is
- * `JSONObject | null` — correct, since a request can carry none — and every
- * use below is in a test that put one there, so this says so once instead of
- * at each of the twelve reads.
- */
-function body(rq: KuzzleRequest): JSONObject {
-  present(rq.input.body, "request.input.body");
-
-  return rq.input.body;
-}
 
 describe("#api/request/KuzzleRequest", () => {
   let rq: Request;
@@ -471,7 +460,7 @@ describe("#api/request/KuzzleRequest", () => {
         request.context.connection.protocol = "ws";
         expect(request.getBodyBoolean("doha")).toBe(true);
 
-        body(request).doha = false;
+        bodyOf(request).doha = false;
 
         expect(request.getBodyBoolean("doha")).toBe(false);
       });
@@ -480,7 +469,7 @@ describe("#api/request/KuzzleRequest", () => {
         request.context.connection.protocol = "http";
         expect(request.getBodyBoolean("doha")).toBe(true);
 
-        body(request).doha = false;
+        bodyOf(request).doha = false;
 
         expect(request.getBodyBoolean("doha")).toBe(false);
       });
@@ -508,12 +497,12 @@ describe("#api/request/KuzzleRequest", () => {
       describe("#getBodyArray", () => {
         it("should return the array of the body (lodash parameter)", () => {
           expect(request.getBodyArray("relations.lebron")).toBe(
-            body(request).relations.lebron,
+            bodyOf(request).relations.lebron,
           );
         });
 
         it("extracts the required parameter", () => {
-          expect(request.getBodyArray("names")).toBe(body(request).names);
+          expect(request.getBodyArray("names")).toBe(bodyOf(request).names);
         });
 
         it("should throw if the parameter is missing", () => {
@@ -572,23 +561,25 @@ describe("#api/request/KuzzleRequest", () => {
       describe("#getBodyString", () => {
         it("should return the string of the body (lodash parameter)", () => {
           expect(request.getBodyString("relatives.Peter")).toBe(
-            body(request).relatives.Peter,
+            bodyOf(request).relatives.Peter,
           );
         });
 
         it("should return the string of an array (lodash parameter)", () => {
-          expect(request.getBodyString("names.0")).toBe(body(request).names[0]);
+          expect(request.getBodyString("names.0")).toBe(
+            bodyOf(request).names[0],
+          );
         });
 
         it("should return the string of an array (lodash bracket parameter)", () => {
           expect(request.getBodyString("relations.lebron[0]")).toBe(
-            body(request).relations.lebron[0],
+            bodyOf(request).relations.lebron[0],
           );
         });
 
         it("extracts the required parameter", () => {
           expect(request.getBodyString("fullname")).toBe(
-            body(request).fullname,
+            bodyOf(request).fullname,
           );
         });
 
@@ -626,13 +617,13 @@ describe("#api/request/KuzzleRequest", () => {
       describe("#getBodyObject", () => {
         it("should return the object of the body (lodash parameter)", () => {
           expect(request.getBodyObject("powers.fire")).toBe(
-            body(request).powers.fire,
+            bodyOf(request).powers.fire,
           );
         });
 
         it("extracts the required parameter", () => {
           expect(request.getBodyObject("relatives")).toBe(
-            body(request).relatives,
+            bodyOf(request).relatives,
           );
         });
 
@@ -686,7 +677,7 @@ describe("#api/request/KuzzleRequest", () => {
       describe("#getBodyNumber", () => {
         it("should return the number of the body (lodash parameter)", () => {
           expect(request.getBodyNumber("powers.fire.damage")).toBe(
-            body(request).powers.fire.damage,
+            bodyOf(request).powers.fire.damage,
           );
         });
 
@@ -729,7 +720,7 @@ describe("#api/request/KuzzleRequest", () => {
       describe("#getBodyInteger", () => {
         it("should return the integer of the body (lodash parameter)", () => {
           expect(request.getBodyInteger("powers.fire.mana")).toBe(
-            body(request).powers.fire.mana,
+            bodyOf(request).powers.fire.mana,
           );
         });
 

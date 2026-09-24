@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b stays open, outside the DoD · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 [#2880](https://github.com/kuzzleio/kuzzle/pull/2880) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -133,26 +133,29 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
 | **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
 | **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
-| **M6** | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                             |    ~82 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility. M4 hands it `command.test.ts` whole, `let command` still inferred. |
-| **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
-| **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
+| **M6** ✅ | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                          |    ~82 | 98 → 0, and `tests/` moves into the strict program. Two subject changes, two fixtures that were asserting themselves. See _[What M6 found](#what-m6-found)_. |
+| **M7** ✅ | The flip: one test program, and the fold **measured and refused**                                |      — | The non-strict program is deleted. Folding the specs into `tsconfig.json` takes `dist/` from 770 to 1 311 files. See _[What M7 found](#what-m7-found)_.        |
+| **M8** ✅ | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program — **off, recorded** | 378 | 344 are specs reading back what they wrote; the 34 that run hold no defect. See _[What M8 found](#what-m8-found)_. |
 
 **M1 + M2 + M4 = 829 of 1 077 (77%), and all three are one annotation per site.**
 The step is far more mechanical than its total suggests; what it is not is small.
 
 ## Definition of done
 
-- [ ] `tsconfig.tests.json` deleted, or its `strict: false` removed.
-- [ ] `npm run typecheck:tests` green with `strict: true` over `tests/`,
+- [x] `tsconfig.tests.json` deleted, or its `strict: false` removed. _(M7: the
+      non-strict program is gone; the strict one took its name.)_
+- [x] `npm run typecheck:tests` green with `strict: true` over `tests/`,
       `features/`, `features-legacy/`, `.ci/`, `scripts/` and the
-      `start-kuzzle-*` entrypoints.
-- [ ] No error silenced by a widening: no `any`, no `!`, no `@ts-expect-error`
+      `start-kuzzle-*` entrypoints. _(M6.)_
+- [x] No error silenced by a widening: no `any`, no `!`, no `@ts-expect-error`
       without a register entry. The fix removes the error rather than moving it —
       [ADR-0001 › Conversion standards](../ADR-0001-migration-typescript.md#conversion-standards-per-file),
       which applies here even though nothing is being converted.
-- [ ] `TS2341`'s eight sites resolved by changing the subject or the test, per
-      [step 13's L6](13-sprint-10-test-closure.md).
-- [ ] `noUncheckedIndexedAccess` decided either way, in writing.
+- [x] `TS2341`'s sites — **ten, not eight** — resolved by changing the subject
+      or the test, per [step 13's L6](13-sprint-10-test-closure.md). _(M6, and
+      one of them was the subject: see [What M6 found](#what-m6-found).)_
+- [x] `noUncheckedIndexedAccess` decided either way, in writing. _(M8: off in
+      the test program, on in `tsconfig.json` — see [What M8 found](#what-m8-found).)_
 
 ## What M0 found
 
@@ -787,3 +790,273 @@ fewer. Plus M6's `command.test.ts`: ten `TS2341` and a redesign.
 **`present()` is the tool for most of the remaining `TS18047`s**, and the `lib/`
 finding above is the reminder to ask, at each one, *whether the type is wrong
 before working around it being right*.
+
+## What M6 found
+
+**98 → 0, and `tests/` moves into the strict program.** The non-strict one is
+now empty; M7 deletes it.
+
+The tail was 18 files of one-offs and one file that was a redesign.
+
+### `command.test.ts`: the ten `TS2341`, answered on both sides of L6
+
+_Change the subject or the test, never the visibility_ needed both halves here.
+
+**The subject.** The spec read `command.state` to ask *"is it listening?"* —
+`init()` does not await `listen()`, so the flag was the only answer available.
+`ClusterCommand` now has a public `get running(): boolean`. The flag stays
+private, because its values are that file's business; **whether the command
+layer is listening is a legitimate question from outside**, and it is the one
+the spec was really asking.
+
+**The test.** The spec read `command.protoroot` to decode replies. What it needs
+is the *wire format*, and that is a file: it now loads the same `command.proto`
+itself, in a `beforeAll`.
+
+⚠️ **Two tests also *assigned* `protoroot`, and that one was the subject's
+fault.** The first fix here was to call `init()` instead — and the suite
+answered `Error: Address already in use`. Those two tests use the command layer
+as a **client**: the port in its config is the one it *dials*, and the server it
+dials already holds it.
+
+Which is the finding: **`ClusterCommand` is two things.** It is the server every
+node runs, and the client `getFullState()` and `broadcastHandshake()` use to
+call its peers. Both need the protobuf codec; only the first needs a bound port.
+`init()` did both, so a client-only use had no way to become usable — hence the
+assignment into a private field. `loadProtobuf()` is now public and `init()`
+calls it.
+
+_A private member a spec insists on reaching is sometimes a test written against
+an implementation detail, and sometimes a class that does two jobs through one
+door._ The first reading cost a wrong fix; the suite is what distinguished
+them.
+
+One more read, `command.node.config.ports.command = …`, was a test reaching in
+to change a constructor argument after the fact. It constructs the subject with
+the port it wants instead.
+
+### Two more setters contradicted their getters — the siblings of M5's `body`
+
+```ts
+get jwt(): string | null        set jwt(str: string)          // assertString  → null
+get volatile(): JSONObject|null set volatile(obj: JSONObject) // assertObject  → null
+```
+
+Same shape as [M5](#what-m5-found)'s `body`, same first branch in the assertion
+helper, same getter promising what the setter refused. Found because a spec
+assigned `string | null` to `jwt` and could not.
+
+_When a finding names a class, fixing the reported instance is half the work_ —
+[lessons](../lessons.md), TD-71/73. The enumeration is the whole of
+`requestInput.ts`'s setters; `headers` already admitted `undefined`, and
+`index`, `collection`, `controller`, `action` and `triggerEvents` take values
+their getters do not widen.
+
+### A stub that was looser than its subject
+
+```ts
+// tests/mocks/entryPoint.ts
+execute: vi.fn((_c: unknown, _r: unknown, cb?: (r: unknown) => void) => cb?.({}))
+//                                            ^ optional
+```
+
+`NetworkEntryPoint.execute` declares `cb` **required** and always passes it. The
+stub made it optional, so every `mockImplementation` in the three protocol specs
+had to cope with a callback that cannot be absent — four `TS2722`s, all of them
+about a case the subject cannot produce. _A stub looser than its subject asks
+its callers to handle what cannot happen._
+
+### ⚠️ A second fixture that was asserting itself
+
+`tokenManager`'s refresh test built the new token as
+`new Token({ _id: "...I got better" })` — **no `userId`** — and then asserted
+that `getConnectedUserToken(refreshed.userId, "foo")` finds it. That lookup is
+`token.userId === userId`, so the assertion was `null === null`: it matched
+without ever checking the association the method exists to check. The fixture
+now carries the user, which is what a refresh keeps, and the test fails if a
+refresh ever loses it.
+
+That is [M5](#what-m5-found)'s finding a second time, in a different suite, and
+the mechanism is identical: **a fixture that leaves a field unset does not
+exercise the absent case, it exercises a comparison between two absences.**
+Both were caught by running the suite, not by the compiler.
+
+### The rest, by shape
+
+- **`present()` everywhere it was `expect(x).toBeDefined()`** — vitest's
+  assertion does not narrow, so the line after it still read a possibly-absent
+  value. Five specs shared the `invokeAsk` idiom.
+- **`bodyOf()` / `userOf()`** (`tests/helpers/request.ts`) — M5's local `body()`
+  reader, promoted: six specs dereference `input.body` or `context.user` a dozen
+  times each.
+- **`invalid<T>()`** for the fixtures whose whole point is the rejection —
+  `validateFieldSpecification({ notEmpty: null })`, `new RequestInput(null)`,
+  `loader.load(null)`, a chain with a hole in it.
+- **`Reflect.deleteProperty`** where a spec deleted a non-optional property
+  (`global.nodeId` in a teardown, `role.controllers.controller.actions` as the
+  state under test). `delete` requires the property to be optional, and making
+  it optional for one teardown would cost every reader a narrowing.
+- **One documentation disagreement, recorded not fixed**: `funnel.execute` is
+  documented `@returns {Number} -1 | 0 | 1`, and one refusal path goes through
+  `_executeError`, declared `): null`. Nothing in `lib/` reads the code — both
+  callers ignore it — so the spec records `number | null` and says why.
+
+## What M7 found
+
+**One test program.** `tsconfig.tests.json` — the non-strict one — is deleted,
+and `tsconfig.tests.strict.json` takes its name, which is the name
+`npm run typecheck:tests`, CI and `CONTRIBUTING.md` all already used. The script
+runs one `tsc` instead of two.
+
+### The fold was measured, and it does not hold
+
+The slice was written as *"delete `tsconfig.tests.json`, fold the specs back
+into one program **if that holds**"*, with K6's instruction attached: diff what
+the build emits, do not assume. Adding `tests/**/*.ts` to `tsconfig.json`'s
+`include` and running `tsc`:
+
+| | Before | With the specs folded in |
+| --- | ---: | ---: |
+| Emitted files | **770** | **1 311** |
+| New top-level directories in `dist/` | — | `dist/tests/`, `dist/.ci/` |
+| Errors | 0 | **346** |
+
+So it fails twice over, and the two reasons are unrelated:
+
+1. **`tsconfig.json` is what `dist/` is emitted from.** Putting the specs in it
+   is [step 12's K6](12-sprint-9-strict-flip.md) regression arriving from the
+   other side — that slice took the payload 1 518 → 769 by getting them *out*.
+   _One program to emit from and one to check is a different question from one
+   standard for both._
+2. **`noUncheckedIndexedAccess` is on in that program**, and the specs are not
+   clean under it. 346 errors, which is M8's question and the last difference
+   between the two programs.
+
+⚠️ **The first attempt at this measurement measured nothing.** The edit that was
+supposed to add `tests/**` to the `include` was a string replacement against
+`"bin/start-kuzzle-server.ts"` — a line that exists on [step 03](03-sprint-2-bin.md)'s
+branch and not on this one. It matched nothing, `tsc` ran on the unmodified
+config, and answered *"0 errors, 770 files"* — a result that looks exactly like
+the conclusion one wants. _A measurement whose setup can silently not apply will
+report the null result as a finding._ The check is cheap: print the config you
+just wrote before running anything against it.
+
+### The rename broke every functional shard, and `typecheck:tests` could not see it
+
+The green local run and the green `migration-ratchets` job both ran `tsc -p
+tsconfig.tests.json`. CI's 32 functional shards ran something else, and all 32
+failed at load:
+
+```
+features/step_definitions/controllers-steps.ts(3,28): error TS7016:
+  Could not find a declaration file for module 'request-promise'.
+```
+
+`cucumber.config.cjs` sets `TS_NODE_PROJECT` so the step definitions compile
+under the test program's settings, and that pointer resolved *by name* — which
+is exactly what the rename changed under it. ts-node was suddenly compiling the
+suites with `strict: true`, and **ts-node reads a project's `compilerOptions`
+but not its `include`**. The ambient declarations that type the suites' untyped
+dependencies (`tests/types/request-promise.d.ts`, `tests/types/should-as-function.d.ts`)
+were only ever reaching `tsc` through that `include`. Under `strict: false`
+their absence was invisible — `noImplicitAny` off makes `TS7016` disappear.
+
+The fix is `tsconfig.cucumber.json`: it extends the test program, and adds
+`ts-node.files: true` with an `include` holding **only** the ambient `.d.ts`
+files, so ts-node loads a dozen declarations at startup and still compiles the
+step definitions on demand.
+
+_Two lessons, both about what a check does not cover:_
+
+1. **A pointer that resolves by name survives a rename and changes meaning.**
+   The comment in `cucumber.config.cjs` even said *"when M7 deletes
+   `tsconfig.tests.json`, this pointer has to follow it"* — M7 deleted it by
+   giving the name to a different file, so the pointer did not dangle. It aimed
+   somewhere else.
+2. **`typecheck:tests` is not the only consumer of that config.** ts-node is,
+   and it honours a strict subset of it. Checking a config change with the
+   command named in it checks one of its readers.
+
+The reproduction is two seconds and needs no Docker:
+
+```bash
+node -r ts-node/register -e 'require("./features/step_definitions/controllers-steps.ts")'
+```
+
+### Documentation that named two programs
+
+`CONTRIBUTING.md` carried the two-program table and the rule *"put a new spec in
+the strict program"*; the `migration-ratchets` job explained why it ran two
+`tsc`s. Both now describe one program — and `CONTRIBUTING.md` says why the specs
+are not in `tsconfig.json`, since that is the question this slice answered.
+
+## What M8 found
+
+**Decided: `noUncheckedIndexedAccess` stays off in the test program, and on in
+`tsconfig.json`.** Nothing changed but this record and the comment on the flag
+in `tsconfig.tests.json`: the measurement found no defect to fix, so there was
+no code to write.
+
+### The 378, by shape
+
+Measured 2026-09-24 on M7's `tsconfig.tests.json` with the flag passed on the
+command line (`npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`).
+**378 errors in 50 files** — more than the 346 M7 quoted, because M7 measured the
+specs *folded into `tsconfig.json`*, whose `include` holds neither the cucumber
+suites nor the tooling. Classified exclusively, in this order:
+
+| Shape | Errors | What the flag is objecting to |
+| --- | ---: | --- |
+| `harness.clientStub.*` / `harness.sent(…)` in `elasticsearchCases/` | 140 | `ESClientStub extends Record<string, Stub>`, and the stub is a `Proxy` that answers **every** key. The flag says a key may be absent; for this object it never is. |
+| `mock.calls[0][0]` and siblings | 87 | Reading back the call the spec just made. If it was not made, the `expect` on the next token fails anyway — with a `TypeError` instead of a diff, which is the whole difference. |
+| `arr[0]`, `arr[1]` | 61 | Fixtures the same spec wrote a few lines up, or results it is about to assert the length of. |
+| Other `tests/` sites | 56 | The same two shapes, spelled differently: stubs typed `Record<string, Mock>` (`cache.get`, `tokenManager.getConnectedUserToken`, `debug.formatters.a`) and fixture maps (`mappings.index1`, `role.controllers.controller`). |
+| `features*/`, `.ci/`, `start-kuzzle-test.ts` | 34 | The code that *runs* rather than asserts — the only place the flag could have found something. |
+
+**344 of 378 are specs, and they are exactly the case the slice table predicted:**
+an indexed read whose presence the spec itself guarantees. Making them compile
+means ~300 `!` or `?.`. The `casts` and `any` ratchets count `lib/` only, so
+nothing would stop those from becoming the idiom — and a `!` in a spec is not
+a weaker `expect`, it is no `expect` at all, sitting in front of one.
+
+### The 34 that run were read one by one, and none is a defect
+
+- **Already guarded, narrowing lost.** `if (this.requests[id]) this.requests[id](msg)`
+  (`mqtt.ts`, `websocket.ts`), `if (rooms && rooms[roomId]) { const room = rooms[roomId]; … }`,
+  and the same around `subscribedRooms` — the flag does not narrow an element
+  access by a checked non-literal key, so a guarded read reports as unguarded.
+  The fix would be a hoist into a `const`, for no behaviour change.
+- **A missing key is a test failure, and should be.** `unsubscribe` on a room
+  never subscribed, `sockets[key].terminate()` on a socket never opened: the
+  harness throwing there is the correct outcome.
+- **An `argv` flag with no value** — `--enable-plugins` in `start-kuzzle-test.ts`,
+  `--world-parameters` in `features-legacy/support/hooks.ts` — would crash on
+  `undefined`. Every caller of the first (`.ci/test-cluster-{7,8}.yml`) passes
+  a value, and nothing passes the second at all — `cucumber.config.cjs` sets
+  `worldParameters` as an option, so that `argv` branch is dead rather than
+  fragile. Neither has a path to the crash.
+- **Parsers over well-formed input.** `coverage-gate.ts` reads lcov `DA:` lines
+  (a malformed one gives `NaN`, which counts as not hit) and exemption lines it
+  has already trimmed and filtered for emptiness.
+
+_A flag is worth its cost where an absent key is a state the code can be in._
+In `lib/` that is most indexed reads — request bodies, config, user input. In a
+spec it is almost none: the spec wrote the key. The measurement is what makes
+this a decision rather than a preference — the 34 sites where the argument
+could have failed were checked, and it did not.
+
+### Why not the half-measures
+
+- **Flag on, test code off.** `tsc` has no per-file options, so this is a second
+  program, and M7 has just deleted the second program.
+- **Retype `ESClientStub` as a total map** (the 140). Correct under the flag,
+  inert without it: with the flag off, `Record<string, Stub>` already reads as
+  total. It is the first thing to do *if* the flag is ever turned on, and
+  nothing before.
+
+### To revisit it
+
+Re-run the command above. The decision holds while the non-spec share stays
+small and defect-free; a harness or tooling file that grows real lookups over
+external input (the cucumber support API over server responses is the likeliest)
+is the signal to measure again.

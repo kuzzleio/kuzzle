@@ -89,7 +89,10 @@ describe("#cluster/ClusterIdCardHandler", () => {
       clearInterval(internals.refreshTimer);
     }
 
-    delete global.nodeId;
+    // `Reflect.deleteProperty`, not `delete`: `nodeId` is declared
+    // non-optional on the global (lib/types/Global.ts), which is right for
+    // every reader — the teardown is the one place that unsets it.
+    Reflect.deleteProperty(global, "nodeId");
     vi.restoreAllMocks();
     restoreKuzzle();
   });

@@ -1,3 +1,4 @@
+import type { JSONObject } from "kuzzle-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { KuzzleRequest } from "../../../lib/api/request";
@@ -13,6 +14,7 @@ import { Room } from "../../../lib/core/realtime/room";
 import { InternalError } from "../../../lib/kerror/errors/internalError";
 import type { RealtimeScope } from "../../../lib/types";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { present } from "../../helpers/present";
 
 /*
  * One file for one subject, where Mocha had seven — `publish`,
@@ -131,7 +133,7 @@ describe("#core/realtime/Notifier", () => {
   const invokeAsk = (event: string, ...args: unknown[]) => {
     const handler = asked.get(event);
 
-    expect(handler, `no handler registered for ${event}`).toBeDefined();
+    present(handler, `no handler registered for ${event}`);
 
     return handler(...args);
   };
@@ -1017,9 +1019,12 @@ describe("#core/realtime/Notifier", () => {
         clerk.subscriptions.set(
           "foobar",
           new ConnectionRooms(
-            new Map([
-              ["nonMatching", null],
-              ["alwaysMatching", null],
+            // `{}`, not `null`: the only writer is
+            // `registerSubscription(…, request.input.volatile ?? {})`, so a
+            // stored subscription always carries an object (step 14, M5).
+            new Map<string, JSONObject>([
+              ["nonMatching", {}],
+              ["alwaysMatching", {}],
             ]),
           ),
         );

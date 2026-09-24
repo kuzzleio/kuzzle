@@ -1,0 +1,27 @@
+{
+  // The program `ts-node` compiles the cucumber step definitions with, and
+  // nothing else — `cucumber.config.cjs` points `TS_NODE_PROJECT` here.
+  //
+  // It exists because of one asymmetry: `ts-node` reads a project's
+  // `compilerOptions`, but NOT its `include`. Since M7 there is a single test
+  // program and it is strict, so `noImplicitAny` is on at load time; the
+  // ambient declarations that make the suites' untyped dependencies typed
+  // (`request-promise`, `should`'s function subpath) live in `tests/types/`
+  // and were reaching `tsc` through `tsconfig.tests.json`'s `include` alone.
+  // `ts-node` never saw them, and every functional shard died at load on
+  // `TS7016: Could not find a declaration file for module 'request-promise'`
+  // with Kuzzle itself perfectly healthy.
+  //
+  // `ts-node.files` makes `ts-node` honour the `include` below — which is
+  // deliberately just the ambient declarations. The step definitions are still
+  // compiled on demand as cucumber requires them, so this costs a dozen
+  // `.d.ts` files at startup, not the whole test program.
+  //
+  // See docs/adr-001/steps/14-test-program-strict.md.
+
+  "extends": "./tsconfig.tests.json",
+  "ts-node": {
+    "files": true
+  },
+  "include": ["tests/types/**/*.d.ts", "lib/types/**/*.d.ts"]
+}

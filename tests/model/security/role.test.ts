@@ -49,7 +49,9 @@ describe("#model/security/Role", () => {
       role.controllers = { controller: { actions: {} } };
       expect(role.isActionAllowed(request)).toBe(false);
 
-      delete role.controllers.controller?.actions;
+      // Same reason as `idCardHandler`'s teardown: `actions` is not optional,
+      // and removing it is exactly the state under test.
+      Reflect.deleteProperty(role.controllers.controller ?? {}, "actions");
       expect(role.isActionAllowed(request)).toBe(false);
 
       delete role.controllers.controller;

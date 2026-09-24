@@ -7,6 +7,7 @@ import Router from "../../../lib/core/network/router";
 import { PluginImplementationError } from "../../../lib/kerror/errors/pluginImplementationError";
 import { settle } from "../../helpers/settle";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { present } from "../../helpers/present";
 
 /*
  * One file for one subject: Mocha had `router/router.test.js` and
@@ -99,6 +100,7 @@ describe("#core/network/Router", () => {
         const stored = router.connections.get(connectionId);
 
         expect(stored).toBeInstanceOf(RequestContext);
+        present(stored, `connection ${connectionId}`);
         expect(stored.connectionId).toBe(connectionId);
         expect(stored.protocol).toBe(protocol);
         expect(stored.token).toBeNull();
@@ -373,6 +375,7 @@ describe("#core/network/Router", () => {
       expect(result.response.requestId).toBe(message.requestId);
       expect(result.response.headers["content-type"]).toBe("application/json");
       expect(result.response.status).toBe(404);
+      present(result.response.error, "the response error");
       expect(result.response.error.message).toBe(
         "API URL not found: /a/b/c/d.",
       );

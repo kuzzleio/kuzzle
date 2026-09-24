@@ -10,6 +10,7 @@ import { MultipleErrorsError } from "../../../lib/kerror/errors/multipleErrorsEr
 import { SizeLimitError } from "../../../lib/kerror/errors/sizeLimitError";
 import { invalid } from "../../helpers/invalid";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { bodyOf } from "../../helpers/request";
 
 const index = "festivals";
 const collection = "huma";
@@ -848,7 +849,7 @@ describe("#api/controllers/documentController", () => {
     });
 
     it('should reject if users give document with "_source" property', async () => {
-      request.input.body.documents = [
+      bodyOf(request).documents = [
         { _id: "doc-1", body: {} },
         { _id: "doc-2", _source: {} },
       ];
@@ -869,7 +870,7 @@ describe("#api/controllers/documentController", () => {
     });
 
     it("should return immediately if the provided payload is empty", async () => {
-      request.input.body.documents = [];
+      bodyOf(request).documents = [];
 
       await expect(
         mChanges("mCreate", actionEnum.CREATE),
@@ -962,7 +963,7 @@ describe("#api/controllers/documentController", () => {
     });
 
     it("should notify with _updatedFields when doing an upsert ", async () => {
-      request.input.body.documents = ["_id1", "_id2", "_id3"].map((id) => ({
+      bodyOf(request).documents = ["_id1", "_id2", "_id3"].map((id) => ({
         _id: id,
         changes: { field: "_source" },
         default: { field2: "default" },
@@ -1364,7 +1365,7 @@ describe("#api/controllers/documentController", () => {
     });
 
     it("should have default value for refresh, userId and retryOnConflict", async () => {
-      request.input.body.default = undefined;
+      bodyOf(request).default = undefined;
 
       await controller.upsert(request);
 

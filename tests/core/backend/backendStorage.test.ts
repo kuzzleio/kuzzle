@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Backend } from "../../../lib/core/backend/backend";
 import { createBackend, internals } from "./backendFixture";
+import { present } from "../../helpers/present";
 
 vi.mock("../../../lib/kuzzle", async () => {
   const { FakeKuzzle } = await import("./fakeKuzzle");
@@ -27,6 +28,8 @@ const maxRetriesOf = (
   const symbol = Object.getOwnPropertySymbols(client.helpers).find(
     (s) => s.description === "max retries",
   );
+
+  present(symbol, 'the "max retries" symbol');
 
   return client.helpers[symbol];
 };
