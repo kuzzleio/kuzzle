@@ -7,6 +7,12 @@
 // at the test program is what keeps the step definitions compiling under the same
 // settings they were written for; without it every functional shard dies at load time
 // on a strict error in a step definition, with Kuzzle itself perfectly healthy.
+//
+// ⚠️ Step 14 is moving that code, directory by directory, into the STRICT test program
+// (tsconfig.tests.strict.json). ts-node reads this file for its compiler options only —
+// not for `include`/`exclude` — so a directory that has already moved still loads under
+// `strict: false` here, which is the more permissive of the two and cannot fail. When
+// step 14's M7 deletes `tsconfig.tests.json`, this pointer has to follow it.
 process.env.TS_NODE_PROJECT =
   process.env.TS_NODE_PROJECT || require("path").join(__dirname, "tsconfig.tests.json");
 
