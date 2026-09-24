@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b stays open, outside the DoD · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 _(this PR)_ · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b stays open, outside the DoD · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 [#2880](https://github.com/kuzzleio/kuzzle/pull/2880) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
