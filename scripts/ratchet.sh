@@ -9,8 +9,8 @@
 # unrecorded improvement — so the baseline always mirrors reality).
 #
 # Usage:
-#   scripts/ratchet.sh <js|mocha|any|casts|cpd-exclusions> [--update]
-#   npm run ratchet                  # all five, check mode
+#   scripts/ratchet.sh <js|any|casts|cpd-exclusions> [--update]
+#   npm run ratchet                  # all four, check mode
 #   npm run ratchet:js -- --update   # record the current js count as the new baseline
 #
 set -euo pipefail
@@ -91,12 +91,6 @@ case "$metric" in
     )"
     hint="Write new code in .ts — no new JavaScript under lib/ or bin/, extension or not."
     ;;
-  mocha)
-    label="Mocha specs (test/**/*.test.js)"
-    baseline_file=".migration/mocha-baseline.txt"
-    current="$(find test -type f -name '*.test.js' | wc -l | tr -d ' ')"
-    hint="Write new unit tests in vitest + TS (ADR-0001 › Tests)."
-    ;;
   any)
     # 'as unknown as' is counted too: it is the escape hatch a conversion reaches
     # for once ': any' is forbidden, so leaving it out would just move the debt.
@@ -144,7 +138,7 @@ case "$metric" in
     hint="Narrow instead of asserting (type guard, 'satisfies', or fix the source type)."
     ;;
   *)
-    echo "usage: scripts/ratchet.sh <js|mocha|any|casts|cpd-exclusions> [--update]" >&2
+    echo "usage: scripts/ratchet.sh <js|any|casts|cpd-exclusions> [--update]" >&2
     exit 2
     ;;
 esac

@@ -1,8 +1,8 @@
 // Flat config: `.eslintrc.json` and the `plugin:kuzzle/*` syntax are gone with
-// eslint-plugin-kuzzle 2.0.0 (ESLint 9 dropped eslintrc support). The three
-// per-directory `.eslintrc.json` files (test, features, features-legacy) and
-// `.eslintignore` are folded in here — flat config is one file, top to bottom,
-// last block wins.
+// eslint-plugin-kuzzle 2.0.0 (ESLint 9 dropped eslintrc support). The
+// per-directory `.eslintrc.json` files (features, features-legacy — and, until
+// step 13's L7 deleted the Mocha suite, test) and `.eslintignore` are folded in
+// here — flat config is one file, top to bottom, last block wins.
 import kuzzle from "eslint-plugin-kuzzle";
 
 export default [
@@ -20,8 +20,10 @@ export default [
   ...kuzzle.configs.node,
 
   // `configs.typescript` used to be an `overrides` block scoped to `*.ts`.
-  // Spread as-is it would apply to every file, and the ~800 `require()` calls
-  // of the mocha suite would each become a `no-require-imports` error.
+  // Spread as-is it would apply to every file, and the CommonJS JavaScript the
+  // repo still carries on purpose — the three plugin fixtures under
+  // `bin/plugins/available/**`, which are the `js` ratchet's floor — would each
+  // take a `no-require-imports` error for a `require()` that is correct there.
   ...kuzzle.configs.typescript.map((config) => ({
     ...config,
     files: ["**/*.ts"],
@@ -29,8 +31,8 @@ export default [
 
   // Flat config defaults `.js` to `sourceType: "module"`, under which the
   // `strict` rule forbids the `"use strict"` directive our CommonJS files
-  // carry. Every `.js` left in the repo is CommonJS (ADR-0001 is migrating
-  // them to TypeScript, not to ESM).
+  // carry. Every `.js` left in the repo is CommonJS (ADR-0001 migrated them to
+  // TypeScript, not to ESM; what remains is the plugin-fixture floor).
   {
     files: ["**/*.js"],
     languageOptions: { sourceType: "commonjs" },
@@ -69,7 +71,7 @@ export default [
   },
 
   {
-    files: ["test/**", "tests/**", "features/**", "features-legacy/**"],
+    files: ["tests/**", "features/**", "features-legacy/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -86,18 +88,6 @@ export default [
             "expect(fn).toThrow() with no matcher is not a test of why — pass the expected error, message or a matcher object. (ADR-0001, TD-57)",
         },
       ],
-    },
-  },
-
-  // Was test/.eslintrc.json
-  {
-    files: ["test/**"],
-    rules: {
-      "func-names": "off",
-      "no-invalid-this": "off",
-      "no-new": "off",
-      "new-cap": "off",
-      "sort-keys": "off",
     },
   },
 

@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · L2d [#2817](https://github.com/kuzzleio/kuzzle/pull/2817) · L2e [#2818](https://github.com/kuzzleio/kuzzle/pull/2818) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Closed · **Opened:** 2026-09-21 · **Closed:** 2026-09-24 · **55 PRs** — the full list is in the slice sections below; the spine is L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b [#2807](https://github.com/kuzzleio/kuzzle/pull/2807)–[#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · L2 [#2814](https://github.com/kuzzleio/kuzzle/pull/2814)–[#2818](https://github.com/kuzzleio/kuzzle/pull/2818) · L3 [#2820](https://github.com/kuzzleio/kuzzle/pull/2820)–[#2825](https://github.com/kuzzleio/kuzzle/pull/2825) · L4 [#2827](https://github.com/kuzzleio/kuzzle/pull/2827)–[#2846](https://github.com/kuzzleio/kuzzle/pull/2846) · L5 [#2849](https://github.com/kuzzleio/kuzzle/pull/2849)–[#2853](https://github.com/kuzzleio/kuzzle/pull/2853) · L6 [#2854](https://github.com/kuzzleio/kuzzle/pull/2854), [#2856](https://github.com/kuzzleio/kuzzle/pull/2856)–[#2862](https://github.com/kuzzleio/kuzzle/pull/2862) · L7a [#2864](https://github.com/kuzzleio/kuzzle/pull/2864) · L7b [#2865](https://github.com/kuzzleio/kuzzle/pull/2865) · L7c [#2866](https://github.com/kuzzleio/kuzzle/pull/2866) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -125,7 +125,7 @@ Ordered so each is independently mergeable, the ratchet moves in every one of th
 | **L4** ✅  | **`mock-require` → `vi.mock`**, excluding the Elasticsearch twins, `core` first — sub-sliced [by subject](#how-l4s-34-are-cut-by-subject--measured-on-2-dev-2026-09-22-d377ec6fd) into **a**–**e**; **all five landed** ([L4 is closed](#l4-is-closed))                                                                                                                                            | **34** | **14 128** | One decision repeated 34 times: `vi.mock` is hoisted and static where `mock-require` is dynamic, so a spec that swaps a module _conditionally_ or inside a `beforeEach` needs restructuring, not translating. Its own slice because the answer generalises.                                                                           |
 | **L5** ✅  | The **two Elasticsearch twins** (they carry `mock-require` too) — sub-sliced [by action group](#how-l5s-2-are-cut-by-action-group--measured-on-2-dev-2026-09-23-623676e7f) into **a**–**e**; **all five landed, both files deleted**                                                                                                                                                               |  **2** | **12 431** | 19% of the suite in two near-identical files, so the second is largely the first's diff — exactly K3's shape, and K3's cost is the estimate to use. Its own PR because its size dominates any review it shares.                                                                                                                       |
 | **L6**     | The **`rewire` specs** — **12** since [L4e2](#what-l4e2-found) deleted two of them as already-ported duplicates, [cut into a–h](#how-l6s-12-are-cut--measured-on-this-branch-2026-09-23-20052a2b3)                                                                                                                                                                                                 | **12** |  **6 083** | Budgeted as redesigns — **measurement says five of the twelve are ports** (`rewire` used as `require`), and the redesign is one shape appearing twice: a module-private helper stubbed in place. Expect `lib/` changes in three of the eight sub-slices, not all of them.                                                             |
-| **L7**     | **Closure**: delete `.mocharc`, `mocha`, `should`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `@types/mocha`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline; shrink `tsconfig.tests.json` to the cucumber directories and clear its 65 own strict errors                                                                               |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
+| **L7**     | **Closure**, [cut into a–c](#what-l7a-found): **a** the runner apparatus (`.mocharc`, `test/`, `mocha`, `@types/mocha`, `mock-require`, `rewire`, `c8`, `should-sinon`, `sinon`, the `test:unit:mocha*` scripts, `npm run build:tests`, the `mocha` ratchet and its baseline, the CI suite matrix) · **b** the coverage plumbing ([what it found](#what-l7b-found): two of `prepare-coverage.ts`'s three passes were two-runner machinery and the third could never fire again — it is `coverage-gate.ts` now) · **c** the closure note. ⚠️ **Two corrections to this row, both found by doing it — see _[What L7a found](#what-l7a-found)_: `should` does NOT go** (cucumber's assertion library, 17 files), and the "65 own strict errors" are **1 077**, which is not this step's work |      — |          — | Mechanical **and only correct when the ratchet is 0** — the same condition K6 had. ⚠️ **`build:tests` exists because `.mocharc` globs `dist/test/**`** ([step 12 K6](12-sprint-9-strict-flip.md#what-k6-found)); vitest runs from source, so this slice removes a build step, and the payload must be diffed exactly as K6 diffed it. |
 
 ### Re-measured on `2-dev` after L1b (2026-09-21, `089ef8160`)
 
@@ -3778,3 +3778,261 @@ together" dissolved on that question, and three specs turned out to be
 **five of the twelve were ports, not redesigns**, `rewire` was irreplaceable
 exactly once ([L6h](#what-l6h-found--and-l6-is-closed)), and **the `mocha`
 ratchet reads 0**. What is left is **L7** (closure).
+
+## What L7a found
+
+**The apparatus, deleted: `.mocharc.json`, `test/` (10 residual fixtures, nothing
+referenced them), `mocha`, `@types/mocha`, `mock-require`, `rewire`, `c8`,
+`should-sinon`, `sinon`, `npm run build:tests`, `test:unit:mocha`,
+`test:unit:mocha:coverage`, the `mocha` ratchet and its baseline, the CI suite
+matrix and the `suit` input of `.github/actions/unit-tests`.** `package-lock.json`
+lost 1 807 lines. Two things this row of the plan got wrong, and one it could not
+have known:
+
+### `should` does not go — it was never Mocha's
+
+The plan lists `should` among the deletions, next to `should-sinon` and `sinon`,
+and the three did arrive together. But **`should` is cucumber's assertion library
+too**, in 17 files across `features/` and `features-legacy/`:
+
+```
+features/support/assertions.ts, features/step_definitions/*.ts (11),
+features-legacy/step_definitions/*.ts (5)
+```
+
+`sinon` really did leave with Mocha — **zero `tests/` specs import it**, which is
+the number [the scope table](#the-axis-that-actually-decides-cost-what-a-spec-mocks-with)
+predicted at the step's open and the only prediction in it that held exactly. But
+`should` outlives axis 2 entirely, and so does the `no-restricted-syntax` lint rule
+that forbids `should(fn).throw()` with no matcher ([TD-57](../type-debt-register.md#td-57)) —
+it now guards cucumber alone. **ADR-0001's Definition of Done names `should` in the
+same breath as `mocha`, `rewire` and `c8`; that line is wrong** and is corrected in
+the hub with this slice. _The generalisable part: a dependency shared by two suites
+is not retired by retiring one of them, and a deletion list written from a runner's
+`require`s will always over-reach._
+
+### The 65 strict errors are 1 077, and they are not this step's
+
+L7 was to "shrink `tsconfig.tests.json` to the cucumber directories and clear its 65
+own strict errors" — 53 in `tests/`, 6 in `.ci/`, 6 in `start-kuzzle-test.ts`,
+measured by [step 12's K6](12-sprint-9-strict-flip.md#what-k6-found) on 2026-09-21.
+Re-measured on `2-dev` on 2026-09-24, with L0–L6 merged:
+
+| Directory              | K6, 2026-09-21 | Now, 2026-09-24 |
+| ---------------------- | -------------: | --------------: |
+| `tests/`               |             53 |         **388** |
+| `features-legacy/`     |            661 |             638 |
+| `features/`            |             47 |              44 |
+| `start-kuzzle-test.ts` |              6 |               5 |
+| `.ci/`                 |              6 |               2 |
+| _this step's share_    |         **65** |       **1 077** |
+
+⚠️ **The two columns are not the same measurement**, and the difference is worth
+more than the numbers. K6 read the specs through the *production* program's
+options, so `noUncheckedIndexedAccess` was on; `tsconfig.tests.json` turns it off,
+which is what the specs had before the flip. Measured both ways today: **1 077**
+under `strict` alone, **1 454** at full parity with the production program. Both
+are written at the top of `tsconfig.tests.json`, so the next person measures the
+same thing twice rather than a fourth thing.
+
+And the cucumber rows barely moved while `tests/` went 53 → 388, because
+**this step filled `tests/`**: every spec L0–L6 ported was written against a
+program with `strict: false`. The debt did not accumulate quietly — **it was
+authored**, slice by slice, by work whose definition of done never mentioned it.
+_That is the finding, not the total:_ a migration that moves code into a program
+with a lower standard pays the difference later, at the size of everything it
+moved.
+
+**Decision: L7 does not clear them, and step 13 does not either.** ADR-0001's
+Definition of Done asks for `strict: true` in `tsconfig.json` with `allowJs`
+removed — [done by K6](12-sprint-9-strict-flip.md#what-k6-found) — and for zero
+Mocha specs, which is L6. It does not ask for strict test code. Bundling 1 077
+errors into a closure slice would do to step 13 what
+[the perimeter split](#perimeter--this-step-is-the-unit-suites-not-cucumber)
+refused to do with cucumber's 708: make the step unreadable and its finish line
+arbitrary. They want a step, planned from numbers the way this one was.
+
+_What did shrink: `allowJs`._ It was there for the Mocha specs' JavaScript, and
+**no file in the test program is JavaScript any more** — checked, not assumed.
+
+### `.ci/` and `scripts/` are in no program at all
+
+Looking for the 6 `.ci/` errors turned up that there is nothing to look in:
+`tsconfig.json` includes `lib/`, `index.ts` and two binaries; `tsconfig.tests.json`
+includes `tests/`, `features/`, `features-legacy/` and the two `start-kuzzle-*.ts`.
+**`.ci/scripts/*.ts` and `scripts/*.ts` are in neither** — so
+`prepare-coverage.ts`, which is the coverage gate, and `count-casts.ts`, which is
+the `casts` ratchet, are type-checked by nothing. They run under `tsx`, which
+transpiles without checking. This is the same shape as
+[TD-44](../type-debt-register.md#td-44) and [TD-71](../type-debt-register.md#td-71) —
+_the gate that is not itself gated_ — and it is [L7b](#slices)'s to fix, since L7b
+is the slice that rewrites `prepare-coverage.ts`.
+
+## What L7b found
+
+**`prepare-coverage.ts` is `coverage-gate.ts`, 595 lines → 287, and
+`merge-coverage.ts` is deleted.** The script had three passes. Two of them
+existed only because two runners fed the scanner, and the third could never fire
+again. Taking them one at a time is the whole of this slice, because each one
+answers a different question about what a gate is for.
+
+### Pass 1 was a `c8` artefact, and that was measured rather than assumed
+
+Pass 1 dropped `DA:` entries on blank and comment-only lines, because c8 derived
+its line set from V8 ranges over the **compiled** output and emitted an entry for
+every line of a loaded file. It reported `clientAdapter.ts` at 40.3% with every
+handler under test.
+
+The obvious move on deleting c8 is to delete the correction with it. The premise
+— _"vitest's v8 provider reports only real statements"_ — is written in the
+script's own header, and it had never been checked against a report. So it was:
+over the full suite's lcov, **280 files and 13 947 `DA:` entries, zero on a blank
+or comment-only line**, using a *wider* predicate than the pass itself (it also
+counted continuation lines of block comments). The pass was a no-op, and now it
+is provably one rather than presumably one.
+
+_This is the same discipline [L0](#what-l0-found) was written to enforce, pointed
+at the tooling instead of at a spec: **a premise that was true about a thing you
+deleted is not automatically true about the thing that replaced it, and the report
+is right there.**_
+
+### Pass 2's disappearance closes L3d's open worry — by deletion
+
+Pass 2 gave each file a single owning runner, per the `tests/` mirror convention,
+because c8 and vitest disagreed on what an executable line is and Sonar unions
+its inputs. With one report there is nothing to arbitrate, so `specTarget()` and
+`vitestOwnedFiles()` go.
+
+And with them goes the item [L3d filed for L7](#slices) — ⚠️ _"an unmirrored spec
+is silently unowned: `specTarget` returning `null` is not reported anywhere, so a
+typo in a spec's path is indistinguishable from a deliberate split"_ — which this
+slice was supposed to fix with a check that lists unmirrored specs. **It needs no
+check.** Being "unowned" was never a property of a spec; it was a property of
+there being two reports to be owned by. Every file vitest executes is in vitest's
+report, mirror or not. The three specs that carried a comment explaining their
+location as a coverage-attribution requirement — `hotelClerk`, `httpwsProtocol`,
+`OpenApiManager` — keep their location, which one subject / one spec justifies on
+its own, and their comments now say which half of the argument expired.
+
+_The generalisable part: **a problem created by having two of something can be
+closed by having one of it.** The fix filed against it assumed the count was
+fixed. Re-read a filed finding against the world at the time you act on it, not
+the world it was filed in._
+
+### Pass 3 outlives the migration only if it stops being about the migration
+
+Pass 3 is [TD-42](../type-debt-register.md#td-42)'s gate: every `lib/**.js`
+renamed to `.ts` in a PR must be executed by at least one spec, because
+SonarCloud's 80% `new_coverage` is an aggregate and an aggregate says nothing
+about its worst member ([#2723](https://github.com/kuzzleio/kuzzle/pull/2723)
+passed at 88.3% with three unexecuted files, two of them freshly bug-fixed).
+
+Its predicate is `.js` → `.ts`. **`lib/` holds no JavaScript and the `js` ratchet
+forbids adding any, so that predicate can never match again** — the gate would
+have stayed wired into CI, green on every PR, checking a set that is empty by
+construction. A gate whose input cannot be non-empty is indistinguishable from a
+deleted gate, except that it still looks like enforcement.
+
+So it was generalised, deliberately and not as cleanup: `convertedFiles` →
+**`newLibFiles`**, matching every `lib/**.ts` a PR *adds* — `A`, a `.js` → `.ts`
+rename, and the `D`+`A` pair `--find-renames` records a heavy rewrite as — while
+still ignoring a `.ts` → `.ts` rename (the code existed, and its spec most likely
+moved with it) and a modification. **The rule was never about conversions.** It is
+ADR-0001's standing conversion standard — _a file with no unit spec ships one_ —
+and that sentence is about `lib/` gaining a file, which will keep happening long
+after this ADR closes. The spec gained a case saying exactly that
+(`"takes a .ts file that is simply new — the point of the change"`), where the old
+one asserted the opposite.
+
+### A correction to [What L7a found](#what-l7a-found)
+
+L7a reported that `.ci/scripts/*.ts` and `scripts/*.ts` are "type-checked by
+nothing". That is half right, and the half that is wrong is the more interesting
+one. `coverage-gate.ts` **was** type-checked — because `tests/ci/coverageGate.test.ts`
+imports it, and tsc pulls a program's whole import graph in. So the checking of a
+CI gate was a **side effect of that gate happening to have a spec**: a file that
+lost its spec would lose its type-checking silently, and neither loss would be
+reported anywhere. `scripts/count-casts.ts` is the case with no spec at all —
+**it is the `casts` ratchet**, the one ratchet that parses rather than greps, and
+it was checked by nothing.
+
+Both are now listed by name in `tsconfig.tests.json` rather than reached through
+an import. _Not done, and still where [TD-39](../type-debt-register.md#td-39) left
+it: `.ci/` and `scripts/` remain outside the prettier and eslint scopes._
+(`npx eslint ./.ci ./scripts` reports 11 `no-console` errors, which for a CI
+script is the rule being wrong rather than the script.)
+
+### `merge-coverage.ts` goes with c8
+
+[TD-50](../type-debt-register.md#td-50) — _c8 loses coverage for any module loaded
+more than once in a process_, which cost the `validation.js` sprint two
+mis-sized PRs — was fixed by re-deriving c8's lcov from its raw temp directory
+through `v8-to-istanbul`. Its only caller was `test:unit:mocha:coverage`, deleted
+by [L7a](#what-l7a-found). The finding stands in the register; the fix has no
+subject left.
+
+## Step 13 is closed
+
+**148 Mocha spec files, 64 295 lines, 3 092 tests → 0. One unit runner: 153
+vitest files, 3 765 tests.** Fifty-five PRs over four days, in eight slices
+(L0–L7), every one of which moved the ratchet except the closure.
+
+| Slice  | What it was                                                    | Specs |
+| ------ | -------------------------------------------------------------- | ----: |
+| L0     | the three specs that already had a vitest twin                 |     3 |
+| L1     | the codemod, on the specs that mock nothing shared             |    27 |
+| L1b    | the specs built on `test/mocks/kuzzle.mock.js`                 |    30 |
+| L2     | the clean specs at 201–1 000 lines                             |    28 |
+| L3     | the six clean specs over 1 000 lines                           |     6 |
+| L4     | `mock-require` → `vi.mock`                                     |    34 |
+| L5     | the two Elasticsearch twins                                    |     2 |
+| L6     | the `rewire` specs                                             |    12 |
+| L7     | the apparatus, the coverage plumbing, this note                |     — |
+
+### The plan was wrong in the same direction five times
+
+Every slice was budgeted from a property of the **text** — how many lines a spec
+has, which module-faking library it imports, whether a `lib/` file has a spec of
+the same name — and in every case the property that decided the cost was a
+property of what the spec *does*:
+
+- **L0** was scoped from line counts and two of its three "unfinished ports" were
+  not ports at all. *Lines are not tests; only coverage compares two tests.*
+- **L1** was budgeted at 60 specs and carried 27, because 30 of them turned out to
+  be built on `kuzzle.mock.js` — **L1b did not exist in the plan** and became the
+  largest slice by file count.
+- **L4** was budgeted as "`vi.mock` is hoisted, `mock-require` is dynamic" and the
+  `reRequire` was almost never there for the mock. *Ask what a `reRequire` is
+  resetting, not what the `mockrequire` is replacing.*
+- **L6** was budgeted as twelve redesigns because twelve specs imported `rewire`;
+  **five were ports**, and `rewire` was irreplaceable exactly once — where the
+  answer was a fixture, not a mocking technique.
+- **L7** was budgeted as mechanical and had two corrections in its first slice:
+  `should` is not Mocha's, and its "65 strict errors" were 1 077.
+
+_Stated once, because it is the step's own lesson about planning:_ **an import is
+not a design, and a file is not a test.** Both are cheap to grep, which is exactly
+why they end up in a plan. The three measurements that actually predicted cost —
+coverage per subject (L0), what a spec reads off `global.kuzzle` (L1b), and what a
+re-require resets (L4) — each required running something.
+
+### What it found in `lib/`
+
+Six changes to production code, all of them forced by a test that could no longer
+reach around the subject: `validationUtils.ts` and `geoShapeUtils.ts` (extracted
+so a spec could address them without `rewire`), `didYouMean`'s import, and the
+three defects filed from L3. Plus the dead-assertion census — the slices
+numbered the forms as they met them and reached **nineteen distinct ways an
+assertion can be written so that it cannot fail**, most of them predating the
+step. That census is the step's most reusable output: it is a review checklist,
+and [TD-57](../type-debt-register.md#td-57) gated two of its forms in lint.
+
+### What is next
+
+- **[Step 14](14-test-program-strict.md)** — the 1 077 strict errors in the test
+  program, planned from this step's numbers and opened with it. Not in ADR-0001's
+  Definition of Done, which is why it is a step and not a slice here.
+- **[Step 03](03-sprint-2-bin.md)** is still paused, and it is the last thing
+  between the ADR and its first DoD box: `bin/start-kuzzle-server` and
+  `bin/wait-kuzzle`, the two extensionless executables
+  [TD-45](../type-debt-register.md#td-45) found the ratchet had never counted.

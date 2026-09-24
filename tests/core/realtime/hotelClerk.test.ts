@@ -22,6 +22,11 @@ import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
  * report with nothing left in it. Merging is what closes the mirror, so all
  * seven are ported here rather than five now and two with L2.
  *
+ * That coverage reason expired with step 13's L7b: with one runner there is no
+ * report to be attributed to the wrong one, and `specTarget` is gone. The
+ * merge still stands on its own — one subject, one spec — which is why this
+ * file is left as it is.
+ *
  * The `describe` blocks below are the seven former files, in that order.
  */
 

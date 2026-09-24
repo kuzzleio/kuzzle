@@ -30,14 +30,23 @@ the build is the only place left to hide it: **the fix removes the error rather 
 moving it** — no `!`, no `as`, no widening a parameter to silence a call site. The
 `casts` and `any` ratchets below are what enforce that.
 
-`strict` applies to a whole *program*, not to a file, so **the test code has its own**:
-`tsconfig.tests.json` (strict off, `allowJs` on for the frozen Mocha specs) covers
-`tests/`, `test/`, `features/` and `features-legacy/`, and `npm run typecheck:tests`
-checks it in CI. That is the same checking the specs had before the flip — hardening
-them is step 13's business (test closure — see the step table in
-[ADR-0001](docs/adr-001/ADR-0001-migration-typescript.md)). Note what
-this means in practice: `npm run build` no longer compiles the tests, so a type error
-in a spec surfaces in `typecheck:tests`, not in the build.
+`strict` applies to a whole *program*, not to a file, so **the test code has its
+own — two of them**, and `npm run typecheck:tests` runs both:
+
+| Program | `strict` | Holds |
+|---|---|---|
+| `tsconfig.tests.strict.json` | on | what has been taken to strict, **growing** |
+| `tsconfig.tests.json` | off | the rest, **shrinking** |
+
+That split is ADR-0001 [step 14](docs/adr-001/steps/14-test-program-strict.md),
+which is taking the test code to `strict` one directory at a time: a directory
+changes standard by moving from the second file's `exclude` to the first file's
+`include`, in one PR, with its errors fixed. When the non-strict file is empty it
+is deleted. **Put a new spec in the strict program** unless it lives in a
+directory that is still on the other side of the line.
+
+Note what this means in practice: `npm run build` does not compile the tests, so a
+type error in a spec surfaces in `typecheck:tests`, not in the build.
 
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
@@ -71,14 +80,14 @@ the `migration-ratchets` job:
 Run the gates locally before pushing:
 
 ```bash
-npm run ratchet             # js / mocha / any / casts / cpd-exclusions
-npm run typecheck:tests     # type-check tests/, test/, features/, features-legacy/
+npm run ratchet             # js / any / casts / cpd-exclusions
+npm run typecheck:tests     # type-check tests/, features/, features-legacy/
 npm run build               # this IS the strict type-check of lib/ + index.ts + bin/
 .ci/scripts/pr-preflight.sh # the above + lint + error-codes + coverage reminder
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
-`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:casts`) — then
+`npm run ratchet:js -- --update` (idem `:any`, `:casts`) — then
 commit `.migration/`.
 
 ### Assertions on errors
@@ -200,8 +209,13 @@ Finally, run the command `docker compose up` to start your Kuzzle stack.
 
 | Directory | Runner | Status |
 |-----------|--------|--------|
-| `tests/` | **vitest + TypeScript** | where **every new spec** goes |
-| `test/` | Mocha (JavaScript) | **frozen** — legacy, migrated away progressively |
+| `tests/` | **vitest + TypeScript** | the unit suite — every spec lives here |
+
+There used to be a second tree, `test/`, holding 168 Mocha specs in JavaScript. It was
+frozen and migrated away spec by spec under a CI ratchet; ADR-0001 step 13 took that
+count to zero and deleted the runner with it. If you are reading a comment, a commit or
+an issue that mentions `test/`, `.mocharc`, `rewire`, `mock-require`, `should` in a unit
+spec or `npm run build:tests`, it predates that.
 
 `tests/` mirrors the source tree: the spec for `lib/util/bytes.ts` is
 `tests/util/bytes.test.ts`. Discovery is `tests/**/*.{test,spec}.ts`.
@@ -216,39 +230,43 @@ type-checks but does not resolve at runtime under vite.
 
 ### How coverage is measured
 
-The quality gate requires **80% coverage on new code**, and the two unit
-runners disagree on what "a line" is: `c8` (wrapping Mocha) derives its line
-set from the *compiled* output and reports every line of a loaded file, blank
-lines and comments included, while vitest's v8 provider reports only real
-statements. Merging the two understates coverage — badly, for a file whose
-tests live in vitest.
+The quality gate requires **80% coverage on new code**, which is an aggregate
+over the whole PR — and an aggregate prices the block while saying nothing
+about its worst member. #2723 passed at 88.3% with three files carrying no
+spec at all, two of which had just received bug fixes.
 
-So `.ci/scripts/prepare-coverage.ts` runs between the test suites and the
-SonarCloud scan. It drops non-executable lines from both reports, then gives
-each file a **single owner**: the runner whose spec targets it, per the `tests/`
-mirror convention. It only ever hands a file to vitest when vitest measures it
-at least as well, so it cannot lower a file's reported coverage — and it prints
-any file where Mocha still measures better, which is worth investigating.
+So `.ci/scripts/coverage-gate.ts` runs between the suite and the SonarCloud
+scan and holds the rule per file: **every `lib/**.ts` a PR adds must be
+executed by at least one spec.** A well-covered sibling cannot pay for a file
+nothing runs. A file with genuinely no executable line — type-only output —
+goes in `.migration/coverage-exempt.txt` with the reason beside it, so that
+"nothing runs this" is a decision someone wrote down.
 
-To reproduce the numbers CI sees:
+To reproduce what CI sees:
 
 ```bash
-npm run build
-npm run test:unit:mocha:coverage
 npm run test:unit:vitest
-npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
+COVERAGE_BASE_SHA=$(git merge-base HEAD origin/2-dev) \
+  npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
 ```
+
+That script used to be `prepare-coverage.ts` and had two further passes,
+both of which existed only because two runners fed the scanner: one corrected
+a `c8` artefact (it emitted a coverage entry for every line of a loaded file,
+comments included, which reported `clientAdapter.ts` at 40.3% with every
+handler under test), and one arbitrated which report owned a file. ADR-0001
+step 13 closed the second runner, and L7b removed both — the c8 correction
+after measuring that vitest's provider emits **zero** entries on blank or
+comment lines, over 13 947 of them.
 
 ### Running unit tests
 
 ```bash
 npm run test:unit:vitest
-npm run test:unit:mocha
 
 # Or, with no local Node.js toolchain (recommended on arm64 — the native `re2`
 # binding will not load on the host):
-.ci/scripts/docker-test.sh unit vitest
-.ci/scripts/docker-test.sh unit mocha
+.ci/scripts/docker-test.sh unit
 ```
 
 ### Functional tests

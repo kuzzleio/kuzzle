@@ -1,6 +1,6 @@
 ---
 name: docker-tests
-description: Run Kuzzle's unit (vitest/mocha) or functional (cucumber) test suites entirely inside Docker, with no local Node.js/npm install required, including targeting a single feature file or tag for fast iteration. Use when the user asks to run/launch tests, unit tests, functional tests, or "les tests" for this repo, especially when they want it done "via Docker" or without setting up a local toolchain.
+description: Run Kuzzle's unit (vitest) or functional (cucumber) test suites entirely inside Docker, with no local Node.js/npm install required, including targeting a single feature file or tag for fast iteration. Use when the user asks to run/launch tests, unit tests, functional tests, or "les tests" for this repo, especially when they want it done "via Docker" or without setting up a local toolchain.
 ---
 
 # Docker Tests
@@ -12,11 +12,13 @@ the project's `kuzzle-runner` container images — the host only needs Docker.
 ## Unit tests
 
 ```bash
-.ci/scripts/docker-test.sh unit vitest
-.ci/scripts/docker-test.sh unit mocha
+.ci/scripts/docker-test.sh unit
 ```
 
-Each command runs `npm ci && npm run build && npm run test:unit:<suite>` inside
+It took a `<vitest|mocha>` argument while the two unit runners ran side by side;
+ADR-0001 step 13 closed that, and vitest is the unit runner.
+
+The command runs `npm ci && npm run build && npm run test:unit:vitest` inside
 a one-off container based on the `node` service from `docker-compose.yml`
 (`--no-deps`, so Elasticsearch/Redis are not started — unit tests don't need them).
 

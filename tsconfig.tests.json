@@ -1,25 +1,37 @@
 {
-  // TEST program — type-checked by `npm run typecheck:tests`, and COMPILED into
-  // `dist/` by `npm run build:tests`, because the Mocha suite runs on the emitted
-  // JavaScript (`.mocharc` globs `./dist/test/**/*.test.js`), not on the sources.
+  // TEST program — type-checked by `npm run typecheck:tests`, and nothing else.
+  //
+  // It used to be COMPILED into `dist/` as well, by `npm run build:tests`, because
+  // the Mocha suite ran on the emitted JavaScript (`.mocharc` globbed
+  // `./dist/test/**/*.test.js`) rather than on the sources. Step 13's L7 deleted the
+  // last of that apparatus — vitest and cucumber both run from source, through
+  // `tsx`/`ts-node` — so this program emits nothing: `noEmit` is set here rather than
+  // passed on the command line, so the file says what it is.
   //
   // `tsconfig.json` went `strict: true` at the end of the TypeScript migration
   // (docs/adr-001/steps/12-sprint-9-strict-flip.md, K6). `strict` applies to a whole
   // program, so keeping the specs in that program would have meant either ~770 strict
   // errors in the build's path or dropping the type-check on the test code entirely.
-  // This file is the third option: the specs keep exactly the checking they had before
-  // the flip — `strict: false`, `allowJs: true` for the Mocha specs still in JavaScript
-  // — and `lib/` keeps strict. Hardening these is step 13's business, not K6's.
-  "extends": "./tsconfig.json",
+  // This file is the third option: the test code keeps exactly the checking it had
+  // before the flip — `strict: false` — and `lib/` keeps strict. ⚠️ **That is a
+  // deferral, not a conclusion**, and the size of it is worth writing down. Measured
+  // 2026-09-24, flipping the two lines below:
   //
-  // It emits to the same `dist/` the production build does, at the same paths it
-  // used to reach when both lived in one program. `npm run build` no longer emits
-  // `dist/test/**`, so `test:unit:mocha` runs `build:tests` first — miss that and
-  // Mocha exits 1 with "No test file(s) found", which is how this was caught.
+  //   `strict: true` alone ............................. 1 077 errors
+  //     638 features-legacy · 388 tests · 44 features · 5 start-kuzzle-test.ts
+  //     · 2 .ci
+  //   + `noUncheckedIndexedAccess: true` (full parity
+  //     with the production program) ................... 1 448 errors
+  //
+  // ADR-0001's Definition of Done does not ask for those — it asks for `strict` in
+  // the build, which is done — so they are a step of their own, not step 13's.
+  //
+  // `allowJs` left with the Mocha specs: every file this program sees is TypeScript.
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "strict": false,
-    "allowJs": true,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true
   },
   "include": [
     // Ambient declarations for untyped Node internals. They are `.d.ts`, so nothing
@@ -28,22 +40,25 @@
     // here loses `process.moduleLoadList` in lib/kuzzle/dumpGenerator.ts. See
     // docs/adr-001/steps/10-sprint-7-kuzzle.md.
     "lib/types/**/*.d.ts",
-    // Unit tests vitest
+    // Unit tests (vitest)
     "tests/**/*.ts",
-    "tests/**/*.js",
     "tests/**/*.json",
-    // Unit tests mocha
-    "test/**/*.ts",
-    "test/**/*.js",
-    "test/**/*.json",
-    // Functional tests
+    // Functional tests (cucumber)
     "features/**/*.ts",
     "features-legacy/**/*.ts",
-    // development files
-    "start-kuzzle-test.ts",
-    "start-kuzzle-dev.ts"
+    // Ambient declarations for test-only dependencies (see tests/types/).
+    "tests/types/**/*.d.ts"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    // ⚠️ THE STEP 14 LINE. Everything below has moved to `tsconfig.tests.strict.json`
+    // and is checked under `strict` there. A slice of step 14 moves paths from here
+    // to that file's `include`; when this list covers everything, this file is
+    // deleted. See docs/adr-001/steps/14-test-program-strict.md.
+    ".ci",
+    "scripts",
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts",
+    "features-legacy/support/api"
   ]
 }

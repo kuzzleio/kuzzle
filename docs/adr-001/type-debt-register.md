@@ -872,6 +872,7 @@ Not theoretical. `context.ts` received a bug fix in that very PR — `context.Re
 - **Fix:** make the rule per file. Extend `.ci/scripts/prepare-coverage.ts`, which already owns and normalises both lcov reports, to assert that every file renamed `.js` → `.ts` in the PR appears in the merged report with at least one hit. A well-covered sibling must not be able to pay for a file nothing executes.
 - **The generalisable part:** _an aggregate threshold prices the block and says nothing about its worst member_, and the worst member is exactly the file a reviewer would have asked about.
 - ✅ **Done** — pass 3 of `.ci/scripts/prepare-coverage.ts`, run from the `sonarqube` job with `COVERAGE_BASE_SHA` taken from `github.event.pull_request.base.sha`. Three things it needed to be real rather than decorative: it reads the `D`+`A` shape as well as the `R` one, because `--find-renames` records the _most_ rewritten conversions as a delete plus an add (`context.js` → `context.ts` in #2723 is one of them, and it is one of the three files this finding is about); it does nothing at all when the base commit is unset, since outside a PR there is no set of "files this change converted"; and its escape hatch, `.migration/coverage-exempt.txt`, takes a reason on the same line and prints it back on every run — the only admissible one being that the file has no executable line to hit. Verified in both directions against #2723's own base commit: 14 conversions named and exit 1, and `✔ no .js → .ts conversion` / exit 0 on a PR that converts nothing. The gate carries 13 vitest cases of its own (`tests/ci/prepareCoverage.test.ts`), which also put the script inside `tsc --noEmit`'s program for the first time. _Not done:_ `.ci/` is still outside the prettier/eslint scopes [TD-39](#td-39) extended to `tests/`.
+- **Widened 2026-09-24 ([step 13](steps/13-sprint-10-test-closure.md) L7b):** the script is `.ci/scripts/coverage-gate.ts` and the spec `tests/ci/coverageGate.test.ts`; `convertedFiles` is **`newLibFiles`** and matches every `lib/**.ts` a PR *adds*, not only a `.js` → `.ts` rename. The old predicate could never match again — `lib/` holds no JavaScript and the `js` ratchet forbids adding any — so the gate would have stayed wired into CI, green on an empty set, looking like enforcement. **The rule was never about conversions**: it is _a file with no unit spec ships one_, which is about `lib/` gaining a file. ⚠️ Being inside `tsc`'s program was also a **side effect of having a spec** — the import graph is what pulled it in — so `coverage-gate.ts` and `scripts/count-casts.ts` are now listed by name in `tsconfig.tests.json`.
 
 ### TD-43
 
@@ -1015,6 +1016,7 @@ The three instances produce an **identical** 1180-entry `statementMap`, so mergi
 - **Blast radius.** Overall mocha coverage **81.4% → 92.7%**; 29 files gain more than 5 points, several enormously (`cluster/subscriber.js` 28.3% → 98.9%, `cluster/publisher.js` 34.2% → 99.4%, `core/auth/passportWrapper.ts` 52.7% → 100%). It has been understating the gate since c8 was introduced, for `.ts` conversions as much as for `.js`.
 - **Which direction it failed in:** _closed_. Understated coverage blocks work, it does not let defects through — no conversion was waved past on a bad number. What it cost is plan: the sprint was sequenced, and two PRs sized, against phantom debt.
 - **The generalisable part:** _a coverage number is the output of a merge, and a merge is a claim about what two measurements have in common._ Every other gate in this ADR reads one number from one run. This one silently combined several and the combination was wrong — and the arithmetic that would have caught it (branch > line is impossible) was sitting in the same report from the start.
+- **Status 2026-09-24 ([step 13](steps/13-sprint-10-test-closure.md) L7b):** `merge-coverage.ts` is **deleted**. It re-derived c8's report, and c8 left with Mocha — the defect was a property of how c8 merges `ScriptCoverage` ranges, and vitest's provider produces one report from one run. The finding stands; its fix has no subject left. _The lesson does not leave with the script_: the tell was branch coverage above line coverage in the same report, which is impossible, and that arithmetic reads the same on any report.
 
 ### TD-51
 
@@ -1389,6 +1391,7 @@ This is not an edge case — it is the shape [step 11](steps/11-sprint-8-cluster
 - **Fix:** try `lib/<path>.js` and `lib/<path>/index.js` too. Blast radius is exactly one file today (`command.js`); the other two unresolved specs — `tests/ci/prepareCoverage.test.ts` and `tests/api/controllers/securityController/apiKeys.test.ts` — have no `lib/` target by design.
 - **What it was hiding.** `command.js` read **41.5%** raw and **16.9%** after normalisation, and the gate sees the normalised number. Step 11 recorded 41.5% as the correction to an earlier 16.9%; both were mocha figures, one raw and one normalised, and the file was in worse shape than either reading suggested. Measured by the runner that owns it, it is now **98.8%**.
 - **The generalisable part:** _a convention that maps names to files encodes an assumption about which files exist yet._ The mirror convention was written when every vitest spec targeted something already converted, and it silently stopped being true the first time someone wrote a spec ahead of a rename — which is the practice the ADR recommends.
+- **Status 2026-09-24 ([step 13](steps/13-sprint-10-test-closure.md) L7b):** the mechanism is **gone with the second runner**. `specTarget` existed to decide which of two reports owned a file; with one report every file vitest executes is in it, mirror or not, and the resolution question no longer has a wrong answer to give. The lesson outlives the code, and so does the practice it protected — a spec written ahead of a rename now counts from the moment it runs, for the simpler reason that there is nowhere else for it to count.
 
 ---
 
@@ -1862,3 +1865,30 @@ Every failure path leaves the lock held: an invalid suffix, a dump path outside 
 - **Why 🟠:** it is reachable from the API by a single malformed request, the state it corrupts is process-wide, and the operator is told the opposite of what is true — `dump` is exactly the tool they reach for when a node is misbehaving.
 - **Fix:** `try { … } finally { this._dump = false; }` around everything after the lock is taken, or take the lock after the argument checks. Both are `lib/` changes.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/kuzzle/dumpGenerator.test.ts` pins the current behaviour in a test that names this entry, so the fix will show up as a failing assertion pointing at it.
+
+---
+
+### TD-82
+
+**`unsubscribe` returns nothing when the room is unknown, and the caller cannot tell that from a successful unsubscribe** · 🟡 low · `features-legacy/support/api/{apiBase,mqtt,websocketBase}.ts`
+
+Found by typing `ApiBase` ([step 14 M1b](steps/14-test-program-strict.md#what-m1b-found)): the base's `unsubscribe` always sends, while both overrides return early.
+
+```ts
+// MqttApi
+unsubscribe(roomId, clientName, waitForResponse = false) {
+  const client = this.clients[clientName];
+  if (!client) {
+    return;                       // ← no request, no error, no signal
+  }
+  …
+  return this.send({ action: "unsubscribe", … }, waitForResponse, clientName);
+}
+```
+
+`WebSocketApiBase` does the same three times over — unknown socket, unknown room set, unknown room. A step definition that awaits the result gets `undefined` and **continues as though it had unsubscribed**, so a scenario whose subscription bookkeeping is wrong passes for the same reason a correct one does.
+
+- **Why 🟡:** it is the functional suite's own harness, not `lib/`, and it produces false *passes* rather than false failures — which is the worse direction for a test, but the blast radius is the legacy suite's realtime scenarios only.
+- **What made it visible:** nothing was wrong at runtime that was not wrong before. Typing the base class made the family's contract explicit — *a response, or nothing at all* — and a contract is the kind of thing you can read and disagree with. This is the third time in ADR-0001 that annotating a declaration, rather than running anything, is what surfaced a behaviour nobody had chosen.
+- **Fix:** throw, or answer a resolved promise carrying the reason, instead of `undefined`. Both change what the scenarios see, so this is a behaviour change in the test harness and does not belong in a typing slice.
+- **Not fixed here:** [step 14](steps/14-test-program-strict.md)'s M1b declares the union that is true today (`Promise<ApiResponse> | undefined`) and files this. The declaration is where the fix will show up as a type error.

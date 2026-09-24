@@ -1,5 +1,7 @@
 // TODO modify the syntax to be typescript
 
+import type { JSONObject } from "kuzzle-sdk";
+
 import Bluebird from "bluebird";
 import type { MqttClient } from "mqtt";
 import mqtt from "mqtt";
@@ -85,7 +87,7 @@ export default class MqttApi extends ApiBase {
     return this._getClient(clientName).then((client) => {
       const promise = new Bluebird((resolve, reject) => {
         this.requests[msg.requestId] = (response) => {
-          const listener = (document) => {
+          const listener = (document: JSONObject) => {
             this.responses = document;
           };
 
