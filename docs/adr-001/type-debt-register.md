@@ -1926,3 +1926,49 @@ Truncated headers, unpacked into the cache and then handed to the compiler — s
 - **Fix, shipped here:** `.ci/scripts/with-retry.sh` — three attempts, 10 s doubling — wrapped around **every** `npm ci` in CI, host and container alike (5 in the PR workflow, 1 in `semantic-release`, the `unit-tests` and `build-and-run-kuzzle` actions, and the three in `run-test-cluster.sh` / `run-monkey-tests.sh`). It answers both shapes for the same reason: `npm ci` deletes `node_modules` before doing anything, and the containerised attempts each get a fresh `--rm` container, so neither a rolled-back install nor a poisoned header cache survives into the retry.
 - **Why retry rather than remove the download.** Pinning `npm_config_devdir` into the mounted tree, or shipping headers in `kuzzleio/kuzzle-runner`, would remove the dependency outright — but both pin a Node patch version in a matrix that spans three majors, and go stale silently. A retry is version-agnostic and has no state to go stale.
 - **The generalisable part:** _a retry setting protects the client it belongs to, not the step it sits in._ `fetch-retries` was configured, looked like coverage of "the install", and covered none of the bytes that actually failed. Its corollary, from shape 2: _a download that fails loudly and a download that fails quietly are the same defect, and only the loud one gets filed._
+
+---
+
+### TD-84
+
+**Every command-line option of the production entrypoint was dead, three of them twice over, and its one warning would have thrown** · 🔴 open defect · `bin/start-kuzzle-server.ts`
+
+Found converting `bin/start-kuzzle-server` to TypeScript ([step 03](steps/03-sprint-2-bin.md)). Nothing was run: the file had been JavaScript and outside every program, so `tsc` had never read it. It produced **nine errors on the first compile**, and four of them are behaviours:
+
+```js
+app.import.mappings = loadJson(options.mappings);    // TS2322 — `mappings` is a method
+app.import.fixtures = loadJson(options.fixtures);    // TS2339 — no such member
+app.import.securities = loadJson(options.securities);// TS2339 — no such member
+
+const { total: admins } = await app.sdk.security.searchUsers(…);
+if (admins.length === 0) {                           // TS2339 — `total` is a number
+  app.log("[!] [WARNING] There is no administrator user yet…");  // TS2349 — `log` is a Logger
+}
+```
+
+**And underneath all of that, nothing was parsing the command line at all.** The options were read off `yargs().…argv`:
+
+```js
+const options = yargs().scriptName("kuzzle").describe("fixtures", …).argv;
+```
+
+`yargs()` called with no argument parses an **empty** argument list — the process arguments have to be handed to it, `yargs(hideBin(process.argv))` — so `argv` was `{ _: [], $0: "…" }` on every run. Measured on this repo's yargs 18.0.0:
+
+```
+empty  : {"_":[],"$0":"ytest.cjs"}
+hideBin: {"_":[],"mappings":"/tmp/x.json","$0":"ytest.cjs"}
+```
+
+So **all six options** — `--fixtures`, `--mappings`, `--securities`, `--vault-key`, `--secrets-file`, `--enable-plugins` — were declared, documented in `--help`, and then read off an object that never carried them. `--vault-key` and `--secrets-file` included: the vault has only ever been configured through `KUZZLE_VAULT_KEY` / `KUZZLE_SECRETS_FILE`, which is why nobody noticed. That is the outer defect; the three below are what would have been wrong had the parse worked.
+
+- **`--mappings` replaced the method instead of calling it.** `BackendImport` exposes `mappings()`, `profiles()`, `roles()`, `userMappings()` and `users()`. The assignment overwrote `app.import.mappings` with a plain object, so nothing was imported and nothing complained.
+- **`--fixtures` and `--securities` set properties nobody reads.** `Backend._import` has no such keys; the values sat on the wrapper until the process exited. Both options have been documented in `--help` and inert.
+- **The "no administrator user" warning could never print.** `searchUsers` answers a count in `total`; `admins.length` on a number is `undefined`, and `undefined === 0` is false. Had it printed, `app.log(…)` would have thrown — `log` is a `Logger` object, not a function. Two independent defects on the same three lines, each of which hid the other.
+
+**Fixed here.** The parse is `yargs(hideBin(process.argv))`, and then, because the conversion cannot compile otherwise: `--mappings` calls `app.import.mappings()`; `--securities` is split into `roles` / `profiles` / `users`, the shape `admin:loadSecurities` takes; `--fixtures` is loaded after `app.start()` through `admin:loadFixtures`, since documents have no pre-start import API; the warning tests `total === 0` and goes through `app.log.warn`.
+
+- **Why 🔴:** it is the entrypoint the published Docker image runs, **all six** of its options did nothing, and the one safety warning in the file was unreachable. Nothing failed loudly, which is why it survived — see [TD-83](#td-83)'s corollary, filed the day before.
+- **Verified against the image, not against the compiler.** `docker build -f docker/images/kuzzle/Dockerfile` then a boot against Elasticsearch 7 + Redis: before the fix the node starts and imports nothing; after it, `--mappings`, `--securities` and `--fixtures` land in storage, and the administrator warning prints for the first time. The PR's description carries the two log excerpts. ⚠️ **What CI does and does not cover here.** `Build and Run (kuzzle, 7|8)` *does* build `docker/images/kuzzle/Dockerfile` (`.ci/services-*.yml` builds it from source) and boots the container, so the entrypoint's **startup path** is gated on every PR — that is why none of this was a crash. What is never exercised is the entrypoint **with any option**: the job passes none, and the functional suites run `start-kuzzle-test.ts`. Six options and one warning, all off the tested path. _A job that proves a binary starts proves nothing about the arguments it accepts._
+- **Related hazard, not fixed here:** `yargs@18` is ESM-only (`"exports": { ".": "./index.mjs" }`, no CJS entry, no typings for it — hence the `@types/yargs` dev dependency). The emitted entrypoint is CommonJS, so `require("yargs")` only resolves under Node's `require(esm)`, i.e. Node ≥ 22.12. The published image is `node:24` and the package declares support from Node 20, so anyone running the entrypoint on Node 20 gets `ERR_REQUIRE_ESM`. Replacing yargs with `node:util`'s `parseArgs` would remove the dependency and the hazard, at the cost of `--help`; it is a decision about the entrypoint, not about types.
+- **Still open, and not fixed here:** `--enable-plugins` resolves `./plugins/available/<name>` relative to the entrypoint, and `bin/plugins/` is **not** in `package.json`'s `files`. From `dist/bin/` in the container the directory does not exist, so the option throws `MODULE_NOT_FOUND` for every value. The functional suites do not use it — they pass `--enable-plugins` to `start-kuzzle-test.ts`, which resolves against the source tree — so the option is dead in the only place it ships. Either publish the fixtures or drop the option; both are decisions about the product, not about types.
+- **The generalisable part:** _a file outside every program is not "still JavaScript", it is unchecked — and the ratchet that counts it says nothing about that._ These four defects survived `strict` being turned on in the build, because `include` named a file the compiler silently skipped: `bin/start-kuzzle-server` had no extension, and `tsc` only picks up the extensions it knows.

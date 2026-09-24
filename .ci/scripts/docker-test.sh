@@ -77,18 +77,23 @@ run_functional() {
   docker compose -f "$yml_file" up -d
 
   echo "Waiting for the cluster to be reachable..."
+  # `bin/wait-kuzzle.ts` is TypeScript and not part of the published build, so
+  # it runs through `ts-node` — the same idiom `.ci/test-cluster-*.yml` uses for
+  # `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
+  local wait_kuzzle=(node -r ts-node/register/transpile-only bin/wait-kuzzle.ts)
+
   docker compose -f "$yml_file" run --rm --no-deps \
-    -e KUZZLE_HOST=kuzzle_node_1 -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+    -e KUZZLE_HOST=kuzzle_node_1 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
   docker compose -f "$yml_file" run --rm --no-deps \
-    -e KUZZLE_HOST=kuzzle_node_2 -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+    -e KUZZLE_HOST=kuzzle_node_2 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
   docker compose -f "$yml_file" run --rm --no-deps \
-    -e KUZZLE_HOST=kuzzle_node_3 -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+    -e KUZZLE_HOST=kuzzle_node_3 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
   # The production-mode node: nginx does not balance over it, so nothing else
   # would wait for it, and features/StackTrace.feature addresses it directly.
   docker compose -f "$yml_file" run --rm --no-deps \
-    -e KUZZLE_HOST=kuzzle_node_prod -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+    -e KUZZLE_HOST=kuzzle_node_prod -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
   docker compose -f "$yml_file" run --rm --no-deps \
-    -e KUZZLE_HOST=nginx -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+    -e KUZZLE_HOST=nginx -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
 
   trap - ERR
 

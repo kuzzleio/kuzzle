@@ -41,7 +41,7 @@
     "index.ts",
     // Binaries
     "bin/copy-binaries.ts",
-    "bin/start-kuzzle-server"
+    "bin/start-kuzzle-server.ts"
   ],
   "exclude": [
     "dist"

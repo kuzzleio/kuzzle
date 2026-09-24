@@ -22,9 +22,6 @@ runs:
     - run: npm run build
       shell: bash
 
-    - run: npm prune --omit=dev
-      shell: bash
-
     - name: Docker compose up
       run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
@@ -61,9 +58,17 @@ runs:
         trap 'docker compose -f $YML_FILE logs' err
 
         export MAX_TRIES=60
-        ./bin/wait-kuzzle
+        node -r ts-node/register/transpile-only ./bin/wait-kuzzle.ts
 
         trap - err
+      shell: bash
+
+    # After the readiness check, not before it: `wait-kuzzle` is TypeScript
+    # since step 03 and runs through `ts-node`, which is a devDependency. The
+    # image under test does not depend on this tree's `node_modules` at all —
+    # `.ci/services-*.yml` builds it from `docker/images/kuzzle/Dockerfile`,
+    # which copies the sources and runs its own `npm ci`.
+    - run: npm prune --omit=dev
       shell: bash
 
     - name: Down docker compose stack
