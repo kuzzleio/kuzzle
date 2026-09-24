@@ -31,7 +31,9 @@
     ".ci/scripts/**/*.ts",
     "scripts/**/*.ts",
     "start-kuzzle-test.ts",
-    "start-kuzzle-dev.ts"
+    "start-kuzzle-dev.ts",
+    // M1a — the legacy functional suite's shared API wrapper.
+    "features-legacy/support/api/apiBase.ts"
   ],
   "exclude": [
     "dist"

@@ -58,6 +58,7 @@
     ".ci",
     "scripts",
     "start-kuzzle-test.ts",
-    "start-kuzzle-dev.ts"
+    "start-kuzzle-dev.ts",
+    "features-legacy/support/api/apiBase.ts"
   ]
 }

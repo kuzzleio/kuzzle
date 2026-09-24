@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -127,7 +127,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | #      | Content                                                                                             | Errors | Why this grouping                                                                                                                                              |
 | ------ | --------------------------------------------------------------------------------------------------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **M0** ✅ | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible. See _[What M0 found](#what-m0-found)_.           |
-| **M1** | `features-legacy/support/api/**` — `apiBase.ts` + `http.ts`                                          | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. |
+| **M1** | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** `http.ts` (177)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
 | **M2** | the rest of `features-legacy/`                                                                       |    275 | 22 files, same shape, now against a typed support API.                                                                                                          |
 | **M3** | `features/`                                                                                          |     44 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
 | **M4** | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                               |    191 | One shape, 49% of the vitest debt. Mechanical, and doing it first shrinks every file the later slices open.                                                     |
@@ -234,3 +234,52 @@ be absent, and in one of them the answer was a path nobody had tested.
 diagnostics, not about the diffs**, and M0's ratio — 3 mechanical, 4 not, out of
 7 — is too small a sample to revise it with. M1 is 363 of one diagnostic in two
 files and will answer the question properly.
+
+## What M1a found
+
+**`features-legacy/support/api/apiBase.ts`: 186 errors → 0, and the diff is
+type-only** — every removed line is a method signature, an `abstract`
+declaration, one `const msg = {`, or one `.then`/`.catch` callback. Checked
+mechanically rather than by reading, because at 118 changed lines a reading is
+not evidence.
+
+**178 of the 186 were one diagnostic, `TS7006`, and they were generated rather
+than typed by hand**: a name → type table applied to every un-annotated
+parameter of every method, `index`/`collection`/`id`/`userId`/`strategy` →
+`string`, `body`/`query`/`args` → `JSONObject`, `ids`/`roles` → `string[]`. The
+table left **nothing** unmatched on the first run, which is itself the finding
+about this file: it is a wrapper whose parameters are named after what they are.
+
+### The eight that were not the table
+
+- **`TS7053` ×5** — `msg[k] = item` on an object literal. The file already had
+  the answer: `ApiMessage`, its own alias, which the literal was simply not
+  annotated with. _An inferred literal type has no index signature, and a loop
+  that writes runtime keys needs one._
+- **`TS7010` ×2** — the two `abstract` members, `send` and `sendAndListen`, with
+  no return type. They are the whole point of the class, so a wrong guess here
+  would land on every one of the ~120 methods that call them. Typed
+  `Promise<ApiResponse>` with `ApiResponse` a named alias, because the suite
+  asserts on `.result`, `.error` and `.status` by hand and **pinning a shape
+  would be inventing one no step definition agrees to**.
+- **`TS7006` ×2** — the `.then`/`.catch` pair in `checkToken`, the only callbacks
+  in the file.
+
+### ⚠️ M1's annotations are claims that M2 checks
+
+`world.api` is typed (`HttpApi | MqttApi | WebSocketApi`), so a call site that
+goes through a typed receiver verifies these annotations. **Many do not:** the
+step definitions hold 32 `TS2683` — _`this` implicitly has type `any`_ — and a
+call on an `any` receiver is not checked against anything. So the 178
+annotations are, today, **inferred from each method's body and confirmed by the
+call sites that happen to be typed**.
+
+That is not a reason to widen them to `any` — an annotation that is never
+checked and an annotation that is wrong are both fixed by typing `this`, and
+only one of them says something in the meantime. But it does mean **M2 is not
+only the remaining 275 errors: it is the verification pass for M1**, and a
+`string` that should have been `string | null` will surface there rather than
+here. Sequencing M1 first was still right — a typed `this` against an untyped
+API would have produced the same 178 errors at 24 call-site files instead of one
+declaration file — but the plan's "M1 is what makes M2 smaller than it looks"
+should read **"M1 is what makes M2 a check rather than a rewrite."**
