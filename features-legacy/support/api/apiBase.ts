@@ -1121,7 +1121,24 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  unsubscribe(room: string, clientId: string) {
+  /**
+   * ⚠️ The return type is wider than this implementation, which always sends.
+   * Both overrides — `MqttApi` and `WebSocketApiBase` — return early with
+   * `undefined` when the client, the socket or the room is unknown, so the
+   * family's contract is "a response, or nothing at all". Declaring that is
+   * what makes the overrides legal; whether returning nothing is *right* is a
+   * separate question, filed as TD-82: a caller awaiting `undefined` continues
+   * as though it had unsubscribed.
+   *
+   * The third parameter is theirs too — this implementation always sends with
+   * `getAnswer: false`.
+   */
+  unsubscribe(
+    room: string,
+    clientId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    waitForResponse?: boolean,
+  ): Promise<ApiResponse> | undefined {
     const msg = {
       action: "unsubscribe",
       body: { roomId: room },

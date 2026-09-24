@@ -1865,3 +1865,30 @@ Every failure path leaves the lock held: an invalid suffix, a dump path outside 
 - **Why 🟠:** it is reachable from the API by a single malformed request, the state it corrupts is process-wide, and the operator is told the opposite of what is true — `dump` is exactly the tool they reach for when a node is misbehaving.
 - **Fix:** `try { … } finally { this._dump = false; }` around everything after the lock is taken, or take the lock after the argument checks. Both are `lib/` changes.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/kuzzle/dumpGenerator.test.ts` pins the current behaviour in a test that names this entry, so the fix will show up as a failing assertion pointing at it.
+
+---
+
+### TD-82
+
+**`unsubscribe` returns nothing when the room is unknown, and the caller cannot tell that from a successful unsubscribe** · 🟡 low · `features-legacy/support/api/{apiBase,mqtt,websocketBase}.ts`
+
+Found by typing `ApiBase` ([step 14 M1b](steps/14-test-program-strict.md#what-m1b-found)): the base's `unsubscribe` always sends, while both overrides return early.
+
+```ts
+// MqttApi
+unsubscribe(roomId, clientName, waitForResponse = false) {
+  const client = this.clients[clientName];
+  if (!client) {
+    return;                       // ← no request, no error, no signal
+  }
+  …
+  return this.send({ action: "unsubscribe", … }, waitForResponse, clientName);
+}
+```
+
+`WebSocketApiBase` does the same three times over — unknown socket, unknown room set, unknown room. A step definition that awaits the result gets `undefined` and **continues as though it had unsubscribed**, so a scenario whose subscription bookkeeping is wrong passes for the same reason a correct one does.
+
+- **Why 🟡:** it is the functional suite's own harness, not `lib/`, and it produces false *passes* rather than false failures — which is the worse direction for a test, but the blast radius is the legacy suite's realtime scenarios only.
+- **What made it visible:** nothing was wrong at runtime that was not wrong before. Typing the base class made the family's contract explicit — *a response, or nothing at all* — and a contract is the kind of thing you can read and disagree with. This is the third time in ADR-0001 that annotating a declaration, rather than running anything, is what surfaced a behaviour nobody had chosen.
+- **Fix:** throw, or answer a resolved promise carrying the reason, instead of `undefined`. Both change what the scenarios see, so this is a behaviour change in the test harness and does not belong in a typing slice.
+- **Not fixed here:** [step 14](steps/14-test-program-strict.md)'s M1b declares the union that is true today (`Promise<ApiResponse> | undefined`) and files this. The declaration is where the fix will show up as a type error.

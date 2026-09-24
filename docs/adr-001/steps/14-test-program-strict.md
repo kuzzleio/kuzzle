@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -127,7 +127,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | #      | Content                                                                                             | Errors | Why this grouping                                                                                                                                              |
 | ------ | --------------------------------------------------------------------------------------------------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **M0** ✅ | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible. See _[What M0 found](#what-m0-found)_.           |
-| **M1** | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** `http.ts` (177)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
+| **M1** ✅ | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** the rest of the directory ✅ (177 + what the import graph added)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
 | **M2** | the rest of `features-legacy/`                                                                       |    275 | 22 files, same shape, now against a typed support API.                                                                                                          |
 | **M3** | `features/`                                                                                          |     44 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
 | **M4** | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                               |    191 | One shape, 49% of the vitest debt. Mechanical, and doing it first shrinks every file the later slices open.                                                     |
@@ -283,3 +283,72 @@ here. Sequencing M1 first was still right — a typed `this` against an untyped
 API would have produced the same 178 errors at 24 call-site files instead of one
 declaration file — but the plan's "M1 is what makes M2 smaller than it looks"
 should read **"M1 is what makes M2 a check rather than a rewrite."**
+
+## What M1b found
+
+**`features-legacy/support/api/` is strict, all five files of it — and it had to
+be all five.** M1b was scoped as `http.ts`, 177 errors, the same table as
+[M1a](#what-m1a-found). It is instead the whole directory, for a reason that is
+worth stating because it will recur:
+
+> **An `include` can name one file. An import graph cannot be asked to.**
+
+`http.ts` imports `../world` for its `KWorld` type, and `world.ts` constructs
+all three protocol wrappers — so adding `http.ts` to the strict program pulled
+`mqtt.ts`, `websocket.ts` and `websocketBase.ts` in with it. That is the same
+mechanic [M0](#what-m0-found) recorded from the other direction (`exclude` does
+not remove an imported file from a program), and the practical rule is: **a
+slice's unit is a directory or a leaf, never a file in the middle of a graph.**
+
+### What the graph dragged in was the interesting part
+
+The table cleared `http.ts`'s 173 `TS7006` with nothing unmatched, exactly as in
+M1a. The four leftovers were a declaration, an array and a guard:
+
+- **`TS7016`, `request-promise`** — deprecated since 2020 and shipping no types.
+  Declared in `tests/types/`, narrowly: `rp(options)` answering the body, with
+  the option bag passed through. ⚠️ **The first version was wrong and a second
+  caller said so**: it required `url`, and
+  `features/step_definitions/network-step.ts` passes `uri` — the same option
+  under the other name. _A declaration written from one call site describes that
+  call site._
+- **`TS18048`, `route.url`** — declared `url?: string` in `httpRoutes.ts`, where
+  a loop at the bottom of the file assigns `route.url = route.path` for every
+  route and the doc comment calls it a deprecated alias. The fix is not a guard
+  and not a `!`: **read `route.path`**, which is the same string and is declared
+  non-optional. Reading the alias means asserting a population step this file
+  cannot see.
+- **`TS7034`/`TS7005`, `hits`** — `const hits = []` in a `replace` callback.
+
+### ⚠️ And then the base class's contract turned out to be false — [TD-82](../type-debt-register.md#td-82)
+
+M1a gave `ApiBase` a return type. The graph then put both subclasses in the same
+program, and they refused it:
+
+```
+Type '(roomId: string, clientName: string, waitForResponse?: boolean)
+        => Bluebird<any> | undefined'
+  is not assignable to type '(room: string, clientId: string)
+        => Promise<ApiResponse>'.
+```
+
+`MqttApi.unsubscribe` and `WebSocketApiBase.unsubscribe` **return early with
+`undefined`** when the client, the socket or the room is unknown — four early
+returns between them — and they take a third parameter the base does not
+declare. The base's declaration was a claim about a family it had only ever
+described one member of.
+
+M1b declares what is true today — `Promise<ApiResponse> | undefined`, plus the
+third parameter — and files the behaviour as
+[TD-82](../type-debt-register.md#td-82), because **a step definition that awaits
+`undefined` continues as though it had unsubscribed**: a scenario whose
+subscription bookkeeping is wrong passes for the same reason a correct one does.
+Fixing that changes what the scenarios see and does not belong in a typing
+slice.
+
+_Third time in this ADR that **annotating a declaration, rather than running
+anything, is what surfaced a behaviour nobody had chosen**_ — after
+[M0](#what-m0-found)'s untested `unregister-pipe` path two slices ago. The
+pattern is specific enough to plan around: the errors that are worth the step
+are the ones on a **declaration shared by more than one implementation**, and
+they are not in the count that makes a slice look big.

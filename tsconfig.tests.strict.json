@@ -32,8 +32,11 @@
     "scripts/**/*.ts",
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts",
-    // M1a — the legacy functional suite's shared API wrapper.
-    "features-legacy/support/api/apiBase.ts"
+    // M1 — the legacy functional suite's API wrappers. M1a took `apiBase.ts`;
+    // M1b takes the rest of the directory, because `http.ts` reaches `world.ts`
+    // which constructs all three protocols: an `include` can name one file, an
+    // import graph cannot be asked to.
+    "features-legacy/support/api/**/*.ts"
   ],
   "exclude": [
     "dist"
