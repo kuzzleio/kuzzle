@@ -1,6 +1,6 @@
 # Step 13 — Sprint 10: test closure (Mocha → vitest)
 
-**Status:** 🟦 Open · **Opened:** 2026-09-21 · **PR(s):** L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b1 [#2807](https://github.com/kuzzleio/kuzzle/pull/2807) · L1b2 [#2808](https://github.com/kuzzleio/kuzzle/pull/2808) · L1b2b [#2809](https://github.com/kuzzleio/kuzzle/pull/2809) · L1b3 [#2811](https://github.com/kuzzleio/kuzzle/pull/2811) · L1b4 [#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · re-measure [#2813](https://github.com/kuzzleio/kuzzle/pull/2813) · L2a [#2814](https://github.com/kuzzleio/kuzzle/pull/2814) · L2b [#2815](https://github.com/kuzzleio/kuzzle/pull/2815) · L2c [#2816](https://github.com/kuzzleio/kuzzle/pull/2816) · L2d [#2817](https://github.com/kuzzleio/kuzzle/pull/2817) · L2e [#2818](https://github.com/kuzzleio/kuzzle/pull/2818) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Closed · **Opened:** 2026-09-21 · **Closed:** 2026-09-24 · **55 PRs** — the full list is in the slice sections below; the spine is L0 [#2805](https://github.com/kuzzleio/kuzzle/pull/2805) · L1 [#2806](https://github.com/kuzzleio/kuzzle/pull/2806) · L1b [#2807](https://github.com/kuzzleio/kuzzle/pull/2807)–[#2812](https://github.com/kuzzleio/kuzzle/pull/2812) · L2 [#2814](https://github.com/kuzzleio/kuzzle/pull/2814)–[#2818](https://github.com/kuzzleio/kuzzle/pull/2818) · L3 [#2820](https://github.com/kuzzleio/kuzzle/pull/2820)–[#2825](https://github.com/kuzzleio/kuzzle/pull/2825) · L4 [#2827](https://github.com/kuzzleio/kuzzle/pull/2827)–[#2846](https://github.com/kuzzleio/kuzzle/pull/2846) · L5 [#2849](https://github.com/kuzzleio/kuzzle/pull/2849)–[#2853](https://github.com/kuzzleio/kuzzle/pull/2853) · L6 [#2854](https://github.com/kuzzleio/kuzzle/pull/2854), [#2856](https://github.com/kuzzleio/kuzzle/pull/2856)–[#2862](https://github.com/kuzzleio/kuzzle/pull/2862) · L7a [#2864](https://github.com/kuzzleio/kuzzle/pull/2864) · L7b [#2865](https://github.com/kuzzleio/kuzzle/pull/2865) · L7c [#2866](https://github.com/kuzzleio/kuzzle/pull/2866) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -3970,3 +3970,69 @@ mis-sized PRs — was fixed by re-deriving c8's lcov from its raw temp directory
 through `v8-to-istanbul`. Its only caller was `test:unit:mocha:coverage`, deleted
 by [L7a](#what-l7a-found). The finding stands in the register; the fix has no
 subject left.
+
+## Step 13 is closed
+
+**148 Mocha spec files, 64 295 lines, 3 092 tests → 0. One unit runner: 153
+vitest files, 3 765 tests.** Fifty-five PRs over four days, in eight slices
+(L0–L7), every one of which moved the ratchet except the closure.
+
+| Slice  | What it was                                                    | Specs |
+| ------ | -------------------------------------------------------------- | ----: |
+| L0     | the three specs that already had a vitest twin                 |     3 |
+| L1     | the codemod, on the specs that mock nothing shared             |    27 |
+| L1b    | the specs built on `test/mocks/kuzzle.mock.js`                 |    30 |
+| L2     | the clean specs at 201–1 000 lines                             |    28 |
+| L3     | the six clean specs over 1 000 lines                           |     6 |
+| L4     | `mock-require` → `vi.mock`                                     |    34 |
+| L5     | the two Elasticsearch twins                                    |     2 |
+| L6     | the `rewire` specs                                             |    12 |
+| L7     | the apparatus, the coverage plumbing, this note                |     — |
+
+### The plan was wrong in the same direction five times
+
+Every slice was budgeted from a property of the **text** — how many lines a spec
+has, which module-faking library it imports, whether a `lib/` file has a spec of
+the same name — and in every case the property that decided the cost was a
+property of what the spec *does*:
+
+- **L0** was scoped from line counts and two of its three "unfinished ports" were
+  not ports at all. *Lines are not tests; only coverage compares two tests.*
+- **L1** was budgeted at 60 specs and carried 27, because 30 of them turned out to
+  be built on `kuzzle.mock.js` — **L1b did not exist in the plan** and became the
+  largest slice by file count.
+- **L4** was budgeted as "`vi.mock` is hoisted, `mock-require` is dynamic" and the
+  `reRequire` was almost never there for the mock. *Ask what a `reRequire` is
+  resetting, not what the `mockrequire` is replacing.*
+- **L6** was budgeted as twelve redesigns because twelve specs imported `rewire`;
+  **five were ports**, and `rewire` was irreplaceable exactly once — where the
+  answer was a fixture, not a mocking technique.
+- **L7** was budgeted as mechanical and had two corrections in its first slice:
+  `should` is not Mocha's, and its "65 strict errors" were 1 077.
+
+_Stated once, because it is the step's own lesson about planning:_ **an import is
+not a design, and a file is not a test.** Both are cheap to grep, which is exactly
+why they end up in a plan. The three measurements that actually predicted cost —
+coverage per subject (L0), what a spec reads off `global.kuzzle` (L1b), and what a
+re-require resets (L4) — each required running something.
+
+### What it found in `lib/`
+
+Six changes to production code, all of them forced by a test that could no longer
+reach around the subject: `validationUtils.ts` and `geoShapeUtils.ts` (extracted
+so a spec could address them without `rewire`), `didYouMean`'s import, and the
+three defects filed from L3. Plus the dead-assertion census — the slices
+numbered the forms as they met them and reached **nineteen distinct ways an
+assertion can be written so that it cannot fail**, most of them predating the
+step. That census is the step's most reusable output: it is a review checklist,
+and [TD-57](../type-debt-register.md#td-57) gated two of its forms in lint.
+
+### What is next
+
+- **[Step 14](14-test-program-strict.md)** — the 1 077 strict errors in the test
+  program, planned from this step's numbers and opened with it. Not in ADR-0001's
+  Definition of Done, which is why it is a step and not a slice here.
+- **[Step 03](03-sprint-2-bin.md)** is still paused, and it is the last thing
+  between the ADR and its first DoD box: `bin/start-kuzzle-server` and
+  `bin/wait-kuzzle`, the two extensionless executables
+  [TD-45](../type-debt-register.md#td-45) found the ratchet had never counted.
