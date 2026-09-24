@@ -44,7 +44,7 @@ Adopt an **incremental migration, driven by a CI ratchet, sequenced by architect
 
 - [ ] `0` JavaScript files in `lib/` and `bin/` (excluding generated files **and the 3 plugin fixtures under `bin/plugins/available/**`** — see the register, 2026-09-09: the `js` ratchet's floor is therefore `3`, not `0`). _`bin/copy-binaries.js` was long miscounted as a 4th fixture; it is build tooling, and it was converted rather than exempted ([#2713](https://github.com/kuzzleio/kuzzle/pull/2713))._ ⚠️ **Corrected 2026-09-11 ([TD-45](type-debt-register.md#td-45)):** `bin/start-kuzzle-server` and `bin/wait-kuzzle` are extensionless `#!/usr/bin/env node` scripts that `-name '*.js'` never matched, so they had never been counted. `bin/` holds **5** JavaScript files, of which 3 are the fixture floor; both executables are in scope.
 - [x] `strict: true` in the main `tsconfig.json`; `allowJs` removed. _(2026-09-21, [step 12](steps/12-sprint-9-strict-flip.md) K6 — `tsconfig.json` is production-only and strict; the specs moved to `tsconfig.tests.json`.)_
-- [ ] `0` Mocha specs; vitest + TS the only unit runner; `mocha`/`should`/`rewire`/`c8` removed.
+- [x] `0` Mocha specs; vitest + TS the only unit runner; `mocha`/`rewire`/`c8` removed. _(2026-09-24, [step 13](steps/13-sprint-10-test-closure.md) — L6h took the ratchet to 0, L7a deleted the apparatus: `.mocharc`, `test/`, `mocha`, `@types/mocha`, `mock-require`, `rewire`, `c8`, `should-sinon`, `sinon`, `build:tests` and the `mocha` ratchet itself.)_ ⚠️ **This line used to name `should` too, and that was wrong**: `should` is cucumber's assertion library in 17 files across `features/` and `features-legacy/`, and it outlives axis 2 — see [What L7a found](steps/13-sprint-10-test-closure.md#what-l7a-found). `sinon` did leave: zero `tests/` specs import it.
 - [ ] Cucumber functional tests unchanged (already TS).
 
 Why this over big-bang, pure-opportunistic, full-strict-now or coupled-tests: [step 00](steps/00-rejected-alternatives.md).
@@ -62,7 +62,7 @@ Stable reference for _how_ the migration is enforced and sequenced. How it was b
 
 ### Enforcement — five ratchets, and `strict` in the build
 
-- **Count ratchets** (`scripts/ratchet.sh <js|mocha|any|casts>`, `npm run ratchet`): the counts of `.js` files, Mocha specs, written `any` and type assertions may **only decrease**; a reduction updates its baseline in `.migration/` in the same PR. _The `implicit-any` ratchet retired with the strict flip — `strict` subsumes `noImplicitAny`._
+- **Count ratchets** (`scripts/ratchet.sh <js|any|casts>`, `npm run ratchet`): the counts of `.js` files, written `any` and type assertions may **only decrease**; a reduction updates its baseline in `.migration/` in the same PR. _Two have retired, each having done its job: `implicit-any` with the strict flip (`strict` subsumes `noImplicitAny`), and **`mocha`** with [step 13](#step-table)'s L7a — it counted `test/**/*.test.js`, reached 0, and the directory it counted no longer exists._
 - **~~Progressive strict~~ → `strict: true` in `tsconfig.json` (2026-09-21).** For the eight sprints it took to get there, strict was enforced on a growing file list (`.migration/strict-adopted.txt`) by **filtering tsc output** — _not_ via `include`, since tsc pulls the entire import graph into the program. The list reached all of `lib/` and the machinery was deleted with [step 12](steps/12-sprint-9-strict-flip.md)'s K6. **`npm run build` is now the strict type-check**; `npm run typecheck:tests` covers the specs, which have their own non-strict program (`tsconfig.tests.json`) because `strict` applies to a program and not to a file.
 - The **written-`any`** ratchet (`any`) exists because explicit `any` is **invisible** to `strict` (see step 01). It counts `: any`, `as any` **and `as unknown as`** — the escape hatch a conversion reaches for once `: any` is forbidden.
 - The **implicit-`any`** ratchet (`implicit-any`, `tsconfig.implicit.json`) counts the `TS7xxx` diagnostics over `lib/` + `index.ts` under `noImplicitAny`. It exists because the written-`any` ratchet charges **nothing** for an un-annotated parameter: without it, renaming a file without typing anything scores a perfect zero (see [step 06](steps/06-hardening-mid-course.md)).
@@ -101,7 +101,7 @@ Stable reference for _how_ the migration is enforced and sequenced. How it was b
 
 ### Tests
 
-Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated progressively (mocha ratchet). **Closure (sprint 10):** at mocha = 0, remove `mocha`, `.mocharc`, `should`, `should-sinon`, `rewire`, `c8` and the `test:unit:mocha` command. The vitest spec location is still an open point (below).
+Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated progressively (mocha ratchet). **Closure (sprint 10): done** — [step 13](steps/13-sprint-10-test-closure.md) took the count 148 → 0 in seven slices and L7a removed `mocha`, `.mocharc`, `should-sinon`, `sinon`, `rewire`, `mock-require`, `c8`, `test/` and the `test:unit:mocha*` commands. ⚠️ **`should` was on this list and should not have been** — it is cucumber's assertion library as well, and it stays; see [What L7a found](steps/13-sprint-10-test-closure.md#what-l7a-found). The vitest spec location was settled: `tests/`, mirroring the source tree.
 
 ---
 
@@ -125,7 +125,7 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 
 ⚠️ **One behaviour change from K5 is not covered by a unit spec, and it is now merged:** `Kuzzle.id` was declared and never assigned, so `global.kuzzle.id` read `undefined` everywhere. It is now `global.nodeId`, or a fresh `knode-*` name when no `Backend` named the process. Three carriers go from absent to the node's name — the redis client name (`SETNAME`), the cluster ID card's `id`, and `node` on every realtime notification. It shipped in [#2803](https://github.com/kuzzleio/kuzzle/pull/2803) with the functional suites green; **if a downstream consumer reads any of those three as `undefined`, this is the change that did it.**
 
-**Ratchet state:** `js` 5 · `mocha` **14** · `any` 178 · `casts` 84 · `cpd-exclusions` 6. All five fail-closed since [TD-71](type-debt-register.md#td-71). **`implicit-any` retired with K6** — `strict` subsumes `noImplicitAny`, and its last reading of 30 was an artefact of measuring with `strictNullChecks` off; under the program that builds the package, `lib/` has zero implicit any.
+**Ratchet state:** `js` 5 · `any` 178 · `casts` 84 · `cpd-exclusions` 6 — **four, not five: the `mocha` ratchet retired with L7a**, having reached its floor and had the suite it counted deleted. All fail-closed since [TD-71](type-debt-register.md#td-71). **`implicit-any` retired with K6** — `strict` subsumes `noImplicitAny`, and its last reading of 30 was an artefact of measuring with `strictNullChecks` off; under the program that builds the package, `lib/` has zero implicit any.
 
 **The foundation is in place and has been re-hardened twice:** 5 CI ratchets, `strict` in the build itself, per-file coverage, ESLint with `consistent-type-imports` as an error, and a `pr-preflight.sh` that reads uncommitted work ([TD-66](type-debt-register.md#td-66)).
 
@@ -136,7 +136,7 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 | Ratchet              |                 Now |                             At the ADR's open | Floor                                                                             |
 | -------------------- | ------------------: | --------------------------------------------: | --------------------------------------------------------------------------------- |
 | `js`                 |               **5** |                                           111 | **5 — reached** (3 fixtures + 2 executables, [step 03](steps/03-sprint-2-bin.md)) |
-| `mocha` (spec files) |              **14** |                                           168 | 0 — [step 13](#step-table)                                                        |
+| `mocha` (spec files) |           _retired_ |                                           168 | **0 — reached** ([step 13](#step-table) L6h); the ratchet went with L7a          |
 | `any`                |             **178** | 200 (metric later widened to `as unknown as`) | 0                                                                                 |
 | `implicit-any`       |           _retired_ |                                           520 | **retired with K6** — `strict` subsumes `noImplicitAny`                           |
 | `casts`              |              **84** |                 87 (ratchet added 2026-09-15) | 0                                                                                 |
@@ -144,7 +144,7 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 | strict adopted       |           _retired_ |                                            46 | **the flip happened** — nothing adopted, nothing exempt                           |
 | strict errors        |               **0** |                        1 673 (step 12's open) | 0 — reached                                                                       |
 
-Unit tests: **118 Mocha spec files** (**2 758 tests**) against **52 vitest spec files** (**494 tests**) — the ratio [step 13](#step-table) exists to close, and the one number here that has barely moved.
+Unit tests: **153 vitest spec files, 3 764 tests, one runner** (measured 2026-09-24 on L7a's branch, in Docker). At the ADR's open it was 168 Mocha spec files against an empty vitest tree; at step 13's open, 148 Mocha (3 092 tests) against 25 vitest (261). The ratio this ADR existed to close is closed.
 
 **Remaining JavaScript: 5, all in `bin/`** — 3 plugin fixtures under `bin/plugins/available/**` (the floor, reached by [#2713](https://github.com/kuzzleio/kuzzle/pull/2713)) plus `start-kuzzle-server` and `wait-kuzzle`, two extensionless Node executables the ratchet's predicate had never seen ([TD-45](type-debt-register.md#td-45)). `lib/`: **0**.
 
@@ -158,7 +158,7 @@ Unit tests: **118 Mocha spec files** (**2 758 tests**) against **52 vitest spec 
 
 2. **[Step 08 — type-debt backlog](steps/08-type-debt-backlog.md), in parallel, is down to two items.** [TD-62](type-debt-register.md#td-62) and [TD-63](type-debt-register.md#td-63) closed through step 12, and [TD-54](type-debt-register.md#td-54) closed with it — **[#2757](https://github.com/kuzzleio/kuzzle/issues/2757) and [#2770](https://github.com/kuzzleio/kuzzle/issues/2770) need closing by hand.** [#2785](https://github.com/kuzzleio/kuzzle/issues/2785) is the design decision [TD-65](type-debt-register.md#td-65)/[TD-67](type-debt-register.md#td-67) left open — _resynchronise instead of evicting_ — and wants a decision before code. **TD-20 stays split and stays blocked:** [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) needs an API shape (`response.configure` cannot set a result), [#2721](https://github.com/kuzzleio/kuzzle/issues/2721) is a breaking HTTP change for the next major.
 3. **[#2790](https://github.com/kuzzleio/kuzzle/issues/2790) is a known CI flake — rerun the job, do not diagnose it.** The functional jobs intermittently die in `npm ci` rebuilding native modules. Its local half is fixed ([TD-72](type-debt-register.md#td-72), [#2797](https://github.com/kuzzleio/kuzzle/pull/2797)); the CI half and the functional path stay open.
-4. **Per PR, from here on the DoD changes** — no conversions are left, and no adoption list either. Keep **`npm run build` green** (it is the strict type-check of `lib/` + `index.ts` + `bin/`) and **`npm run typecheck:tests`** green (the specs' own program); `npm run ratchet` with **no counter rising** (`casts` and `any` are what stop a "strict fix" from being a cast); ship a spec for any branch a fix adds; run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` / `unit vitest` — the native `re2` binding cannot load on host arm64). After merging into `2-dev`, **close the linked issues by hand**: `Closes #NNN` only fires on `master`.
+4. **Per PR, from here on the DoD changes** — no conversions are left, and no adoption list either. Keep **`npm run build` green** (it is the strict type-check of `lib/` + `index.ts` + `bin/`) and **`npm run typecheck:tests`** green (the specs' own program); `npm run ratchet` with **no counter rising** (`casts` and `any` are what stop a "strict fix" from being a cast); ship a spec for any branch a fix adds; run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit` — the native `re2` binding cannot load on host arm64). After merging into `2-dev`, **close the linked issues by hand**: `Closes #NNN` only fires on `master`.
 
 > **Conversion gotchas (learned Sprint 1):** a file whose Mocha spec uses `rewire`/`__set__` on a required module (e.g. `didYouMean`) must keep the compiled variable name — use `import x = require("mod")`, not `import x from "mod"`. Typing a previously-`any` export (e.g. `Promback`) can break inferring consumers: make it **generic** (`Promback<T>`) and annotate the call sites rather than reintroducing `any`.
 
@@ -173,10 +173,9 @@ Unit tests: **118 Mocha spec files** (**2 758 tests**) against **52 vitest spec 
 **Key commands:**
 
 ```bash
-npm run ratchet                     # js / mocha / any / casts / cpd-exclusions
+npm run ratchet                     # js / any / casts / cpd-exclusions
 npm run build                       # tsc + copy-binaries — AND the strict type-check of lib/
-npm run typecheck:tests             # tsconfig.tests.json — tests/, test/, features/, features-legacy/
-npm run build:tests                 # emits dist/test/** — the Mocha suite's input
+npm run typecheck:tests             # tsconfig.tests.json — tests/, features/, features-legacy/
 npm run ratchet:js -- --update      # after a reduction: update the baseline
 .ci/scripts/pr-preflight.sh         # lint + error-codes + ratchets/strict + 2 reminders
 ```

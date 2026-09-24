@@ -31,13 +31,14 @@ moving it** — no `!`, no `as`, no widening a parameter to silence a call site.
 `casts` and `any` ratchets below are what enforce that.
 
 `strict` applies to a whole *program*, not to a file, so **the test code has its own**:
-`tsconfig.tests.json` (strict off, `allowJs` on for the frozen Mocha specs) covers
-`tests/`, `test/`, `features/` and `features-legacy/`, and `npm run typecheck:tests`
-checks it in CI. That is the same checking the specs had before the flip — hardening
-them is step 13's business (test closure — see the step table in
-[ADR-0001](docs/adr-001/ADR-0001-migration-typescript.md)). Note what
-this means in practice: `npm run build` no longer compiles the tests, so a type error
-in a spec surfaces in `typecheck:tests`, not in the build.
+`tsconfig.tests.json` (strict off) covers `tests/`, `features/` and `features-legacy/`,
+and `npm run typecheck:tests` checks it in CI. That is the same checking the specs had
+before the flip, and it is **a deferral, not a conclusion**: under `strict` that program
+holds 1 077 errors, 1 454 with `noUncheckedIndexedAccess` — the count is written down at
+the top of `tsconfig.tests.json`. ADR-0001's Definition of Done asks for `strict` in the
+build, which is done; hardening the test code is a step of its own. Note what this means
+in practice: `npm run build` does not compile the tests, so a type error in a spec
+surfaces in `typecheck:tests`, not in the build.
 
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
@@ -71,14 +72,14 @@ the `migration-ratchets` job:
 Run the gates locally before pushing:
 
 ```bash
-npm run ratchet             # js / mocha / any / casts / cpd-exclusions
-npm run typecheck:tests     # type-check tests/, test/, features/, features-legacy/
+npm run ratchet             # js / any / casts / cpd-exclusions
+npm run typecheck:tests     # type-check tests/, features/, features-legacy/
 npm run build               # this IS the strict type-check of lib/ + index.ts + bin/
 .ci/scripts/pr-preflight.sh # the above + lint + error-codes + coverage reminder
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
-`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:casts`) — then
+`npm run ratchet:js -- --update` (idem `:any`, `:casts`) — then
 commit `.migration/`.
 
 ### Assertions on errors
@@ -200,8 +201,13 @@ Finally, run the command `docker compose up` to start your Kuzzle stack.
 
 | Directory | Runner | Status |
 |-----------|--------|--------|
-| `tests/` | **vitest + TypeScript** | where **every new spec** goes |
-| `test/` | Mocha (JavaScript) | **frozen** — legacy, migrated away progressively |
+| `tests/` | **vitest + TypeScript** | the unit suite — every spec lives here |
+
+There used to be a second tree, `test/`, holding 168 Mocha specs in JavaScript. It was
+frozen and migrated away spec by spec under a CI ratchet; ADR-0001 step 13 took that
+count to zero and deleted the runner with it. If you are reading a comment, a commit or
+an issue that mentions `test/`, `.mocharc`, `rewire`, `mock-require`, `should` in a unit
+spec or `npm run build:tests`, it predates that.
 
 `tests/` mirrors the source tree: the spec for `lib/util/bytes.ts` is
 `tests/util/bytes.test.ts`. Discovery is `tests/**/*.{test,spec}.ts`.
@@ -243,12 +249,10 @@ npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest
 
 ```bash
 npm run test:unit:vitest
-npm run test:unit:mocha
 
 # Or, with no local Node.js toolchain (recommended on arm64 — the native `re2`
 # binding will not load on the host):
-.ci/scripts/docker-test.sh unit vitest
-.ci/scripts/docker-test.sh unit mocha
+.ci/scripts/docker-test.sh unit
 ```
 
 ### Functional tests

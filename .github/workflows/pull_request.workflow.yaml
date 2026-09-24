@@ -101,20 +101,23 @@ jobs:
         run: npm ci
         shell: bash
 
-      # Ratchets: the .js / mocha / explicit-any / cast counts may only decrease.
+      # Ratchets: the .js / explicit-any / cast counts may only decrease.
       # See docs/adr-001/steps/01-sprint-0-tooling.md, step 06 and scripts/ratchet.sh.
-      # The `implicit-any` ratchet retired with the strict flip (step 12, K6):
-      # `strict` in tsconfig.json subsumes `noImplicitAny` for lib/, and the build
-      # now fails on what that ratchet used to count.
-      - name: Migration ratchets (js / mocha / any / casts / cpd-exclusions)
+      # Two have retired, both by reaching their floor and staying there: the
+      # `implicit-any` ratchet with the strict flip (step 12, K6) — `strict` in
+      # tsconfig.json subsumes `noImplicitAny` for lib/, and the build now fails on
+      # what that ratchet used to count — and the `mocha` ratchet with step 13's L7,
+      # which deleted the suite it counted.
+      - name: Migration ratchets (js / any / casts / cpd-exclusions)
         run: npm run ratchet
         shell: bash
 
       # `strict` lives in tsconfig.json since step 12 (K6), so the production
       # type-check IS the build, gated by the `build` job below. What that program
       # no longer covers is the test code: `strict` applies to a whole program, so
-      # the specs have their own (tsconfig.tests.json, strict off, allowJs on) and
-      # it is checked here — exactly the checking they had before the flip.
+      # the specs have their own (tsconfig.tests.json, strict off) and it is checked
+      # here — exactly the checking they had before the flip. `allowJs` left with
+      # the Mocha suite (step 13, L7): every file that program sees is TypeScript.
       - name: Type-check the test programs
         run: npm run typecheck:tests
         shell: bash
@@ -242,12 +245,10 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
+        # One runner, so no suite dimension: `mocha` left this matrix with the last
+        # Mocha spec (step 13, L6h) and its apparatus with L7. ADR-0001's axis 2 is
+        # closed — vitest is the unit runner.
         node-version: [20, 22, 24]
-        # `mocha` left the matrix with the last Mocha spec (step 13, L6h): the
-        # runner errors out when its glob matches nothing. The apparatus it
-        # belongs to — the dependency, `.mocharc.json`, `test/` and the
-        # `test:unit:mocha*` scripts — goes with L7.
-        test-suits: ["vitest"]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -264,8 +265,6 @@ jobs:
 
       - name: Unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
-        with:
-          suit: ${{ matrix.test-suits }}
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 

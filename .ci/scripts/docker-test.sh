@@ -14,15 +14,14 @@ ES_VERSION="${ES_VERSION:-7}"
 usage() {
   cat <<'EOF'
 Usage:
-  .ci/scripts/docker-test.sh unit <vitest|mocha>
+  .ci/scripts/docker-test.sh unit
   .ci/scripts/docker-test.sh functional <http|websocket|legacy:http|legacy:mqtt|legacy:websocket> [-- <cucumber-js args>]
 
 Env vars:
   ES_VERSION   Elasticsearch major version for functional tests: 7 or 8 (default: 7)
 
 Examples:
-  .ci/scripts/docker-test.sh unit vitest
-  .ci/scripts/docker-test.sh unit mocha
+  .ci/scripts/docker-test.sh unit
   .ci/scripts/docker-test.sh functional websocket
   ES_VERSION=8 .ci/scripts/docker-test.sh functional http
 
@@ -32,17 +31,9 @@ Examples:
 EOF
 }
 
+# One unit runner since ADR-0001 step 13 closed axis 2 — this took a
+# <vitest|mocha> argument while the two suites ran side by side.
 run_unit() {
-  local suite="$1"
-
-  case "$suite" in
-    vitest|mocha) ;;
-    *)
-      echo "Unknown unit suite: '$suite' (expected 'vitest' or 'mocha')" >&2
-      exit 1
-      ;;
-  esac
-
   # `node_modules` lives in a named volume, NOT in the bind-mounted checkout.
   #
   # The repository is mounted at /var/app, so without this the container's
@@ -56,7 +47,7 @@ run_unit() {
   docker compose -f docker-compose.yml run --rm --no-deps \
     -v kuzzle_test_node_modules:/var/app/node_modules \
     -e NODE_ENV=test \
-    node bash -lc "npm ci && npm run build && npm run test:unit:${suite}"
+    node bash -lc "npm ci && npm run build && npm run test:unit:vitest"
 }
 
 run_functional() {
@@ -130,7 +121,7 @@ run_functional() {
 
 case "${1:-}" in
   unit)
-    run_unit "${2:?Missing unit suite: vitest|mocha}"
+    run_unit
     ;;
   functional)
     suite="${2:?Missing functional suite: e.g. http, websocket, legacy:http}"
