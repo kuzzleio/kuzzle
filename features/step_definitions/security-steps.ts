@@ -3,10 +3,12 @@ import should from "should";
 import { Then } from "@cucumber/cucumber";
 
 import { isApiError } from "../support/errors";
+import type KuzzleWorld from "../support/world";
+import { invokeAction } from "../support/invoke";
 
 Then(
   /I (try to )?create a (strict )?profile "(.*?)" with the following policies:/,
-  async function (trying, strict, profileId, dataTable) {
+  async function (this: KuzzleWorld, trying, strict, profileId, dataTable) {
     const data = this.parseObject(dataTable);
     const policies = [];
 
@@ -43,26 +45,35 @@ Then(
 
 Then(
   /I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/,
-  async function (not, method, roleId, dataTable) {
+  async function (this: KuzzleWorld, not, method, roleId, dataTable) {
     const controllers = this.parseObject(dataTable);
     const options = {
       force: not ? false : true,
     };
 
     await this.tryAction(
-      this.sdk.security[method + "Role"](roleId, { controllers }, options),
+      invokeAction(
+        this.sdk.security,
+        method + "Role",
+        roleId,
+        { controllers },
+        options,
+      ),
       not,
     );
   },
 );
 
-Then(/I am (not )?able to get a role with id "(.*?)"/, function (not, roleId) {
-  return this.tryAction(this.sdk.security.getRole(roleId), not);
-});
+Then(
+  /I am (not )?able to get a role with id "(.*?)"/,
+  function (this: KuzzleWorld, not, roleId) {
+    return this.tryAction(this.sdk.security.getRole(roleId), not);
+  },
+);
 
 Then(
   /I am (not )?able to get a profile with id "(.*?)"/,
-  async function (not, profileId) {
+  async function (this: KuzzleWorld, not, profileId) {
     return this.tryAction(
       this.sdk.security.getProfile(profileId),
       not,
@@ -73,7 +84,7 @@ Then(
 
 Then(
   "I am able to find {int} roles by searching controller:",
-  async function (count, dataTable) {
+  async function (this: KuzzleWorld, count, dataTable) {
     const controller = this.parseObject(dataTable);
 
     const result = await this.sdk.security.searchRoles(controller);
@@ -88,9 +99,13 @@ Then(
 
 Then(
   "I am able to mGet roles and get {int} roles with the following ids:",
-  async function (count, dataTable) {
+  async function (this: KuzzleWorld, count, dataTable) {
     const data = this.parseObject(dataTable);
     const roleIds = [];
+
+    if (typeof data.ids !== "object" || data.ids === null) {
+      throw new Error(`"ids" must be an object or an array, got ${data.ids}`);
+    }
 
     for (const role of Object.values(data.ids)) {
       roleIds.push(role);
@@ -100,21 +115,27 @@ Then(
   },
 );
 
-Then(/I (can not )?delete the role "(.*?)"/, function (not, roleId) {
-  return this.tryAction(
-    this.sdk.security.deleteRole(roleId, { refresh: "wait_for" }),
-    not,
-  );
-});
+Then(
+  /I (can not )?delete the role "(.*?)"/,
+  function (this: KuzzleWorld, not, roleId) {
+    return this.tryAction(
+      this.sdk.security.deleteRole(roleId, { refresh: "wait_for" }),
+      not,
+    );
+  },
+);
 
-Then(/I (can not )?delete the profile "(.*?)"/, function (not, profileId) {
-  return this.tryAction(
-    this.sdk.security.deleteProfile(profileId, { refresh: "wait_for" }),
-    not,
-  );
-});
+Then(
+  /I (can not )?delete the profile "(.*?)"/,
+  function (this: KuzzleWorld, not, profileId) {
+    return this.tryAction(
+      this.sdk.security.deleteProfile(profileId, { refresh: "wait_for" }),
+      not,
+    );
+  },
+);
 
-Then("I delete the user {string}", async function (userId) {
+Then("I delete the user {string}", async function (this: KuzzleWorld, userId) {
   this.props.result = await this.sdk.security.deleteUser(userId, {
     refresh: "wait_for",
   });
@@ -122,7 +143,7 @@ Then("I delete the user {string}", async function (userId) {
 
 Then(
   "I create a user {string} with content:",
-  async function (userId, dataTable) {
+  async function (this: KuzzleWorld, userId, dataTable) {
     const content = this.parseObject(dataTable);
 
     const body = {
@@ -141,51 +162,60 @@ Then(
   },
 );
 
-Then("I update the role {string} with:", async function (roleId, dataTable) {
-  const controllers = this.parseObject(dataTable);
+Then(
+  "I update the role {string} with:",
+  async function (this: KuzzleWorld, roleId, dataTable) {
+    const controllers = this.parseObject(dataTable);
 
-  const rights: Record<string, { actions: unknown }> = {};
+    const rights: Record<string, { actions: unknown }> = {};
 
-  for (const [controller, actions] of Object.entries(controllers)) {
-    rights[controller] = { actions };
-  }
+    for (const [controller, actions] of Object.entries(controllers)) {
+      rights[controller] = { actions };
+    }
 
-  this.props.result = await this.sdk.security.updateRole(
-    roleId,
-    { controllers: rights },
-    { refresh: "wait_for" },
-  );
-});
+    this.props.result = await this.sdk.security.updateRole(
+      roleId,
+      { controllers: rights },
+      { refresh: "wait_for" },
+    );
+  },
+);
 
-Then("The role {string} should match the default one", async function (roleId) {
-  const defaultRoles = this.kuzzleConfig.security.standard.roles,
-    role = await this.sdk.security.getRole(roleId);
+Then(
+  "The role {string} should match the default one",
+  async function (this: KuzzleWorld, roleId) {
+    const defaultRoles = this.kuzzleConfig.security.standard.roles,
+      role = await this.sdk.security.getRole(roleId);
 
-  for (const [controller, actions] of Object.entries(role.controllers)) {
-    should(actions).match(defaultRoles[roleId].controllers[controller]);
-  }
-});
+    for (const [controller, actions] of Object.entries(role.controllers)) {
+      should(actions).match(defaultRoles[roleId].controllers[controller]);
+    }
+  },
+);
 
-Then("The role {string} should match:", async function (roleId, dataTable) {
-  const controllers = this.parseObject(dataTable);
-  const role = await this.sdk.security.getRole(roleId);
+Then(
+  "The role {string} should match:",
+  async function (this: KuzzleWorld, roleId, dataTable) {
+    const controllers = this.parseObject(dataTable);
+    const role = await this.sdk.security.getRole(roleId);
 
-  for (const [controller, actions] of Object.entries(controllers)) {
-    should(role.controllers).have.property(controller);
-    should(actions).match(role.controllers[controller].actions);
-  }
-});
+    for (const [controller, actions] of Object.entries(controllers)) {
+      should(role.controllers).have.property(controller);
+      should(actions).match(role.controllers[controller].actions);
+    }
+  },
+);
 
 Then(
   "The profile {string} policies should match:",
-  async function (profileId, dataTable) {
+  async function (this: KuzzleWorld, profileId, dataTable) {
     const expectedPolicies = this.parseObjectArray(dataTable);
 
     const profile = await this.sdk.security.getProfile(profileId);
 
     should(profile.policies).have.length(expectedPolicies.length);
 
-    for (let i = 0; i < profile.policies; i++) {
+    for (let i = 0; i < profile.policies.length; i++) {
       should(profile.policies[i]).match(expectedPolicies[i]);
     }
   },
@@ -193,7 +223,7 @@ Then(
 
 Then(
   "The user {string} should have the following profiles:",
-  async function (userId, dataTable) {
+  async function (this: KuzzleWorld, userId, dataTable) {
     const expectedProfiles = _.flatten(dataTable.rawTable);
 
     const user = await this.sdk.security.getUser(userId);
@@ -204,7 +234,7 @@ Then(
 
 Then(
   /The user "(.*?)"( should not)? exists/,
-  async function (userId, shouldNot) {
+  async function (this: KuzzleWorld, userId, shouldNot) {
     try {
       await this.sdk.security.getUser(userId);
 
@@ -225,7 +255,7 @@ Then(
 
 Then(
   "I am able to mGet users with the following ids:",
-  async function (dataTable) {
+  async function (this: KuzzleWorld, dataTable) {
     const userIds = _.flatten(dataTable.rawTable).map((obj: any) =>
       JSON.parse(obj),
     );

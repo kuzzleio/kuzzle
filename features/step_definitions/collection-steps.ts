@@ -1,16 +1,21 @@
 import { Then, Given } from "@cucumber/cucumber";
 import should from "should";
+import type KuzzleWorld from "../support/world";
+import { invokeAction } from "../support/invoke";
 
-Given("a collection {string}:{string}", async function (index, collection) {
-  this.props.result = await this.sdk.collection.create(index, collection);
+Given(
+  "a collection {string}:{string}",
+  async function (this: KuzzleWorld, index, collection) {
+    this.props.result = await this.sdk.collection.create(index, collection, {});
 
-  this.props.index = index;
-  this.props.collection = collection;
-});
+    this.props.index = index;
+    this.props.collection = collection;
+  },
+);
 
 Given(
   "an existing collection {string}:{string}",
-  async function (index, collection) {
+  async function (this: KuzzleWorld, index, collection) {
     if (!(await this.sdk.index.exists(index))) {
       throw new Error(`Index ${index} does not exist`);
     }
@@ -26,9 +31,9 @@ Given(
 
 Then(
   "I {string} the collection {string}:{string} with:",
-  async function (action, index, collection, dataTable) {
-    let mappings = {},
-      settings = {};
+  async function (this: KuzzleWorld, action, index, collection, dataTable) {
+    let mappings: unknown = {},
+      settings: unknown = {};
 
     if (dataTable.rowsHash) {
       ({ mappings, settings } = this.parseObject(dataTable));
@@ -45,7 +50,9 @@ Then(
           index,
         });
       } else {
-        this.props.result = await this.sdk.collection[action](
+        this.props.result = await invokeAction(
+          this.sdk.collection,
+          action,
           index,
           collection,
           { mappings, settings },
@@ -62,7 +69,7 @@ Then(
 
 Then(
   "I list {string} collections in index {string}",
-  async function (expectedType, index) {
+  async function (this: KuzzleWorld, expectedType, index) {
     const { collections } = await this.sdk.collection.list(index);
 
     this.props.result = {
@@ -75,7 +82,7 @@ Then(
 
 Then(
   /I should( not)? see the collection "(.*?)":"(.*?)"/,
-  async function (not, index, collection) {
+  async function (this: KuzzleWorld, not, index, collection) {
     const { collections } = await this.sdk.collection.list(index);
 
     const collectionNames = collections.map(
@@ -92,11 +99,11 @@ Then(
 
 Then(
   "I get mappings of collection {string}:{string}",
-  async function (index, collection) {
+  async function (this: KuzzleWorld, index, collection) {
     this.props.result = await this.sdk.collection.getMapping(index, collection);
   },
 );
 
-Then("I refresh the collection", function () {
+Then("I refresh the collection", function (this: KuzzleWorld) {
   return this.sdk.collection.refresh(this.props.index, this.props.collection);
 });
