@@ -24,7 +24,14 @@
 /**
  * Second half of `npm run build`: `tsc` emits the compiled JavaScript, this
  * copies into `dist/` what the compiler does not — the cluster's `.proto`
- * definitions and the executable server entrypoint.
+ * definitions — and gives the compiled server entrypoint the extensionless,
+ * executable name the container and the published package promise.
+ *
+ * `bin/start-kuzzle-server` used to be JavaScript, copied here verbatim
+ * ([step 03](../docs/adr-001/steps/03-sprint-2-bin.md)). It is TypeScript now,
+ * so `tsc` emits `dist/bin/start-kuzzle-server.js` and the copy below is what
+ * keeps `dist/bin/start-kuzzle-server` — `docker/images/kuzzle/Dockerfile`'s
+ * `CMD`, and an entry in `package.json`'s `files` — existing and executable.
  *
  * Run from the source tree, not from `dist/`, so the paths below stay relative
  * to the repository root (`__dirname/..`); from `dist/bin/` they would resolve
@@ -56,8 +63,8 @@ async function main(): Promise<void> {
     "cluster",
     "protobuf",
   );
-  const binSourceFile = path.join(projectRoot, "bin", "start-kuzzle-server");
   const binTargetDir = path.join(projectRoot, "dist", "bin");
+  const binSourceFile = path.join(binTargetDir, "start-kuzzle-server.js");
   const binTargetFile = path.join(binTargetDir, "start-kuzzle-server");
 
   await fs.mkdir(protobufTargetDir, { recursive: true });
