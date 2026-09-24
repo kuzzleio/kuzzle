@@ -940,6 +940,48 @@ the conclusion one wants. _A measurement whose setup can silently not apply will
 report the null result as a finding._ The check is cheap: print the config you
 just wrote before running anything against it.
 
+### The rename broke every functional shard, and `typecheck:tests` could not see it
+
+The green local run and the green `migration-ratchets` job both ran `tsc -p
+tsconfig.tests.json`. CI's 32 functional shards ran something else, and all 32
+failed at load:
+
+```
+features/step_definitions/controllers-steps.ts(3,28): error TS7016:
+  Could not find a declaration file for module 'request-promise'.
+```
+
+`cucumber.config.cjs` sets `TS_NODE_PROJECT` so the step definitions compile
+under the test program's settings, and that pointer resolved *by name* — which
+is exactly what the rename changed under it. ts-node was suddenly compiling the
+suites with `strict: true`, and **ts-node reads a project's `compilerOptions`
+but not its `include`**. The ambient declarations that type the suites' untyped
+dependencies (`tests/types/request-promise.d.ts`, `tests/types/should-as-function.d.ts`)
+were only ever reaching `tsc` through that `include`. Under `strict: false`
+their absence was invisible — `noImplicitAny` off makes `TS7016` disappear.
+
+The fix is `tsconfig.cucumber.json`: it extends the test program, and adds
+`ts-node.files: true` with an `include` holding **only** the ambient `.d.ts`
+files, so ts-node loads a dozen declarations at startup and still compiles the
+step definitions on demand.
+
+_Two lessons, both about what a check does not cover:_
+
+1. **A pointer that resolves by name survives a rename and changes meaning.**
+   The comment in `cucumber.config.cjs` even said *"when M7 deletes
+   `tsconfig.tests.json`, this pointer has to follow it"* — M7 deleted it by
+   giving the name to a different file, so the pointer did not dangle. It aimed
+   somewhere else.
+2. **`typecheck:tests` is not the only consumer of that config.** ts-node is,
+   and it honours a strict subset of it. Checking a config change with the
+   command named in it checks one of its readers.
+
+The reproduction is two seconds and needs no Docker:
+
+```bash
+node -r ts-node/register -e 'require("./features/step_definitions/controllers-steps.ts")'
+```
+
 ### Documentation that named two programs
 
 `CONTRIBUTING.md` carried the two-program table and the rule *"put a new spec in

@@ -168,6 +168,8 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 
 23. **A wrapper typed without its callers records what its author believed the contract was.** [M1](steps/14-test-program-strict.md#what-m1a-found) annotated the legacy suite's API wrappers with no step definitions in the program, and wrote ~90 parameters as required whose own bodies default them (`index: index || this.world.fakeIndex`). M2 put the callers in the same program and 30 call sites disagreed at once. The same blindness, one layer up, is what left `responses` and `subscribedRooms` `protected` while 26 step-definition sites read them — [M2](steps/14-test-program-strict.md#what-m2-found). _Typing a module before its consumers is worth doing; treating the result as settled is not._
 
+24. **A config has more readers than the command named in it, and a pointer that resolves by name survives a rename by aiming somewhere else.** [M7](steps/14-test-program-strict.md#the-rename-broke-every-functional-shard-and-typecheck-tests-could-not-see-it) renamed the strict test program onto `tsconfig.tests.json`. `npm run typecheck:tests` was green; all 32 functional shards died at load on `TS7016`, because `cucumber.config.cjs` points ts-node at that *name* — and ts-node honours a project's `compilerOptions` but not its `include`, so the ambient `.d.ts` files that `tsc` was picking up never reached it. _Before renaming a config, grep for who else reads it, and check the change with each reader's own entrypoint._
+
 Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 
 Gated on 2026-09-16, and both were worth the hour:
