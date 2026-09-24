@@ -25,6 +25,26 @@ import { ENVELOPES, type ESEnvelope } from "./envelope";
 export type ESVersion = "7" | "8";
 
 /** The `_esWrapper` the subject reaches for on every client rejection. */
+/**
+ * The `_getAliasFromIndice` implementation two case files arm.
+ *
+ * `harness.client` is `any` — the dispatcher is ES7 or ES8 — so a spy on it
+ * takes `(...args: unknown[])`, and the indice has to be narrowed rather than
+ * declared. The answer is the subject's own type: a NON-EMPTY tuple, because
+ * every caller dereferences its first element.
+ */
+export async function aliasFromIndice(
+  ...args: unknown[]
+): Promise<[string, ...string[]]> {
+  const [indice] = args;
+
+  if (typeof indice !== "string") {
+    throw new TypeError("_getAliasFromIndice expects an indice name");
+  }
+
+  return [`@${indice}`];
+}
+
 export interface ESWrapperStub {
   reject: ReturnType<typeof vi.fn>;
   formatESError: ReturnType<typeof vi.fn>;

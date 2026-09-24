@@ -18,6 +18,7 @@ import ms from "ms";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ESHarness } from "./harness";
+import { aliasFromIndice } from "./harness";
 
 const index = "nyc-open-data";
 const collection = "yellow-taxi";
@@ -67,7 +68,7 @@ export function describeQueries(harness: ESHarness) {
     const armAliasLookup = () =>
       vi
         .spyOn(harness.client, "_getAliasFromIndice")
-        .mockImplementation((asked: string) => [`@${asked}`]);
+        .mockImplementation(aliasFromIndice);
 
     it("advances the cursor and maps each hit back to its collection", async () => {
       armCursor({ fetched: 1, targets });

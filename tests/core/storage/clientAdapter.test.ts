@@ -163,6 +163,7 @@ vi.mock("../../../lib/core/storage/indexCache", () => ({
 }));
 
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import { present } from "../../helpers/present";
 
 describe("#core/storage/ClientAdapter", () => {
   let adapter: ClientAdapter;
@@ -175,7 +176,7 @@ describe("#core/storage/ClientAdapter", () => {
   const ask = (suffix: string, ...args: unknown[]) => {
     const handler = handlers.get(`core:storage:private:${suffix}`);
 
-    expect(handler, `no handler registered for "${suffix}"`).toBeDefined();
+    present(handler, `no handler registered for "${suffix}"`);
 
     return handler(...args);
   };

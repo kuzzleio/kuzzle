@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { asEntryPoint, stubEntryPoint } from "../../../mocks/entryPoint";
 import type { EntryPointStub } from "../../../mocks/entryPoint";
 import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
+import { present } from "../../../helpers/present";
 
 /**
  * ⚠️ The Mocha spec registered `net` **and** `node:net`, because `mock-require`
@@ -19,13 +20,26 @@ vi.mock("node:net", () => {
   return { createServer: net.createServer };
 });
 
+/**
+ * What aedes hands an event handler. The payload differs per event — a client,
+ * a packet, an error — so the spec passes whatever that event carries and the
+ * handler is described by its arity, not by its argument.
+ */
+type AedesHandler = (...args: unknown[]) => void;
+
+/** One recorded `aedes.on(event, handler)` call. */
+type AedesOnCall = [string, AedesHandler];
+
 vi.mock("aedes", () => ({
   default: class Aedes {
     public authorizePublish: unknown = null;
     public authorizeSubscribe: unknown = null;
     public handle = vi.fn();
-    public on = vi.fn();
-    public publish = vi.fn();
+    // Typed, so that reading `mock.calls` says what a call carries: the specs
+    // below pick handlers and published packets out of them.
+    public on = vi.fn<(event: string, handler: AedesHandler) => void>();
+    public publish =
+      vi.fn<(packet: { topic: string; payload: string }) => void>();
   },
 }));
 
@@ -67,6 +81,10 @@ async function loadSubject() {
 
 describe("MqttProtocol", () => {
   let entryPoint: EntryPointStub;
+  // `any`, and deliberately: the subject is loaded through `vi.resetModules()`
+  // and its `aedes` field is the mocked class above, so the real
+  // `MqttProtocol` type would describe neither. The reads below state the
+  // shapes they need instead.
   let protocol: any;
   let fakeClient: FakeClient;
 
@@ -116,15 +134,19 @@ describe("MqttProtocol", () => {
 
       await init();
 
-      expect(protocol.aedes.on.mock.calls.map((c) => c[0])).toEqual([
-        "client",
-        "clientError",
-        "clientDisconnect",
-        "publish",
-      ]);
+      expect(
+        protocol.aedes.on.mock.calls.map(([event]: AedesOnCall) => event),
+      ).toEqual(["client", "clientError", "clientDisconnect", "publish"]);
 
-      const handlerOf = (event: string) =>
-        protocol.aedes.on.mock.calls.find((c) => c[0] === event)[1];
+      const handlerOf = (event: string) => {
+        const call: AedesOnCall | undefined = protocol.aedes.on.mock.calls.find(
+          ([name]: AedesOnCall) => name === event,
+        );
+
+        present(call, `an "${event}" handler`);
+
+        return call[1];
+      };
 
       handlerOf("client")(fakeClient);
       expect(protocol.onConnection.mock.calls).toEqual([[fakeClient]]);
@@ -227,7 +249,11 @@ describe("MqttProtocol", () => {
       protocol.broadcast({ payload: "payload", channels: ["ch1", "ch2"] });
 
       // Both channels: the Mocha spec counted two calls and named only `ch1`.
-      expect(protocol.aedes.publish.mock.calls.map((c) => c[0])).toEqual([
+      expect(
+        protocol.aedes.publish.mock.calls.map(
+          ([packet]: [{ topic: string; payload: string }]) => packet,
+        ),
+      ).toEqual([
         { topic: "ch1", payload: '"payload"' },
         { topic: "ch2", payload: '"payload"' },
       ]);

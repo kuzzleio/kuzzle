@@ -226,7 +226,10 @@ export class RequestInput {
     return this[_jwt];
   }
 
-  set jwt(str: string) {
+  // `| null` for the same reason as `body` below: `assertString` answers
+  // `null` for `null` and `undefined` in its first branch, and the getter
+  // above declares it. See docs/adr-001/steps/14-test-program-strict.md (M5).
+  set jwt(str: string | null) {
     this[_jwt] = assert.assertString("jwt", str);
   }
 
@@ -364,7 +367,8 @@ export class RequestInput {
     return this[_volatile];
   }
 
-  set volatile(obj: JSONObject) {
+  // `| null`, as `assertObject` and the getter above both allow.
+  set volatile(obj: JSONObject | null) {
     this[_volatile] = assert.assertObject("volatile", obj);
   }
 }

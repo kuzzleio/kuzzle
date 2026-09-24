@@ -21,6 +21,7 @@ import { TooManyRequestsError } from "../../../lib/kerror/errors/tooManyRequests
 import { UnauthorizedError } from "../../../lib/kerror/errors/unauthorizedError";
 import { Mutex } from "../../../lib/util/mutex";
 import { invalid } from "../../helpers/invalid";
+import { present } from "../../helpers/present";
 import { settle } from "../../helpers/settle";
 import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
 
@@ -475,17 +476,24 @@ describe("#core/plugin/pluginContext", () => {
       executePluginRequest.mockResolvedValue(result);
 
       return settle<void>((resolve, reject) => {
-        const returned = context.accessors.execute(request, (error, answer) => {
-          try {
-            expect(error).toBeNull();
-            expect(answer).toMatchObject(request);
-            expect(answer.result).toBe(result);
-            expect(executePluginRequest).toHaveBeenCalledWith(request);
-            resolve();
-          } catch (assertion) {
-            reject(assertion);
-          }
-        });
+        // `execute` declares its callback as `unknown` — it validates it at
+        // runtime with `isPrombackCallback` — so a callback written inline
+        // gets no contextual type and has to state its own.
+        const returned = context.accessors.execute(
+          request,
+          (error: unknown, answer?: KuzzleRequest) => {
+            try {
+              expect(error).toBeNull();
+              expect(answer).toMatchObject(request);
+              present(answer, "the answered request");
+              expect(answer.result).toBe(result);
+              expect(executePluginRequest).toHaveBeenCalledWith(request);
+              resolve();
+            } catch (assertion) {
+              reject(assertion);
+            }
+          },
+        );
 
         expect(returned).toBeNull();
       });
@@ -500,6 +508,7 @@ describe("#core/plugin/pluginContext", () => {
       const answer = await context.accessors.execute(request);
 
       expect(answer).toMatchObject(request);
+      present(answer, "the answered request");
       expect(answer.result).toBe(result);
       expect(executePluginRequest).toHaveBeenCalledWith(request);
     });
@@ -511,16 +520,19 @@ describe("#core/plugin/pluginContext", () => {
       executePluginRequest.mockRejectedValue(error);
 
       return settle<void>((resolve, reject) => {
-        context.accessors.execute(request, (thrown, answer) => {
-          try {
-            expect(executePluginRequest).toHaveBeenCalledWith(request);
-            expect(thrown).toMatchObject(error);
-            expect(answer).toBeUndefined();
-            resolve();
-          } catch (assertion) {
-            reject(assertion);
-          }
-        });
+        context.accessors.execute(
+          request,
+          (thrown: unknown, answer?: KuzzleRequest) => {
+            try {
+              expect(executePluginRequest).toHaveBeenCalledWith(request);
+              expect(thrown).toMatchObject(error);
+              expect(answer).toBeUndefined();
+              resolve();
+            } catch (assertion) {
+              reject(assertion);
+            }
+          },
+        );
       });
     });
 
@@ -538,10 +550,16 @@ describe("#core/plugin/pluginContext", () => {
       settle<void>((resolve, reject) => {
         context.accessors.execute(
           invalid<KuzzleRequest>({}),
-          (error, answer) => {
+          (error: unknown, answer?: KuzzleRequest) => {
             try {
               expect(executePluginRequest).not.toHaveBeenCalled();
               expect(error).toBeInstanceOf(PluginImplementationError);
+              // Narrowed by the assertion above, not by a cast: the error is
+              // `unknown` until something says what it is.
+              if (!(error instanceof Error)) {
+                throw new TypeError("the callback's error is not an Error");
+              }
+
               expect(error.message).toMatch(
                 /^Invalid argument: a Request object must be supplied/,
               );

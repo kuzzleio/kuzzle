@@ -1,64 +1,78 @@
 {
-  // TEST program — type-checked by `npm run typecheck:tests`, and nothing else.
+  // THE test program — `tests/`, `features/`, `features-legacy/`, the CI and
+  // migration tooling, and the `start-kuzzle-*` entrypoints. Type-checked by
+  // `npm run typecheck:tests`, and nothing else: it emits nothing.
   //
-  // It used to be COMPILED into `dist/` as well, by `npm run build:tests`, because
-  // the Mocha suite ran on the emitted JavaScript (`.mocharc` globbed
-  // `./dist/test/**/*.test.js`) rather than on the sources. Step 13's L7 deleted the
-  // last of that apparatus — vitest and cucumber both run from source, through
-  // `tsx`/`ts-node` — so this program emits nothing: `noEmit` is set here rather than
-  // passed on the command line, so the file says what it is.
+  // There were two of these until step 14's M7. ADR-0001 took the test code to
+  // `strict` one directory at a time, and a directory changed standard by moving
+  // program — out of a non-strict `tsconfig.tests.json`'s `include` and into a
+  // `tsconfig.tests.strict.json`'s. That is the technique step 12's K6 landed on,
+  // because `strict` is a property of a *program*, not of a file. M6 moved the
+  // last directory, which left the non-strict program empty; what survives is the
+  // strict one, under the name both were checked by.
   //
-  // `tsconfig.json` went `strict: true` at the end of the TypeScript migration
-  // (docs/adr-001/steps/12-sprint-9-strict-flip.md, K6). `strict` applies to a whole
-  // program, so keeping the specs in that program would have meant either ~770 strict
-  // errors in the build's path or dropping the type-check on the test code entirely.
-  // This file is the third option: the test code keeps exactly the checking it had
-  // before the flip — `strict: false` — and `lib/` keeps strict. ⚠️ **That is a
-  // deferral, not a conclusion**, and the size of it is worth writing down. Measured
-  // 2026-09-24, flipping the two lines below:
+  // ⚠️ **The specs do NOT go back into `tsconfig.json`.** M7 measured it rather
+  // than assuming either way — adding `tests/**/*.ts` to that file's `include` and
+  // running `tsc`:
   //
-  //   `strict: true` alone ............................. 1 077 errors
-  //     638 features-legacy · 388 tests · 44 features · 5 start-kuzzle-test.ts
-  //     · 2 .ci
-  //   + `noUncheckedIndexedAccess: true` (full parity
-  //     with the production program) ................... 1 448 errors
+  //   * `dist/` goes 770 -> 1 311 emitted files, and grows `dist/tests/` and
+  //     `dist/.ci/`. That is the payload regression step 12's K6 fixed (1 518 ->
+  //     769), arriving from the other direction.
+  //   * 346 errors, because `noUncheckedIndexedAccess` is ON in that program and
+  //     the specs are not clean under it. See below.
   //
-  // ADR-0001's Definition of Done does not ask for those — it asks for `strict` in
-  // the build, which is done — so they are a step of their own, not step 13's.
+  // One program to *emit* from and one to *check* is a different question from one
+  // standard for both; the standard is the same either way now, bar the flag below.
   //
-  // `allowJs` left with the Mocha specs: every file this program sees is TypeScript.
+  // See docs/adr-001/steps/14-test-program-strict.md.
+
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
+    // ⚠️ The one place this program differs from the production one, on
+    // purpose (step 14's M8). `noUncheckedIndexedAccess` is on in `tsconfig.json`
+    // and right for `lib/`. Here it reports 378 errors (2026-09-24): 344 are specs
+    // reading back a fixture or a mock call they just made, and the 34 in code
+    // that runs (cucumber support, `.ci/`, `start-kuzzle-test.ts`) were read one
+    // by one and hold no defect. Turning it on would mean ~300 `!`, which no
+    // ratchet counts outside `lib/`. Re-measure with
+    // `npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`.
     "noUncheckedIndexedAccess": false,
     "noEmit": true
   },
   "include": [
-    // Ambient declarations for untyped Node internals. They are `.d.ts`, so nothing
-    // imports them and the program would not pull them in on its own: `lib/` used to
-    // carry them into the shared program via its own glob, and dropping `lib/**` from
-    // here loses `process.moduleLoadList` in lib/kuzzle/dumpGenerator.ts. See
+    // Ambient declarations: they are `.d.ts`, so nothing imports them and the
+    // program would not pull them in on its own — dropping them loses
+    // `process.moduleLoadList` in lib/kuzzle/dumpGenerator.ts, and `should`'s
+    // function subpath in the cucumber suites. See
     // docs/adr-001/steps/10-sprint-7-kuzzle.md.
     "lib/types/**/*.d.ts",
-    // Unit tests (vitest)
-    "tests/**/*.ts",
-    "tests/**/*.json",
-    // Functional tests (cucumber)
-    "features/**/*.ts",
-    // Ambient declarations for test-only dependencies (see tests/types/).
-    "tests/types/**/*.d.ts"
-  ],
-  "exclude": [
-    "dist",
-    // ⚠️ THE STEP 14 LINE. Everything below has moved to `tsconfig.tests.strict.json`
-    // and is checked under `strict` there. A slice of step 14 moves paths from here
-    // to that file's `include`; when this list covers everything, this file is
-    // deleted. See docs/adr-001/steps/14-test-program-strict.md.
-    ".ci",
-    "scripts",
+    "tests/types/**/*.d.ts",
+    // The slice that moved each of these is named for the record; step 14's
+    // history is in docs/adr-001/steps/14-test-program-strict.md.
+    // M0 — the CI and migration tooling, and the functional-test entrypoints.
+    ".ci/scripts/**/*.ts",
+    // `bin/wait-kuzzle.ts` belongs to the same family: CI tooling, run by
+    // `.ci/scripts/**` through `ts-node`, and deliberately NOT part of the
+    // published build — so it is checked here rather than by `npm run build`.
+    // See docs/adr-001/steps/03-sprint-2-bin.md.
+    "bin/wait-kuzzle.ts",
+    "scripts/**/*.ts",
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts",
-    "features-legacy",
-    "features"
-  ]
+    // M1 — the legacy functional suite's API wrappers. M1a took `apiBase.ts`;
+    // M1b takes the rest of the directory, because `http.ts` reaches `world.ts`
+    // which constructs all three protocols: an `include` can name one file, an
+    // import graph cannot be asked to.
+    // M2 — the rest of the legacy suite: the world, the hooks and the 24 step
+    // definition files, which is why the glob is now the whole directory.
+    "features-legacy/**/*.ts",
+    // M3 — the modern cucumber suite.
+    "features/**/*.ts",
+    // M6 — the last of `tests/`. The non-strict program is empty after this:
+    // `tsconfig.tests.json` is deleted by M7.
+    "tests/**/*.ts",
+    "tests/**/*.json"
+  ],
+  "exclude": ["dist"]
 }

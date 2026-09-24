@@ -54,7 +54,7 @@ it to 3.
 | File | Now | Program | Why |
 | --- | --- | --- | --- |
 | `bin/start-kuzzle-server` | `bin/start-kuzzle-server.ts` | **production** (`tsconfig.json`) | It is the published entrypoint: `dist/bin/start-kuzzle-server` is in `package.json`'s `files` and is the Docker image's `CMD`. |
-| `bin/wait-kuzzle` | `bin/wait-kuzzle.ts` | **tests, strict** (`tsconfig.tests.strict.json`) | CI tooling, run by `.ci/scripts/**`, shipped nowhere — the same family as `.ci/scripts/**` and `scripts/**`, which [step 14](14-test-program-strict.md)'s M0 put there. |
+| `bin/wait-kuzzle` | `bin/wait-kuzzle.ts` | **tests, strict** (`tsconfig.tests.json`) | CI tooling, run by `.ci/scripts/**`, shipped nowhere — the same family as `.ci/scripts/**` and `scripts/**`, which [step 14](14-test-program-strict.md)'s M0 put there. |
 
 **The published path does not change.** `tsc` now emits
 `dist/bin/start-kuzzle-server.js`, and `bin/copy-binaries.ts` — which already

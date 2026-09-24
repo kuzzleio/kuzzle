@@ -1212,8 +1212,10 @@ describe("#core/plugin/pluginsManager", () => {
       const verified = (...args: unknown[]) =>
         settle<{ error: unknown; message: unknown; result: unknown }>(
           (resolve) => {
-            verifyAdapter(...args, (error, result, message) =>
-              resolve({ error, message, result }),
+            verifyAdapter(
+              ...args,
+              (error: unknown, result: unknown, message: unknown) =>
+                resolve({ error, message, result }),
             );
           },
         );

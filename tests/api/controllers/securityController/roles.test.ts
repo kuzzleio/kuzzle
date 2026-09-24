@@ -7,6 +7,7 @@ import { SizeLimitError } from "../../../../lib/kerror/errors/sizeLimitError";
 import { Role } from "../../../../lib/model/security/role";
 import { invalid } from "../../../helpers/invalid";
 import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
+import { bodyOf } from "../../../helpers/request";
 
 /** A role as the security module answers it. */
 const role = (id: string) => {
@@ -224,7 +225,7 @@ describe("#api/controllers/securityController — roles", () => {
     it("should answer one serialized role per id", async () => {
       const response = await controller.mGetRoles(request);
 
-      expect(asked(event)).toEqual([event, request.input.body.ids]);
+      expect(asked(event)).toEqual([event, bodyOf(request).ids]);
       expect(response.hits).toHaveLength(3);
       response.hits.forEach((hit: { _id: string }, i: number) => {
         expect(hit).not.toBeInstanceOf(Role);
@@ -283,7 +284,7 @@ describe("#api/controllers/securityController — roles", () => {
       });
       expect(asked(event)).toEqual([
         event,
-        { controllers: request.input.body.controllers },
+        { controllers: bodyOf(request).controllers },
         { from: 0, size: 10000 },
       ]);
     });

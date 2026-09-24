@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import MemoryStorageController from "../../../lib/api/controllers/memoryStorageController";
 import { KuzzleRequest } from "../../../lib/api/request";
+import { present } from "../../helpers/present";
 
 /**
  * The Mocha spec swaps the real command table for a small fixture, so none of
@@ -19,7 +20,7 @@ describe("#api/controllers/MemoryStorageController", () => {
       (args) => args[0] === "core:cache:public:execute" && args[1] === command,
     );
 
-    expect(call, `${command} was not executed`).toBeDefined();
+    present(call, `the ${command} call`);
 
     return call.slice(2);
   };
@@ -397,7 +398,7 @@ describe("#api/controllers/MemoryStorageController", () => {
         (args) => args[0] === "core:cache:public:mExecute",
       );
 
-      expect(call, "mexecute was not executed").toBeDefined();
+      present(call, "the mexecute call");
 
       return call[1];
     };

@@ -7,6 +7,7 @@ import { SizeLimitError } from "../../../../lib/kerror/errors/sizeLimitError";
 import { Profile } from "../../../../lib/model/security/profile";
 import { invalid } from "../../../helpers/invalid";
 import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
+import { bodyOf } from "../../../helpers/request";
 
 describe("#api/controllers/securityController — profiles", () => {
   let controller: SecurityController;
@@ -297,7 +298,7 @@ describe("#api/controllers/securityController — profiles", () => {
       failures.set(event, error);
 
       await expect(controller.mGetProfiles(request)).rejects.toBe(error);
-      expect(asked(event)[0]).toEqual([event, request.input.body.ids]);
+      expect(asked(event)[0]).toEqual([event, bodyOf(request).ids]);
     });
   });
 

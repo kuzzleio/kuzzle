@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import CacheEngine from "../../../lib/core/cache/cacheEngine";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { present } from "../../helpers/present";
 
 /**
  * A stand-in for the `Redis` service, built from the surface `CacheEngine`
@@ -101,7 +102,7 @@ describe("#core/cache/CacheEngine", () => {
   const invoke = (event: string, ...args: unknown[]) => {
     const handler = asked.get(event);
 
-    expect(handler, `no handler registered for ${event}`).toBeDefined();
+    present(handler, `no handler registered for ${event}`);
 
     return handler(...args);
   };

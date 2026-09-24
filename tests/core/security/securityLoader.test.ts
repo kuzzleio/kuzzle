@@ -4,6 +4,8 @@ import { BadRequestError } from "../../../lib/kerror/errors/badRequestError";
 import SecurityLoader from "../../../lib/core/security/securityLoader";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 import securities from "../../fixtures/securities.json";
+import { invalid } from "../../helpers/invalid";
+import { present } from "../../helpers/present";
 
 /*
  * `securities.json` moved from `test/mocks/` to `tests/fixtures/`: it is a
@@ -48,7 +50,10 @@ describe("#core/security/SecurityLoader", () => {
   it("is what the security:load event calls", () => {
     const load = vi.spyOn(loader, "load").mockResolvedValue(undefined);
 
-    asked.get("core:security:load")("json", "opts");
+    const handler = asked.get("core:security:load");
+
+    present(handler, "handler for core:security:load");
+    handler("json", "opts");
 
     expect(load).toHaveBeenCalledWith("json", "opts");
   });
@@ -146,7 +151,7 @@ describe("#core/security/SecurityLoader", () => {
 
   describe("payload validation", () => {
     it("rejects a null payload", async () => {
-      const rejection = loader.load(null);
+      const rejection = loader.load(invalid(null));
 
       await expect(rejection).rejects.toBeInstanceOf(BadRequestError);
       await expect(rejection).rejects.toMatchObject({

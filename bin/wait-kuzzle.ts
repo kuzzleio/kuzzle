@@ -49,7 +49,7 @@ import { Kuzzle, WebSocket } from "kuzzle-sdk";
  *     with `autoReconnect: false`, bounded by its own timeout.
  *
  * It is not shipped: it is CI tooling, so it lives in the test program
- * (`tsconfig.tests.strict.json`) and is run through `ts-node`, the same way
+ * (`tsconfig.tests.json`) and is run through `ts-node`, the same way
  * `.ci/` runs `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
  */
 
