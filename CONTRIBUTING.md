@@ -222,28 +222,34 @@ type-checks but does not resolve at runtime under vite.
 
 ### How coverage is measured
 
-The quality gate requires **80% coverage on new code**, and the two unit
-runners disagree on what "a line" is: `c8` (wrapping Mocha) derives its line
-set from the *compiled* output and reports every line of a loaded file, blank
-lines and comments included, while vitest's v8 provider reports only real
-statements. Merging the two understates coverage — badly, for a file whose
-tests live in vitest.
+The quality gate requires **80% coverage on new code**, which is an aggregate
+over the whole PR — and an aggregate prices the block while saying nothing
+about its worst member. #2723 passed at 88.3% with three files carrying no
+spec at all, two of which had just received bug fixes.
 
-So `.ci/scripts/prepare-coverage.ts` runs between the test suites and the
-SonarCloud scan. It drops non-executable lines from both reports, then gives
-each file a **single owner**: the runner whose spec targets it, per the `tests/`
-mirror convention. It only ever hands a file to vitest when vitest measures it
-at least as well, so it cannot lower a file's reported coverage — and it prints
-any file where Mocha still measures better, which is worth investigating.
+So `.ci/scripts/coverage-gate.ts` runs between the suite and the SonarCloud
+scan and holds the rule per file: **every `lib/**.ts` a PR adds must be
+executed by at least one spec.** A well-covered sibling cannot pay for a file
+nothing runs. A file with genuinely no executable line — type-only output —
+goes in `.migration/coverage-exempt.txt` with the reason beside it, so that
+"nothing runs this" is a decision someone wrote down.
 
-To reproduce the numbers CI sees:
+To reproduce what CI sees:
 
 ```bash
-npm run build
-npm run test:unit:mocha:coverage
 npm run test:unit:vitest
-npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
+COVERAGE_BASE_SHA=$(git merge-base HEAD origin/2-dev) \
+  npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
 ```
+
+That script used to be `prepare-coverage.ts` and had two further passes,
+both of which existed only because two runners fed the scanner: one corrected
+a `c8` artefact (it emitted a coverage entry for every line of a loaded file,
+comments included, which reported `clientAdapter.ts` at 40.3% with every
+handler under test), and one arbitrated which report owned a file. ADR-0001
+step 13 closed the second runner, and L7b removed both — the c8 correction
+after measuring that vitest's provider emits **zero** entries on blank or
+comment lines, over 13 947 of them.
 
 ### Running unit tests
 

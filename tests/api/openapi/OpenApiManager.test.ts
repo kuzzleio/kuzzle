@@ -5,10 +5,11 @@ import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 /*
  * The Mocha spec sat at `test/api/OpenApiManager.test.js` while the subject is
- * `lib/api/openapi/OpenApiManager.ts`. The `tests/` mirror convention is what
- * assigns a file its owning coverage report (`prepare-coverage.ts`), so the
- * port moves the spec under `openapi/` — otherwise it would run, pass, and
- * count for nothing.
+ * `lib/api/openapi/OpenApiManager.ts`. The `tests/` mirror convention was what
+ * assigned a file its owning coverage report, so the port moved the spec under
+ * `openapi/` — otherwise it would have run, passed, and counted for nothing.
+ * With one runner (step 13, L7b) that hazard is gone and the mirror is a
+ * convention for finding a spec, not a condition for it counting.
  */
 describe("#api/openapi/OpenApiManager", () => {
   let manager: OpenApiManager;

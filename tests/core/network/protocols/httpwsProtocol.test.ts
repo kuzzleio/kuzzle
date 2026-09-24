@@ -18,7 +18,9 @@ import {
  * files over one subject: both re-required `httpwsProtocol` and both built the
  * same `HttpWs`. The `tests/` mirror maps one spec to one `lib/` file, so they
  * are one file here — the HTTP half and the WebSocket half of the same
- * protocol — and `prepare-coverage.ts` attributes the subject once.
+ * protocol. (The coverage-attribution half of that argument expired with step
+ * 13's L7b: one runner, one report, nothing to attribute. One subject, one
+ * spec still holds.)
  */
 vi.mock("uWebSockets.js", async () => {
   // The three constants and `getParts` are the real ones: the subject compares

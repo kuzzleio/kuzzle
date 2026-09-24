@@ -19,8 +19,9 @@
   //
   //   `strict: true` alone ............................. 1 077 errors
   //     638 features-legacy · 388 tests · 44 features · 5 start-kuzzle-test.ts
+  //     · 2 .ci
   //   + `noUncheckedIndexedAccess: true` (full parity
-  //     with the production program) ................... 1 454 errors
+  //     with the production program) ................... 1 448 errors
   //
   // ADR-0001's Definition of Done does not ask for those — it asks for `strict` in
   // the build, which is done — so they are a step of their own, not step 13's.
@@ -45,6 +46,13 @@
     // Functional tests (cucumber)
     "features/**/*.ts",
     "features-legacy/**/*.ts",
+    // CI and migration tooling. Listed by name rather than reached through a
+    // spec's import graph: `coverage-gate.ts` was type-checked only because
+    // `tests/ci/coverageGate.test.ts` imports it, which made the checking of a
+    // CI gate a side effect of that gate having a spec. `count-casts.ts` has no
+    // spec and was checked by nothing at all (step 13, L7b).
+    ".ci/scripts/**/*.ts",
+    "scripts/**/*.ts",
     // development files
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts"

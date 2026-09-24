@@ -197,33 +197,27 @@ jobs:
         run: ./.ci/scripts/check-build-payload.sh
         shell: bash
 
-      # One runner feeds the scanner since step 13 L6h emptied the Mocha suite:
-      # vitest writes coverage/vitest/lcov.info, and the mocha half of the
-      # normalisation below simply finds no report. Before ADR-0001 step 06 only
-      # mocha ran here, and `.ts` was coverage-excluded outright, so every
-      # JS->TS conversion silently left the coverage gate (TD-24) — that is the
-      # debt this pairing paid off, and it is now paid.
+      # One runner feeds the scanner since step 13 closed axis 2. Before ADR-0001
+      # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
+      # every JS->TS conversion silently left the coverage gate (TD-24) — that is
+      # the debt the two-runner pairing paid off, and it is paid.
       - name: Vitest coverage
         run: npm run test:unit:vitest
         shell: bash
 
-      # The two runners disagree on which lines of a .ts file are executable:
-      # c8 derives its set from the COMPILED output and reports every line of a
-      # loaded file (blank lines and comments included), while vitest's v8
-      # provider reports only real statements. Merging the two line sets
-      # understates coverage badly — it put clientAdapter.ts at 40% with every
-      # one of its handlers under test. This normalises both reports and gives
-      # each file a single owner. See docs/adr-001/steps/07-sprint-5-core-i.md.
+      # Holds the rule the aggregate gate cannot: every lib/**.ts this PR adds
+      # must be executed by at least one spec. SonarCloud's 80% new_coverage is
+      # an aggregate over the block, and an aggregate says nothing about its
+      # worst member — #2723 passed at 88.3% with three files carrying no spec
+      # at all (TD-42, #2729). The base commit is what "new in this PR" is
+      # measured against; the checkout above is unshallow, so it is in history.
       #
-      # It also holds the rule the aggregate gate cannot: every lib/**.js
-      # renamed to .ts in this PR must be executed by at least one spec.
-      # SonarCloud's 80% new_coverage is an aggregate over the block, and an
-      # aggregate says nothing about its worst member — #2723 passed at 88.3%
-      # with three files carrying no spec at all (TD-42, #2729). The base
-      # commit is what "converted in this PR" is measured against; the checkout
-      # above is unshallow, so it is in history.
-      - name: Normalise the coverage reports
-        run: npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
+      # This was `prepare-coverage.ts`, and it also normalised the two reports
+      # the two runners produced — a c8 artefact correction and an ownership
+      # arbiter. Step 13's L7b removed both with the second runner; see that
+      # step's `What L7b found` for the measurement that justified it.
+      - name: Coverage gate — every new lib/ file is executed by a spec
+        run: npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
         shell: bash
         env:
           COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
