@@ -495,3 +495,38 @@ The two specs that state what `_initApi` does with an `openapi` member — carry
 it as declared — stay; their comment now says why the validation was not added.
 If it is wanted, it belongs in a major, with a warning in the minor before it.
 
+### TD-74 — one channel name for two configurations
+
+`Channel.hash` concatenates one digit per field. Its `users` switch mapped
+both `"out"` and `"none"` to `"3"`, and `Room.createChannel` keeps the first
+channel it sees under a name — so `users: "out"` and `users: "none"` on the
+same room shared one channel, and whichever subscribed second got the first
+one's configuration: missing the "user left" notifications it asked for, or
+receiving ones it did not. The API documents a channel as a subscription
+configuration's *unique* identifier.
+
+`"out"` now hashes to `"4"`. `"none"` keeps `"3"` because it is the default:
+changing it would rename almost every channel in production for no gain. The
+register's second concern — no `scope: "none"` case — turned out not to be a
+collision (every other field contributes exactly one digit, so the two-digit
+suffix is unique) and is left alone with a comment rather than renaming those
+channels too.
+
+The type: `ChannelScope = RealtimeScope | "none"`, local to `channel.ts`.
+Widening `RealtimeScope` instead would have let a document *notification*
+claim `scope: "none"`, which it never has; the cluster's TD-68 guard keeps
+checking notifications against the narrow type. `SCOPE_ALLOWED_VALUES` is its
+own array instead of an alias of the users' one.
+
+**Why it is not breaking:** channel names are opaque (`"<unique channel
+identifier>"` in the API docs), returned by `realtime:subscribe` and used
+back by the same client; the cluster never synchronises them — each node
+names its own subscribers' channels — so a mixed-version cluster during a
+rolling upgrade is consistent node by node. Only `users: "out"` channels
+change name.
+
+`tests/core/realtime/channel.test.ts` is new: the collision, uniqueness over
+all 32 configurations, the default names pinned, and the validators; the
+first three fail against the old code (the third only on its `users: "out"`
+line, by design). `notifier.test.ts` loses its `"none" as RealtimeScope` cast.
+

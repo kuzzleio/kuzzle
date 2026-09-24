@@ -1630,6 +1630,8 @@ This is the **fourth** instance of one finding — [TD-45](#td-45) (`*.js` never
 
 ### TD-74
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-74--one-channel-name-for-two-configurations)), and the entry's reading of the hash was half wrong.** The real collision was the **users** switch — `"out"` and `"none"` both `"3"` — and it was a live defect: `Room.createChannel` keeps the first channel registered under a name, so the second of two such subscriptions got the first one's configuration. `"out"` is now `"4"`; `"none"` keeps `"3"` so every default channel keeps its name. The **scope** half was not a collision: every other field adds exactly one digit, so a `"none"` scope's two-digit suffix was already unique — it stays as it is, with a comment. The type went into a channel-only `ChannelScope = RealtimeScope | "none"` rather than widening `RealtimeScope`, which also types document notifications; `SCOPE_ALLOWED_VALUES` is its own array. **Not breaking:** channel names are documented as opaque identifiers, returned by `subscribe` and never synchronised across the cluster; only `users: "out"` channels are renamed.
+
 **`RealtimeScope` forbids a value the runtime validates and the dispatcher relies on** · 🟠 medium · `lib/types/realtime/RealtimeScope.ts`, `lib/core/realtime/channel.ts`
 
 Found porting the `notifier` specs ([step 13 L1b2b](steps/13-sprint-10-test-closure.md#what-l1b2b-found)), by TS2322 × 6.
