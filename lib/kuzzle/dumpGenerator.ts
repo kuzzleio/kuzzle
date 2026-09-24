@@ -48,8 +48,26 @@ class DumpGenerator {
       throw kerror.get("api", "process", "action_locked", "dump");
     }
 
+    // The arguments are checked before the lock is taken, and every path out
+    // of the generation releases it: a lock held past a failure answers every
+    // later dump with `action_locked` about a dump that is not running
+    // (TD-81).
+    const dumpPath = this._resolveDumpPath(suffix);
+
     this._dump = true;
 
+    try {
+      return await this._generate(dumpPath);
+    } finally {
+      this._dump = false;
+    }
+  }
+
+  /**
+   * The directory this dump will be written to, or a `BadRequestError` if the
+   * suffix is malformed or would place it outside the configured dump path.
+   */
+  private _resolveDumpPath(suffix: string): string {
     const suffixRegex = /^[A-Za-z0-9_-]{0,64}$/;
     if (!suffixRegex.test(suffix)) {
       throw new BadRequestError(
@@ -71,6 +89,10 @@ class DumpGenerator {
       );
     }
 
+    return dumpPath;
+  }
+
+  private async _generate(dumpPath: string): Promise<string> {
     this.logger.info("=".repeat(79));
     this.logger.info(`Generating dump in ${dumpPath}`);
 
@@ -212,7 +234,6 @@ class DumpGenerator {
     );
     this.logger.info("=".repeat(79));
 
-    this._dump = false;
     return dumpPath;
   }
 

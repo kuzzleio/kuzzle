@@ -118,23 +118,54 @@ describe("#kuzzle/DumpGenerator", () => {
     });
 
     /**
-     * ⚠️ [TD-81](../type-debt-register.md#td-81) — `dump()` takes the lock
-     * *before* validating its argument and releases it only on the success
-     * path. So one rejected request — a bad suffix, an unwritable directory —
-     * disables dumping for the lifetime of the process, and the next call
-     * answers `action_locked` about a dump that is not running.
-     *
-     * Pinned as it is, not fixed: the fix is a `try/finally` in `lib/`, which
-     * is not what this slice is. This spec is what will notice when it lands.
+     * [TD-81](../../docs/adr-001/type-debt-register.md#td-81): the lock used to
+     * be taken before the arguments were checked and released only on the
+     * success path, so one rejected request disabled dumping for the lifetime
+     * of the process. Each failure path below is followed by a dump that must
+     * succeed.
      */
-    it("should keep the lock after a rejected suffix — TD-81", async () => {
+    it("should not hold the lock after a rejected suffix — TD-81", async () => {
       await expect(
         generator.dump("test/../../../../dumpe-me"),
       ).rejects.toBeInstanceOf(BadRequestError);
 
+      await expect(generator.dump(suffix)).resolves.toBe(dumpPath);
+    });
+
+    it("should release the lock when the generation fails — TD-81", async () => {
+      fs.mkdirSync.mockImplementationOnce(() => {
+        throw new Error("EACCES: permission denied, mkdir '/tmp/dump'");
+      });
+
+      await expect(generator.dump(suffix)).rejects.toThrow(
+        /Unable to create dump folder/,
+      );
+
+      await expect(generator.dump(suffix)).resolves.toBe(dumpPath);
+    });
+
+    it("should hold the lock for the whole generation", async () => {
+      let finishStats!: () => void;
+
+      getAllStats.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishStats = () => resolve({ hits: [] });
+          }),
+      );
+
+      const first = generator.dump(suffix);
+
+      await vi.waitFor(() => expect(getAllStats).toHaveBeenCalled());
+
       await expect(generator.dump(suffix)).rejects.toMatchObject({
         id: "api.process.action_locked",
       });
+
+      finishStats();
+
+      await expect(first).resolves.toBe(dumpPath);
+      await expect(generator.dump(suffix)).resolves.toBe(dumpPath);
     });
 
     it("should keep the cause when the dump folder cannot be created", async () => {

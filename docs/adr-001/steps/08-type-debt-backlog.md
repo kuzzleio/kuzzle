@@ -429,3 +429,19 @@ That matters past arithmetic. A ratchet is a message to a future contributor: *t
 - `npm run ratchet` — **six** green (js 22, mocha 149, any 205, implicit-any 456, **casts 87**, cpd-exclusions 4)
 - `npm run test:strict` — **127** adopted files pass
 - `npm run test:lint` / `npm run prettier:check` — clean
+
+### TD-81 — the dump lock, released on every path
+
+`DumpGenerator.dump()` took its lock, *then* validated the suffix and the path,
+and released the lock on the success path only. Now `dump()` checks the lock,
+resolves and validates the path (`_resolveDumpPath`, no lock held), takes the
+lock, and runs the generation (`_generate`, the former body, unchanged) in a
+`try/finally`. The early `action_locked` check stays first, so a call made
+while a dump runs is still answered "locked" whatever its suffix.
+
+`tests/kuzzle/dumpGenerator.test.ts` pinned the bug by name; that test became
+two tests of the fix (a rejected suffix, a failed `mkdir`, each followed by a
+dump that must succeed) — **both fail against the old code** — and a third
+that the lock is held while the generation is still awaiting, which passes on
+both and exists so the fix cannot be "release it earlier".
+

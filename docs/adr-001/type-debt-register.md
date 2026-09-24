@@ -1839,6 +1839,8 @@ instead of `Unknown authentication strategy "foobar"`.
 
 ### TD-81
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-81--the-dump-lock-released-on-every-path)).** The arguments are checked before the lock is taken, and the generation runs in a `try/finally` that releases it. The spec that pinned the bug is now two specs of the fix — a rejected suffix and a failed generation, each followed by a dump that must succeed — both verified to fail against the old code, plus one that the lock is held for the whole generation.
+
 **`DumpGenerator.dump()` takes its lock before validating, and releases it only on success — one bad request disables dumps for the process's lifetime** · 🟠 med · `lib/kuzzle/dumpGenerator.ts`
 
 Found porting the `kuzzle/dumpGenerator` spec ([step 13 L6b](steps/13-sprint-10-test-closure.md#what-l6b-found)), by calling `dump()` twice in one test.
