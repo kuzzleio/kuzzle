@@ -1,8 +1,14 @@
 import { When, Then } from "@cucumber/cucumber";
 import should from "should";
 
-const actionName = (action) => Object.keys(action)[0];
-const actionBody = (action) => action[actionName(action)];
+/**
+ * One bulk action, as the feature files write it: a single verb (`index`,
+ * `create`, `delete`…) mapped to that verb's payload.
+ */
+type BulkAction = Record<string, Record<string, unknown>>;
+
+const actionName = (action: BulkAction) => Object.keys(action)[0];
+const actionBody = (action: BulkAction) => action[actionName(action)];
 
 When("I perform a bulk import with the following:", async function (dataTable) {
   const bulkData = dataTable.rawTable.map(JSON.parse);

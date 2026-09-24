@@ -4,6 +4,11 @@ import { Then, When } from "@cucumber/cucumber";
 import should from "should";
 import WebSocket from "ws";
 
+import type KuzzleWorld from "../support/world";
+
+/** One reachable node of the test cluster. */
+type NodeAddress = { host: string; port: number };
+
 /**
  * The property under test is about what crosses the wire, so these steps talk
  * to one node directly instead of going through the world's SDK: that one
@@ -16,7 +21,7 @@ import WebSocket from "ws";
  * service name. Hence the environment variables, with the published ports as
  * defaults — the same reason `KUZZLE_HOST` exists.
  */
-const nodes = {
+const nodes: Record<string, NodeAddress> = {
   development: {
     host: process.env.KUZZLE_DEV_HOST || "localhost",
     port: Number.parseInt(process.env.KUZZLE_DEV_PORT || "17510", 10),
@@ -28,7 +33,7 @@ const nodes = {
 };
 
 function nodeAddress(kind: string) {
-  const address = nodes[kind];
+  const address: NodeAddress | undefined = nodes[kind];
 
   if (!address) {
     throw new Error(`Unknown node "${kind}" (expected development|production)`);
@@ -52,7 +57,10 @@ function get(
         response.on("end", () =>
           resolve({
             body: Buffer.concat(chunks).toString(),
-            statusCode: response.statusCode,
+            // `statusCode` is set on any response that reached `end`; the
+            // optional type covers a socket destroyed before the head, which
+            // takes the `error` path instead.
+            statusCode: response.statusCode ?? 0,
           }),
         );
       },
@@ -99,7 +107,7 @@ function queryOverWebSocket(
 }
 
 /** The error payload of the last HTTP response, which must exist. */
-function httpError(world): Record<string, unknown> {
+function httpError(world: KuzzleWorld): Record<string, unknown> {
   const body = JSON.parse(world.props.httpResponse.body || "{}");
 
   // A response with no error at all would satisfy "carries no stack trace"
@@ -112,7 +120,7 @@ function httpError(world): Record<string, unknown> {
 
 When(
   "I send a HTTP {string} request to {string} on the {word} node",
-  async function (method, path, kind) {
+  async function (this: KuzzleWorld, method, path, kind) {
     const { host, port } = nodeAddress(kind);
 
     should(method).be.eql("GET");
@@ -124,21 +132,21 @@ When(
 // `The HTTP response status should be {int}` is network-step.ts's, and reads
 // the same `props.httpResponse` shape this file produces.
 
-Then("The HTTP error id should be {string}", function (id) {
+Then("The HTTP error id should be {string}", function (this: KuzzleWorld, id) {
   should(httpError(this).id).be.eql(id);
 });
 
-Then("The HTTP error carries no stack trace", function () {
+Then("The HTTP error carries no stack trace", function (this: KuzzleWorld) {
   should(httpError(this).stack).be.undefined();
 });
 
-Then("The HTTP error carries a stack trace", function () {
+Then("The HTTP error carries a stack trace", function (this: KuzzleWorld) {
   should(httpError(this).stack).be.a.String().and.not.be.empty();
 });
 
 When(
   "I query {string}:{string} over WebSocket on the {word} node",
-  async function (controller, action, kind) {
+  async function (this: KuzzleWorld, controller, action, kind) {
     const { host, port } = nodeAddress(kind);
 
     this.props.websocketResponse = await queryOverWebSocket(host, port, {
@@ -149,7 +157,7 @@ When(
 );
 
 /** The error payload of the last WebSocket response, which must exist. */
-function websocketError(world): Record<string, unknown> {
+function websocketError(world: KuzzleWorld): Record<string, unknown> {
   const response = world.props.websocketResponse;
 
   should(response).not.be.undefined();
@@ -158,10 +166,13 @@ function websocketError(world): Record<string, unknown> {
   return response.error;
 }
 
-Then("The WebSocket error carries no stack trace", function () {
-  should(websocketError(this).stack).be.undefined();
-});
+Then(
+  "The WebSocket error carries no stack trace",
+  function (this: KuzzleWorld) {
+    should(websocketError(this).stack).be.undefined();
+  },
+);
 
-Then("The WebSocket error carries a stack trace", function () {
+Then("The WebSocket error carries a stack trace", function (this: KuzzleWorld) {
   should(websocketError(this).stack).be.a.String().and.not.be.empty();
 });

@@ -2,6 +2,8 @@ import should from "should";
 import _ from "lodash";
 import { Given } from "@cucumber/cucumber";
 
+import { isApiError } from "../support/errors";
+
 Given(
   "I'm logged in Kuzzle as user {string} with password {string}",
   async function (username, password) {
@@ -62,7 +64,7 @@ Given(
 
       throw new Error("Token should not be valid");
     } catch (error) {
-      if (error.id !== "security.token.invalid") {
+      if (!isApiError(error) || error.id !== "security.token.invalid") {
         throw error;
       }
     }

@@ -273,7 +273,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data = [];
+          const data: string[] = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -321,7 +321,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data = [];
+          const data: string[] = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -357,7 +357,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data = [];
+          const data: string[] = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
