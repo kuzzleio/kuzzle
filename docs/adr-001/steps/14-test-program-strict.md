@@ -1094,7 +1094,11 @@ were.
   `for (let i = 0; i < profile.policies; i++)` compares a number with an
   array, which is always `false`: the step asserted the length and nothing
   else. Another entry for [step 13's dead-assertion census](13-sprint-10-test-closure.md)
-  — the loop form, where the body is correct and the bound is not.
+  — the loop form, where the body is correct and the bound is not. **Its first
+  run failed every non-legacy shard**: `#BackendImport.feature` expected
+  `restrictedTo` as an object, where the fixture it imports (and the API)
+  make it an array. The expectation had been wrong since it was written, and
+  the loop that should have said so never iterated.
 - **The `document:search` step never took its HTTP branch.**
   `this.kuzzleConfig.PROTOCOL === "http"` reads the *server's* rc config,
   which has no such key, so the `GET` + `searchBody` path was dead and every
