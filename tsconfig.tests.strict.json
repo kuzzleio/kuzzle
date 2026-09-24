@@ -1,0 +1,39 @@
+{
+  // TEST program, STRICT half — checked by `npm run typecheck:tests` alongside
+  // its non-strict sibling, `tsconfig.tests.json`.
+  //
+  // ADR-0001 [step 14](docs/adr-001/steps/14-test-program-strict.md) is taking the
+  // test code to `strict`, and `strict` is a property of a *program*, not of a file
+  // — the lesson step 12's K6 paid for. So a directory changes standard by changing
+  // program: it leaves the `exclude` list of `tsconfig.tests.json` and enters the
+  // `include` list below, in one PR, with its errors fixed. Both programs run on
+  // every push, so nothing is unchecked at any point in between, and the step ends
+  // when the non-strict one is empty and gets deleted.
+  //
+  // ⚠️ `noUncheckedIndexedAccess` is deliberately NOT on here yet. It is on in the
+  // production program and it is a different argument: in a spec, `data[0]` is
+  // usually an assertion about a fixture the same spec wrote three lines up. It is
+  // step 14's M8, to be argued rather than assumed — +371 errors as measured on
+  // 2026-09-24.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true
+  },
+  "include": [
+    // Ambient declarations, for the same reason `tsconfig.tests.json` carries them:
+    // they are `.d.ts`, so nothing imports them and neither program would pull them
+    // in on its own. See docs/adr-001/steps/10-sprint-7-kuzzle.md.
+    "lib/types/**/*.d.ts",
+    "tests/types/**/*.d.ts",
+    // M0 — the CI and migration tooling, and the functional-test entrypoints.
+    ".ci/scripts/**/*.ts",
+    "scripts/**/*.ts",
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts"
+  ],
+  "exclude": [
+    "dist"
+  ]
+}

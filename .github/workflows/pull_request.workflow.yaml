@@ -114,10 +114,12 @@ jobs:
 
       # `strict` lives in tsconfig.json since step 12 (K6), so the production
       # type-check IS the build, gated by the `build` job below. What that program
-      # no longer covers is the test code: `strict` applies to a whole program, so
-      # the specs have their own (tsconfig.tests.json, strict off) and it is checked
-      # here — exactly the checking they had before the flip. `allowJs` left with
-      # the Mocha suite (step 13, L7): every file that program sees is TypeScript.
+      # does not cover is the test code: `strict` applies to a whole program, so the
+      # test code has its own — TWO of them since step 14 opened, and this runs both.
+      # `tsconfig.tests.json` is `strict: false` and shrinking; `tsconfig.tests.strict.json`
+      # is `strict: true` and growing, one directory per slice. Nothing is unchecked
+      # in between, which is the whole point of splitting rather than flipping.
+      # See docs/adr-001/steps/14-test-program-strict.md.
       - name: Type-check the test programs
         run: npm run typecheck:tests
         shell: bash

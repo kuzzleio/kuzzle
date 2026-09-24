@@ -75,11 +75,17 @@ upgrade-*.report
 
 # JS generated files from TS
 *.d.ts
-# ...except hand-written declarations, which only ever live here. `outDir` is
-# `dist/` (ignored below), so tsc never emits into lib/types — anything matching
-# this is something someone wrote. Was a per-file exception for `Global.d.ts`,
-# which is `Global.ts` now.
+# ...except hand-written declarations. `outDir` is `dist/` (ignored below), so tsc
+# never emits into either directory — anything matching these is something someone
+# wrote. Was a per-file exception for `Global.d.ts`, which is `Global.ts` now.
+#
+# `lib/types/` declares untyped runtime dependencies of the PRODUCTION code;
+# `tests/types/` declares those of the TEST code, and the distinction is load-
+# bearing rather than tidy: nothing in `lib/` may import a test dependency, and
+# `should` — which outlived the Mocha suite as cucumber's assertion library
+# (ADR-0001 step 13, L7a) — is the first one that needed saying (step 14, M0).
 !lib/types/*.d.ts
+!tests/types/*.d.ts
 *.js.map
 
 # NPM package

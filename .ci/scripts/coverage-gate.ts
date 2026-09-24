@@ -61,18 +61,20 @@ const pct = ({ found, hit }: Totals) =>
 /** Per-file line coverage, keyed by source path. */
 export function perFile(lcov: string): Map<string, Totals> {
   const totals = new Map<string, Totals>();
-  let current: string | null = null;
+  // The record being filled, held rather than looked up again by its path: the
+  // second lookup is what `strict` cannot prove non-null, and re-reading a map
+  // you have just written to is the kind of thing a reader has to check.
+  let current: Totals | null = null;
 
   for (const line of lcov.split("\n")) {
     if (line.startsWith("SF:")) {
-      current = line.slice(3).trim();
-      totals.set(current, { found: 0, hit: 0 });
+      current = { found: 0, hit: 0 };
+      totals.set(line.slice(3).trim(), current);
     } else if (line.startsWith("DA:") && current) {
-      const entry = totals.get(current);
       const hits = Number.parseInt(line.slice(3).split(",")[1], 10);
 
-      entry.found += 1;
-      entry.hit += hits > 0 ? 1 : 0;
+      current.found += 1;
+      current.hit += hits > 0 ? 1 : 0;
     }
   }
 

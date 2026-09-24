@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** ⬜ To do · **Opened:** 2026-09-24 · **PR(s):** — · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -126,7 +126,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 
 | #      | Content                                                                                             | Errors | Why this grouping                                                                                                                                              |
 | ------ | --------------------------------------------------------------------------------------------------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **M0** | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery   |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible.                                                  |
+| **M0** ✅ | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible. See _[What M0 found](#what-m0-found)_.           |
 | **M1** | `features-legacy/support/api/**` — `apiBase.ts` + `http.ts`                                          | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. |
 | **M2** | the rest of `features-legacy/`                                                                       |    275 | 22 files, same shape, now against a typed support API.                                                                                                          |
 | **M3** | `features/`                                                                                          |     44 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
@@ -152,3 +152,85 @@ The step is far more mechanical than its total suggests; what it is not is small
 - [ ] `TS2341`'s eight sites resolved by changing the subject or the test, per
       [step 13's L6](13-sprint-10-test-closure.md).
 - [ ] `noUncheckedIndexedAccess` decided either way, in writing.
+
+## What M0 found
+
+**The machinery is three files and one line in `package.json`**, and it works the
+way the plan said:
+
+- **`tsconfig.tests.strict.json`** — `strict: true`, `noEmit`, and an `include`
+  list that grows one slice at a time. It opens holding `.ci/scripts/**`,
+  `scripts/**` and the two `start-kuzzle-*.ts` entrypoints.
+- **`tsconfig.tests.json`** — unchanged except for an `exclude` list that names
+  the same paths, under a comment marking it as **the step 14 line**. When that
+  list covers everything the file is deleted.
+- **`npm run typecheck:tests`** runs both, so a path that leaves one program and
+  does not arrive in the other fails immediately rather than going quiet.
+
+⚠️ **`exclude` does not remove a file from a program that imports it.**
+`tests/ci/coverageGate.test.ts` imports `.ci/scripts/coverage-gate.ts`, so the
+non-strict program still pulls it in through the import graph and checks it
+non-strictly, while the strict program checks it strictly. That is harmless — the
+stricter check is the binding one and both run — but it means **`exclude` is not
+how a file is removed from checking, only from being a root**. Worth knowing
+before M4, where the same relationship runs the other way round.
+
+### The seven errors, and what each one actually was
+
+Three of them were the un-annotated-binding shape the plan predicted, and the
+other four each said something:
+
+- **`TS18048` ×2, `coverage-gate.ts`** — `totals.get(current)` is
+  `Totals | undefined` on a map the same loop had just written to. The fix is not
+  a `!`: the loop now **holds the record it is filling** instead of looking it up
+  again by its path. Re-reading a map you have just written to is something a
+  reader has to check too, so strict was pointing at a readability problem as much
+  as at a type.
+- **`TS7016`, `should/as-function`** — `should` ships a declaration for its main
+  entry only, and the main entry extends `Object.prototype` on import, which is
+  exactly why a test entrypoint uses the subpath. Declared in
+  **`tests/types/should-as-function.d.ts`**, not in `lib/types/`: `should` is a
+  test dependency — it outlived Mocha as cucumber's assertion library
+  ([L7a](13-sprint-10-test-closure.md#what-l7a-found)) — and nothing in `lib/` may
+  import it. Both programs include `tests/types/**/*.d.ts`.
+- **`TS2345`, `plugin.use`'s options** — the call passed `null` where the
+  parameter is optional. **An optional parameter admits the absence of a value,
+  not a null one**, and the two are not the same claim; `undefined` is the fix.
+- **`TS7034`/`TS7005`, `dynamicPipeId`** — a bare `let`. Annotating it honestly is
+  `string | void`, because `pipe.register` answers a pipe id only when the
+  application is **already started**, and nothing when the registration is queued
+  before start. The handler that unregisters it then has a real absent case, which
+  it now throws on by name instead of handing `undefined` to `unregister`.
+  _Typing the variable is what turned up the untested path; this is the step's
+  first instance of the thing that makes it worth doing at all._
+
+### `.gitignore` said hand-written declarations only ever live in `lib/types/`
+
+```
+*.d.ts
+# ...except hand-written declarations, which only ever live here.
+!lib/types/*.d.ts
+```
+
+The repo ignores `*.d.ts` because `tsc` emits them, with one exception for the
+hand-written ones — and the comment stated, as a fact about the repo, that they
+only ever live in `lib/types/`. `tests/types/should-as-function.d.ts` was
+therefore created, used, and **silently untracked**: both type-check runs were
+green locally and the file would simply not have existed in CI.
+
+This is [TD-64](../type-debt-register.md#td-64)'s lesson in a different file —
+_a convention that maps names to files encodes an assumption about which files
+exist yet_ — and the assumption here was that test code never declares anything.
+The rule now carries both directories and says why the split is load-bearing
+rather than tidy: nothing in `lib/` may import a test dependency.
+
+### What M0 says about the rest of the step
+
+Two of the seven were a bare `let` — **the shape M4 is 191 of** — and both were
+mechanical. But `plugin.use`'s `null` and `dynamicPipeId`'s `void` were not: each
+was a place where the code and the type disagreed about whether something could
+be absent, and in one of them the answer was a path nobody had tested.
+**The plan's "829 of 1 077 are one annotation per site" is a statement about the
+diagnostics, not about the diffs**, and M0's ratio — 3 mechanical, 4 not, out of
+7 — is too small a sample to revise it with. M1 is 363 of one diagnostic in two
+files and will answer the question properly.

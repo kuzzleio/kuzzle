@@ -46,18 +46,18 @@
     // Functional tests (cucumber)
     "features/**/*.ts",
     "features-legacy/**/*.ts",
-    // CI and migration tooling. Listed by name rather than reached through a
-    // spec's import graph: `coverage-gate.ts` was type-checked only because
-    // `tests/ci/coverageGate.test.ts` imports it, which made the checking of a
-    // CI gate a side effect of that gate having a spec. `count-casts.ts` has no
-    // spec and was checked by nothing at all (step 13, L7b).
-    ".ci/scripts/**/*.ts",
-    "scripts/**/*.ts",
-    // development files
-    "start-kuzzle-test.ts",
-    "start-kuzzle-dev.ts"
+    // Ambient declarations for test-only dependencies (see tests/types/).
+    "tests/types/**/*.d.ts"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    // ⚠️ THE STEP 14 LINE. Everything below has moved to `tsconfig.tests.strict.json`
+    // and is checked under `strict` there. A slice of step 14 moves paths from here
+    // to that file's `include`; when this list covers everything, this file is
+    // deleted. See docs/adr-001/steps/14-test-program-strict.md.
+    ".ci",
+    "scripts",
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts"
   ]
 }

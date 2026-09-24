@@ -30,15 +30,23 @@ the build is the only place left to hide it: **the fix removes the error rather 
 moving it** — no `!`, no `as`, no widening a parameter to silence a call site. The
 `casts` and `any` ratchets below are what enforce that.
 
-`strict` applies to a whole *program*, not to a file, so **the test code has its own**:
-`tsconfig.tests.json` (strict off) covers `tests/`, `features/` and `features-legacy/`,
-and `npm run typecheck:tests` checks it in CI. That is the same checking the specs had
-before the flip, and it is **a deferral, not a conclusion**: under `strict` that program
-holds 1 077 errors, 1 454 with `noUncheckedIndexedAccess` — the count is written down at
-the top of `tsconfig.tests.json`. ADR-0001's Definition of Done asks for `strict` in the
-build, which is done; hardening the test code is a step of its own. Note what this means
-in practice: `npm run build` does not compile the tests, so a type error in a spec
-surfaces in `typecheck:tests`, not in the build.
+`strict` applies to a whole *program*, not to a file, so **the test code has its
+own — two of them**, and `npm run typecheck:tests` runs both:
+
+| Program | `strict` | Holds |
+|---|---|---|
+| `tsconfig.tests.strict.json` | on | what has been taken to strict, **growing** |
+| `tsconfig.tests.json` | off | the rest, **shrinking** |
+
+That split is ADR-0001 [step 14](docs/adr-001/steps/14-test-program-strict.md),
+which is taking the test code to `strict` one directory at a time: a directory
+changes standard by moving from the second file's `exclude` to the first file's
+`include`, in one PR, with its errors fixed. When the non-strict file is empty it
+is deleted. **Put a new spec in the strict program** unless it lives in a
+directory that is still on the other side of the line.
+
+Note what this means in practice: `npm run build` does not compile the tests, so a
+type error in a spec surfaces in `typecheck:tests`, not in the build.
 
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
