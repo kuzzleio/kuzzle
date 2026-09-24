@@ -2,20 +2,8 @@ import { After, Before, BeforeAll } from "@cucumber/cucumber";
 
 import fixtures from "../fixtures/functionalTestsFixtures.json";
 import Http from "./api/http";
+import { httpApi, realtimeApi } from "./stepUtils";
 import World from "./world";
-
-type HookWorld = {
-  api: any;
-  currentUser?: any;
-  currentToken?: any;
-  users?: any;
-  idPrefix: string;
-  fakeIndex: string;
-  fakeAltIndex: string;
-  fakeNewIndex: string;
-  fakeCollection: string;
-  fakeAltCollection: string;
-};
 
 async function bootstrapDatabase() {
   const world = new World({ parameters: parseWorldParameters() });
@@ -72,7 +60,7 @@ BeforeAll(async function () {
   await bootstrapDatabase();
 });
 
-Before({ timeout: 10 * 2000 }, async function (this: HookWorld) {
+Before({ timeout: 10 * 2000 }, async function (this: World) {
   const world = new World({ parameters: parseWorldParameters() });
 
   try {
@@ -98,49 +86,53 @@ Before({ tags: "@resetDatabase", timeout: 10 * 2000 }, async function () {
   await bootstrapDatabase();
 });
 
-After(async function (this: HookWorld) {
+After(async function (this: World) {
   return this.api.disconnect();
 });
 
-After({ tags: "@realtime" }, function (this: HookWorld) {
-  return this.api.unsubscribeAll().catch(() => true);
+After({ tags: "@realtime" }, function (this: World) {
+  return realtimeApi(this)
+    .unsubscribeAll()
+    .catch(() => true);
 });
 
-Before({ tags: "@security" }, function (this: HookWorld) {
+Before({ tags: "@security" }, function (this: World) {
   return cleanSecurity.call(this);
 });
 
-Before({ tags: "@firstAdmin" }, function (this: HookWorld) {
+Before({ tags: "@firstAdmin" }, function (this: World) {
   return cleanSecurity.call(this);
 });
 
-After({ tags: "@firstAdmin" }, async function (this: HookWorld) {
+After({ tags: "@firstAdmin" }, async function (this: World) {
   await grantDefaultRoles.call(this);
   return cleanSecurity.call(this);
 });
 
-Before({ tags: "@redis" }, function (this: HookWorld) {
+Before({ tags: "@redis" }, function (this: World) {
   return cleanRedis.call(this);
 });
 
-After({ tags: "@redis" }, function (this: HookWorld) {
+After({ tags: "@redis" }, function (this: World) {
   return cleanRedis.call(this);
 });
 
-Before({ tags: "@validation" }, function (this: HookWorld) {
+Before({ tags: "@validation" }, function (this: World) {
   return cleanValidations.call(this);
 });
 
-After({ tags: "@validation" }, function (this: HookWorld) {
+After({ tags: "@validation" }, function (this: World) {
   return cleanValidations.call(this);
 });
 
-After({ tags: "@http" }, function (this: HookWorld) {
-  this.api.encode("identity");
-  this.api.decode("identity");
+After({ tags: "@http" }, function (this: World) {
+  const api = httpApi(this);
+
+  api.encode("identity");
+  api.decode("identity");
 });
 
-function cleanSecurity(this: HookWorld) {
+function cleanSecurity(this: World) {
   if (this.currentUser) {
     delete this.currentUser;
   }
@@ -148,7 +140,7 @@ function cleanSecurity(this: HookWorld) {
   return this.api.resetSecurity();
 }
 
-async function grantDefaultRoles(this: HookWorld) {
+async function grantDefaultRoles(this: World) {
   const body = await this.api.login(
     "local",
     this.users.useradmin.credentials.local,
@@ -184,7 +176,7 @@ async function grantDefaultRoles(this: HookWorld) {
   });
 }
 
-function cleanRedis(this: HookWorld) {
+function cleanRedis(this: World) {
   return this.api
     .callMemoryStorage("keys", { args: { pattern: `${this.idPrefix}*` } })
     .then((response) => {
@@ -198,7 +190,7 @@ function cleanRedis(this: HookWorld) {
     });
 }
 
-async function cleanValidations(this: HookWorld) {
+async function cleanValidations(this: World) {
   const body = await this.api.searchSpecifications({
     query: {
       match_all: { boost: 1 },

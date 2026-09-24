@@ -81,6 +81,7 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "12.5.0",
+    "@types/async": "^3.2.24",
     "@types/bluebird": "3.5.42",
     "@types/cookie": "1.0.0",
     "@types/lodash": "4.17.21",
