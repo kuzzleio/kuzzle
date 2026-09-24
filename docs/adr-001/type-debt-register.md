@@ -1731,6 +1731,8 @@ which is what every plugin writes, and which does not type-check.
 
 ### TD-77
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-77--two-error-codes-for-a-validation-nobody-wrote)) — by removing the codes, not by adding the check.** Adding the validation would refuse at startup an application whose `openapi` member is malformed and which starts today: a breaking change, ruled out. Both codes were raised by nothing, so no client can have received either, and the only code able to raise them is Kuzzle's own (`context.kerror` is scoped to `plugin.<pluginName>`). `4-plugin.json` loses both entries — each was its subdomain's last code, so no gap — and `doc/2`'s error-code page is regenerated.
+
 **Both `invalid_openapi_schema` error codes are declared, documented — and raised nowhere** · 🟠 medium · `lib/core/plugin/plugin.ts`, `lib/kerror/codes/4-plugin.json`
 
 Found porting the `plugin/pluginsManager` spec ([step 13 L4d4](steps/13-sprint-10-test-closure.md#what-l4d4-found)), by two tests that passed against a subject that does nothing.

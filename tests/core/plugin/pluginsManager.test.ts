@@ -531,17 +531,14 @@ describe("#core/plugin/pluginsManager", () => {
      */
 
     /*
-     * ⚠️ **`plugin.controller.invalid_openapi_schema` and
-     * `plugin.assert.invalid_openapi_schema` are declared in
-     * `lib/kerror/codes/4-plugin.json`, documented in `doc/2`, and raised
-     * nowhere in `lib/`.** Nothing validates a route's `openapi` member:
-     * `checkHttpRoute` splices the name out of the properties it police and
-     * the value is copied into the route as-is. The two tests that claimed
-     * otherwise are the dead assertions above, so the suite has been
-     * reporting a validation that has never existed.
-     *
-     * Recorded as [TD-77](../../../docs/adr-001/type-debt-register.md#td-77);
-     * a porting slice states what the subject does, and these two say it.
+     * A route's `openapi` member is carried into the route as declared:
+     * `checkHttpRoute` polices property names, not this value. Two error codes
+     * (`plugin.{assert,controller}.invalid_openapi_schema`) once advertised a
+     * validation that was never written, and two dead Mocha tests "proved" it;
+     * the codes were removed rather than the validation added, because adding
+     * it would refuse at startup applications that start today
+     * ([TD-77](../../../docs/adr-001/type-debt-register.md#td-77)). These two
+     * tests state the contract as it is.
      */
     it("carries an openapi declaration that is not a valid specification, unchecked", async () => {
       api.email.actions.receive.http[0].openapi = { invalid: "specification" };
