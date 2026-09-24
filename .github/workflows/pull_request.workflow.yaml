@@ -115,12 +115,10 @@ jobs:
       # `strict` lives in tsconfig.json since step 12 (K6), so the production
       # type-check IS the build, gated by the `build` job below. What that program
       # does not cover is the test code: `strict` applies to a whole program, so the
-      # test code has its own — TWO of them since step 14 opened, and this runs both.
-      # `tsconfig.tests.json` is `strict: false` and shrinking; `tsconfig.tests.strict.json`
-      # is `strict: true` and growing, one directory per slice. Nothing is unchecked
-      # in between, which is the whole point of splitting rather than flipping.
-      # See docs/adr-001/steps/14-test-program-strict.md.
-      - name: Type-check the test programs
+      # test code has its own, `tsconfig.tests.json` — `strict: true` since step 14's
+      # M6 moved the last directory into it, and `noEmit`, because the build emits
+      # from the other one. See docs/adr-001/steps/14-test-program-strict.md.
+      - name: Type-check the test program
         run: npm run typecheck:tests
         shell: bash
 

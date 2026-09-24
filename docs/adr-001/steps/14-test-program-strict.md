@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -134,7 +134,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
 | **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
 | **M6** ✅ | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                          |    ~82 | 98 → 0, and `tests/` moves into the strict program. Two subject changes, two fixtures that were asserting themselves. See _[What M6 found](#what-m6-found)_. |
-| **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
+| **M7** ✅ | The flip: one test program, and the fold **measured and refused**                                |      — | The non-strict program is deleted. Folding the specs into `tsconfig.json` takes `dist/` from 770 to 1 311 files. See _[What M7 found](#what-m7-found)_.        |
 | **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
 
 **M1 + M2 + M4 = 829 of 1 077 (77%), and all three are one annotation per site.**
@@ -142,16 +142,18 @@ The step is far more mechanical than its total suggests; what it is not is small
 
 ## Definition of done
 
-- [ ] `tsconfig.tests.json` deleted, or its `strict: false` removed.
-- [ ] `npm run typecheck:tests` green with `strict: true` over `tests/`,
+- [x] `tsconfig.tests.json` deleted, or its `strict: false` removed. _(M7: the
+      non-strict program is gone; the strict one took its name.)_
+- [x] `npm run typecheck:tests` green with `strict: true` over `tests/`,
       `features/`, `features-legacy/`, `.ci/`, `scripts/` and the
-      `start-kuzzle-*` entrypoints.
-- [ ] No error silenced by a widening: no `any`, no `!`, no `@ts-expect-error`
+      `start-kuzzle-*` entrypoints. _(M6.)_
+- [x] No error silenced by a widening: no `any`, no `!`, no `@ts-expect-error`
       without a register entry. The fix removes the error rather than moving it —
       [ADR-0001 › Conversion standards](../ADR-0001-migration-typescript.md#conversion-standards-per-file),
       which applies here even though nothing is being converted.
-- [ ] `TS2341`'s eight sites resolved by changing the subject or the test, per
-      [step 13's L6](13-sprint-10-test-closure.md).
+- [x] `TS2341`'s sites — **ten, not eight** — resolved by changing the subject
+      or the test, per [step 13's L6](13-sprint-10-test-closure.md). _(M6, and
+      one of them was the subject: see [What M6 found](#what-m6-found).)_
 - [ ] `noUncheckedIndexedAccess` decided either way, in writing.
 
 ## What M0 found
@@ -897,3 +899,50 @@ Both were caught by running the suite, not by the compiler.
   documented `@returns {Number} -1 | 0 | 1`, and one refusal path goes through
   `_executeError`, declared `): null`. Nothing in `lib/` reads the code — both
   callers ignore it — so the spec records `number | null` and says why.
+
+## What M7 found
+
+**One test program.** `tsconfig.tests.json` — the non-strict one — is deleted,
+and `tsconfig.tests.strict.json` takes its name, which is the name
+`npm run typecheck:tests`, CI and `CONTRIBUTING.md` all already used. The script
+runs one `tsc` instead of two.
+
+### The fold was measured, and it does not hold
+
+The slice was written as *"delete `tsconfig.tests.json`, fold the specs back
+into one program **if that holds**"*, with K6's instruction attached: diff what
+the build emits, do not assume. Adding `tests/**/*.ts` to `tsconfig.json`'s
+`include` and running `tsc`:
+
+| | Before | With the specs folded in |
+| --- | ---: | ---: |
+| Emitted files | **770** | **1 311** |
+| New top-level directories in `dist/` | — | `dist/tests/`, `dist/.ci/` |
+| Errors | 0 | **346** |
+
+So it fails twice over, and the two reasons are unrelated:
+
+1. **`tsconfig.json` is what `dist/` is emitted from.** Putting the specs in it
+   is [step 12's K6](12-sprint-9-strict-flip.md) regression arriving from the
+   other side — that slice took the payload 1 518 → 769 by getting them *out*.
+   _One program to emit from and one to check is a different question from one
+   standard for both._
+2. **`noUncheckedIndexedAccess` is on in that program**, and the specs are not
+   clean under it. 346 errors, which is M8's question and the last difference
+   between the two programs.
+
+⚠️ **The first attempt at this measurement measured nothing.** The edit that was
+supposed to add `tests/**` to the `include` was a string replacement against
+`"bin/start-kuzzle-server.ts"` — a line that exists on [step 03](03-sprint-2-bin.md)'s
+branch and not on this one. It matched nothing, `tsc` ran on the unmodified
+config, and answered *"0 errors, 770 files"* — a result that looks exactly like
+the conclusion one wants. _A measurement whose setup can silently not apply will
+report the null result as a finding._ The check is cheap: print the config you
+just wrote before running anything against it.
+
+### Documentation that named two programs
+
+`CONTRIBUTING.md` carried the two-program table and the rule *"put a new spec in
+the strict program"*; the `migration-ratchets` job explained why it ran two
+`tsc`s. Both now describe one program — and `CONTRIBUTING.md` says why the specs
+are not in `tsconfig.json`, since that is the question this slice answered.
