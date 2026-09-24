@@ -11,6 +11,7 @@ import { SizeLimitError } from "../../../../lib/kerror/errors/sizeLimitError";
 import * as kerror from "../../../../lib/kerror";
 import { User } from "../../../../lib/model/security/user";
 import { invalid } from "../../../helpers/invalid";
+import { present } from "../../../helpers/present";
 import { restoreKuzzle, stubKuzzle, stubLogger } from "../../../mocks/kuzzle";
 
 /**
@@ -30,6 +31,17 @@ type Internals = {
 
 const internalsOf = (controller: SecurityController) =>
   invalid<Internals>(controller);
+
+/**
+ * The body the enclosing `beforeEach` has just set. `input.body` is
+ * `JSONObject | null` — a request can carry none — and every use below is in a
+ * test that put one there.
+ */
+function body(rq: KuzzleRequest): JSONObject {
+  present(rq.input.body, "request.input.body");
+
+  return rq.input.body;
+}
 
 describe("#api/controllers/securityController — users", () => {
   let controller: SecurityController;
@@ -168,14 +180,14 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if the provided request is not valid", async () => {
-      request.input.body.controller = null;
+      body(request).controller = null;
 
       await rejects(controller.checkRights(request), {
         id: "api.assert.missing_argument",
       });
 
-      request.input.body.controller = "document";
-      request.input.body.action = null;
+      body(request).controller = "document";
+      body(request).action = null;
 
       await rejects(controller.checkRights(request), {
         id: "api.assert.missing_argument",
@@ -308,7 +320,7 @@ describe("#api/controllers/securityController — users", () => {
         throw new Error("oh noes");
       });
 
-      request.input.body.credentials.foo = { firstname: "X Æ A-12" };
+      body(request).credentials.foo = { firstname: "X Æ A-12" };
 
       await rejects(
         persist(),
@@ -433,7 +445,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if no ids are given", async () => {
-      delete request.input.body.ids;
+      delete body(request).ids;
 
       await rejects(controller.mGetUsers(request), {
         id: "api.assert.missing_argument",
@@ -727,7 +739,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if no profileId is given", async () => {
-      delete request.input.body.content.profileIds;
+      delete body(request).content.profileIds;
 
       await rejects(controller.createUser(request), {
         id: "api.assert.missing_argument",
@@ -738,7 +750,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if profileIds is not an array", async () => {
-      request.input.body.content.profileIds = {};
+      body(request).content.profileIds = {};
 
       await rejects(controller.createUser(request), {
         id: "api.assert.invalid_type",
@@ -782,7 +794,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if profileIds are given", async () => {
-      request.input.body.content.profileIds = ["ohnoes"];
+      body(request).content.profileIds = ["ohnoes"];
 
       await rejects(controller.createRestrictedUser(request), {
         id: "api.assert.forbidden_argument",
@@ -911,7 +923,7 @@ describe("#api/controllers/securityController — users", () => {
       );
 
     it("should create a user if it did not exist", async () => {
-      const created = { _id: "test", _source: request.input.body.content };
+      const created = { _id: "test", _source: body(request).content };
 
       const persistUser = vi
         .spyOn(internalsOf(controller), "_persistUser")
@@ -933,13 +945,13 @@ describe("#api/controllers/securityController — users", () => {
         local: { password: "password", username: "username" },
       };
 
-      request.input.body.default = { city: "Montpellier", credentials };
+      body(request).default = { city: "Montpellier", credentials };
 
       const created = {
         _id: "test",
         _source: {
-          ...request.input.body.default,
-          ...request.input.body.content,
+          ...body(request).default,
+          ...body(request).content,
         },
       };
 
@@ -1029,7 +1041,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if the content does not have a profileIds attribute", async () => {
-      delete request.input.body.profileIds;
+      delete body(request).profileIds;
 
       await rejects(controller.replaceUser(request), {
         id: "api.assert.missing_argument",
@@ -1037,7 +1049,7 @@ describe("#api/controllers/securityController — users", () => {
     });
 
     it("should reject if the provided profileIds attribute is not an array", async () => {
-      request.input.body.profileIds = {};
+      body(request).profileIds = {};
 
       await rejects(controller.replaceUser(request), {
         id: "api.assert.invalid_type",
@@ -1260,9 +1272,12 @@ describe("#api/controllers/securityController — users", () => {
     let restrict: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
+      // `_persistUser` answers the serialized user it stored; these tests
+      // assert on the call, not on the answer, so the value only has to be a
+      // well-formed one.
       persistUser = vi
         .spyOn(internalsOf(controller), "_persistUser")
-        .mockResolvedValue(undefined);
+        .mockResolvedValue({ _id: "test", _source: {} });
       restrict = vi
         .spyOn(internalsOf(controller), "restrictDefaultRights")
         .mockResolvedValue(undefined);

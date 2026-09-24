@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -132,7 +132,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M3** ✅ | `features/`                                                                                       |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work. See _[What M3 found](#what-m3-found)_.                                  |
 | **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
 | **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
-| **M5** | `tests/` — the five hot files, whatever is left in them                                              |   ~120 | Each is a PR's worth of review on its own; four of the five are step 13 ports, so the author of the debt is in the git blame.                                    |
+| **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
 | **M6** | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                             |    ~82 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility. M4 hands it `command.test.ts` whole, `let command` still inferred. |
 | **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
 | **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
@@ -688,3 +688,102 @@ npx tsc -p <that file> --noEmit | grep -c 'error TS'
 
 The temporary config is not committed on purpose — a second strict config that
 nothing runs is a config that goes stale. M7 deletes the need for it.
+
+## What M5 found
+
+**202 → 98.** The slice was planned as "the five hot files, whatever is left in
+them, ~120". It was **three** files: M4 emptied `backendImport.test.ts`
+outright — its 58 errors were all uses of the five bindings M4 annotated — and
+`command.test.ts` belongs to M6. _A slice sized before the one that runs before
+it is sized against a tree that no longer exists._
+
+### One line in `lib/` answered 33 of them
+
+`RequestInput`'s accessor pair disagreed with itself:
+
+```ts
+get body(): JSONObject | null { … }
+set body(obj: JSONObject | Array<any>) {      // ← no null
+  this[_body] = assert.assertArrayOrObject("body", obj);
+}
+```
+
+`assertArrayOrObject` answers `null` for `null` *and* `undefined` — it is its
+first branch — the constructor initialises the field to `null`, and the getter
+declares it. **The setter excluded the one value the implementation handles
+first**, so no caller could clear a body, and every spec exercising "the request
+has no body" was writing a value its own subject said was illegal. Seventeen
+sites in `request.test.ts`, sixteen elsewhere.
+
+The fix is the parameter type, not the code: `JSONObject | Array<any> | null`.
+No runtime change, and `headers` two accessors below already documents the same
+accommodation for `undefined`.
+
+_An accessor pair is one declaration in two halves, and nothing checks that they
+agree._ The getter is the promise; the setter is what the promise is worth.
+
+### `tests/helpers/present.ts` — a subject's nullability is not a fixture's
+
+56 of the step's errors are `TS18047`/`TS18048` — "possibly null" — and almost
+none are a real absence: `request.error` is `KuzzleError | null` because a
+request that has not failed carries none, and a spec that *set* one is in the
+other case.
+
+```ts
+present(request.error, "request.error");
+expect(request.error.message).toBe(error.message);   // narrowed, no cast
+```
+
+An assertion function, so the narrowing holds for the rest of the block, and a
+real assertion, so a subject that stops storing the value fails on that line
+rather than three lines later with `Cannot read properties of null`. It joins
+`invalid<T>()` and `settle()` in `tests/helpers/`, and the same reasoning
+produced the local `body(request)` reader in the two specs that dereference
+`input.body` a dozen times each.
+
+### Three mocks answered `undefined` where the subject answers a value
+
+`hotelClerk.join`, `hotelClerk.subscribe` and `securityController._persistUser`
+were stubbed with `mockResolvedValue(undefined)`. Each answers something — a
+room, a serialized user — and each spec asserts on the *call*, not on the
+answer, so the stub was never wrong at runtime. It was wrong as a description: a
+stub that cannot type-check against its own subject will not notice when that
+subject changes shape.
+
+### ⚠️ `new Map([["foo", null]])` as a volatile fixture, and the assertion built on it
+
+`ConnectionRooms` maps a room to its volatile data, typed `JSONObject`. Eight
+fixtures wrote `null` straight into it, bypassing the only writer there is:
+
+```ts
+this.registerSubscription(connectionId, roomId, request.input.volatile ?? {});
+```
+
+So a stored subscription always carries an object, and `null` is a state
+`hotelClerk` cannot produce. Correcting the fixtures to `{}` **failed a test** —
+the one asserting what `unsubscribe` notifies:
+
+```ts
+expect(notifyUser).toHaveBeenCalledWith(roomId,
+  expect.objectContaining({ input: expect.objectContaining({ volatile: null }) }), …
+```
+
+It was asserting the fixture back to itself. The notification carries `{}` in
+production and always has. Both it and a sibling `toBeNull()` now assert `{}`.
+
+_A fixture that writes past a subject's own writer does not describe the
+subject's state; it describes a state the subject cannot reach, and every
+assertion downstream of it measures the fixture._ This is why the slice ran the
+suite rather than trusting the compiler: after the change nothing about the
+types was wrong — the test was.
+
+### What M5 says about the rest of the step
+
+98 left, and the shape has changed: mostly `TS2345`/`TS2322` argument and
+assignment mismatches spread thin — 15 in `waterfall.test.ts`, 8 in
+`tokenManager.test.ts`, 7 in `pluginContext.test.ts`, then a tail of four and
+fewer. Plus M6's `command.test.ts`: ten `TS2341` and a redesign.
+
+**`present()` is the tool for most of the remaining `TS18047`s**, and the `lib/`
+finding above is the reminder to ask, at each one, *whether the type is wrong
+before working around it being right*.

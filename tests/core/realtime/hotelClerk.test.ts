@@ -1,3 +1,4 @@
+import type { JSONObject } from "kuzzle-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { KuzzleRequest } from "../../../lib/api/request";
@@ -9,6 +10,7 @@ import { BadRequestError } from "../../../lib/kerror/errors/badRequestError";
 import { NotFoundError } from "../../../lib/kerror/errors/notFoundError";
 import { PreconditionError } from "../../../lib/kerror/errors/preconditionError";
 import { SizeLimitError } from "../../../lib/kerror/errors/sizeLimitError";
+import { present } from "../../helpers/present";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 /*
@@ -152,7 +154,7 @@ describe("#core/realtime/HotelClerk", () => {
   const invokeAsk = (event: string, ...args: unknown[]) => {
     const handler = asked.get(event);
 
-    expect(handler, `no handler registered for ${event}`).toBeDefined();
+    present(handler, `handler for ${event}`);
 
     return handler(...args);
   };
@@ -184,11 +186,11 @@ describe("#core/realtime/HotelClerk", () => {
     beforeEach(() => {
       internals.subscriptions.set(
         "a",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
       internals.subscriptions.set(
         "b",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
     });
 
@@ -197,7 +199,11 @@ describe("#core/realtime/HotelClerk", () => {
         .spyOn(hotelClerk, "clearConnections")
         .mockResolvedValue(undefined);
 
-      await listened.get("kuzzle:shutdown")();
+      const shutdown = listened.get("kuzzle:shutdown");
+
+      present(shutdown, "handler for kuzzle:shutdown");
+
+      await shutdown();
 
       expect(clear).toHaveBeenCalledTimes(1);
     });
@@ -225,11 +231,11 @@ describe("#core/realtime/HotelClerk", () => {
     it("reports its room and subscription counts", () => {
       internals.subscriptions.set(
         "a",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
       internals.subscriptions.set(
         "b",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
 
       expect(hotelClerk.metrics()).toMatchObject({
@@ -344,7 +350,11 @@ describe("#core/realtime/HotelClerk", () => {
 
   describe("#join", () => {
     it("is what the join event calls", () => {
-      const join = vi.spyOn(hotelClerk, "join").mockResolvedValue(undefined);
+      // `join` answers a room; what this asserts is the wiring, so the value
+      // only has to be one.
+      const join = vi
+        .spyOn(hotelClerk, "join")
+        .mockResolvedValue({ channel: "channel", roomId: "roomId" });
 
       invokeAsk("core:realtime:join", "request");
 
@@ -353,6 +363,7 @@ describe("#core/realtime/HotelClerk", () => {
 
     it("lets a second connection join an existing room", async () => {
       const first = await hotelClerk.subscribe(subscribeRequest());
+      present(first, "subscribe result");
       const { roomId } = first;
 
       expect(first).toHaveProperty("channel");
@@ -416,7 +427,11 @@ describe("#core/realtime/HotelClerk", () => {
       const response = { channel: "foobar", cluster: false, subscribed: true };
 
       internals.rooms.set("i-exist", {} as never);
-      internals.subscribeToRoom = (async (_id, _request, callback) => {
+      internals.subscribeToRoom = (async (
+        _id: string,
+        _request: KuzzleRequest,
+        callback: (subscribed: boolean, cluster: boolean) => Promise<void>,
+      ) => {
         await callback(response.subscribed, response.cluster);
         return response;
       }) as never;
@@ -454,11 +469,11 @@ describe("#core/realtime/HotelClerk", () => {
       );
       internals.subscriptions.set(
         "a",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
       internals.subscriptions.set(
         "b",
-        new ConnectionRooms(new Map([["foo", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["foo", {}]])),
       );
 
       internals.rooms.set(
@@ -555,7 +570,7 @@ describe("#core/realtime/HotelClerk", () => {
     it("is what the subscribe event calls", () => {
       const subscribe = vi
         .spyOn(hotelClerk, "subscribe")
-        .mockResolvedValue(undefined);
+        .mockResolvedValue({ channel: "channel", roomId: "roomId" });
 
       invokeAsk("core:realtime:subscribe", "foo");
 
@@ -585,6 +600,7 @@ describe("#core/realtime/HotelClerk", () => {
         .mockReturnValueOnce({ filter: [], id: "barfoo", index: "foo/bar" });
 
       const first = await hotelClerk.subscribe(request);
+      present(first, "subscribe result");
 
       expect(koncorde.normalize).toHaveBeenCalledTimes(1);
       expect(koncorde.store).toHaveBeenCalledTimes(1);
@@ -599,6 +615,7 @@ describe("#core/realtime/HotelClerk", () => {
       );
 
       const room = internals.rooms.get(first.roomId);
+      present(room, "room first.roomId");
       const channels = [...room.channels.keys()];
 
       expect(channels).toHaveLength(1);
@@ -606,11 +623,15 @@ describe("#core/realtime/HotelClerk", () => {
         scope: "all",
         users: "none",
       });
-      expect(
-        internals.subscriptions.get(connectionId).getVolatile(room.id),
-      ).toEqual(request.input.volatile);
+      const connectionRooms = internals.subscriptions.get(connectionId);
+
+      present(connectionRooms, `subscriptions for ${connectionId}`);
+      expect(connectionRooms.getVolatile(room.id)).toEqual(
+        request.input.volatile,
+      );
 
       const second = await hotelClerk.subscribe(request);
+      present(second, "subscribe result");
 
       expect(koncorde.normalize).toHaveBeenCalledTimes(2);
       expect(koncorde.store).toHaveBeenCalledTimes(2);
@@ -635,10 +656,12 @@ describe("#core/realtime/HotelClerk", () => {
     it("answers the same room when the filter is already subscribed", async () => {
       const request = subscribeRequest();
       const first = await hotelClerk.subscribe(request);
+      present(first, "subscribe result");
 
       expect(internals.roomsCount).toBe(1);
 
       const second = await hotelClerk.subscribe(request);
+      present(second, "subscribe result");
 
       expect(second).toMatchObject(first);
       expect(internals.roomsCount).toBe(1);
@@ -678,6 +701,7 @@ describe("#core/realtime/HotelClerk", () => {
     it("accepts an empty filter", async () => {
       const request = subscribeRequest({});
       const result = await hotelClerk.subscribe(request);
+      present(result, "subscribe result");
 
       expect(internals.roomsCount).toBe(1);
       expect(notifyUser).toHaveBeenCalledWith(
@@ -788,7 +812,7 @@ describe("#core/realtime/HotelClerk", () => {
     it("rejects a subscribed room that no longer exists", async () => {
       internals.subscriptions.set(
         connectionId,
-        new ConnectionRooms(new Map([["nowhere", null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([["nowhere", {}]])),
       );
 
       const rejection = hotelClerk.unsubscribe(connectionId, "nowhere");
@@ -813,7 +837,7 @@ describe("#core/realtime/HotelClerk", () => {
       });
       internals.subscriptions.set(
         connectionId,
-        new ConnectionRooms(new Map([[roomId, null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([[roomId, {}]])),
       );
 
       await hotelClerk.unsubscribe(connectionId, roomId);
@@ -828,7 +852,7 @@ describe("#core/realtime/HotelClerk", () => {
 
       internals.subscriptions.set(
         connectionId,
-        new ConnectionRooms(new Map([[roomId, null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([[roomId, {}]])),
       );
 
       await hotelClerk.unsubscribe(connectionId, roomId);
@@ -840,13 +864,18 @@ describe("#core/realtime/HotelClerk", () => {
       expect(internals.rooms.size).toBe(0);
 
       /* Notified even with nobody listening for cluster mode. */
+      // `volatile: {}`, not `null`: the only writer is
+      // `registerSubscription(…, request.input.volatile ?? {})`, so a stored
+      // subscription always carries an object. The `null` this asserted came
+      // from the fixture writing straight into `ConnectionRooms`, which is a
+      // state the subject cannot produce.
       expect(notifyUser).toHaveBeenCalledWith(
         roomId,
         expect.objectContaining({
           input: expect.objectContaining({
             action: "unsubscribe",
             controller: "realtime",
-            volatile: null,
+            volatile: {},
           }),
         }),
         "out",
@@ -871,9 +900,9 @@ describe("#core/realtime/HotelClerk", () => {
       internals.subscriptions.set(
         connectionId,
         new ConnectionRooms(
-          new Map([
-            [roomId, null],
-            ["anotherRoom", null],
+          new Map<string, JSONObject>([
+            [roomId, {}],
+            ["anotherRoom", {}],
           ]),
         ),
       );
@@ -882,9 +911,12 @@ describe("#core/realtime/HotelClerk", () => {
 
       await hotelClerk.unsubscribe(connectionId, roomId);
 
-      expect(
-        internals.subscriptions.get(connectionId).getVolatile("anotherRoom"),
-      ).toBeNull();
+      const remaining = internals.subscriptions.get(connectionId);
+
+      present(remaining, `subscriptions for ${connectionId}`);
+      // Same fixture correction as above: what a kept room carries is the
+      // object it was registered with.
+      expect(remaining.getVolatile("anotherRoom")).toEqual({});
       expect(internals.rooms.has(roomId)).toBe(false);
       expect(internals.rooms.has("anotherRoom")).toBe(true);
       expect(internals.roomsCount).toBe(1);
@@ -899,17 +931,21 @@ describe("#core/realtime/HotelClerk", () => {
     it("keeps a room another connection still holds, and notifies it", async () => {
       internals.subscriptions.set(
         connectionId,
-        new ConnectionRooms(new Map([[roomId, null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([[roomId, {}]])),
       );
       internals.subscriptions.set(
         "foobar",
-        new ConnectionRooms(new Map([[roomId, null]])),
+        new ConnectionRooms(new Map<string, JSONObject>([[roomId, {}]])),
       );
-      connectionsOf(internals.rooms.get(roomId)).add("foobar");
+      const sharedRoom = internals.rooms.get(roomId);
+
+      present(sharedRoom, `room ${roomId}`);
+      connectionsOf(sharedRoom).add("foobar");
 
       await hotelClerk.unsubscribe(connectionId, roomId);
 
       const room = internals.rooms.get(roomId);
+      present(room, "room roomId");
 
       expect(connectionsOf(room).size).toBe(1);
       expect(connectionsOf(room).has("foobar")).toBe(true);

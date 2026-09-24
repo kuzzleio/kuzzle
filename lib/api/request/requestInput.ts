@@ -313,7 +313,14 @@ export class RequestInput {
     return this[_body];
   }
 
-  set body(obj: JSONObject | Array<any>) {
+  /**
+   * `null` is accepted, and was already the only way to *clear* a body:
+   * `assertArrayOrObject` answers `null` for both `null` and `undefined`, the
+   * constructor initialises the field to `null`, and the getter above declares
+   * it. The parameter type excluded the one value the implementation handles
+   * first — the same asymmetry `headers` documents just below.
+   */
+  set body(obj: JSONObject | Array<any> | null) {
     this[_body] = assert.assertArrayOrObject("body", obj);
   }
 
