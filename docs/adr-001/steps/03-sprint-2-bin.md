@@ -67,6 +67,14 @@ the alternative, and it would have changed a path that is in `files`, in the
 `.ci/test-cluster-*.yml` already uses for `start-kuzzle-test.ts`, from a
 `WAIT_KUZZLE` / `wait_kuzzle` array defined once per script.
 
+⚠️ **Its fourteenth call site is in `.github/actions/build-and-run-kuzzle`, and
+it ran after `npm prune --omit=dev`** — which removes `ts-node`. The first push
+went red there, on a step no local check reaches. The prune now runs *after* the
+readiness check: it was never a prerequisite of it, because the image under test
+is built from source by `.ci/services-*.yml` and does not read this tree's
+`node_modules` at all. _A grep for call sites has to include the workflow files,
+and a call site's environment is part of the call site._
+
 ## What the conversion found
 
 **`bin/wait-kuzzle` was a faithful port** — an `unknown` catch variable, two
@@ -108,8 +116,13 @@ image, survived every check this ADR built.
 - **The image, not just the compiler.** `docker build -f
   docker/images/kuzzle/Dockerfile` then a boot against Elasticsearch 7 + Redis:
   the node reaches `Kuzzle 2.56.0 is ready`, and `--mappings`, `--securities`
-  and `--fixtures` land in storage. No CI job builds that image, which is the
-  other half of why TD-84 lasted.
+  and `--fixtures` land in storage.
+
+  ⚠️ **CI builds that image and boots it** — `Build and Run (kuzzle, 7|8)`,
+  through `.ci/services-*.yml` — so the startup path was always gated, which is
+  why TD-84 was silent rather than red. What no job exercises is the entrypoint
+  **with an option**: that job passes none. _A job that proves a binary starts
+  proves nothing about the arguments it accepts._
 - `npm run typecheck:tests`, `npm run ratchet` (`js` 3 = new baseline),
   `npm run test:lint`, `npx prettier --check` green.
 - The functional suites exercise `bin/wait-kuzzle.ts` on every run: it is what
