@@ -1813,6 +1813,8 @@ assert(
 
 ### TD-80
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-80--passports-next-and-one-failure-path)).** The middleware gets its `next`, and passport's errors, the strategy callback's and anything thrown go through one `fail()`. An unknown strategy is now answered `Unknown authentication strategy "foobar"` (still `plugin.runtime.unexpected_error`); the spec that pinned `next is not a function` asserts that message and fails against the old code. `casts` ratchet 84 → 83 (the callback's `as Error` went with the duplicated branch).
+
 **`PassportWrapper.authenticate` never passes `next`, so passport's own errors surface as `next is not a function`** · 🟡 low · `lib/core/auth/passportWrapper.ts`
 
 Found porting the `core/auth/passportWrapper` spec ([step 13 L4e6](steps/13-sprint-10-test-closure.md#what-l4e6-found)), by asserting on an unknown strategy — which the Mocha spec could not do, having replaced passport with a stub.

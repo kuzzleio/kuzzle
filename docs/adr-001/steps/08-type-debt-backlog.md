@@ -463,3 +463,17 @@ are gone, so the calls themselves are the type-level test. Its one deliberate
 misuse — `new Request()` with no data, to assert the throw — is now refused by
 the type and carries a `@ts-expect-error` saying so. **`any` ratchet 178 → 175.**
 
+### TD-80 — passport's `next`, and one failure path
+
+`PassportWrapper.authenticate` invoked passport's middleware with
+`(request, response)`, and passport reports what it decides itself — an unknown
+strategy name first — through `next(error)`. The `TypeError` that produced was
+wrapped as `Caught an unexpected plugin error: next is not a function`.
+
+The wrapper had also grown two copies of the same "wrap unless it is already a
+`KuzzleError`" branch (callback error, thrown error), one with an `as Error`
+the other had already replaced by a narrowing. Both are now one `fail()`,
+which is also the `next`; the error code is unchanged, the message is
+passport's. The pinned spec now asserts `Unknown authentication strategy
+"foobar"` and fails against the old code. **`casts` ratchet 84 → 83.**
+
