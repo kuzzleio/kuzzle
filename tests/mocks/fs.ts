@@ -9,8 +9,18 @@
 import { vi } from "vitest";
 
 /** A read stream whose `pipe` chains and whose `on("finish")` fires at once. */
-function stubStream() {
-  const stream = {
+type StreamStub = {
+  on: ReturnType<typeof vi.fn>;
+  pipe: ReturnType<typeof vi.fn>;
+};
+
+/**
+ * The annotation is load-bearing: both members answer `stream` itself, so
+ * without it the initializer refers to a binding whose type is being inferred
+ * from that same initializer.
+ */
+function stubStream(): StreamStub {
+  const stream: StreamStub = {
     on: vi.fn((_event: string, listener: () => void) => {
       listener();
 

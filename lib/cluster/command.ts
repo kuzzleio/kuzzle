@@ -137,6 +137,19 @@ class ClusterCommand {
   private readonly logger: ReturnType<typeof global.kuzzle.log.child>;
 
   /**
+   * Whether `listen()`'s loop is running: `init()` starts it without awaiting
+   * it, and `dispose()` is what stops it.
+   *
+   * The flag itself stays private — its values are this file's business — but
+   * *whether the command layer is listening* is a legitimate question from
+   * outside, and it is the one the spec was reading `state` to answer. See
+   * docs/adr-001/steps/14-test-program-strict.md (M6).
+   */
+  get running(): boolean {
+    return this.state === stateEnum.RUNNING;
+  }
+
+  /**
    * @param localNode the cluster node this command layer belongs to
    */
   constructor(localNode: CommandingNode) {
@@ -148,8 +161,22 @@ class ClusterCommand {
     this.logger = global.kuzzle.log.child("cluster:command");
   }
 
-  async init(): Promise<void> {
+  /**
+   * Loads the wire schema, and nothing else.
+   *
+   * This class is two things: the **server** every node runs, and the
+   * **client** `getFullState()` and `broadcastHandshake()` use to call its
+   * peers. Both need the codec; only the first needs a bound port. `init()`
+   * did both, so a client-only use had to either bind a port it does not serve
+   * on — the port it means to *dial*, which is already taken — or reach into
+   * `protoroot`, which is what the spec did before step 14's M6.
+   */
+  async loadProtobuf(): Promise<void> {
     this.protoroot = await protobuf.load(`${__dirname}/protobuf/command.proto`);
+  }
+
+  async init(): Promise<void> {
+    await this.loadProtobuf();
     await this.serve();
 
     this.listen();

@@ -76,7 +76,7 @@ describe("#RequestInput", () => {
       void new RequestInput(invalid(undefined));
     }).toThrow("Input request data must be a non-null object");
     expect(() => {
-      void new RequestInput(null);
+      void new RequestInput(invalid(null));
     }).toThrow("Input request data must be a non-null object");
     expect(() => {
       void new RequestInput([]);

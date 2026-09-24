@@ -16,7 +16,12 @@ import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
  * half of its contract, and the Mocha spec asserted it exactly once.
  */
 type Outcome = {
-  code: number;
+  // `number | null`, not `number`: the JSDoc says "-1 delayed, 0 executing,
+  // 1 refused", and one refusal — `unauthorized_origin` — goes through
+  // `_executeError`, which is declared `): null`. Nothing in `lib/` reads the
+  // code (both callers ignore it), so this is a documentation/return-type
+  // disagreement rather than a defect; the spec records what is returned.
+  code: number | null;
   error: Error | null;
   response: KuzzleRequest;
 };
@@ -28,7 +33,7 @@ const execute = (funnel: Funnel, request: KuzzleRequest): Promise<Outcome> =>
      * promise settles once each has arrived. */
     let answer: { error: Error | null; response: KuzzleRequest } | null = null;
     /** Not a code the subject ever answers: "execute has not returned yet". */
-    let code = Number.NaN;
+    let code: number | null = Number.NaN;
 
     const settle = () => {
       if (answer !== null && !Number.isNaN(code)) {

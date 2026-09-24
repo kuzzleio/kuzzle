@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Bluebird from "bluebird";
-import stringify from "json-stable-stringify";
+import stableStringify from "json-stable-stringify";
 
 import Kuzzle from "../../lib/kuzzle/kuzzle";
 import type { StartOptions } from "../../lib/types/Kuzzle";
@@ -11,6 +11,7 @@ import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
 import { lastMutex, resetMutexes } from "./kuzzleFixture";
+import { present } from "../helpers/present";
 
 /**
  * ⚠️ The Mocha spec rewired `koncorde_1` and `vault_1` — **the variable names
@@ -79,6 +80,20 @@ const funnelOf = (kuzzle: Kuzzle) =>
   invalid<{ remainingRequests: number }>(kuzzle.funnel);
 
 const internalsOf = (kuzzle: Kuzzle) => invalid<Internals>(kuzzle);
+
+/**
+ * `json-stable-stringify` answers `undefined` for a value with no JSON form —
+ * `undefined` itself, a function — which none of the payloads below are. The
+ * subject hashes the same way, so saying it here keeps the expectations
+ * readable and fails on this line if a payload ever stops being serializable.
+ */
+function stable(value: unknown): string {
+  const json = stableStringify(value);
+
+  present(json, "the stable stringification");
+
+  return json;
+}
 
 describe("#kuzzle/Kuzzle", () => {
   let kuzzle: Kuzzle;
@@ -510,13 +525,13 @@ describe("#kuzzle/Kuzzle", () => {
       expect(ask).toHaveBeenCalledWith(
         "core:cache:internal:store",
         "backend:init:import:mappings",
-        sha256(stringify({ toImport: { mappings: payload }, toSupport: {} })),
+        sha256(stable({ toImport: { mappings: payload }, toSupport: {} })),
       );
       expect(ask).toHaveBeenCalledWith(
         "core:cache:internal:store",
         "backend:init:import:permissions",
         sha256(
-          stringify({
+          stable({
             toImport: { profiles: payload, roles: payload, users: payload },
             toSupport: {},
           }),
@@ -616,7 +631,7 @@ describe("#kuzzle/Kuzzle", () => {
             existingESHash,
             existingRedisHash,
             importPayloadHash: sha256(
-              stringify({ toImport: { mappings: payload }, toSupport: {} }),
+              stable({ toImport: { mappings: payload }, toSupport: {} }),
             ),
             type: "mappings",
           });

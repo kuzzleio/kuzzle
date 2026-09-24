@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { storeScopeEnum } from "../../../../lib/core/storage/storeScopeEnum";
 import type { ESHarness } from "./harness";
+import { aliasFromIndice } from "./harness";
 
 const index = "nyc-open-data";
 const collection = "yellow-taxi";
@@ -85,7 +86,7 @@ export function describeInventory(harness: ESHarness) {
       );
 
       vi.spyOn(harness.client, "_getAliasFromIndice").mockImplementation(
-        async (target: string) => [`@${target}`],
+        aliasFromIndice,
       );
     };
 

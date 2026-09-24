@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TokenManager } from "../../../lib/core/auth/tokenManager";
 import { Token } from "../../../lib/model/security/token";
 import { invalid } from "../../helpers/invalid";
+import { present } from "../../helpers/present";
 import { restoreKuzzle, stubAsk, stubKuzzle } from "../../mocks/kuzzle";
 
 /** One entry of the manager's sorted list, as it keeps them. */
@@ -73,9 +74,21 @@ describe("#core/auth/TokenManager", () => {
   const managed = () =>
     (manager as unknown as { tokens: { array: ManagedToken[] } }).tokens.array;
 
-  /** What the manager holds for a connection, through its public reader. */
-  const forConnection = (userId: string, connectionId: string) =>
-    manager.getConnectedUserToken(userId, connectionId);
+  /**
+   * What the manager holds for a connection, through its public reader.
+   *
+   * `Token.userId` is `string | null` — a token can exist before it is
+   * attached to a user — while `getConnectedUserToken` takes a `string`. Every
+   * token these tests build has a user, and this is where that is asserted,
+   * once, instead of at each of the nine call sites.
+   */
+  const forConnection = (user: Token | string, connectionId: string) => {
+    const userId = typeof user === "string" ? user : user.userId;
+
+    present(userId, "token.userId");
+
+    return manager.getConnectedUserToken(userId, connectionId);
+  };
 
   const entry = (t: Token, connectionIds: string[]) => ({
     idx: `${t.expiresAt};${t._id}`,
@@ -114,9 +127,7 @@ describe("#core/auth/TokenManager", () => {
       manager.link(token, "foo");
 
       expect(managed()).toMatchObject([entry(token, ["foo"])]);
-      expect(forConnection(token.userId, "foo")).toMatchObject(
-        entry(token, ["foo"]),
-      );
+      expect(forConnection(token, "foo")).toMatchObject(entry(token, ["foo"]));
       expect(runTimer).toHaveBeenCalledOnce();
     });
 
@@ -126,7 +137,7 @@ describe("#core/auth/TokenManager", () => {
 
       expect(managed()).toMatchObject([entry(token, ["foo", "bar"])]);
       for (const connectionId of ["foo", "bar"]) {
-        expect(forConnection(token.userId, connectionId)).toMatchObject(
+        expect(forConnection(token, connectionId)).toMatchObject(
           entry(token, ["foo", "bar"]),
         );
       }
@@ -162,13 +173,13 @@ describe("#core/auth/TokenManager", () => {
 
       manager.link(token, "foo1");
       manager.link(token, "foo2");
-      expect(forConnection(token.userId, "foo1")).toMatchObject(
+      expect(forConnection(token, "foo1")).toMatchObject(
         entry(token, ["foo1", "foo2"]),
       );
 
       manager.link(later, "foo1");
 
-      expect(forConnection(later.userId, "foo1")).toMatchObject(
+      expect(forConnection(later, "foo1")).toMatchObject(
         entry(later, ["foo1"]),
       );
       expect(managed()).toMatchObject([
@@ -191,7 +202,7 @@ describe("#core/auth/TokenManager", () => {
           "core:realtime:connection:remove",
           connectionId,
         );
-        expect(forConnection(token.userId, connectionId)).toBeNull();
+        expect(forConnection(token, connectionId)).toBeNull();
       }
     });
 
@@ -350,7 +361,7 @@ describe("#core/auth/TokenManager", () => {
       }
 
       expect(managed()).toEqual([]);
-      expect(forConnection(token.userId, "foo")).toBeNull();
+      expect(forConnection(token, "foo")).toBeNull();
     });
   });
 
@@ -363,7 +374,7 @@ describe("#core/auth/TokenManager", () => {
 
       expect(expire).not.toHaveBeenCalled();
       expect(managed()).toEqual([]);
-      expect(forConnection(token.userId, "connectionId")).toBeNull();
+      expect(forConnection(token, "connectionId")).toBeNull();
       // Unlinking is not expiring: the realtime layer is not told to drop it.
       expect(bus.ask).not.toHaveBeenCalledWith(
         "core:realtime:connection:remove",
@@ -394,13 +405,18 @@ describe("#core/auth/TokenManager", () => {
     });
 
     it("should replace the old token with the new one", () => {
-      const refreshed = new Token({ _id: "...I got better" });
+      // `userId`, which the fixture did not carry: a refresh keeps the user
+      // and `getConnectedUserToken` answers only when the stored token's user
+      // matches the one asked for. Without it both sides were `null`, so the
+      // lookup matched without ever checking the association it exists to
+      // check (step 14, M6).
+      const refreshed = new Token({ _id: "...I got better", userId: "foo" });
 
       manager.refresh(token, refreshed);
 
       expect(managed()).toHaveLength(1);
       expect(managed()[0]?.idx).toBe(`${refreshed.expiresAt};${refreshed._id}`);
-      expect(forConnection(refreshed.userId, "foo")).toMatchObject({
+      expect(forConnection(refreshed, "foo")).toMatchObject({
         idx: `${refreshed.expiresAt};${refreshed._id}`,
       });
     });

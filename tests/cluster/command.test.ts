@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import type { Mock } from "vitest";
 
 import Long from "long";
@@ -8,6 +16,7 @@ import { Reply, Request } from "zeromq";
 import ClusterCommand from "../../lib/cluster/command";
 import type { Activity } from "../../lib/cluster/protobuf/commandMessages";
 import type { SerializedRoomState } from "../../lib/cluster/state";
+import { present } from "../helpers/present";
 
 /**
  * `command.js` reaches for `zeromq` through a CommonJS `require`, which vitest
@@ -89,13 +98,22 @@ function fakeNode({
 }
 
 describe("#cluster/ClusterCommand", () => {
-  // ⚠️ Deliberately un-annotated, and it is the only one left in the suite.
-  // Typing this as `ClusterCommand` is correct and immediately reports ten
-  // `TS2341`s: the spec asserts on `protoroot`, `server`, `state` and `node`,
-  // all private. Those are step 14's M6 — *change the subject or the test,
-  // never the visibility* (step 13's L6) — and answering them is a different
-  // piece of work from annotating a binding.
-  let command;
+  /**
+   * The spec's own copy of the wire schema, loaded from the same `.proto` the
+   * subject loads. Reading `command.protoroot` was the alternative, and it is a
+   * private member: what these tests need is the *format*, which is a file, not
+   * a field of the subject (step 13's L6 — change the test, not the
+   * visibility).
+   */
+  let protoroot: protobuf.Root;
+
+  beforeAll(async () => {
+    protoroot = await protobuf.load(
+      `${process.cwd()}/lib/cluster/protobuf/command.proto`,
+    );
+  });
+
+  let command: ClusterCommand;
   let logger: {
     child: Mock;
     error: Mock;
@@ -123,7 +141,7 @@ describe("#cluster/ClusterCommand", () => {
 
     // `dispose()` is what stops `listen()`'s loop; without it the unresolved
     // `receive()` keeps the socket — and the port — for the next test.
-    if (command && command.state !== 3) {
+    if (command && command.running) {
       command.dispose();
     }
   });
@@ -134,11 +152,11 @@ describe("#cluster/ClusterCommand", () => {
 
       await command.init();
 
-      expect(command.protoroot.lookupType("HandshakeRequest")).toBeTruthy();
-      expect(command.server).not.toBeNull();
-      // 2 = RUNNING. `listen()` is deliberately not awaited by `init()`, so
-      // the state flag is what says the loop is running.
-      expect(command.state).toBe(2);
+      // `listen()` is deliberately not awaited by `init()`, so "is it
+      // listening" is the question, and the subject answers it. That the
+      // protobuf root loaded and the port bound is what every test below
+      // exercises for real, by sending a request to it.
+      expect(command.running).toBe(true);
     });
   });
 
@@ -149,9 +167,9 @@ describe("#cluster/ClusterCommand", () => {
 
       command.dispose();
 
-      // 3 = CLOSED. The loop reads this flag between two `receive()` calls,
-      // and swallows the error the closed socket raises in the meantime.
-      expect(command.state).toBe(3);
+      // The loop reads this between two `receive()` calls, and swallows the
+      // error the closed socket raises in the meantime.
+      expect(command.running).toBe(false);
     });
   });
 
@@ -184,7 +202,7 @@ describe("#cluster/ClusterCommand", () => {
 
       expect(topic.toString()).toBe("fullstate");
 
-      const decoder = command.protoroot.lookupType("FullStateResponse");
+      const decoder = protoroot.lookupType("FullStateResponse");
       const state = decoder.toObject(decoder.decode(payload));
 
       // Every remote node, plus this one — the requesting node uses this list
@@ -228,7 +246,7 @@ describe("#cluster/ClusterCommand", () => {
       expect([nodeId, ip]).toEqual(["knode-2", "127.0.0.2"]);
       expect(lastMessageId.toString()).toBe("3");
 
-      const decoder = command.protoroot.lookupType("HandshakeResponse");
+      const decoder = protoroot.lookupType("HandshakeResponse");
 
       expect(decoder.toObject(decoder.decode(payload))).toMatchObject({
         added: true,
@@ -258,15 +276,17 @@ describe("#cluster/ClusterCommand", () => {
         command = new ClusterCommand(
           fakeNode({ port: PORT.fullStateClient, remoteNodes: new Map() }),
         );
-        command.protoroot = await protobuf.load(
-          `${process.cwd()}/lib/cluster/protobuf/command.proto`,
-        );
+        // `loadProtobuf()`, not `init()`: this command is used as a *client*
+        // here, and the port in its config is the one it dials — the server
+        // above already holds it. The subject now separates the two, which is
+        // what the spec was reaching into `protoroot` to do.
+        await command.loadProtobuf();
 
         const fullState = await command.getFullState([
           { id: "knode-1", ip: "127.0.0.1" },
         ]);
 
-        expect(fullState).not.toBeNull();
+        present(fullState, "the full state");
         expect(fullState.nodesState).toHaveLength(1);
         expect(logger.warn).not.toHaveBeenCalled();
       } finally {
@@ -304,9 +324,11 @@ describe("#cluster/ClusterCommand", () => {
         command = new ClusterCommand(
           fakeNode({ lastMessageId: 12, port: PORT.broadcastHandshake }),
         );
-        command.protoroot = await protobuf.load(
-          `${process.cwd()}/lib/cluster/protobuf/command.proto`,
-        );
+        // `loadProtobuf()`, not `init()`: this command is used as a *client*
+        // here, and the port in its config is the one it dials — the server
+        // above already holds it. The subject now separates the two, which is
+        // what the spec was reaching into `protoroot` to do.
+        await command.loadProtobuf();
 
         // TEST-NET-1 (RFC 5737): guaranteed not to route anywhere, which is
         // how a node that died between two heartbeats looks from here. Another
@@ -332,14 +354,19 @@ describe("#cluster/ClusterCommand", () => {
       peer = new Reply();
       await peer.bind(`tcp://127.0.0.1:${PORT.sendSingleHandshake}`);
 
-      const answering = peer.receive().then(([topic, payload]) => {
+      // Captured: `peer` is nulled in the next `beforeEach`, and the closure
+      // below outlives the statement that created it.
+      const answeringPeer = peer;
+      const answering = answeringPeer.receive().then(([topic, payload]) => {
         expect(topic.toString()).toBe("handshake");
         expect(payload.toString()).toBe("handshake request");
 
-        return peer.send(["handshake", encoded]);
+        return answeringPeer.send(["handshake", encoded]);
       });
 
-      command.node.config.ports.command = PORT.sendSingleHandshake;
+      command = new ClusterCommand(
+        fakeNode({ port: PORT.sendSingleHandshake }),
+      );
 
       const response = await command._sendSingleHandshake(
         "knode-1",
@@ -348,6 +375,7 @@ describe("#cluster/ClusterCommand", () => {
       );
       await answering;
 
+      present(response, "the handshake response");
       expect(Buffer.from(response).toString()).toBe(encoded.toString());
       expect(logger.warn).not.toHaveBeenCalled();
     });

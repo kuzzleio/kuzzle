@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2876](https://github.com/kuzzleio/kuzzle/pull/2876) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -133,7 +133,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
 | **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
 | **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
-| **M6** | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                             |    ~82 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility. M4 hands it `command.test.ts` whole, `let command` still inferred. |
+| **M6** ✅ | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                          |    ~82 | 98 → 0, and `tests/` moves into the strict program. Two subject changes, two fixtures that were asserting themselves. See _[What M6 found](#what-m6-found)_. |
 | **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
 | **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
 
@@ -787,3 +787,113 @@ fewer. Plus M6's `command.test.ts`: ten `TS2341` and a redesign.
 **`present()` is the tool for most of the remaining `TS18047`s**, and the `lib/`
 finding above is the reminder to ask, at each one, *whether the type is wrong
 before working around it being right*.
+
+## What M6 found
+
+**98 → 0, and `tests/` moves into the strict program.** The non-strict one is
+now empty; M7 deletes it.
+
+The tail was 18 files of one-offs and one file that was a redesign.
+
+### `command.test.ts`: the ten `TS2341`, answered on both sides of L6
+
+_Change the subject or the test, never the visibility_ needed both halves here.
+
+**The subject.** The spec read `command.state` to ask *"is it listening?"* —
+`init()` does not await `listen()`, so the flag was the only answer available.
+`ClusterCommand` now has a public `get running(): boolean`. The flag stays
+private, because its values are that file's business; **whether the command
+layer is listening is a legitimate question from outside**, and it is the one
+the spec was really asking.
+
+**The test.** The spec read `command.protoroot` to decode replies. What it needs
+is the *wire format*, and that is a file: it now loads the same `command.proto`
+itself, in a `beforeAll`.
+
+⚠️ **Two tests also *assigned* `protoroot`, and that one was the subject's
+fault.** The first fix here was to call `init()` instead — and the suite
+answered `Error: Address already in use`. Those two tests use the command layer
+as a **client**: the port in its config is the one it *dials*, and the server it
+dials already holds it.
+
+Which is the finding: **`ClusterCommand` is two things.** It is the server every
+node runs, and the client `getFullState()` and `broadcastHandshake()` use to
+call its peers. Both need the protobuf codec; only the first needs a bound port.
+`init()` did both, so a client-only use had no way to become usable — hence the
+assignment into a private field. `loadProtobuf()` is now public and `init()`
+calls it.
+
+_A private member a spec insists on reaching is sometimes a test written against
+an implementation detail, and sometimes a class that does two jobs through one
+door._ The first reading cost a wrong fix; the suite is what distinguished
+them.
+
+One more read, `command.node.config.ports.command = …`, was a test reaching in
+to change a constructor argument after the fact. It constructs the subject with
+the port it wants instead.
+
+### Two more setters contradicted their getters — the siblings of M5's `body`
+
+```ts
+get jwt(): string | null        set jwt(str: string)          // assertString  → null
+get volatile(): JSONObject|null set volatile(obj: JSONObject) // assertObject  → null
+```
+
+Same shape as [M5](#what-m5-found)'s `body`, same first branch in the assertion
+helper, same getter promising what the setter refused. Found because a spec
+assigned `string | null` to `jwt` and could not.
+
+_When a finding names a class, fixing the reported instance is half the work_ —
+[lessons](../lessons.md), TD-71/73. The enumeration is the whole of
+`requestInput.ts`'s setters; `headers` already admitted `undefined`, and
+`index`, `collection`, `controller`, `action` and `triggerEvents` take values
+their getters do not widen.
+
+### A stub that was looser than its subject
+
+```ts
+// tests/mocks/entryPoint.ts
+execute: vi.fn((_c: unknown, _r: unknown, cb?: (r: unknown) => void) => cb?.({}))
+//                                            ^ optional
+```
+
+`NetworkEntryPoint.execute` declares `cb` **required** and always passes it. The
+stub made it optional, so every `mockImplementation` in the three protocol specs
+had to cope with a callback that cannot be absent — four `TS2722`s, all of them
+about a case the subject cannot produce. _A stub looser than its subject asks
+its callers to handle what cannot happen._
+
+### ⚠️ A second fixture that was asserting itself
+
+`tokenManager`'s refresh test built the new token as
+`new Token({ _id: "...I got better" })` — **no `userId`** — and then asserted
+that `getConnectedUserToken(refreshed.userId, "foo")` finds it. That lookup is
+`token.userId === userId`, so the assertion was `null === null`: it matched
+without ever checking the association the method exists to check. The fixture
+now carries the user, which is what a refresh keeps, and the test fails if a
+refresh ever loses it.
+
+That is [M5](#what-m5-found)'s finding a second time, in a different suite, and
+the mechanism is identical: **a fixture that leaves a field unset does not
+exercise the absent case, it exercises a comparison between two absences.**
+Both were caught by running the suite, not by the compiler.
+
+### The rest, by shape
+
+- **`present()` everywhere it was `expect(x).toBeDefined()`** — vitest's
+  assertion does not narrow, so the line after it still read a possibly-absent
+  value. Five specs shared the `invokeAsk` idiom.
+- **`bodyOf()` / `userOf()`** (`tests/helpers/request.ts`) — M5's local `body()`
+  reader, promoted: six specs dereference `input.body` or `context.user` a dozen
+  times each.
+- **`invalid<T>()`** for the fixtures whose whole point is the rejection —
+  `validateFieldSpecification({ notEmpty: null })`, `new RequestInput(null)`,
+  `loader.load(null)`, a chain with a hole in it.
+- **`Reflect.deleteProperty`** where a spec deleted a non-optional property
+  (`global.nodeId` in a teardown, `role.controllers.controller.actions` as the
+  state under test). `delete` requires the property to be optional, and making
+  it optional for one teardown would cost every reader a narrowing.
+- **One documentation disagreement, recorded not fixed**: `funnel.execute` is
+  documented `@returns {Number} -1 | 0 | 1`, and one refusal path goes through
+  `_executeError`, declared `): null`. Nothing in `lib/` reads the code — both
+  callers ignore it — so the spec records `number | null` and says why.

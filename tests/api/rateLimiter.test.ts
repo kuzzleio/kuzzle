@@ -4,6 +4,7 @@ import RateLimiter from "../../lib/api/rateLimiter";
 import { KuzzleRequest } from "../../lib/api/request";
 import { invalid } from "../helpers/invalid";
 import { restoreKuzzle, stubAsk, stubKuzzle } from "../mocks/kuzzle";
+import { userOf } from "../helpers/request";
 
 describe("#api/RateLimiter", () => {
   const mGetProfiles = "core:security:profile:mGet";
@@ -159,7 +160,7 @@ describe("#api/RateLimiter", () => {
     });
 
     it("should limit auth:logout for the anonymous user", async () => {
-      request.context.user._id = "-1";
+      userOf(request)._id = "-1";
       request.input.controller = "auth";
       request.input.action = "logout";
       profiles = [{ _id: "bar", rateLimit: 50 }];

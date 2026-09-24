@@ -1,7 +1,46 @@
 import { describe, expect, it } from "vitest";
 
 import waterfall from "../../../lib/kuzzle/event/waterfall";
+import { invalid } from "../../helpers/invalid";
 import { settle } from "../../helpers/settle";
+
+/**
+ * The subject's own two types, restated here because `waterfall.ts` uses
+ * `export =` for the function and so cannot export them alongside it.
+ *
+ * `Step` is what the subject declares — `(...args: unknown[]) => void`. It
+ * cannot say *"the last argument is the callback"*: a rest element has to be
+ * last, and `[...unknown[], Callback]` is not assignable from a step written
+ * with named parameters. So a step reads its callback off the end, which is
+ * what the subject passes and what `callbackOf` below narrows.
+ */
+type Callback = (error?: unknown, ...results: unknown[]) => void;
+type Step = (...args: unknown[]) => void;
+
+function isCallback(value: unknown): value is Callback {
+  return typeof value === "function";
+}
+
+function callbackOf(args: unknown[]): Callback {
+  const cb = args[args.length - 1];
+
+  if (!isCallback(cb)) {
+    throw new TypeError("waterfall called a step without a callback");
+  }
+
+  return cb;
+}
+
+/** A step that passes the payload straight through, optionally recording it. */
+const passthrough =
+  (ran?: string[], name?: string, error?: unknown): Step =>
+  (...args) => {
+    if (ran && name) {
+      ran.push(name);
+    }
+
+    callbackOf(args)(error ?? null, ...args.slice(0, -1));
+  };
 
 /**
  * `waterfall` reports through a callback invoked with an explicit `this`, and
@@ -14,10 +53,7 @@ import { settle } from "../../helpers/settle";
 describe("#kuzzle/event/waterfall", () => {
   it("chains callbacks and passes the result along", () =>
     settle<void>((resolve, reject) => {
-      const chain = [
-        (data, cb) => cb(null, data),
-        (data, cb) => cb(null, data),
-      ];
+      const chain: Step[] = [passthrough(), passthrough()];
 
       waterfall(
         chain,
@@ -37,9 +73,10 @@ describe("#kuzzle/event/waterfall", () => {
 
   it("chains callbacks that carry many arguments", () =>
     settle<void>((resolve, reject) => {
-      const step = (...args) => {
-        const cb = args.pop();
-        cb(null, ...args);
+      const step: Step = (...args) => {
+        const cb = callbackOf(args);
+
+        cb(null, ...args.slice(0, -1));
       };
 
       waterfall(
@@ -66,16 +103,12 @@ describe("#kuzzle/event/waterfall", () => {
       // denies a request, so the one outcome it must not have is a silent
       // success.
       const ran: string[] = [];
-      const chain = [
-        (data, cb) => {
-          ran.push("first");
-          cb(null, data);
-        },
-        undefined,
-        (data, cb) => {
-          ran.push("third");
-          cb(null, data);
-        },
+      // `invalid`: a chain hole is exactly what the subject must reject, and
+      // `Step[]` forbids writing one.
+      const chain: Step[] = [
+        passthrough(ran, "first"),
+        invalid<Step>(undefined),
+        passthrough(ran, "third"),
       ];
 
       waterfall(
@@ -98,15 +131,9 @@ describe("#kuzzle/event/waterfall", () => {
   it("propagates an error and stops the chain", () =>
     settle<void>((resolve, reject) => {
       const ran: string[] = [];
-      const chain = [
-        (data, cb) => {
-          ran.push("first");
-          cb(new Error("error"), data);
-        },
-        (data, cb) => {
-          ran.push("second");
-          cb(null, data);
-        },
+      const chain: Step[] = [
+        passthrough(ran, "first", new Error("error")),
+        passthrough(ran, "second"),
       ];
 
       waterfall(
@@ -136,10 +163,7 @@ describe("#kuzzle/event/waterfall", () => {
       const context = { marker: "the-receiver" };
 
       waterfall(
-        [
-          (data: unknown, cb: (e: unknown, d: unknown) => void) =>
-            cb(null, data),
-        ],
+        [passthrough()],
         [{ data: "foobar" }],
         function assertsItsReceiver(this: typeof context) {
           try {

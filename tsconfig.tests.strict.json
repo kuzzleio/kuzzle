@@ -40,7 +40,11 @@
     // definition files, which is why the glob is now the whole directory.
     "features-legacy/**/*.ts",
     // M3 — the modern cucumber suite.
-    "features/**/*.ts"
+    "features/**/*.ts",
+    // M6 — the last of `tests/`. The non-strict program is empty after this:
+    // `tsconfig.tests.json` is deleted by M7.
+    "tests/**/*.ts",
+    "tests/**/*.json"
   ],
   "exclude": [
     "dist"

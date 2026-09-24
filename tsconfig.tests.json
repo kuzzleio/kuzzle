@@ -59,6 +59,7 @@
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts",
     "features-legacy",
-    "features"
+    "features",
+    "tests"
   ]
 }

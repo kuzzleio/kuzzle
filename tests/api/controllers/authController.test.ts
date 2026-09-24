@@ -14,6 +14,7 @@ import { Token } from "../../../lib/model/security/token";
 import { User } from "../../../lib/model/security/user";
 import { invalid } from "../../helpers/invalid";
 import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
+import { bodyOf, userOf } from "../../helpers/request";
 
 /** The cookie every `cookieAuth` path writes, with its token interpolated. */
 const setCookie = (token: string) =>
@@ -192,14 +193,14 @@ describe("#api/controllers/authController", () => {
     });
 
     it("should reject if the provided request is not valid", async () => {
-      request.input.body.controller = null;
+      bodyOf(request).controller = null;
 
       await rejects(controller.checkRights(request), {
         id: "api.assert.missing_argument",
       });
 
-      request.input.body.controller = "document";
-      request.input.body.action = null;
+      bodyOf(request).controller = "document";
+      bodyOf(request).action = null;
 
       await rejects(controller.checkRights(request), {
         id: "api.assert.missing_argument",
@@ -632,7 +633,7 @@ describe("#api/controllers/authController", () => {
     });
 
     it("should reject if invoked by an anonymous user", async () => {
-      request.context.user._id = "-1";
+      userOf(request)._id = "-1";
 
       await rejects(
         controller.logout(request),
