@@ -79,13 +79,22 @@ export default [
           selector:
             "CallExpression[arguments.length=0][callee.type='MemberExpression'][callee.property.name=/^(throw|throwError)$/]:not([callee.object.property.name='not'])",
           message:
-            "should(fn).throw() with no matcher is not a test of why — assert the error type, message or id. In a function whose control flow is four asserts, \"it threw\" is what every path has in common. (ADR-0001, TD-57)",
+            'should(fn).throw() with no matcher is not a test of why — assert the error type, message or id. In a function whose control flow is four asserts, "it threw" is what every path has in common. (ADR-0001, TD-57)',
         },
         {
           selector:
             "CallExpression[arguments.length=0][callee.type='MemberExpression'][callee.property.name=/^toThrow(Error)?$/]:not([callee.object.property.name='not'])",
           message:
             "expect(fn).toThrow() with no matcher is not a test of why — pass the expected error, message or a matcher object. (ADR-0001, TD-57)",
+        },
+        {
+          // Cucumber types a step's `this` as a world with an index signature,
+          // so an un-annotated step compiles whatever it reads off `this`.
+          // Harmless in tests/, which registers no cucumber step.
+          selector:
+            "CallExpression[callee.name=/^(Given|When|Then|Before|After|BeforeStep|AfterStep|defineStep)$/] > :matches(FunctionExpression:not([params.0.name='this']), ArrowFunctionExpression)",
+          message:
+            "Declare the world: `function (this: KuzzleWorld, ...)` in features/, `this: KWorld` in features-legacy/. Without it `this` is cucumber's IWorld, whose index signature types every read as `any`. (ADR-0001, step 14 M3b)",
         },
       ],
     },
