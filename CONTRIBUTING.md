@@ -35,6 +35,19 @@ own**: `tsconfig.tests.json`, `strict: true`, run by `npm run typecheck:tests`.
 It covers `tests/`, `features/`, `features-legacy/`, `.ci/scripts/`, `scripts/`
 and the `start-kuzzle-*` entrypoints.
 
+⚠️ **`npm run typecheck:tests` is not that config's only reader.** Cucumber's
+`ts-node` compiles the functional step definitions with it too, through
+`tsconfig.cucumber.json` — and **ts-node honours a project's `compilerOptions`
+but not its `include`**. That is why the ambient declarations under
+`tests/types/` are re-listed there with `ts-node.files: true`: without them every
+functional shard dies at load on `TS7016` while `typecheck:tests` stays green.
+If you change either config, check it with both entrypoints — the second takes
+two seconds and needs no Docker:
+
+```bash
+node -r ts-node/register -e 'require("./features/step_definitions/controllers-steps.ts")'
+```
+
 There were two of them while ADR-0001
 [step 14](docs/adr-001/steps/14-test-program-strict.md) was taking the test code
 to `strict` one directory at a time — a directory changed standard by moving

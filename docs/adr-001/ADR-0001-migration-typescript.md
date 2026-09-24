@@ -164,6 +164,8 @@ Unit tests: **153 vitest spec files, 3 765 tests, one runner** (measured 2026-09
 4. **[#2790](https://github.com/kuzzleio/kuzzle/issues/2790) is a known CI flake — rerun the job, do not diagnose it.** The functional jobs intermittently die in `npm ci` rebuilding native modules. Its local half is fixed ([TD-72](type-debt-register.md#td-72), [#2797](https://github.com/kuzzleio/kuzzle/pull/2797)); the CI half and the functional path stay open.
 5. **Per PR, from here on the DoD changes** — no conversions are left, and no adoption list either. Keep **`npm run build` green** (it is the strict type-check of `lib/` + `index.ts` + `bin/`) and **`npm run typecheck:tests`** green (the specs' own program); `npm run ratchet` with **no counter rising** (`casts` and `any` are what stop a "strict fix" from being a cast); ship a spec for any branch a fix adds; run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit` — the native `re2` binding cannot load on host arm64). After merging into `2-dev`, **close the linked issues by hand**: `Closes #NNN` only fires on `master`.
 
+> **Test-config gotcha (learned step 14, M7):** `tsconfig.tests.json` has **two** readers. `npm run typecheck:tests` runs `tsc` on it; cucumber's `ts-node` compiles the step definitions with it too, through `tsconfig.cucumber.json` — and **ts-node honours a project's `compilerOptions` but not its `include`**. That is why the ambient declarations under `tests/types/` are re-listed in `tsconfig.cucumber.json` with `ts-node.files: true`: without them every functional shard dies at load on `TS7016` while `typecheck:tests` stays green. Check a change to either config with both entrypoints — the second is two seconds and needs no Docker: `node -r ts-node/register -e 'require("./features/step_definitions/controllers-steps.ts")'`.
+
 > **Conversion gotchas (learned Sprint 1):** a file whose Mocha spec uses `rewire`/`__set__` on a required module (e.g. `didYouMean`) must keep the compiled variable name — use `import x = require("mod")`, not `import x from "mod"`. Typing a previously-`any` export (e.g. `Promback`) can break inferring consumers: make it **generic** (`Promback<T>`) and annotate the call sites rather than reintroducing `any`.
 
 > **Coverage measurement — `.ci/scripts/coverage-gate.ts` runs before the scan** and holds the rule the aggregate 80% gate cannot: **every `lib/**.ts` a PR adds must be executed by at least one spec** (TD-42). Exceptions go in `.migration/coverage-exempt.txt`, with the reason on the line. Reproduce what CI sees with the two commands in `CONTRIBUTING.md` › _How coverage is measured_.
@@ -182,6 +184,8 @@ Unit tests: **153 vitest spec files, 3 765 tests, one runner** (measured 2026-09
 npm run ratchet                     # js / any / casts / cpd-exclusions
 npm run build                       # tsc + copy-binaries — AND the strict type-check of lib/
 npm run typecheck:tests             # tsconfig.tests.json — tests/, features/, features-legacy/
+                                    # ⚠️ NOT the only reader of that config: cucumber's ts-node
+                                    # reads it too, via tsconfig.cucumber.json. See below.
 npm run ratchet:js -- --update      # after a reduction: update the baseline
 .ci/scripts/pr-preflight.sh         # lint + error-codes + ratchets/strict + 2 reminders
 ```
