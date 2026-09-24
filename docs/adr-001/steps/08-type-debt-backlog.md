@@ -445,3 +445,21 @@ dump that must succeed) — **both fail against the old code** — and a third
 that the lock is held while the generation is still awaiting, which passes on
 both and exists so the fix cannot be "release it earlier".
 
+### TD-76 — `PluginContext.constructors` declared as constructors
+
+Four of the seven entries were typed as the instances they build, so
+`new context.constructors.Request(request, {})` — the documented, most-used
+call of the public plugin API — did not type-check. `Koncorde`,
+`RequestContext` and `RequestInput` are now `typeof` their classes and assigned
+without a cast. `Request` is `PluginRequestConstructor`, exported from
+`pluginContext.ts`, with **two construct signatures** — from an original
+request, or from raw data — because `instantiateRequest` accepts both and the
+spec exercises both; its assignment keeps one assertion, since it is a plain
+function that plugins call with `new` (it returns an object, so `new` yields
+it).
+
+The spec had named the workaround (`constructorOf()`, seven casts); all seven
+are gone, so the calls themselves are the type-level test. Its one deliberate
+misuse — `new Request()` with no data, to assert the throw — is now refused by
+the type and carries a `@ts-expect-error` saying so. **`any` ratchet 178 → 175.**
+

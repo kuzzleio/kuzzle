@@ -1693,6 +1693,8 @@ is refused the input the method exists to accept. One type is doing duty for two
 
 ### TD-76
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-76--pluginContextconstructors-declared-as-constructors)).** `Koncorde`, `RequestContext` and `RequestInput` are `typeof` their classes; `Request` is `PluginRequestConstructor` (exported), with `instantiateRequest`'s two call shapes as two construct signatures. Three of the four `as any`s went; the fourth became one named assertion, because `instantiateRequest` is a function called with `new`. `tests/core/plugin/pluginContext.test.ts` dropped all seven `constructorOf()` casts — the uncast calls are the type-level test — and marks its one deliberate misuse with `@ts-expect-error`. `any` ratchet 178 → 175.
+
 **Four of `PluginContext.constructors`' seven entries are declared as the instances they build** · 🟠 medium · `lib/core/plugin/pluginContext.ts`
 
 Found porting the `plugin/context/context` spec ([step 13 L4d3](steps/13-sprint-10-test-closure.md#what-l4d3-found)), by TS2351 × 6.
