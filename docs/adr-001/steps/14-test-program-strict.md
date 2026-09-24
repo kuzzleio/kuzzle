@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b stays open, outside the DoD · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 [#2880](https://github.com/kuzzleio/kuzzle/pull/2880) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b, outside the DoD, done the same day · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 [#2880](https://github.com/kuzzleio/kuzzle/pull/2880) · M3b _(this PR)_ · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -130,7 +130,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M1** ✅ | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** the rest of the directory ✅ (177 + what the import graph added)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
 | **M2** ✅ | the rest of `features-legacy/`                                                                    |    274 | 25 step definition files and 5 support files — and **not** the same shape: `noImplicitThis` was the slice and `TS7006` was its shadow. See _[What M2 found](#what-m2-found)_.                        |
 | **M3** ✅ | `features/`                                                                                       |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work. See _[What M3 found](#what-m3-found)_.                                  |
-| **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
+| **M3b** ✅ | `features/` — annotate `this: KuzzleWorld` on every step and hook | 110 → **33** | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiled by *answering every question*. 110 annotations uncovered 33 errors, and four of them were defects. See _[What M3b found](#what-m3b-found)_. |
 | **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
 | **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
 | **M6** ✅ | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                          |    ~82 | 98 → 0, and `tests/` moves into the strict program. Two subject changes, two fixtures that were asserting themselves. See _[What M6 found](#what-m6-found)_. |
@@ -1060,3 +1060,79 @@ Re-run the command above. The decision holds while the non-spec share stays
 small and defect-free; a harness or tooling file that grows real lookups over
 external input (the cucumber support API over server responses is the likeliest)
 is the signal to measure again.
+
+## What M3b found
+
+**110 annotations, 33 errors uncovered, 0 left** — M2's ratio (178 → 93) at
+`features/`' size. A codemod over the TypeScript AST added `this: KuzzleWorld`
+to every function passed to `Given`/`When`/`Then`/`Before`/`After` that did not
+have one (the ten M3 had added were left alone); `BeforeAll`/`AfterAll` have no
+world and were skipped. No step is registered as an arrow function, so none
+was silently outside the World.
+
+⚠️ **`props` is still `Record<string, any>`**, so `this.props.anything` is as
+unchecked as before. What the annotation buys is everything *else* on the
+world — `sdk`, `host`, `parseObject`, the accessors — and that is where all 33
+were.
+
+### Four defects, none of which the suite could report
+
+- **`I target {string}` could never have worked, and nothing used it.**
+  `this.sdk = this[node]` assigns to a **getter-only** accessor, which throws
+  `TypeError` in strict-mode code; and `node1`–`node3`, which the `@cluster`
+  hooks wrote, were declared nowhere. No scenario carried `@cluster` or the
+  step, so both stayed dead since they were written. The world now has a
+  `nodes` map and an `sdk` setter, the hook hands each node the default SDK's
+  token, and **`Cluster.feature` gained a `@cluster` scenario** that targets
+  each node in turn with a stateless action — deliberately not a write on one
+  node read back on another, which would be a race of its own (`broadcast`
+  resolves on publish, not on delivery). Addresses come from
+  `KUZZLE_CLUSTER_NODES`, defaulting to CI's published ports;
+  `docker-test.sh` sets the service names, as it already did for
+  `StackTrace.feature`.
+- **The profile-policies step never compared a policy.**
+  `for (let i = 0; i < profile.policies; i++)` compares a number with an
+  array, which is always `false`: the step asserted the length and nothing
+  else. Another entry for [step 13's dead-assertion census](13-sprint-10-test-closure.md)
+  — the loop form, where the body is correct and the bound is not.
+- **The `document:search` step never took its HTTP branch.**
+  `this.kuzzleConfig.PROTOCOL === "http"` reads the *server's* rc config,
+  which has no such key, so the `GET` + `searchBody` path was dead and every
+  protocol sent a body. It now reads `this.protocol`, so **the `http` shards
+  exercise that path for the first time** — CI is its first run.
+- **The `After` hook reset `props` by writing a `readonly` field.** Harmless —
+  cucumber builds a new World, and so a new `props`, per scenario — and
+  removed rather than made legal.
+
+### And it is gated now
+
+`eslint.config.mjs` rejects, in both cucumber suites, a function passed to
+`Given`/`When`/`Then`/`Before`/`After`/`BeforeStep`/`AfterStep` whose first
+parameter is not `this` — and any arrow function there, whose `this` is not the
+World at all. It found **3** in `features-legacy/` that M2 had left because
+they never read `this` (`http.ts`, `wait.ts`, one `@resetDatabase` hook);
+they are annotated rather than exempted, so the rule has no exceptions. The
+selector lives in the same `no-restricted-syntax` entry as TD-57's, because a
+second flat-config block would *replace* that rule for the same files, not add
+to it.
+
+### The rest, by shape
+
+- **Six dynamic SDK calls** — `this.sdk.document[action](…)` with an action
+  named by the feature file — are `any` once `this` is typed: no controller
+  has an index signature. `features/support/invoke.ts`'s `invokeAction` reads
+  the method with `Reflect.get` and calls it with `Reflect.apply`, which keeps
+  the receiver (the lesson #2803 paid for) and fails by name on an unknown
+  action instead of `… is not a function`.
+- **Two arity errors that are the SDK's declarations, not the suite:**
+  `collection.create`'s `definition` and `server.now`'s `options` are declared
+  required and handled as optional. Answered by passing `{}`.
+- **`resetSecurityDefault` was typed with the embedded SDK** (`EmbeddedSDK`,
+  from `lib/`) while every caller passes a `kuzzle-sdk` client; it only calls
+  `query`, and now says `Kuzzle`.
+- **`parseObject`'s `unknown`s** meeting typed SDK parameters: one narrowing
+  that fails by name (`ids` must be an object), two assertions where the value
+  goes straight to the server that validates it, and `let mappings: unknown`.
+- **A step read `KuzzleWorld`'s private `_host`/`_port`** where public getters
+  exist.
+
