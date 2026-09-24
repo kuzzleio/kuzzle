@@ -11,6 +11,11 @@ fi
 # Resolved absolutely, once, so it does not depend on the caller's cwd.
 WITH_RETRY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/with-retry.sh"
 
+# `bin/wait-kuzzle.ts` is TypeScript and not part of the published build, so it
+# runs through `ts-node` — the same idiom as `.ci/test-cluster-*.yml` for
+# `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
+WAIT_KUZZLE=(node -r ts-node/register/transpile-only ./bin/wait-kuzzle.ts)
+
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 if [ "$ES_VERSION" == "7" ]; then
@@ -39,13 +44,13 @@ trap dump_cluster_logs err
 
 docker compose -f $YML_FILE up -d
 
-KUZZLE_PORT=17510 ./bin/wait-kuzzle
-KUZZLE_PORT=17511 ./bin/wait-kuzzle
-KUZZLE_PORT=17512 ./bin/wait-kuzzle
+KUZZLE_PORT=17510 "${WAIT_KUZZLE[@]}"
+KUZZLE_PORT=17511 "${WAIT_KUZZLE[@]}"
+KUZZLE_PORT=17512 "${WAIT_KUZZLE[@]}"
 # The production-mode node: features/StackTrace.feature addresses it directly,
 # and nginx does not balance over it, so nothing else would wait for it.
-KUZZLE_PORT=17513 ./bin/wait-kuzzle
-KUZZLE_PORT=7512 ./bin/wait-kuzzle
+KUZZLE_PORT=17513 "${WAIT_KUZZLE[@]}"
+KUZZLE_PORT=7512 "${WAIT_KUZZLE[@]}"
 
 # The trap stays on for the suite. It used to be cleared here, so the one class
 # of failure where the cluster's own view matters most — a scenario failing

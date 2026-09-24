@@ -1,6 +1,11 @@
 # Absolute, because the monkey-tester install below runs from another directory.
 WITH_RETRY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/with-retry.sh"
 
+# `bin/wait-kuzzle.ts` is TypeScript and not part of the published build, so it
+# runs through `ts-node` — the same idiom as `.ci/test-cluster-*.yml` for
+# `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
+WAIT_KUZZLE=(node -r ts-node/register/transpile-only ./bin/wait-kuzzle.ts)
+
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 if [ "$ES_VERSION" == "7" ]; then
@@ -35,9 +40,9 @@ trap dump_cluster_logs err
 docker compose -f $YML_FILE up -d
 
 # don't wait on 7512: nginx will accept connections far before Kuzzle does
-KUZZLE_PORT=17510 ./bin/wait-kuzzle
-KUZZLE_PORT=17511 ./bin/wait-kuzzle
-KUZZLE_PORT=17512 ./bin/wait-kuzzle
+KUZZLE_PORT=17510 "${WAIT_KUZZLE[@]}"
+KUZZLE_PORT=17511 "${WAIT_KUZZLE[@]}"
+KUZZLE_PORT=17512 "${WAIT_KUZZLE[@]}"
 
 echo "Installing Kuzzle Monkey Tester..."
 
