@@ -44,7 +44,7 @@ describe("#core/validation/types/enum", () => {
     });
 
     it("returns false if the value is not listed by the enumeration", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         enumType.validate(
@@ -61,7 +61,7 @@ describe("#core/validation/types/enum", () => {
     });
 
     it("returns false if the value is not a string", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         enumType.validate(typeOptions, { not: "a string" }, errorMessage),

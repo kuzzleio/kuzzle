@@ -5,6 +5,8 @@ import _ from "lodash";
 import { Then } from "@cucumber/cucumber";
 import Bluebird from "bluebird";
 
+import { isApiError } from "../support/errors";
+
 // TODO should is deprecated it needs to be removed
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const should = require("should");
@@ -308,7 +310,11 @@ Then(
       this.props.response = response.body;
       this.props.rawResponse = response;
     } catch (err) {
-      if (expectError) {
+      // `request-promise` nests the API's own answer under `error`. A rejection
+      // that does not carry one is a transport failure, not the error the
+      // scenario is asserting on, so it is rethrown rather than stored as
+      // `undefined` — which would let the step pass on the wrong failure.
+      if (expectError && isApiError(err) && err.error !== undefined) {
         this.props.error = err.error.error;
       } else {
         throw err;
@@ -329,7 +335,7 @@ Then(/I have .* in the app before startup/, function () {
 });
 
 Then("the streamed data should be equal to:", async function (dataTable) {
-  const lines = dataTable.rawTable.map((row) => {
+  const lines = dataTable.rawTable.map((row: string[]) => {
     return row[0];
   });
 

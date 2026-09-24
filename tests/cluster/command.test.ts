@@ -89,8 +89,19 @@ function fakeNode({
 }
 
 describe("#cluster/ClusterCommand", () => {
+  // ⚠️ Deliberately un-annotated, and it is the only one left in the suite.
+  // Typing this as `ClusterCommand` is correct and immediately reports ten
+  // `TS2341`s: the spec asserts on `protoroot`, `server`, `state` and `node`,
+  // all private. Those are step 14's M6 — *change the subject or the test,
+  // never the visibility* (step 13's L6) — and answering them is a different
+  // piece of work from annotating a binding.
   let command;
-  let logger;
+  let logger: {
+    child: Mock;
+    error: Mock;
+    info: Mock;
+    warn: Mock;
+  };
   let peer: Reply | null;
   let client: Request | null;
 

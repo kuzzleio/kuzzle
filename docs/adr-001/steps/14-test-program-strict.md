@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -129,10 +129,11 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M0** ✅ | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible. See _[What M0 found](#what-m0-found)_.           |
 | **M1** ✅ | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** the rest of the directory ✅ (177 + what the import graph added)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
 | **M2** ✅ | the rest of `features-legacy/`                                                                    |    274 | 25 step definition files and 5 support files — and **not** the same shape: `noImplicitThis` was the slice and `TS7006` was its shadow. See _[What M2 found](#what-m2-found)_.                        |
-| **M3** | `features/`                                                                                          |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
-| **M4** | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                               |    191 | One shape, 49% of the vitest debt. Mechanical, and doing it first shrinks every file the later slices open.                                                     |
-| **M5** | `tests/` — the five hot files, whatever is left in them                                              |   ~120 | Each is a PR's worth of review on its own; four of the five are step 13 ports, so the author of the debt is in the git blame.                                    |
-| **M6** | `tests/` — the tail, **including the 8 `TS2341`**                                                    |    ~77 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility.                                |
+| **M3** ✅ | `features/`                                                                                       |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work. See _[What M3 found](#what-m3-found)_.                                  |
+| **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
+| **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
+| **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
+| **M6** | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                             |    ~82 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility. M4 hands it `command.test.ts` whole, `let command` still inferred. |
 | **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
 | **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
 
@@ -535,3 +536,254 @@ subject is `lib/`, which is already strict, so the shadow effect that dominated
 here has nothing to feed on; the equivalent risk is `TS2532` on fixture state,
 which is where `tests/`'s 64 nullability errors already are. Budget M4 as the
 191 plus whatever the annotations uncover, not as 191.
+
+## What M3 found
+
+**42 → 0 over 13 files, and the estimate held** — the first slice of this step
+where it did. `features/` is a tenth the size of `features-legacy/` and was
+written later, so the shapes M1 and M2 fought are simply not there: no
+`TS7006` cliff behind a missing `this`, no support-API family to type first.
+
+But four of the 42 were behaviours, and one was the L6 rule again.
+
+### `world.ts` reached into `DataTable`'s private `rawTable`
+
+```ts
+const keys = dataTable.rawTable[0];          // TS2341 — private
+for (let i = 1; i < dataTable.rawTable.length; i++) {
+```
+
+That is [step 13's L6](13-sprint-10-test-closure.md) finding arriving through a
+third door — after `rewire` in the Mocha suite and after `tests/cluster/command`
+in M6's queue. The rule is the same and the answer was cheap: `raw()` is the
+public reader for the same rows, and the suite was reaching past it for nothing.
+
+### `parseObject` wrote its own result back into its input
+
+```ts
+const content = dataTable.rowsHash();        // Record<string, string>
+for (const key of Object.keys(content)) {
+  content[key] = eval(`const o = ${content[key]}; o`);   // …now anything
+}
+return content;
+```
+
+The evaluated value is a different type from its source, and writing it back is
+what made the return type `any` — one `any` that flowed into every step that
+parses a data table, which is most of them. The parsed values now get their own
+object, and `parseObject` answers `Record<string, unknown>`.
+
+### Three `catch` clauses read fields off `unknown`
+
+`auth-steps` read `error.id`, `security-steps` read `error.status`, and
+`controllers-steps` read `err.error.error`. `features/support/errors.ts` now
+holds one guard for all three — every field optional, no cast, so reading one is
+a question rather than an assertion.
+
+⚠️ **`controllers-steps` was storing `undefined` as the error under test.** Its
+`catch` assumed `request-promise`'s nesting, so a *transport* failure — no API
+answer at all — was recorded as `this.props.error = undefined` and the scenario
+went on to assert against it. It rethrows now: a step that asserts on an API
+error must fail when it did not get one.
+
+### `matchObject` compared an array to a scalar expectation without saying so
+
+```ts
+} else if (_.isArray(objectValue)) {
+  for (let i = 0; i < objectValue.length; i++) {
+    should(objectValue[i]).matchObject(expectedValue[i], …);
+```
+
+`expectedValue` is `unknown`; when it is not an array, `expectedValue[i]` is
+`undefined` for every `i` and every element is reported as mismatched — a
+failure whose message names the elements rather than the mistake. It now throws
+by name.
+
+### The `@realtime` teardown unsubscribed from whatever was in `props`
+
+`Object.values(this.props.subscriptions).map(({ unsubscribe }) => unsubscribe())`
+over a `props` whose values are `unknown`. Anything else in there produced
+`unsubscribe is not a function` from an `After` hook, which cucumber reports
+against the *next* scenario. A guard fails it by name, in place.
+
+### What M3 says about the rest of the step
+
+⚠️ **`this` in a `features/` step is `IWorld<any>`, not `KuzzleWorld`** — so
+`this.props.anything` and `this.sdk.anything` type-check by *default*, not by
+being right. That is why this slice found no `TS2683` where M2 found 32: cucumber
+declares the callback's `this` as a world with an index signature, and an index
+signature answers every question. The annotations added here are only where a
+shared helper demanded one (`network-step`, `stacktrace-steps`).
+
+**Annotating `this: KuzzleWorld` across the suite is a slice of its own, and it
+is the one with the findings in it** — M2 is the precedent: 178 annotations
+removed 150 diagnostics and uncovered 93 errors of other kinds. Filed as **M3b**
+rather than smuggled into M3, because "make the program compile" and "make the
+world's contract real" are different claims, and the second one is measured in
+what it breaks.
+
+**M4's 191 stay the estimate to distrust.** Nothing here contradicts the M2
+lesson; `features/` was simply too small and too recent to hide much.
+
+## What M4 found
+
+**388 → 202**, over 17 files and 38 annotated bindings. The shape was what the
+plan said it was — 23 of the 38 are `const errorMessages: string[] = []` in the
+validation-type specs, one line each — and it is the first slice where the
+"one annotation per site" description survived contact.
+
+**What it did not survive is the assumption that an annotation only removes
+errors.** Annotating three bindings *uncovered* errors that `any` had been
+answering:
+
+| Binding | Uncovered |
+| --- | --- |
+| `let command` → `ClusterCommand` | `TS2341` 8 → **10**, plus one `TS2769` |
+| `let baseType` → `BaseType` | one `TS2345` |
+
+That is [M2's finding](#what-m2-found) again at one hundredth the scale, and it
+is now measured twice: **a count of diagnostics is a count of what the compiler
+can currently see, and every annotation changes what it can see.**
+
+### ⚠️ Two of the uncovered errors are reported by the **non-strict** program too
+
+This is the part worth carrying into M5 and M6. `TS2341` (a private member) and
+`TS2345` (an argument mismatch) are not strict-only checks: they are on in
+`tsconfig.tests.json` as well. So annotating a binding in `tests/` — a directory
+that has *not* moved programs yet — can turn `npm run typecheck:tests` red
+immediately, with no `strict` anywhere in sight.
+
+The staging protects a directory from **strict**; it does not protect it from
+**being typed at all**. A slice that annotates bindings ahead of its directory's
+move has to keep the non-strict program green as it goes, which means the
+findings it uncovers are due in the same PR — not deferred to the slice that
+"owns" them.
+
+### Which is why `tests/cluster/command.test.ts` keeps its `let command`
+
+Annotating it is correct and it reports ten private-member reaches:
+`protoroot`, `server`, `state` and `node`. Answering those is
+[step 13's L6](13-sprint-10-test-closure.md) — _change the subject or the test,
+never the visibility_ — and it is a redesign of what the spec observes, not an
+annotation. It stays inferred, with a comment naming M6, and M6 takes the file
+whole.
+
+**So M6's diagnostic count is wrong in the same direction as every other count
+in this step: it reads 8 `TS2341` because `command` is `any`. It is 10.**
+
+The single `TS2345` that `baseType` uncovered was answered here, being one line:
+the spec passed the string `"foobar"` where `validateFieldSpecification` takes
+`TypeOptions` (a `Record<string, unknown>`). The assertion is identity, so it
+needed *an* options object rather than that one.
+
+### How to re-measure
+
+`tests/` is still in the non-strict program, so nothing reports its strict debt
+on its own. To see the remaining 202:
+
+```bash
+# tsconfig.tests.strict.json + tests/ in its include, then:
+npx tsc -p <that file> --noEmit | grep -c 'error TS'
+```
+
+The temporary config is not committed on purpose — a second strict config that
+nothing runs is a config that goes stale. M7 deletes the need for it.
+
+## What M5 found
+
+**202 → 98.** The slice was planned as "the five hot files, whatever is left in
+them, ~120". It was **three** files: M4 emptied `backendImport.test.ts`
+outright — its 58 errors were all uses of the five bindings M4 annotated — and
+`command.test.ts` belongs to M6. _A slice sized before the one that runs before
+it is sized against a tree that no longer exists._
+
+### One line in `lib/` answered 33 of them
+
+`RequestInput`'s accessor pair disagreed with itself:
+
+```ts
+get body(): JSONObject | null { … }
+set body(obj: JSONObject | Array<any>) {      // ← no null
+  this[_body] = assert.assertArrayOrObject("body", obj);
+}
+```
+
+`assertArrayOrObject` answers `null` for `null` *and* `undefined` — it is its
+first branch — the constructor initialises the field to `null`, and the getter
+declares it. **The setter excluded the one value the implementation handles
+first**, so no caller could clear a body, and every spec exercising "the request
+has no body" was writing a value its own subject said was illegal. Seventeen
+sites in `request.test.ts`, sixteen elsewhere.
+
+The fix is the parameter type, not the code: `JSONObject | Array<any> | null`.
+No runtime change, and `headers` two accessors below already documents the same
+accommodation for `undefined`.
+
+_An accessor pair is one declaration in two halves, and nothing checks that they
+agree._ The getter is the promise; the setter is what the promise is worth.
+
+### `tests/helpers/present.ts` — a subject's nullability is not a fixture's
+
+56 of the step's errors are `TS18047`/`TS18048` — "possibly null" — and almost
+none are a real absence: `request.error` is `KuzzleError | null` because a
+request that has not failed carries none, and a spec that *set* one is in the
+other case.
+
+```ts
+present(request.error, "request.error");
+expect(request.error.message).toBe(error.message);   // narrowed, no cast
+```
+
+An assertion function, so the narrowing holds for the rest of the block, and a
+real assertion, so a subject that stops storing the value fails on that line
+rather than three lines later with `Cannot read properties of null`. It joins
+`invalid<T>()` and `settle()` in `tests/helpers/`, and the same reasoning
+produced the local `body(request)` reader in the two specs that dereference
+`input.body` a dozen times each.
+
+### Three mocks answered `undefined` where the subject answers a value
+
+`hotelClerk.join`, `hotelClerk.subscribe` and `securityController._persistUser`
+were stubbed with `mockResolvedValue(undefined)`. Each answers something — a
+room, a serialized user — and each spec asserts on the *call*, not on the
+answer, so the stub was never wrong at runtime. It was wrong as a description: a
+stub that cannot type-check against its own subject will not notice when that
+subject changes shape.
+
+### ⚠️ `new Map([["foo", null]])` as a volatile fixture, and the assertion built on it
+
+`ConnectionRooms` maps a room to its volatile data, typed `JSONObject`. Eight
+fixtures wrote `null` straight into it, bypassing the only writer there is:
+
+```ts
+this.registerSubscription(connectionId, roomId, request.input.volatile ?? {});
+```
+
+So a stored subscription always carries an object, and `null` is a state
+`hotelClerk` cannot produce. Correcting the fixtures to `{}` **failed a test** —
+the one asserting what `unsubscribe` notifies:
+
+```ts
+expect(notifyUser).toHaveBeenCalledWith(roomId,
+  expect.objectContaining({ input: expect.objectContaining({ volatile: null }) }), …
+```
+
+It was asserting the fixture back to itself. The notification carries `{}` in
+production and always has. Both it and a sibling `toBeNull()` now assert `{}`.
+
+_A fixture that writes past a subject's own writer does not describe the
+subject's state; it describes a state the subject cannot reach, and every
+assertion downstream of it measures the fixture._ This is why the slice ran the
+suite rather than trusting the compiler: after the change nothing about the
+types was wrong — the test was.
+
+### What M5 says about the rest of the step
+
+98 left, and the shape has changed: mostly `TS2345`/`TS2322` argument and
+assignment mismatches spread thin — 15 in `waterfall.test.ts`, 8 in
+`tokenManager.test.ts`, 7 in `pluginContext.test.ts`, then a tail of four and
+fewer. Plus M6's `command.test.ts`: ten `TS2341` and a redesign.
+
+**`present()` is the tool for most of the remaining `TS18047`s**, and the `lib/`
+finding above is the reminder to ask, at each one, *whether the type is wrong
+before working around it being right*.

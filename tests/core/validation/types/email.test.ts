@@ -35,7 +35,7 @@ describe("#core/validation/types/email", () => {
     });
 
     it("returns false if no email is provided and if an email is required", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(emailType.validate({ notEmpty: true }, "", errorMessage)).toBe(
         false,
@@ -56,7 +56,7 @@ describe("#core/validation/types/email", () => {
     });
 
     it("returns false on a string that is not an email address", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         emailType.validate({ notEmpty: true }, "not an email", errorMessage),
@@ -67,7 +67,7 @@ describe("#core/validation/types/email", () => {
     });
 
     it("returns false on a value that is not a string at all", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         emailType.validate(

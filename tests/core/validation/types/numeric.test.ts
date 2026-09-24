@@ -39,7 +39,7 @@ describe("#core/validation/types/numeric", () => {
     });
 
     it("returns false if fieldValue is not a number", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(
         numericType.validate(emptyTypeOptions, "a string", errorMessages),
@@ -48,7 +48,7 @@ describe("#core/validation/types/numeric", () => {
     });
 
     it("returns false if fieldValue is below min", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(numericType.validate(rangeTypeOptions, 40.99, errorMessages)).toBe(
         false,
@@ -59,7 +59,7 @@ describe("#core/validation/types/numeric", () => {
     });
 
     it("returns false if fieldValue is above max", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(numericType.validate(rangeTypeOptions, 42.1, errorMessages)).toBe(
         false,

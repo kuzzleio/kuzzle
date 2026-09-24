@@ -66,7 +66,9 @@ Then(
     const { collections } = await this.sdk.collection.list(index);
 
     this.props.result = {
-      collections: collections.filter(({ type }) => type === expectedType),
+      collections: collections.filter(
+        ({ type }: { type: string }) => type === expectedType,
+      ),
     };
   },
 );
@@ -76,7 +78,9 @@ Then(
   async function (not, index, collection) {
     const { collections } = await this.sdk.collection.list(index);
 
-    const collectionNames = collections.map(({ name }) => name);
+    const collectionNames = collections.map(
+      ({ name }: { name: string }) => name,
+    );
 
     if (not) {
       should(collectionNames).not.containEql(collection);

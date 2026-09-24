@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import extractFields from "../../lib/util/extractFields";
 
 describe("util/extractFields", () => {
-  let document;
+  let document: Record<string, unknown>;
 
   beforeEach(() => {
     document = {

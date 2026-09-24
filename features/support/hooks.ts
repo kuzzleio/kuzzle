@@ -164,14 +164,38 @@ After({ tags: "@login" }, async function () {
   });
 });
 
+/** A room handle as the realtime steps store it. */
+function isUnsubscribable(
+  value: unknown,
+): value is { unsubscribe: () => Promise<void> } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "unsubscribe" in value &&
+    typeof value.unsubscribe === "function"
+  );
+}
+
 // realtime hooks ==============================================================
 
 After({ tags: "@realtime" }, function () {
   if (!this.props.subscriptions) {
     return;
   }
+  // `props` is the world's untyped scratch space, so its values arrive as
+  // `unknown`. Anything in `props.subscriptions` that cannot be unsubscribed
+  // from is a bookkeeping mistake, and this hook is the last place it can be
+  // seen — so it fails the scenario rather than being skipped silently.
   const promises = Object.values(this.props.subscriptions).map(
-    ({ unsubscribe }) => unsubscribe(),
+    (subscription) => {
+      if (!isUnsubscribable(subscription)) {
+        throw new Error(
+          `@realtime teardown: props.subscriptions holds something that cannot unsubscribe: ${JSON.stringify(subscription)}`,
+        );
+      }
+
+      return subscription.unsubscribe();
+    },
   );
 
   return Promise.all(promises);

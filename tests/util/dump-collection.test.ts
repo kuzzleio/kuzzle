@@ -7,8 +7,8 @@ import {
 } from "../../lib/util/dump-collection";
 
 describe("dump-collection", () => {
-  let mapping;
-  let document;
+  let mapping: Record<string, unknown>;
+  let document: Record<string, unknown>;
 
   beforeEach(() => {
     mapping = {

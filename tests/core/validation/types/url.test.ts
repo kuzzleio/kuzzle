@@ -33,7 +33,7 @@ describe("#core/validation/types/url", () => {
     });
 
     it("returns false if the value is empty and required", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(urlType.validate({ notEmpty: true }, "", errorMessage)).toBe(
         false,
@@ -42,7 +42,7 @@ describe("#core/validation/types/url", () => {
     });
 
     it("returns false if the value is not a valid URL address", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         urlType.validate(
@@ -56,7 +56,7 @@ describe("#core/validation/types/url", () => {
 
     it("returns false if the value is not a string", () => {
       [[], {}, 123, undefined, null, false].forEach((v) => {
-        const errorMessage = [];
+        const errorMessage: string[] = [];
 
         expect(urlType.validate({ notEmpty: true }, v, errorMessage)).toBe(
           false,

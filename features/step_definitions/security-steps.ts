@@ -2,6 +2,8 @@ import _ from "lodash";
 import should from "should";
 import { Then } from "@cucumber/cucumber";
 
+import { isApiError } from "../support/errors";
+
 Then(
   /I (try to )?create a (strict )?profile "(.*?)" with the following policies:/,
   async function (trying, strict, profileId, dataTable) {
@@ -76,7 +78,9 @@ Then(
 
     const result = await this.sdk.security.searchRoles(controller);
 
-    result.hits.sort((a, b) => a._id.localeCompare(b._id));
+    result.hits.sort((a: { _id: string }, b: { _id: string }) =>
+      a._id.localeCompare(b._id),
+    );
 
     this.props.result = result;
   },
@@ -140,7 +144,7 @@ Then(
 Then("I update the role {string} with:", async function (roleId, dataTable) {
   const controllers = this.parseObject(dataTable);
 
-  const rights = {};
+  const rights: Record<string, { actions: unknown }> = {};
 
   for (const [controller, actions] of Object.entries(controllers)) {
     rights[controller] = { actions };
@@ -208,7 +212,7 @@ Then(
         throw new Error(`User "${userId}" should not exists.`);
       }
     } catch (error) {
-      if (error.status === 404) {
+      if (isApiError(error) && error.status === 404) {
         if (!shouldNot) {
           throw new Error(`User "${userId}" should exists.`, { cause: error });
         }
