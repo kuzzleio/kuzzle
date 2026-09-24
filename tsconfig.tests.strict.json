@@ -36,7 +36,9 @@
     // M1b takes the rest of the directory, because `http.ts` reaches `world.ts`
     // which constructs all three protocols: an `include` can name one file, an
     // import graph cannot be asked to.
-    "features-legacy/support/api/**/*.ts"
+    // M2 — the rest of the legacy suite: the world, the hooks and the 24 step
+    // definition files, which is why the glob is now the whole directory.
+    "features-legacy/**/*.ts"
   ],
   "exclude": [
     "dist"

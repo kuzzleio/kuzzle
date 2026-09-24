@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -128,8 +128,8 @@ Ordered so each is independently mergeable and the strict program only grows.
 | ------ | --------------------------------------------------------------------------------------------------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **M0** ✅ | `start-kuzzle-test.ts`, `start-kuzzle-dev.ts`, `.ci/`, `scripts/` — and the two-program machinery |  **7** | Two files. It is where the staging mechanism is built and proven, at a size where a mistake in it is visible. See _[What M0 found](#what-m0-found)_.           |
 | **M1** ✅ | `features-legacy/support/api/**` — **a** `apiBase.ts` ✅ (186) · **b** the rest of the directory ✅ (177 + what the import graph added)                | **363** | 34% of the step in two files, one diagnostic. The support API is also what the step definitions call, so typing it first is what makes M2 smaller than it looks. One file per PR: 2 651 lines between them. See _[What M1a found](#what-m1a-found)_. |
-| **M2** | the rest of `features-legacy/`                                                                       |    275 | 22 files, same shape, now against a typed support API.                                                                                                          |
-| **M3** | `features/`                                                                                          |     44 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
+| **M2** ✅ | the rest of `features-legacy/`                                                                    |    274 | 25 step definition files and 5 support files — and **not** the same shape: `noImplicitThis` was the slice and `TS7006` was its shadow. See _[What M2 found](#what-m2-found)_.                        |
+| **M3** | `features/`                                                                                          |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work.                                                                        |
 | **M4** | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                               |    191 | One shape, 49% of the vitest debt. Mechanical, and doing it first shrinks every file the later slices open.                                                     |
 | **M5** | `tests/` — the five hot files, whatever is left in them                                              |   ~120 | Each is a PR's worth of review on its own; four of the five are step 13 ports, so the author of the debt is in the git blame.                                    |
 | **M6** | `tests/` — the tail, **including the 8 `TS2341`**                                                    |    ~77 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility.                                |
@@ -352,3 +352,186 @@ anything, is what surfaced a behaviour nobody had chosen**_ — after
 pattern is specific enough to plan around: the errors that are worth the step
 are the ones on a **declaration shared by more than one implementation**, and
 they are not in the count that makes a slice look big.
+
+## What M2 found
+
+**`features-legacy/` is strict, the whole directory: 274 errors → 0, and the
+non-strict program no longer contains any of it.** The measurement matched the
+plan (274 against 275) and **the plan's reading of what those errors were did
+not.**
+
+### `noImplicitThis` is the whole slice, and `TS7006` was its shadow
+
+The [scope table](#what-the-errors-actually-are--and-they-are-not-one-debt)
+attributed 569 of `features-legacy/`'s 638 to `TS7006` — an implicit `any` on a
+parameter — and called the shape "close to a codemod". In `support/api/` (M1)
+that was exactly right. In `step_definitions/` it was **a measurement of a
+consequence**:
+
+| After                                   | Errors | `TS7006` |
+| --------------------------------------- | -----: | -------: |
+| the directory, as measured               |    274 |      217 |
+| `@types/async`                           |    266 |      198 |
+| **one `this: KWorld` per step callback** | **209**|   **48** |
+
+A cucumber step is `function (…) { this.api.get(id).then((body) => …) }`. With
+no `this` parameter, `this` is `any`, so `this.api.get(id)` is `any`, so **the
+promise callbacks have nothing to be contextually typed from** — and every one
+of them is reported as an implicit-any parameter. 150 of the 217 `TS7006` were
+that: not a missing annotation, but the same missing annotation, counted once
+per callback downstream of it. **178 annotations, one per function that uses
+`this`, applied by a codemod over the AST, removed 150 of the 217 — and
+uncovered 93 errors of other kinds that the program had been unable to reach.**
+
+**What was left is what the slice was actually about.** With `this` typed, the
+world and the API stopped being `any` and the program could finally read the
+step definitions:
+
+| Diagnostic | Count | What appeared |
+| ---------- | ----: | -------------- |
+| `TS2554` | 30 | a wrapper called with fewer arguments than it declares |
+| `TS2339` | 49 | a property that is on no protocol, or on no world |
+| `TS2532` | 39 | scenario state read before any step wrote it |
+
+None of these are in the plan's table, because none of them could be seen
+before `this` was named. **The step's arithmetic is sound; its taxonomy was a
+description of what `strict: false` was able to report.**
+
+### M1 typed ~90 parameters as required that their own bodies default
+
+`ApiBase.get(id: string, index: string, collection: string)` — and the body is
+`index: index || this.world.fakeIndex`. M1a and M1b annotated the wrappers with
+no callers in the program to check against, so a parameter the method *defaults*
+was written as one the method *requires*. 30 call sites proved it, and the sweep
+that fixed it is mechanical and driven by the bodies: a trailing parameter the
+method guards (`x ||`, `if (x)`, `x !== undefined`, `util.getIndex(x)`) becomes
+optional. 93 parameters across `apiBase.ts` and `http.ts`.
+
+Six more were not defaulted anywhere and needed reading:
+`createCollection`'s mappings, `scroll`'s scroll, `getMyRights`'s id,
+`subscribe`'s client, and `create`'s `jwtToken`/`id` in the HTTP wrapper.
+
+⚠️ _Generalised:_ **a wrapper typed without its callers records what the author
+believed the contract was.** M1 could not have found this; M2 could not have
+avoided it.
+
+### Three step definitions read world properties that no step ever writes
+
+`bulk.ts` reads `this.index` and `this.collection` at six call sites.
+**Nothing in the suite assigns either.** What those scenarios have been
+exercising is the wrapper's `index || world.fakeIndex` fallback — the steps pass
+`undefined` and the default supplies `kuzzle-test-index`. They now pass
+`this.fakeIndex` and `this.fakeCollection`, which is the same request with the
+fallback stated at the call site instead of relied on from three files away.
+
+`this.globalBulk` is the third, and it is worse: the step reading it calls
+`this.api.globalBulkImport(…)`, **a method no wrapper has**, and
+`I do a global bulk import` **appears in no feature file**. It could never have
+run. Deleted.
+
+### Four more steps that cannot run, and would not work if they did
+
+`writeDocument.ts`'s `I create|replace|update|createOrReplace multiple documents`
+are unreferenced by any feature file, and each one:
+
+- builds `const body = { documents: [] }` and pushes to it — `never[]`, so the
+  push is a type error and the array was only ever going to hold what TypeScript
+  cannot name;
+- indexes the world with `this[documents[key]]` inside `for (const key of
+  documents)`, where `key` is an **element** and `documents[key]` is therefore
+  `undefined`;
+- calls `callback(response.error.message)` — a string where cucumber wants an
+  `Error`.
+
+116 lines deleted. The DoD's rule is that the fix removes the error rather than
+moving it; for a step that no feature runs and that could not pass if one did,
+removing it *is* the fix.
+
+### `HookWorld` — a type invented because the world had none
+
+`support/hooks.ts` carried its own structural stand-in:
+
+```ts
+type HookWorld = { api: any; currentUser?: any; users?: any; idPrefix: string; … };
+```
+
+`api: any` is the whole point of it. Replacing it with `KWorld` — now that
+`KWorld` is a class the program understands — surfaced two things it had been
+hiding: the `@realtime` teardown calls `unsubscribeAll()`, which **both realtime
+protocols implement and the base did not declare**, and the `@http` teardown
+calls `encode`/`decode`, which **only the HTTP wrapper has**.
+
+Both are answered the same way, and it is the pattern the rest of the slice
+reuses: `stepUtils` exports `httpApi(world)` and `realtimeApi(world)`, which
+narrow the world's `HttpApi | MqttApi | WebSocketApi` and **throw by name** when
+the run's protocol is not the one the step needs. The profiles already guarantee
+it (`httpLegacy` is `not @realtime`, the other two are `not @http`), so the
+throw is a statement of what the tags mean, not a new failure mode.
+
+### The world declared its fixtures and none of its state
+
+`KWorld` declared the 22 fixtures it constructs. The step definitions also
+write `result`, `apiResult`, `updatedResult`, `body`, `currentToken`,
+`scrollId` and `statusCode` — **scenario scratch state, one step writing what
+the next asserts on, none of it declared.** That is why `this.index` could be
+read for years: on a world where every property is undeclared, a typo and a
+protocol are indistinguishable.
+
+The four payload fields are now declared *and initialised to `{}`*. A step that
+reads what no earlier step wrote then fails on its own assertion — which names
+the missing step — instead of throwing `Cannot read properties of undefined` in
+the reader.
+
+### Five sites dispatched on a name they had built from a string
+
+`this[`${objectType}s`]`, `` `get${objectTypeCapitalized}` ``,
+`this.api[method]`, `this[documentName]`. Each is a lookup the type system
+cannot check against a world and an API that have hundreds of members, and each
+had two or three possible values the regex right above it already enumerated.
+They are now explicit: a `Record<SecurityObjectType, …>` in `role.ts`, a ternary
+over the two wrappers in `users.ts`, and a `KWorld.document(name)` accessor for
+the two document fixtures.
+
+### `unsubscribe` answers nothing, and a step awaited it
+
+[TD-82](../type-debt-register.md#td-82), filed by M1b, arrived at its caller in
+this slice. `Then I unsubscribe` did:
+
+```ts
+realtimeApi(this).unsubscribe(room, socketName).then(() => callback());
+```
+
+and `unsubscribe` returns `undefined` when the socket or the room has already
+gone. The step now names that case and fails on it. **This is the third time in
+step 14 that a declaration, annotated rather than run, produced a path nobody
+had chosen** — after M0's `unregister-pipe` and M1b's own finding.
+
+### `responses` and `subscribedRooms` were `protected`, and their callers are steps
+
+16 sites in `notifications.ts` and 10 in `subscription.ts` read them. This is
+[step 13's L6](13-sprint-10-test-closure.md) shape — a test reaching a member it
+was not offered — but the answer is the opposite one, because **the subject here
+is the test harness, not production code**: the room a scenario opened and the
+notification it received are what `features-legacy` exists to assert on. M1
+marked them `protected` with no callers in the program. They are public now, and
+the comment says why.
+
+### One vocabulary, instead of ten spellings of it
+
+`asError` replaces the retry callbacks' inline error handling, which appeared in
+four spellings across 16 `async.retry` sites and one `parallelLimit`, and **all four
+rebuilt an `Error` around the message of the one they had been handed**, losing
+its stack and its `statusCode`. `@types/async` is what made them visible: it
+traded 10 `TS7016` for 12 `TS2769` and 6 `TS2322`, every one of them a place
+where the code reassigned its own `Error` parameter to a string and then wrapped
+it.
+
+### What M2 says about the rest of the step
+
+M4 is 191 `TS7034`/`TS7005` in `tests/` — a bare `let` — and the plan calls it
+mechanical. M2's warning is not that the count is wrong but that **it is a count
+of what a non-strict program can see**. `tests/` is 153 vitest files whose
+subject is `lib/`, which is already strict, so the shadow effect that dominated
+here has nothing to feed on; the equivalent risk is `TS2532` on fixture state,
+which is where `tests/`'s 64 nullability errors already are. Budget M4 as the
+191 plus whatever the annotations uncover, not as 191.

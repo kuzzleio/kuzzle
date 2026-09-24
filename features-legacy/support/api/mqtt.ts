@@ -19,7 +19,7 @@ type Subscription = {
 export default class MqttApi extends ApiBase {
   private clients: Record<string, MqttClient>;
   private requests: Record<string, (result: any) => void>;
-  protected subscribedRooms: Record<string, Record<string, Subscription>>;
+  subscribedRooms: Record<string, Record<string, Subscription>>;
 
   constructor(world: any) {
     super(world);

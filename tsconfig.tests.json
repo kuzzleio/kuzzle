@@ -45,7 +45,6 @@
     "tests/**/*.json",
     // Functional tests (cucumber)
     "features/**/*.ts",
-    "features-legacy/**/*.ts",
     // Ambient declarations for test-only dependencies (see tests/types/).
     "tests/types/**/*.d.ts"
   ],
@@ -59,6 +58,6 @@
     "scripts",
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts",
-    "features-legacy/support/api"
+    "features-legacy"
   ]
 }
