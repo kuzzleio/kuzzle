@@ -21,11 +21,9 @@
  * limitations under the License.
  */
 
-"use strict";
-
 /* eslint-disable no-console */
 
-const { Kuzzle, WebSocket } = require("kuzzle-sdk");
+import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 /**
  * Waits for a Kuzzle node to be able to *process requests*, not merely to
@@ -49,32 +47,55 @@ const { Kuzzle, WebSocket } = require("kuzzle-sdk");
  *     `connect()` and schedules no retry. The wait then burns its whole budget
  *     on a single dead attempt. Each attempt below is instead a fresh client
  *     with `autoReconnect: false`, bounded by its own timeout.
+ *
+ * It is not shipped: it is CI tooling, so it lives in the test program
+ * (`tsconfig.tests.json`) and is run through `ts-node`, the same way
+ * `.ci/` runs `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
  */
 
 const NOT_ENOUGH_NODES = "api.process.not_enough_nodes";
 
-const sleep = (seconds) => {
+const sleep = (seconds: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
 
 const kuzzleHost = process.env.KUZZLE_HOST || "localhost";
-const kuzzlePort = process.env.KUZZLE_PORT || 7512;
+const kuzzlePort = Number.parseInt(process.env.KUZZLE_PORT || "7512", 10);
 const maxTries = Number.parseInt(process.env.MAX_TRIES || "60", 10);
 const attemptTimeout = Number.parseInt(process.env.ATTEMPT_TIMEOUT || "5", 10);
 
 /**
+ * The one property this script reads off a rejection. Anything can be thrown,
+ * so the check is a predicate rather than a cast: a `KuzzleError` carries an
+ * `id`, a socket error does not, and both reach the same `catch`.
+ */
+function errorId(error: unknown): string | undefined {
+  return typeof error === "object" && error !== null && "id" in error
+    ? String((error as { id: unknown }).id)
+    : undefined;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Runs one connection + readiness probe, bounded by `timeout` seconds.
  *
- * @returns {Promise<void>} resolves if the node is ready, rejects otherwise
+ * Resolves if the node is ready, rejects otherwise.
  */
-async function probe(host, port, timeout) {
+async function probe(
+  host: string,
+  port: number,
+  timeout: number,
+): Promise<void> {
   // `autoReconnect` is a *protocol* option, not a Kuzzle one.
   const kuzzle = new Kuzzle(
     new WebSocket(host, { autoReconnect: false, port }),
   );
 
-  let timer;
-  const expire = new Promise((resolve, reject) => {
+  let timer: NodeJS.Timeout | undefined;
+  const expire = new Promise<never>((resolve, reject) => {
     timer = setTimeout(
       () => reject(new Error(`attempt timed out after ${timeout}s`)),
       timeout * 1000,
@@ -95,7 +116,7 @@ async function probe(host, port, timeout) {
         controller: "auth",
       });
     } catch (error) {
-      if (error.id === NOT_ENOUGH_NODES) {
+      if (errorId(error) === NOT_ENOUGH_NODES) {
         throw error;
       }
     }
@@ -117,11 +138,15 @@ async function probe(host, port, timeout) {
   }
 }
 
-async function waitKuzzle(host, port, timeout) {
+async function waitKuzzle(
+  host: string,
+  port: number,
+  timeout: number,
+): Promise<void> {
   console.log(`[ℹ] Trying to connect to Kuzzle at "${host}:${port}"`);
 
   const deadline = Date.now() + timeout * 1000;
-  let lastError;
+  let lastError: unknown;
 
   for (let attempt = 0; Date.now() < deadline; attempt++) {
     const remaining = Math.ceil((deadline - Date.now()) / 1000);
@@ -137,7 +162,7 @@ async function waitKuzzle(host, port, timeout) {
       lastError = error;
 
       console.log(
-        `[-] Kuzzle at "${host}:${port}" is not ready yet (attempt ${attempt + 1}, ${remaining}s left): ${error.message}`,
+        `[-] Kuzzle at "${host}:${port}" is not ready yet (attempt ${attempt + 1}, ${remaining}s left): ${errorMessage(error)}`,
       );
     }
 
@@ -145,16 +170,16 @@ async function waitKuzzle(host, port, timeout) {
   }
 
   console.log(
-    `Timeout after ${timeout}s: Kuzzle at "${host}:${port}" never became ready — last error: ${lastError && lastError.message}`,
+    `Timeout after ${timeout}s: Kuzzle at "${host}:${port}" never became ready — last error: ${errorMessage(lastError)}`,
   );
   process.exit(1);
 }
 
-const run = async () => {
+const run = async (): Promise<void> => {
   try {
     await waitKuzzle(kuzzleHost, kuzzlePort, maxTries);
   } catch (error) {
-    console.error(`[x] ${error.message}`);
+    console.error(`[x] ${errorMessage(error)}`);
     process.exit(1);
   }
 };
@@ -163,4 +188,4 @@ if (require.main === module) {
   run();
 }
 
-module.exports = waitKuzzle;
+export = waitKuzzle;

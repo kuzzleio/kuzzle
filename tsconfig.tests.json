@@ -52,6 +52,11 @@
     // history is in docs/adr-001/steps/14-test-program-strict.md.
     // M0 — the CI and migration tooling, and the functional-test entrypoints.
     ".ci/scripts/**/*.ts",
+    // `bin/wait-kuzzle.ts` belongs to the same family: CI tooling, run by
+    // `.ci/scripts/**` through `ts-node`, and deliberately NOT part of the
+    // published build — so it is checked here rather than by `npm run build`.
+    // See docs/adr-001/steps/03-sprint-2-bin.md.
+    "bin/wait-kuzzle.ts",
     "scripts/**/*.ts",
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts",
