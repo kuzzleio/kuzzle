@@ -6,7 +6,8 @@ import ClientConnection from "../../../lib/core/network/clientConnection";
 
 describe("core/network/clientConnection", () => {
   describe("#constructor", () => {
-    let headers, connection;
+    let headers: Record<string, string>;
+    let connection: ClientConnection;
 
     beforeEach(() => {
       headers = { foo: "bar" };

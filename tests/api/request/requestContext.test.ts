@@ -14,7 +14,7 @@ describe("#RequestContext", () => {
     },
   };
 
-  let context;
+  let context: RequestContext;
 
   beforeEach(() => {
     context = new RequestContext(args);

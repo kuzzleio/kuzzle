@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -131,9 +131,9 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M2** ✅ | the rest of `features-legacy/`                                                                    |    274 | 25 step definition files and 5 support files — and **not** the same shape: `noImplicitThis` was the slice and `TS7006` was its shadow. See _[What M2 found](#what-m2-found)_.                        |
 | **M3** ✅ | `features/`                                                                                       |     42 | 12 files, ~4 errors each. Thin and unrelated to M1/M2's shape; last of the cucumber work. See _[What M3 found](#what-m3-found)_.                                  |
 | **M3b** | `features/` — annotate `this: KuzzleWorld` on every step and hook | ? | Not a compile fix: cucumber types `this` as a world with an index signature, so the suite compiles today by *answering every question*. M2 measured what that hides. |
-| **M4** | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                               |    191 | One shape, 49% of the vitest debt. Mechanical, and doing it first shrinks every file the later slices open.                                                     |
+| **M4** ✅ | `tests/` — the un-annotated `let` (`TS7034`/`TS7005`) across the suite                            |    191 | One shape, 49% of the vitest debt. **186 of them; the last 6 are one binding, handed to M6 with the file it belongs to.** See _[What M4 found](#what-m4-found)_. |
 | **M5** | `tests/` — the five hot files, whatever is left in them                                              |   ~120 | Each is a PR's worth of review on its own; four of the five are step 13 ports, so the author of the debt is in the git blame.                                    |
-| **M6** | `tests/` — the tail, **including the 8 `TS2341`**                                                    |    ~77 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility.                                |
+| **M6** | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                             |    ~82 | ⚠️ Not mechanical. A private member reached from a spec is L6's finding again: fix the subject or the test, never the visibility. M4 hands it `command.test.ts` whole, `let command` still inferred. |
 | **M7** | The flip: delete `tsconfig.tests.json`, fold the specs back into one program if that holds           |      — | Only correct when the non-strict program is empty. K6's lesson applies verbatim — diff what the build emits before and after.                                    |
 | **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
 
@@ -624,3 +624,67 @@ what it breaks.
 
 **M4's 191 stay the estimate to distrust.** Nothing here contradicts the M2
 lesson; `features/` was simply too small and too recent to hide much.
+
+## What M4 found
+
+**388 → 202**, over 17 files and 38 annotated bindings. The shape was what the
+plan said it was — 23 of the 38 are `const errorMessages: string[] = []` in the
+validation-type specs, one line each — and it is the first slice where the
+"one annotation per site" description survived contact.
+
+**What it did not survive is the assumption that an annotation only removes
+errors.** Annotating three bindings *uncovered* errors that `any` had been
+answering:
+
+| Binding | Uncovered |
+| --- | --- |
+| `let command` → `ClusterCommand` | `TS2341` 8 → **10**, plus one `TS2769` |
+| `let baseType` → `BaseType` | one `TS2345` |
+
+That is [M2's finding](#what-m2-found) again at one hundredth the scale, and it
+is now measured twice: **a count of diagnostics is a count of what the compiler
+can currently see, and every annotation changes what it can see.**
+
+### ⚠️ Two of the uncovered errors are reported by the **non-strict** program too
+
+This is the part worth carrying into M5 and M6. `TS2341` (a private member) and
+`TS2345` (an argument mismatch) are not strict-only checks: they are on in
+`tsconfig.tests.json` as well. So annotating a binding in `tests/` — a directory
+that has *not* moved programs yet — can turn `npm run typecheck:tests` red
+immediately, with no `strict` anywhere in sight.
+
+The staging protects a directory from **strict**; it does not protect it from
+**being typed at all**. A slice that annotates bindings ahead of its directory's
+move has to keep the non-strict program green as it goes, which means the
+findings it uncovers are due in the same PR — not deferred to the slice that
+"owns" them.
+
+### Which is why `tests/cluster/command.test.ts` keeps its `let command`
+
+Annotating it is correct and it reports ten private-member reaches:
+`protoroot`, `server`, `state` and `node`. Answering those is
+[step 13's L6](13-sprint-10-test-closure.md) — _change the subject or the test,
+never the visibility_ — and it is a redesign of what the spec observes, not an
+annotation. It stays inferred, with a comment naming M6, and M6 takes the file
+whole.
+
+**So M6's diagnostic count is wrong in the same direction as every other count
+in this step: it reads 8 `TS2341` because `command` is `any`. It is 10.**
+
+The single `TS2345` that `baseType` uncovered was answered here, being one line:
+the spec passed the string `"foobar"` where `validateFieldSpecification` takes
+`TypeOptions` (a `Record<string, unknown>`). The assertion is identity, so it
+needed *an* options object rather than that one.
+
+### How to re-measure
+
+`tests/` is still in the non-strict program, so nothing reports its strict debt
+on its own. To see the remaining 202:
+
+```bash
+# tsconfig.tests.strict.json + tests/ in its include, then:
+npx tsc -p <that file> --noEmit | grep -c 'error TS'
+```
+
+The temporary config is not committed on purpose — a second strict config that
+nothing runs is a config that goes stale. M7 deletes the need for it.

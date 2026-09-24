@@ -26,7 +26,7 @@ describe("#core/validation/types/geoPoint", () => {
     });
 
     it("returns false if the geoPoint is not valid", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(
         geoPointType.validate({}, { not: "a geopoint" }, errorMessages),

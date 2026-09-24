@@ -20,7 +20,7 @@ describe("#core/validation/types/boolean", () => {
 
   describe("#validate", () => {
     it("returns true if fieldValue is a boolean", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(booleanType.validate({}, true, errorMessages)).toBe(true);
       expect(Array.isArray(errorMessages)).toBe(true);
@@ -32,7 +32,7 @@ describe("#core/validation/types/boolean", () => {
     });
 
     it("returns false if fieldValue is not a boolean", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(booleanType.validate({}, "foo", errorMessages)).toBe(false);
       expect(errorMessages).toEqual(["The field must be of type boolean."]);

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import BaseType from "../../../lib/core/validation/baseType";
 
 describe("#core/validation/baseType", () => {
-  let baseType;
+  let baseType: BaseType;
 
   beforeEach(() => {
     baseType = new BaseType();
@@ -21,7 +21,13 @@ describe("#core/validation/baseType", () => {
   });
 
   it("defines function validateFieldSpecification to return the provided options", () => {
-    expect(baseType.validateFieldSpecification("foobar")).toBe("foobar");
+    // The base returns its argument unchanged, so the assertion is identity —
+    // it needs *an* options object, not a specific one. It used to pass the
+    // string "foobar", which `TypeOptions` (a `Record<string, unknown>`) does
+    // not admit; nothing said so while `baseType` was inferred as `any`.
+    const typeOptions = { foobar: true };
+
+    expect(baseType.validateFieldSpecification(typeOptions)).toBe(typeOptions);
   });
 
   it("returns a strict parent's strictness", () => {

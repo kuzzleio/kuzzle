@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { JSONObject } from "kuzzle-sdk";
+
 import type { Backend } from "../../../lib/core/backend/backend";
+import type { DefaultMappings } from "../../../lib/core/backend/backendImport";
 import { createBackend, internals } from "./backendFixture";
 
 vi.mock("../../../lib/kuzzle", async () => {
@@ -19,7 +22,7 @@ describe("BackendImport", () => {
   const imported = () => internals(application)._import;
 
   describe("#mappings", () => {
-    let mappings;
+    let mappings: DefaultMappings;
 
     beforeEach(() => {
       mappings = {
@@ -104,7 +107,7 @@ describe("BackendImport", () => {
   });
 
   describe("#profiles", () => {
-    let profiles;
+    let profiles: JSONObject;
 
     beforeEach(() => {
       profiles = {
@@ -172,7 +175,7 @@ describe("BackendImport", () => {
   });
 
   describe("#roles", () => {
-    let roles;
+    let roles: JSONObject;
 
     beforeEach(() => {
       roles = {
@@ -230,7 +233,7 @@ describe("BackendImport", () => {
   });
 
   describe("#userMappings", () => {
-    let userMappings;
+    let userMappings: JSONObject;
 
     beforeEach(() => {
       userMappings = {
@@ -281,7 +284,7 @@ describe("BackendImport", () => {
   });
 
   describe("#users", () => {
-    let users;
+    let users: JSONObject;
 
     beforeEach(() => {
       users = {

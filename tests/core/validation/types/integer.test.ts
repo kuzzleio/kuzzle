@@ -36,7 +36,7 @@ describe("#core/validation/types/integer", () => {
     });
 
     it("returns false if fieldValue is not a number", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(
         integerType.validate(emptyTypeOptions, "a string", errorMessages),
@@ -45,7 +45,7 @@ describe("#core/validation/types/integer", () => {
     });
 
     it("returns false if fieldValue is not an integer", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(integerType.validate(emptyTypeOptions, 42.42, errorMessages)).toBe(
         false,
@@ -54,7 +54,7 @@ describe("#core/validation/types/integer", () => {
     });
 
     it("returns false if fieldValue is below min", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(integerType.validate(rangeTypeOptions, 40, errorMessages)).toBe(
         false,
@@ -65,7 +65,7 @@ describe("#core/validation/types/integer", () => {
     });
 
     it("returns false if fieldValue is above max", () => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
 
       expect(integerType.validate(rangeTypeOptions, 43, errorMessages)).toBe(
         false,

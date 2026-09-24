@@ -34,7 +34,7 @@ describe("#core/validation/types/string", () => {
 
     it("returns false if the value is not a string", () => {
       [[], {}, 123, null, undefined].forEach((v) => {
-        const errorMessage = [];
+        const errorMessage: string[] = [];
 
         expect(stringType.validate({}, v, errorMessage)).toBe(false);
         expect(errorMessage).toEqual(["The field must be a string."]);
@@ -42,7 +42,7 @@ describe("#core/validation/types/string", () => {
     });
 
     it("returns false if the value length is below the expected minimum", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         stringType.validate({ length: { min: 10 } }, "a string", errorMessage),
@@ -53,7 +53,7 @@ describe("#core/validation/types/string", () => {
     });
 
     it("returns false if the value length is above the expected maximum", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(
         stringType.validate({ length: { max: 5 } }, "a string", errorMessage),

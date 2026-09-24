@@ -38,7 +38,7 @@ describe("#core/validation/types/ipAddress", () => {
     });
 
     it("returns false if no address is provided while being required", () => {
-      const errorMessage = [];
+      const errorMessage: string[] = [];
 
       expect(ipAddressType.validate({ notEmpty: true }, "", errorMessage)).toBe(
         false,
@@ -48,7 +48,7 @@ describe("#core/validation/types/ipAddress", () => {
 
     it("returns false if the value is not a valid IP address", () => {
       ["foobar", "1.2.3.256", "2001:dg8::1"].forEach((ip) => {
-        const errorMessage = [];
+        const errorMessage: string[] = [];
 
         expect(
           ipAddressType.validate({ notEmpty: true }, ip, errorMessage),
@@ -61,7 +61,7 @@ describe("#core/validation/types/ipAddress", () => {
 
     it("returns false if the value is not a string", () => {
       [[], {}, null, undefined, 123].forEach((v) => {
-        const errorMessage = [];
+        const errorMessage: string[] = [];
 
         expect(
           ipAddressType.validate({ notEmpty: true }, v, errorMessage),

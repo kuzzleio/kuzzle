@@ -28,7 +28,7 @@ describe("#core/validation/types/object", () => {
 
     it("returns false if the value is not an object", () => {
       [[], "foobar", undefined, null, 123].forEach((v) => {
-        const errorMessages = [];
+        const errorMessages: string[] = [];
 
         expect(objectType.validate({}, v, errorMessages)).toBe(false);
         expect(errorMessages).toEqual(["The value must be an object."]);
