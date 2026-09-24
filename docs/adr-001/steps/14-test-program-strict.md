@@ -1,6 +1,6 @@
 # Step 14 — the test program under `strict`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done 2026-09-24 — every DoD box ticked; M3b stays open, outside the DoD · **Opened:** 2026-09-24 · **PR(s):** M0 [#2867](https://github.com/kuzzleio/kuzzle/pull/2867) · M1a [#2868](https://github.com/kuzzleio/kuzzle/pull/2868) · M1b [#2869](https://github.com/kuzzleio/kuzzle/pull/2869) · M2 [#2871](https://github.com/kuzzleio/kuzzle/pull/2871) · M3 [#2873](https://github.com/kuzzleio/kuzzle/pull/2873) · M4 [#2874](https://github.com/kuzzleio/kuzzle/pull/2874) · M5 [#2875](https://github.com/kuzzleio/kuzzle/pull/2875) · M6 [#2877](https://github.com/kuzzleio/kuzzle/pull/2877) · M7 [#2878](https://github.com/kuzzleio/kuzzle/pull/2878) · M8 _(this PR)_ · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -135,7 +135,7 @@ Ordered so each is independently mergeable and the strict program only grows.
 | **M5** ✅ | `tests/` — the five hot files, whatever is left in them                                           |   ~120 | Four files, not five: **M4 emptied `backendImport.test.ts` outright** (58 → 0), and `command.test.ts` is M6's. 202 → 98. See _[What M5 found](#what-m5-found)_.  |
 | **M6** ✅ | `tests/` — the tail, **including the `TS2341`s, which are 10 and not 8**                          |    ~82 | 98 → 0, and `tests/` moves into the strict program. Two subject changes, two fixtures that were asserting themselves. See _[What M6 found](#what-m6-found)_. |
 | **M7** ✅ | The flip: one test program, and the fold **measured and refused**                                |      — | The non-strict program is deleted. Folding the specs into `tsconfig.json` takes `dist/` from 770 to 1 311 files. See _[What M7 found](#what-m7-found)_.        |
-| **M8** | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program                          |   +371 | Right for `lib/`; in a spec, `data[0]` is usually an assertion about a fixture the same spec wrote three lines up. Argue it, then do it or record why not.      |
+| **M8** ✅ | **A decision, not a slice:** `noUncheckedIndexedAccess` on the test program — **off, recorded** | 378 | 344 are specs reading back what they wrote; the 34 that run hold no defect. See _[What M8 found](#what-m8-found)_. |
 
 **M1 + M2 + M4 = 829 of 1 077 (77%), and all three are one annotation per site.**
 The step is far more mechanical than its total suggests; what it is not is small.
@@ -154,7 +154,8 @@ The step is far more mechanical than its total suggests; what it is not is small
 - [x] `TS2341`'s sites — **ten, not eight** — resolved by changing the subject
       or the test, per [step 13's L6](13-sprint-10-test-closure.md). _(M6, and
       one of them was the subject: see [What M6 found](#what-m6-found).)_
-- [ ] `noUncheckedIndexedAccess` decided either way, in writing.
+- [x] `noUncheckedIndexedAccess` decided either way, in writing. _(M8: off in
+      the test program, on in `tsconfig.json` — see [What M8 found](#what-m8-found).)_
 
 ## What M0 found
 
@@ -988,3 +989,74 @@ node -r ts-node/register -e 'require("./features/step_definitions/controllers-st
 the strict program"*; the `migration-ratchets` job explained why it ran two
 `tsc`s. Both now describe one program — and `CONTRIBUTING.md` says why the specs
 are not in `tsconfig.json`, since that is the question this slice answered.
+
+## What M8 found
+
+**Decided: `noUncheckedIndexedAccess` stays off in the test program, and on in
+`tsconfig.json`.** Nothing changed but this record and the comment on the flag
+in `tsconfig.tests.json`: the measurement found no defect to fix, so there was
+no code to write.
+
+### The 378, by shape
+
+Measured 2026-09-24 on M7's `tsconfig.tests.json` with the flag passed on the
+command line (`npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`).
+**378 errors in 50 files** — more than the 346 M7 quoted, because M7 measured the
+specs *folded into `tsconfig.json`*, whose `include` holds neither the cucumber
+suites nor the tooling. Classified exclusively, in this order:
+
+| Shape | Errors | What the flag is objecting to |
+| --- | ---: | --- |
+| `harness.clientStub.*` / `harness.sent(…)` in `elasticsearchCases/` | 140 | `ESClientStub extends Record<string, Stub>`, and the stub is a `Proxy` that answers **every** key. The flag says a key may be absent; for this object it never is. |
+| `mock.calls[0][0]` and siblings | 87 | Reading back the call the spec just made. If it was not made, the `expect` on the next token fails anyway — with a `TypeError` instead of a diff, which is the whole difference. |
+| `arr[0]`, `arr[1]` | 61 | Fixtures the same spec wrote a few lines up, or results it is about to assert the length of. |
+| Other `tests/` sites | 56 | The same two shapes, spelled differently: stubs typed `Record<string, Mock>` (`cache.get`, `tokenManager.getConnectedUserToken`, `debug.formatters.a`) and fixture maps (`mappings.index1`, `role.controllers.controller`). |
+| `features*/`, `.ci/`, `start-kuzzle-test.ts` | 34 | The code that *runs* rather than asserts — the only place the flag could have found something. |
+
+**344 of 378 are specs, and they are exactly the case the slice table predicted:**
+an indexed read whose presence the spec itself guarantees. Making them compile
+means ~300 `!` or `?.`. The `casts` and `any` ratchets count `lib/` only, so
+nothing would stop those from becoming the idiom — and a `!` in a spec is not
+a weaker `expect`, it is no `expect` at all, sitting in front of one.
+
+### The 34 that run were read one by one, and none is a defect
+
+- **Already guarded, narrowing lost.** `if (this.requests[id]) this.requests[id](msg)`
+  (`mqtt.ts`, `websocket.ts`), `if (rooms && rooms[roomId]) { const room = rooms[roomId]; … }`,
+  and the same around `subscribedRooms` — the flag does not narrow an element
+  access by a checked non-literal key, so a guarded read reports as unguarded.
+  The fix would be a hoist into a `const`, for no behaviour change.
+- **A missing key is a test failure, and should be.** `unsubscribe` on a room
+  never subscribed, `sockets[key].terminate()` on a socket never opened: the
+  harness throwing there is the correct outcome.
+- **An `argv` flag with no value** — `--enable-plugins` in `start-kuzzle-test.ts`,
+  `--world-parameters` in `features-legacy/support/hooks.ts` — would crash on
+  `undefined`. Every caller of the first (`.ci/test-cluster-{7,8}.yml`) passes
+  a value, and nothing passes the second at all — `cucumber.config.cjs` sets
+  `worldParameters` as an option, so that `argv` branch is dead rather than
+  fragile. Neither has a path to the crash.
+- **Parsers over well-formed input.** `coverage-gate.ts` reads lcov `DA:` lines
+  (a malformed one gives `NaN`, which counts as not hit) and exemption lines it
+  has already trimmed and filtered for emptiness.
+
+_A flag is worth its cost where an absent key is a state the code can be in._
+In `lib/` that is most indexed reads — request bodies, config, user input. In a
+spec it is almost none: the spec wrote the key. The measurement is what makes
+this a decision rather than a preference — the 34 sites where the argument
+could have failed were checked, and it did not.
+
+### Why not the half-measures
+
+- **Flag on, test code off.** `tsc` has no per-file options, so this is a second
+  program, and M7 has just deleted the second program.
+- **Retype `ESClientStub` as a total map** (the 140). Correct under the flag,
+  inert without it: with the flag off, `Record<string, Stub>` already reads as
+  total. It is the first thing to do *if* the flag is ever turned on, and
+  nothing before.
+
+### To revisit it
+
+Re-run the command above. The decision holds while the non-spec share stays
+small and defect-free; a harness or tooling file that grows real lookups over
+external input (the cucumber support API over server responses is the likeliest)
+is the signal to measure again.

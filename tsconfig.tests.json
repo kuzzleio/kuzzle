@@ -29,11 +29,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "strict": true,
-    // ⚠️ The one place this program still differs from the production one, and
-    // the last open question of step 14 (M8): `noUncheckedIndexedAccess` is on
-    // in `tsconfig.json`. It is right for `lib/`; in a spec, `data[0]` is
-    // usually an assertion about a fixture the same spec wrote three lines up.
-    // +371 errors as measured 2026-09-24. Argue it, then do it or record why not.
+    // ⚠️ The one place this program differs from the production one, on
+    // purpose (step 14's M8). `noUncheckedIndexedAccess` is on in `tsconfig.json`
+    // and right for `lib/`. Here it reports 378 errors (2026-09-24): 344 are specs
+    // reading back a fixture or a mock call they just made, and the 34 in code
+    // that runs (cucumber support, `.ci/`, `start-kuzzle-test.ts`) were read one
+    // by one and hold no defect. Turning it on would mean ~300 `!`, which no
+    // ratchet counts outside `lib/`. Re-measure with
+    // `npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`.
     "noUncheckedIndexedAccess": false,
     "noEmit": true
   },
