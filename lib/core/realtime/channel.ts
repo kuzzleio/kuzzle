@@ -108,11 +108,11 @@ export class Channel {
     return str;
   }
 
-  static USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
+  static readonly USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
 
   // Its own array: it used to be `USERS_ALLOWED_VALUES` itself, which is how
   // `"none"` became a valid scope without the type or the hash knowing.
-  static SCOPE_ALLOWED_VALUES: readonly string[] = [
+  static readonly SCOPE_ALLOWED_VALUES: readonly string[] = [
     "all",
     "in",
     "out",
