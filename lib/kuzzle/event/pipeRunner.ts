@@ -25,6 +25,7 @@ import Denque from "denque";
 
 import * as kerrorLib from "../../kerror";
 import { KuzzleError } from "../../kerror/errors";
+import { causeOf } from "../../util/thrown";
 import waterfall from "./waterfall";
 
 const kerror = kerrorLib.wrap("plugin", "runtime");
@@ -83,19 +84,16 @@ function waterfallCallback(
 /**
  * Wraps whatever a pipe rejected with into a `KuzzleError`.
  *
- * The JavaScript read `error.message` off it unconditionally, which is
- * `undefined` for anything that is not an `Error` — a plugin calling
- * `cb("oops")` produced an `unexpected_error` with no message. That is
- * preserved; saying so is the whole change.
+ * The message is the rejected value's own `message`, as the JavaScript read
+ * it: a plugin rejecting with `{ message: "oops" }` says "oops", and one
+ * calling `cb("oops")` still says "undefined".
  */
 function toKuzzleError(error: unknown): KuzzleError {
   if (error instanceof KuzzleError) {
     return error;
   }
 
-  const message = error instanceof Error ? error.message : undefined;
-
-  return kerror.getFrom(error, "unexpected_error", message);
+  return kerror.getFrom(error, "unexpected_error", causeOf(error).message);
 }
 
 /**

@@ -83,6 +83,7 @@ describe("core/network/protocols/httpwsProtocol", () => {
   let ClientConnection: any;
   let HttpStream: any;
   let BadRequestError: any;
+  let ForbiddenError: typeof import("../../../../lib/kerror/errors").ForbiddenError;
   let entryPoint: EntryPointStub;
   let httpWs: any;
   let route: ReturnType<typeof vi.fn>;
@@ -108,6 +109,7 @@ describe("core/network/protocols/httpwsProtocol", () => {
     ClientConnection = connectionModule.default;
     HttpStream = typesModule.HttpStream;
     BadRequestError = errorsModule.BadRequestError;
+    ForbiddenError = errorsModule.ForbiddenError;
 
     route = vi.fn();
     warn = vi.fn();
@@ -1134,6 +1136,36 @@ describe("core/network/protocols/httpwsProtocol", () => {
         /Caught an unexpected WebSocket error/,
       );
       expect(entryPoint.execute).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Whatever the `protocol:websocket:afterParsingPayload` pipe fails with,
+     * a plugin's own KuzzleError included, the client gets
+     * `network.websocket.unexpected_error` (400), as in v2.56.0.
+     */
+    it("wraps a KuzzleError raised by the afterParsingPayload pipe", async () => {
+      vi.mocked(global.kuzzle.pipe).mockImplementation(
+        async (event: string, payload: unknown) => {
+          if (event === "protocol:websocket:afterParsingPayload") {
+            throw new ForbiddenError("forbidden by a plugin", "a.plugin.error");
+          }
+
+          return payload;
+        },
+      );
+
+      await app()._wsOnMessage('{"controller":"foo","action":"bar"}');
+
+      expect(entryPoint.execute).not.toHaveBeenCalled();
+      expect(sent()).toMatchObject({
+        error: {
+          id: "network.websocket.unexpected_error",
+          message:
+            "Caught an unexpected WebSocket error: forbidden by a plugin",
+          status: 400,
+        },
+        status: 400,
+      });
     });
 
     it("executes a standardized Request from a valid payload", async () => {

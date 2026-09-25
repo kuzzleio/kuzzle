@@ -378,6 +378,44 @@ describe("#api/funnel.processRequest", () => {
     expect(statistics.failedRequest).toHaveBeenCalledTimes(1);
   });
 
+  /**
+   * A plugin action rejecting with something that is not an Error: the client
+   * gets the value's own `message`, as in v2.56.0, and never the value itself,
+   * whose other properties are none of the client's business.
+   */
+  it.each([
+    [
+      "an object with a message",
+      { message: "foobar", secret: "s3cr3t" },
+      "foobar",
+    ],
+    ["a string", "foobar", "undefined"],
+    ["null", null, "undefined"],
+  ])(
+    "wraps %s raised by a plugin action with its message only",
+    async (_name, thrown, placeholder) => {
+      const request = new KuzzleRequest({
+        action: "fail",
+        controller: PLUGIN_CONTROLLER,
+      });
+
+      pluginController.fail.mockRejectedValue(thrown as never);
+
+      const error = await funnel.processRequest(request).then(
+        () => expect.unreachable("the request should have failed"),
+        (e: unknown) => e,
+      );
+
+      expect(error).toMatchObject({
+        id: "plugin.runtime.unexpected_error",
+        message: expect.stringMatching(
+          new RegExp(`^Caught an unexpected plugin error: ${placeholder}\\n`),
+        ),
+      });
+      expect(JSON.stringify(error)).not.toContain("s3cr3t");
+    },
+  );
+
   it("feeds a document written by the generic alias pipe back into the action", async () => {
     /*
      * What this test is about is the round trip: `performDocumentAlias`

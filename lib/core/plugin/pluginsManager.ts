@@ -22,7 +22,6 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import type { JSONObject } from "kuzzle-sdk";
@@ -39,6 +38,7 @@ import createDebug from "../../util/debug";
 import didYouMean from "../../util/didYouMean";
 import { Inflector } from "../../util/Inflector";
 import { has, isPlainObject } from "../../util/safeObject";
+import { causeOf } from "../../util/thrown";
 import type { PluginInstance } from "../../types/PluginInstance";
 import Plugin from "./plugin";
 
@@ -51,18 +51,6 @@ const controllerError = kerror.wrap("plugin", "controller");
 
 // Without those plugins, Kuzzle won't start at all.
 const CORE_PLUGINS = new Set(["kuzzle-plugin-auth-passport-local"]);
-
-/**
- * Whatever was thrown, as an `Error`.
- *
- * `catch` answers `unknown`, and everything below reads `.message` off it —
- * which is what the JavaScript did, on values a plugin is free to make
- * anything at all. `inspect`, not `String`: a thrown object stringifies to
- * `[object Object]`.
- */
-function causeOf(thrown: unknown): Error {
-  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
-}
 
 /**
  * The `id` of whatever was thrown, when it carries one.

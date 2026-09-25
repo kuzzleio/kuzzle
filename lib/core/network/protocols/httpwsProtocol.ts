@@ -21,7 +21,6 @@
 
 import querystring from "node:querystring";
 import url from "node:url";
-import { inspect } from "node:util";
 import zlib from "node:zlib";
 
 import type { JSONObject } from "kuzzle-sdk";
@@ -33,6 +32,7 @@ import { KuzzleError } from "../../../kerror/errors";
 import { HttpStream } from "../../../types";
 import createDebug from "../../../util/debug";
 import { removeStacktrace } from "../../../util/stackTrace";
+import { causeOf } from "../../../util/thrown";
 import ClientConnection from "../clientConnection";
 import type { KuzzleWebSocket } from "../../../types/KuzzleWebSocket";
 import HttpMessage from "./httpMessage";
@@ -112,23 +112,29 @@ interface HttpWsProtocolConfig {
 }
 
 /**
- * `catch` answers `unknown`. What the two WebSocket handlers below catch is
- * a `KuzzleError` in every in-tree path — `new Request()` raises
- * `BadRequestError` — but a plugin pipe registered on
- * `protocol:websocket:afterParsingPayload` can throw anything at all, and
- * `JSON.parse` raises a plain `SyntaxError`. Both end up on the wire, so both
- * are normalised here rather than at each call site.
+ * Whatever failed parsing a WebSocket payload, as the error sent back.
  *
- * `inspect`, not `String`: a thrown object stringifies to `[object Object]`.
+ * Always `network.websocket.unexpected_error`, even for a `KuzzleError`: that
+ * is what the `protocol:websocket:afterParsingPayload` pipe and `JSON.parse`
+ * have always answered, and the pipe hands over what a plugin threw already
+ * wrapped as `plugin.runtime.unexpected_error`.
+ */
+function parsingError(thrown: unknown): KuzzleError {
+  const error = causeOf(thrown);
+
+  return kerrorWS.getFrom(error, "unexpected_error", error.message);
+}
+
+/**
+ * What `new Request()` threw, as the error sent back: a `KuzzleError`
+ * (`BadRequestError`) in every in-tree path, forwarded as is.
  */
 function asKuzzleError(thrown: unknown): KuzzleError {
   if (thrown instanceof KuzzleError) {
     return thrown;
   }
 
-  const error = thrown instanceof Error ? thrown : new Error(inspect(thrown));
-
-  return kerrorWS.getFrom(error, "unexpected_error", error.message);
+  return parsingError(thrown);
 }
 
 class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
@@ -498,7 +504,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
        So... the error is forwarded to the client, hoping they know
        what to do with it.
        */
-      this.wsSendError(socket, connection, asKuzzleError(e));
+      this.wsSendError(socket, connection, parsingError(e));
       return;
     }
 
