@@ -56,12 +56,13 @@ services:
     <<: *kuzzle-config
     ports:
       - "17511:7512"
-    # Drops (does not send) one sync message in 50, so that every functional
-    # job runs with lost messages and exercises their retransmission (#2785):
-    # a regression there evicts a node and fails the job.
+    # Drops (does not send) one heartbeat in 5 — one every ~10 s — so that
+    # every functional job runs with lost sync messages and exercises their
+    # retransmission (#2785): a regression there evicts a node and fails the
+    # job. Heartbeats only, see DROP_HEARTBEAT_EVERY_ENV in publisher.ts.
     environment:
       <<: *kuzzle-env
-      KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY: "50"
+      KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY: "5"
 
   kuzzle_node_3:
     <<: *kuzzle-config

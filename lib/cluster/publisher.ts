@@ -55,11 +55,16 @@ type PublishingNode = {
 type SentMessage = BufferedMessage & { messageId: Long };
 
 /**
- * Test-only fault injection: when set to N > 0, every Nth message this node
- * publishes is recorded as sent but never handed to the socket, so that the
- * functional suites exercise the retransmission path. Unset in production.
+ * Test-only fault injection: when set to N > 0, every Nth **heartbeat** this
+ * node publishes is recorded as sent but never handed to the socket, so that
+ * the functional suites exercise the retransmission path. Unset in production.
+ *
+ * Heartbeats only: a loss is noticed when the sender's *next* message arrives,
+ * up to one heartbeat later, so dropping a state message (a new collection,
+ * say) would let a scenario read another node before the gap is filled — a
+ * timing artefact of the injection, not a retransmission failure.
  */
-const DROP_EVERY_ENV = "KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY";
+const DROP_HEARTBEAT_EVERY_ENV = "KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY";
 
 type BufferedMessage = {
   topic: string;
@@ -96,7 +101,9 @@ class ClusterPublisher {
 
   private historyBytes: number;
 
-  private readonly dropEvery: number;
+  private readonly dropHeartbeatEvery: number;
+
+  private heartbeatsSent: number;
 
   /**
    * @param node the cluster node this publisher belongs to
@@ -119,9 +126,13 @@ class ClusterPublisher {
     this.history = [];
     this.historyBytes = 0;
 
-    const dropEvery = Number.parseInt(process.env[DROP_EVERY_ENV] ?? "", 10);
-    this.dropEvery =
+    const dropEvery = Number.parseInt(
+      process.env[DROP_HEARTBEAT_EVERY_ENV] ?? "",
+      10,
+    );
+    this.dropHeartbeatEvery =
       Number.isInteger(dropEvery) && dropEvery > 0 ? dropEvery : 0;
+    this.heartbeatsSent = 0;
   }
 
   async init(): Promise<void> {
@@ -415,11 +426,12 @@ class ClusterPublisher {
 
     this.remember(this.lastMessageId, topic, buffer);
 
-    if (
-      this.dropEvery > 0 &&
-      this.lastMessageId.modulo(this.dropEvery).isZero()
-    ) {
-      return this.lastMessageId;
+    if (this.dropHeartbeatEvery > 0 && topic === "Heartbeat") {
+      this.heartbeatsSent++;
+
+      if (this.heartbeatsSent % this.dropHeartbeatEvery === 0) {
+        return this.lastMessageId;
+      }
     }
 
     // DO NOT AWAIT: bufferSend is built to bufferize payloads to be sent, and

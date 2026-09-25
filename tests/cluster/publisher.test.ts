@@ -158,16 +158,16 @@ describe("ClusterPublisher", () => {
       }
     });
 
-    describe(`with ${"KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY"} set`, () => {
+    describe(`with ${"KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY"} set`, () => {
       beforeEach(() => {
-        vi.stubEnv("KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY", "3");
+        vi.stubEnv("KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY", "3");
       });
 
       afterEach(() => {
         vi.unstubAllEnvs();
       });
 
-      it("does not send every Nth message, and still replays it", async () => {
+      it("does not send every Nth heartbeat, and still replays it", async () => {
         const subject = await publisherKeeping(1000, 16777216);
 
         sendHeartbeats(subject, 7);
@@ -175,6 +175,16 @@ describe("ClusterPublisher", () => {
         expect(subject.bufferSend).toHaveBeenCalledTimes(5);
         expect(subject.replay(id(3), id(3))).toHaveLength(1);
         expect(subject.replay(id(6), id(6))).toHaveLength(1);
+      });
+
+      it("never drops anything but a heartbeat", async () => {
+        const subject = await publisherKeeping(1000, 16777216);
+
+        for (let i = 0; i < 6; i++) {
+          subject.sendSubscription(`room-${i}`);
+        }
+
+        expect(subject.bufferSend).toHaveBeenCalledTimes(6);
       });
     });
   });

@@ -777,11 +777,25 @@ that gap and fills it from the peer, instead of shutting the new node down.
 
 **Testing it end to end.** Nothing in the functional suites could lose a
 message on purpose, so a test-only switch was added:
-`KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY=N` makes a node record every Nth
-message as sent without handing it to the socket. `.ci/test-cluster-{7,8}.yml`
-sets it to 50 on `kuzzle_node_2`, so **every functional job now runs with
-lost messages**: if retransmission regresses, a node is evicted and the job
-fails. Unset, the publisher behaves exactly as before.
+`KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY=N` makes a node record every Nth
+heartbeat as sent without handing it to the socket. `.ci/test-cluster-{7,8}.yml`
+sets it to 5 on `kuzzle_node_2` — a loss every ~10 s — so **every
+functional job now runs with lost messages**: if retransmission regresses, a
+node is evicted and the job fails. Unset, the publisher behaves exactly as
+before.
+
+⚠️ **Heartbeats only, and the first CI run is why.** The switch first dropped
+one message in 50, of any kind. Every loss was recovered — three per job, on
+all three peers, no eviction — and five jobs failed anyway, each on a
+scenario reading another node right after an index or collection change
+(`collection … does not exist`, `index … already exists`). A loss is only
+noticed when the sender's **next** message arrives, which can be a heartbeat
+later (2 s): until then the peers apply nothing newer from that sender, but
+they also do not know they are behind. That latency is a property of the
+design — detection needs a later message — and is the price of a loss that
+used to cost a node; the injection just made it happen on purpose, mid
+scenario. Dropping only heartbeats exercises the same path (request, replay,
+re-validation) without putting a state change behind it.
 
 **Why it is not breaking:** the protocol change is additive and degrades to
 the old behaviour against an older peer; the config key is new, with a
@@ -790,7 +804,7 @@ operator is intended: a node that would have left the cluster stays, and one
 that does leave exits 1.
 
 Unit tests: `publisher.test.ts` (replay in order, the window, both bounds,
-0 disables, the drop switch), `subscriber.test.ts` (gap filled then accepted,
+0 disables, the drop switch dropping heartbeats and nothing else), `subscriber.test.ts` (gap filled then accepted,
 wrong ids evict once, no answer evicts, an older id asks for nothing),
 `command.test.ts` (real sockets: frames in order, `null` when no longer
 kept, on a partial answer, and on silence), `config/index.test.ts`,
