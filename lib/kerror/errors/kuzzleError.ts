@@ -48,49 +48,54 @@ export class KuzzleError extends Error {
    * Error unique code
    * @see https://docs.kuzzle.io/core/2/api/errors/error-codes/
    *
-   * Undefined for an error built by hand rather than from the code registry
-   * (`new BadRequestError("...")`), which both plugins and Kuzzle itself do.
+   * Set on every error built from the code registry (`kerror`), which is how
+   * Kuzzle builds its own; undefined on an error built by hand
+   * (`new BadRequestError("...")`), which plugins and Kuzzle itself also do.
+   * Declared as always present all the same, because that is what v2.56.0
+   * declared and what code compiled against it reads. See the constructor.
    */
-  public code: number | undefined;
+  public code!: number;
 
   /**
    * Error unique identifier
    *
-   * Undefined under the same conditions as {@link code}.
+   * Undefined under the same conditions as {@link code}, and declared as
+   * always present for the same reason.
    */
-  public id: string | undefined;
+  public id!: string;
 
   /**
-   * Placeholders used to construct the error message.
+   * The placeholders that were substituted into the message, when `kerror`
+   * built the error; undefined otherwise. `kerror.get` takes them from its
+   * caller, which may hand it anything — an id, a count, the value that
+   * failed a type check — but `string[]` is what v2.56.0 declared, and code
+   * compiled against it assigns this to a `string[]`.
    */
-  /**
-   * The placeholders that were substituted into the message. `kerror.get`
-   * takes them from its caller, which may hand it anything — an id, a count,
-   * the value that failed a type check — so `string[]` described only the
-   * common case.
-   */
-  public props: unknown[] | undefined;
+  public props!: string[];
 
   /**
-   * `message` admits `undefined` because callers really do omit it:
-   * `doc/build-error-codes.js` constructs one of each class with no arguments
-   * just to read its `status`, and plugin code in JavaScript may do the same.
-   * That produced an error with an empty message before this file was typed,
-   * and it still does. It is spelled as part of the type rather than as a
-   * default value because `status` after it is required.
+   * The arguments are not narrowed to what they are meant to be (a string or
+   * an `Error`, a string id, a numeric code): v2.56.0's subclasses took
+   * untyped ones, so `new InternalError(caught)` with a `catch` variable of
+   * type `unknown` compiled, and must still.
+   *
+   * A `message` that is not an `Error` is stringified, as `Error` itself
+   * does; `undefined` and `null` give an empty one — `doc/build-error-codes.js`
+   * constructs one of each class with no arguments just to read its `status`.
+   *
+   * @param message - a string, or an `Error` whose message and stack are kept
+   * @param status - HTTP status code
+   * @param id - error unique identifier (a string)
+   * @param code - error unique code (a number)
    */
-  constructor(
-    message: string | Error | undefined,
-    status: number,
-    id?: string,
-    code?: number,
-  ) {
-    super(isError(message) ? message.message : (message ?? ""));
+  constructor(message: unknown, status: number, id?: unknown, code?: unknown) {
+    super(isError(message) ? message.message : String(message ?? ""));
 
     this.status = status;
-    this.code = code;
-    this.id = id;
-    this.props = undefined;
+    // The three fields declared above as always present, stored as handed:
+    // their declarations are the ones code compiled against v2.56.0 reads,
+    // not a description of every value that reaches this line.
+    Object.assign(this, { code, id, props: undefined });
     this.stack = undefined;
 
     if (isError(message)) {

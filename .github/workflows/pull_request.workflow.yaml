@@ -162,6 +162,15 @@ jobs:
         run: ./.ci/scripts/check-build-payload.sh
         shell: bash
 
+      # The published typings, compiled by a consumer — an application and a
+      # plugin — with `strict` on and off. A declaration change that makes code
+      # compiled against the previous release fail is a breaking change even
+      # when `lib/` is right, and nothing else here compiles against `dist/`
+      # (ADR-0001 step 15, TY-01…TY-07). See tests/typings/tsconfig.json.
+      - name: Type-check a consumer of the published typings
+        run: npm run typecheck:typings
+        shell: bash
+
   sonarqube:
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork == false

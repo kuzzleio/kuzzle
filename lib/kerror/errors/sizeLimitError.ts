@@ -22,7 +22,7 @@
 import { KuzzleError } from "./kuzzleError";
 
 export class SizeLimitError extends KuzzleError {
-  constructor(message: string | Error = "", id?: string, code?: number) {
+  constructor(message: unknown = "", id?: unknown, code?: unknown) {
     super(message, 413, id, code);
   }
 }

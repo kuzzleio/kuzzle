@@ -32,6 +32,25 @@ describe("#ExternalServiceError", () => {
     expect(err.status).toEqual(500);
   });
 
+  // v2.56.0's subclasses took untyped arguments, so a TypeScript consumer
+  // may hand one a caught `unknown`; `Error` stringifies it, and so do we.
+  it("stringifies a message that is neither a string nor an Error", () => {
+    expect(new KuzzleError(42, 500).message).toEqual("42");
+    expect(new KuzzleError(null, 500).message).toEqual("");
+  });
+
+  // `code`, `id` and `props` are declared as always present (as v2.56.0
+  // declared them) but a hand-built error leaves them undefined — as own
+  // properties, as they always were.
+  it("keeps code, id and props as own properties, undefined when not given", () => {
+    const err = new KuzzleError("foobar", 500);
+
+    expect(Object.keys(err)).toEqual(["status", "code", "id", "props"]);
+    expect(err.code).toBeUndefined();
+    expect(err.id).toBeUndefined();
+    expect(err.props).toBeUndefined();
+  });
+
   it("serializes correctly", () => {
     const err = new KuzzleError("foobar", 500, "ohnoes", 123),
       serialized = JSON.parse(JSON.stringify(err));

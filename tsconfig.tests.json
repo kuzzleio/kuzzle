@@ -74,5 +74,8 @@
     "tests/**/*.ts",
     "tests/**/*.json"
   ],
-  "exclude": ["dist"]
+  // `tests/typings/` is a consumer of the published typings, not a spec: it
+  // imports `kuzzle` from `dist/`, with a consumer's settings, and has its own
+  // programs (`npm run typecheck:typings`). See tests/typings/tsconfig.json.
+  "exclude": ["dist", "tests/typings"]
 }

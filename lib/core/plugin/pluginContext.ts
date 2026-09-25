@@ -117,14 +117,13 @@ export class PluginContext {
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
     /**
-     * `| null` for the callback form: the caller gets its answer there, and
-     * there is no promise to hand back. That is what this has always
-     * returned.
+     * Overloaded on the callback, because the return value depends on it:
+     * without one (or with `null`) the answer is a promise; with one, the
+     * caller gets its answer there and `null` is returned, which is what this
+     * has always done. A single `Promise | null` signature made every
+     * `await execute(request)` of a `strict` plugin a compile error.
      */
-    execute: (
-      request: KuzzleRequest,
-      callback?: unknown,
-    ) => Promise<KuzzleRequest> | null;
+    execute: PluginExecute;
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -368,7 +367,7 @@ export class PluginContext {
 
     this.accessors = {
       cluster: new BackendCluster(),
-      execute: (request, callback) => execute(request, callback),
+      execute,
       nodeId: global.nodeId,
       sdk: new EmbeddedSDK(),
       storage: {
@@ -422,13 +421,36 @@ export class PluginContext {
 }
 
 /**
+ * `context.accessors.execute`'s call shapes. The callback is called as
+ * `callback(error, request)`; it is typed as taking `never` so that a
+ * callback of any signature is accepted, as v2.56.0's `any` did.
+ */
+export type PluginExecute = {
+  (request: KuzzleRequest, callback?: null): Promise<KuzzleRequest>;
+  (request: KuzzleRequest, callback: (...args: never[]) => unknown): null;
+  (request: KuzzleRequest, callback?: unknown): Promise<KuzzleRequest> | null;
+};
+
+/**
  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
 function execute(
   request: KuzzleRequest,
+  callback?: null,
+): Promise<KuzzleRequest>;
+function execute(
+  request: KuzzleRequest,
+  callback: (...args: never[]) => unknown,
+): null;
+function execute(
+  request: KuzzleRequest,
   callback?: unknown,
-): Bluebird<KuzzleRequest> | null {
+): Promise<KuzzleRequest> | null;
+function execute(
+  request: KuzzleRequest,
+  callback?: unknown,
+): Promise<KuzzleRequest> | null {
   // `null` means "no callback", as `undefined` does: plugins pass it to ask
   // for a promise explicitly.
   if (
