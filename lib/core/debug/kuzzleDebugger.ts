@@ -1,6 +1,6 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import type { KuzzleWebSocket } from "../../types/KuzzleWebSocket";
 
 /**

@@ -24,7 +24,7 @@ import Long from "long";
 import * as protobuf from "protobufjs";
 import { Publisher } from "zeromq";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 import type { NormalizedFilter } from "koncorde";
 
 import type DocumentNotification from "../core/realtime/notification/document";

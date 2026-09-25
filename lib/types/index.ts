@@ -29,6 +29,7 @@ export * from "./EventHandler";
 export * from "./Global";
 export * from "./HttpMessage";
 export * from "./HttpStream";
+export * from "./JSONObject";
 export * from "./KuzzleDocument";
 export * from "./OpenApiDefinition";
 export * from "./PasswordPolicy";

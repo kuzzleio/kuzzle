@@ -24,7 +24,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import Bluebird from "bluebird";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import { isEmpty, isFunction, isNil, isString, merge } from "lodash";
 
 import {

@@ -29,7 +29,7 @@ import type {
   Subscription,
 } from "aedes";
 import Aedes from "aedes";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 
 import { Request } from "../../../api/request";
 import { wrap } from "../../../kerror";

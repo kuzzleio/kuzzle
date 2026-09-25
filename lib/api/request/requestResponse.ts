@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import * as assert from "../../util/assertType";
 // Type-only: `kuzzleRequest` imports this module back, and an import elided at
 // compile time cannot close that cycle at runtime.

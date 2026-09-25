@@ -1,4 +1,5 @@
-import type { KDocument, KDocumentContent, JSONObject } from "kuzzle-sdk";
+import type { KDocument, KDocumentContent } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 
 import type { KuzzleRequest, PipeEventHandler } from "../../../index";
 

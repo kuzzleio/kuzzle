@@ -18,6 +18,27 @@ export * from "./lib/util/Inflector";
 
 export { NameGenerator } from "./lib/util/name-generator";
 
+// The server's own models behind `request.context`, under names that do not
+// collide with the SDK's client classes (`User`) or with the `Token` interface
+// — ADR-0002 step 02. Type-only: they are what a request carries, not
+// something a plugin constructs.
+export type {
+  /**
+   * The server-side user model: the type of `request.context.user` and of
+   * `request.getUser()`. Not the SDK's client-side `User`, which is what
+   * `app.sdk.security.*` returns.
+   */
+  User as KuzzleUser,
+} from "./lib/model/security/user";
+export type {
+  /**
+   * The server-side authentication token model: the type of
+   * `request.context.token`. Its connections are tracked by the token manager,
+   * not on the token, so unlike the `Token` interface it has no `connectionId`.
+   */
+  Token as KuzzleToken,
+} from "./lib/model/security/token";
+
 // The SDK names this package has always re-exported (it was `export * from
 // "kuzzle-sdk"`), listed so that the SDK's next additions no longer become part
 // of Kuzzle's API unannounced — ADR-0002 step 01
@@ -55,7 +76,7 @@ export {
   SearchResultBase,
   ServerController,
   SpecificationsSearchResult,
-  /** The SDK's client-side user, as `app.sdk.security.*` returns it — not the type of `request.context.user`. */
+  /** The SDK's client-side user, as `app.sdk.security.*` returns it — not the type of `request.context.user`, which is `KuzzleUser`. */
   User,
   UserOption,
   UserSearchResult,
@@ -145,7 +166,6 @@ export type {
   DocumentMetadata,
   DocumentNotification,
   HttpRoutes,
-  JSONObject,
   KDocument,
   KDocumentContent,
   KDocumentContentGeneric,

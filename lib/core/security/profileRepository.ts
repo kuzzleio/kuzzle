@@ -22,7 +22,7 @@
 import Bluebird from "bluebird";
 import { omit } from "lodash";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import type { OptimizedPolicy, Policy } from "../../../index";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";

@@ -7,4 +7,4 @@
 # conversion whose output is type-only. "The spec is coming in a follow-up" is
 # not one: that is the case the gate exists for.
 #
-# Empty on purpose.
+lib/types/JSONObject.ts type-only: a single `export type` alias, no executable line (ADR-0002 step 02)

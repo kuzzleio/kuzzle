@@ -27,7 +27,7 @@ import Bluebird from "bluebird";
 import get from "lodash/get";
 import type { Client } from "sdk-es8";
 import { errors as esErrors } from "sdk-es8";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 
 import { KuzzleError } from "../../../kerror/errors";
 import createDebug from "../../../util/debug";

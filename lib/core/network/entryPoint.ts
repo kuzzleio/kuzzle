@@ -25,7 +25,7 @@ import path from "node:path";
 import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import type { KuzzleRequest } from "../../api/request";
 import { RequestContext } from "../../api/request";

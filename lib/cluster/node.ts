@@ -41,7 +41,7 @@ import intersection from "lodash/intersection";
 import xor from "lodash/xor";
 import Long from "long";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";

@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import * as semver from "semver";
 
 import defaultConfig from "../../config/default.config";

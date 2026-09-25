@@ -22,7 +22,7 @@
 import assert from "assert";
 import { inspect } from "node:util";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 import rc from "rc";
 import defaultConfig from "./default.config";

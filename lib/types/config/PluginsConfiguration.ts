@@ -1,4 +1,4 @@
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 
 import type { PasswordPolicy } from "../index";
 

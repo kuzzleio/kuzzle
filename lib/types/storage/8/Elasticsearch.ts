@@ -1,5 +1,7 @@
 import type { estypes } from "sdk-es8";
 
+import type { JSONObject } from "../../JSONObject";
+
 export type InfoResult = {
   type: string;
   version: string;
@@ -59,9 +61,9 @@ export type KRequestBody<T> = T & {
   _kuzzle_info?: Partial<KuzzleInfo>;
 };
 
-export interface JSONObject {
-  [key: string]: any;
-}
+// Kuzzle's own `JSONObject` (ADR-0002 step 02, TD-10), re-exported under the
+// name this module has always exported.
+export type { JSONObject } from "../../JSONObject";
 
 export type KImportError = {
   _id?: string | null;

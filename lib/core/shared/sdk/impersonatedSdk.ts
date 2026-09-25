@@ -19,7 +19,8 @@
  * limitations under the License.
  */
 
-import type { BaseRequest, JSONObject } from "kuzzle-sdk";
+import type { BaseRequest } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 
 // The controllers barrel ships `export = { ... }`. A NAMED import cannot
 // target that (TS2497), but a DEFAULT one can under `esModuleInterop` — and

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "./JSONObject";
 import type { PluginContext } from "../core/plugin/pluginContext";
 import type { ControllerDefinition } from "./controllers/ControllerDefinition";
 import type { PluginManifest } from "./PluginManifest";

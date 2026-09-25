@@ -23,7 +23,7 @@ import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import { Koncorde } from "koncorde";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import { cloneDeep, defaultsDeep, isNil } from "lodash";
 
 import type { KuzzleRequest } from "../../api/request";

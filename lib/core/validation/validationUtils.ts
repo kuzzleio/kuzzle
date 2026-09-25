@@ -29,7 +29,7 @@
  * a test to address these by name was `rewire`'s `__get__` — a private binding
  * reached through the compiled scope (ADR-0001, step 13 L6f).
  */
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import * as kerror from "../../kerror";
 import { get, isPlainObject } from "../../util/safeObject";

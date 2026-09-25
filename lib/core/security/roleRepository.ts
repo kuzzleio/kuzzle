@@ -27,7 +27,7 @@ import { ObjectRepository } from "../shared/ObjectRepository";
 import * as kerror from "../../kerror";
 import didYouMean from "../../util/didYouMean";
 import { cacheDbEnum } from "../cache/cacheDbEnum";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";

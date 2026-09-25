@@ -24,7 +24,7 @@ import { get, set } from "lodash";
 import moment from "moment";
 import * as uuid from "uuid";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { RequestInput } from "./requestInput";
 import { RequestResponse } from "./requestResponse";

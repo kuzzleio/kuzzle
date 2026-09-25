@@ -1,4 +1,4 @@
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
 import ndjson from "ndjson";

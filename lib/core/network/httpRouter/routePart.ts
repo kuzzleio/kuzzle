@@ -22,7 +22,7 @@
 import * as querystring from "node:querystring";
 import * as URL from "node:url";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 
 import type HttpMessage from "../protocols/httpMessage";
 import RouteHandler from "./routeHandler";

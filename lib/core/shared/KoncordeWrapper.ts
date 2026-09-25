@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import type { KoncordeOptions } from "koncorde";
 import { Koncorde as KoncordeV4, NormalizedFilter } from "koncorde";
 import {

@@ -21,7 +21,7 @@
 
 import * as util from "util";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 /**
  * `util.types.isNativeError` rather than `instanceof Error`: it answers true
