@@ -24,7 +24,7 @@ import type { PluginContext } from "../core/plugin/pluginContext";
 import type { ControllerDefinition } from "./controllers/ControllerDefinition";
 import type { PluginManifest } from "./PluginManifest";
 import type { StrategyDefinition } from "./StrategyDefinition";
-import type { PipeEventHandler, HookEventHandler } from "./EventHandler";
+import type { HookEventHandler, RegisteredPipeHandler } from "./EventHandler";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
 import type { ImportConfig } from "./Kuzzle";
@@ -40,23 +40,41 @@ export type PluginApiDefinition = {
 };
 
 /**
+ * A hook or pipe target given as the **name** of one of the plugin's methods
+ * instead of the function itself.
+ *
+ * @deprecated Pass the function. Kuzzle still resolves the name, and prints a
+ * deprecation warning when it registers the handler.
+ */
+export type PluginMethodName = string;
+
+/**
  * Allows to define hooks on events
  */
 export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: HookEventHandler | HookEventHandler[];
+  [event: string]:
+    | HookEventHandler
+    | PluginMethodName
+    | Array<HookEventHandler | PluginMethodName>;
 };
 
 /**
- * Allows to define pipes on events
+ * Allows to define pipes on events.
+ *
+ * A pipe either returns a promise, or takes a trailing `callback(error,
+ * request)`: both forms are documented, and the runner accepts both.
  */
 export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: PipeEventHandler | PipeEventHandler[];
+  [event: string]:
+    | RegisteredPipeHandler
+    | PluginMethodName
+    | Array<RegisteredPipeHandler | PluginMethodName>;
 };
 
 /**

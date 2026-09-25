@@ -530,3 +530,27 @@ all 32 configurations, the default names pinned, and the validators; the
 first three fail against the old code (the third only on its `users: "out"`
 line, by design). `notifier.test.ts` loses its `"none" as RealtimeScope` cast.
 
+
+### TD-78 — the two handler forms the plugin types refused
+
+`PluginHookDefinition` and `PluginPipeDefinition` admitted handler functions
+only, in promise form for pipes. The runtime takes two more targets:
+**the name of a plugin method** (deprecated, warned about at registration) and
+**a pipe in callback form** — `(request, callback)` — which the pipes guide
+documents side by side with the promise form. A TypeScript plugin writing
+either had to cast.
+
+Both definitions are widened: hooks to `HookEventHandler | PluginMethodName`,
+pipes to `RegisteredPipeHandler | PluginMethodName` (the union
+`EventHandler.ts` already exported for what the emitter stores), each alone or
+in an array. `PluginMethodName` is a new exported alias of `string` whose only
+job is to carry the `@deprecated` tag, so the name form reads as tolerated,
+not as intended.
+
+**Why it is not breaking:** no runtime change, and the types only widen what
+a plugin may *write*. The one reader that could notice is code that indexes
+its own `pipes` / `hooks` through the base type — and that code already had
+to narrow out the array form before calling, so it holds a union either way.
+
+`tests/core/plugin/pluginsManager.test.ts` loses its `byName()` / `asPipe()`
+casts (~20 uses): the assignments themselves are now the type-level test.

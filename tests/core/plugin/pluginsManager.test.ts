@@ -4,11 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BaseController } from "../../../lib/api/controllers/baseController";
 import Plugin from "../../../lib/core/plugin/plugin";
 import PluginsManager from "../../../lib/core/plugin/pluginsManager";
-import type {
-  CallbackPipeHandler,
-  HookEventHandler,
-  PipeEventHandler,
-} from "../../../lib/types/EventHandler";
 import type { PluginApiDefinition } from "../../../lib/types/Plugin";
 import type { PluginInstance } from "../../../lib/types/PluginInstance";
 import { InternalError as KuzzleInternalError } from "../../../lib/kerror/errors/internalError";
@@ -52,24 +47,6 @@ const yields = (error: unknown = null, result?: unknown) =>
 /** The callback a pipe handler was invoked with. */
 const callbackOf = (args: unknown[]) =>
   args.at(-1) as (error?: unknown, result?: unknown) => void;
-
-/**
- * ⚠️ Two hook/pipe targets the subject accepts and the declared types do not —
- * [TD-78](../../../docs/adr-001/type-debt-register.md#td-78).
- *
- * `PluginHookDefinition` and `PluginPipeDefinition` admit handler *functions*
- * only, while `resolveEventHandler` also takes **the name of a plugin method**
- * (deprecated, warned about, and still the form half of this block tests), and
- * `registerPipe`'s wrapper hands the runner a **callback-form** pipe
- * (`CallbackPipeHandler`, which the emitter's own `RegisteredPipeHandler`
- * admits and the plugin-facing type does not). Named here twice rather than at
- * each of their ~20 uses.
- */
-const byName = (name: string) =>
-  name as unknown as HookEventHandler & PipeEventHandler;
-
-const asPipe = (handler: CallbackPipeHandler) =>
-  handler as unknown as PipeEventHandler;
 
 /** Reads an action off a `BaseController`, whose keys are built at runtime. */
 const actionOf = (controller: BaseController | undefined, name: string) =>
@@ -394,8 +371,8 @@ describe("#core/plugin/pluginsManager", () => {
        * each one is called with.
        */
       application.instance.api = invalid<PluginApiDefinition>({ some: "api" });
-      application.instance.hooks = { "foo:bar": byName("hooks") };
-      application.instance.pipes = { "foo:bar": byName("pipe") };
+      application.instance.hooks = { "foo:bar": "hooks" };
+      application.instance.pipes = { "foo:bar": "pipe" };
       plugin.instance.controllers = invalid({ foo: {} });
       plugin.instance.authenticators = { Some: "authenticator" };
       plugin.instance.strategies = { some: "strategy" };
@@ -1381,8 +1358,8 @@ describe("#core/plugin/pluginsManager", () => {
       const bar = vi.fn();
 
       plugin.instance.hooks = {
-        "bar:foo": byName("bar"),
-        "foo:bar": byName("foo"),
+        "bar:foo": "bar",
+        "foo:bar": "foo",
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1413,8 +1390,8 @@ describe("#core/plugin/pluginsManager", () => {
       const baz = vi.fn();
 
       plugin.instance.hooks = {
-        "bar:foo": [byName("baz")],
-        "foo:bar": [byName("foo"), byName("bar")],
+        "bar:foo": ["baz"],
+        "foo:bar": ["foo", "bar"],
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1448,8 +1425,8 @@ describe("#core/plugin/pluginsManager", () => {
       const bar = vi.fn();
 
       plugin.instance.hooks = {
-        "bar:foo": byName("bar"),
-        "foo:*": byName("foo"),
+        "bar:foo": "bar",
+        "foo:*": "foo",
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1462,7 +1439,7 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("refuses a hook target that names nothing callable", () => {
-      plugin.instance.hooks = { "foo:bar": byName("fou") };
+      plugin.instance.hooks = { "foo:bar": "fou" };
       plugin.instance.foo = () => {};
 
       global.NODE_ENV = "development";
@@ -1484,8 +1461,8 @@ describe("#core/plugin/pluginsManager", () => {
       const bar = vi.fn();
 
       plugin.instance.pipes = {
-        "bar:foo": byName("bar"),
-        "foo:bar": byName("foo"),
+        "bar:foo": "bar",
+        "foo:bar": "foo",
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1499,7 +1476,7 @@ describe("#core/plugin/pluginsManager", () => {
 
     it("attaches a pipe declared as a function", async () => {
       const bar = vi.fn(async () => undefined);
-      const foo = asPipe(yields());
+      const foo = yields();
 
       plugin.instance.pipes = { "bar:foo": bar, "foo:bar": foo };
 
@@ -1515,8 +1492,8 @@ describe("#core/plugin/pluginsManager", () => {
       const bar = vi.fn();
 
       plugin.instance.pipes = {
-        "bar:foo": byName("bar"),
-        "foo:*": byName("foo"),
+        "bar:foo": "bar",
+        "foo:*": "foo",
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1542,8 +1519,8 @@ describe("#core/plugin/pluginsManager", () => {
       });
 
       plugin.instance.pipes = {
-        "bar:foo": [byName("bar")],
-        "foo:bar": [byName("foo"), byName("baz")],
+        "bar:foo": ["bar"],
+        "foo:bar": ["foo", "baz"],
       };
       plugin.instance.foo = foo;
       plugin.instance.bar = bar;
@@ -1573,7 +1550,7 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("refuses a pipe target that names nothing callable", () => {
-      plugin.instance.pipes = { "foo:bar": byName("fou") };
+      plugin.instance.pipes = { "foo:bar": "fou" };
       plugin.instance.foo = () => {};
 
       global.NODE_ENV = "development";
@@ -1587,7 +1564,7 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("relays a KuzzleError a pipe answers with", async () => {
-      plugin.instance.pipes = { "foo:bar": byName("foo") };
+      plugin.instance.pipes = { "foo:bar": "foo" };
       plugin.instance.foo = yields(new KuzzleInternalError("foobar"));
 
       pluginsManager._initPipes(plugin);
@@ -1598,7 +1575,7 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("wraps anything else a pipe answers with in a plugin error", async () => {
-      plugin.instance.pipes = { "foo:bar": byName("foo") };
+      plugin.instance.pipes = { "foo:bar": "foo" };
       plugin.instance.foo = yields("foobar");
 
       pluginsManager._initPipes(plugin);
@@ -1609,11 +1586,9 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("warns when a pipe takes longer than the plugin's warning delay", async () => {
-      const foo = asPipe(
-        vi.fn((...args: unknown[]) => {
-          setTimeout(callbackOf(args), 15);
-        }),
-      );
+      const foo = vi.fn((...args: unknown[]) => {
+        setTimeout(callbackOf(args), 15);
+      });
 
       plugin.instance.pipes = { "foo:bar": foo };
       plugin.config.pipeWarnTime = 10;
@@ -1630,7 +1605,7 @@ describe("#core/plugin/pluginsManager", () => {
     });
 
     it("accepts a pipe that answers a promise, and relays its result", async () => {
-      plugin.instance.pipes = { "foo:bar": byName("foo") };
+      plugin.instance.pipes = { "foo:bar": "foo" };
       plugin.instance.foo = vi.fn(async () => "foobar");
 
       pluginsManager._initPipes(plugin);

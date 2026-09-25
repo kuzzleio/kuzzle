@@ -1757,6 +1757,8 @@ The Mocha suite asserted the opposite, in two tests that had no way to fail: `sh
 
 ### TD-78
 
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-78--the-two-handler-forms-the-plugin-types-refused)).** `PluginHookDefinition` admits `HookEventHandler | PluginMethodName`, and `PluginPipeDefinition` admits `RegisteredPipeHandler | PluginMethodName` — the promise *and* the callback form, both documented by the pipes guide — each alone or in an array. `PluginMethodName` is a new exported alias of `string` carrying `@deprecated`, so the name form is visible and marked rather than silently refused. Types only, no runtime change; the spec's `byName()` / `asPipe()` casts are gone.
+
 **`PluginHookDefinition` and `PluginPipeDefinition` admit neither of the two handler forms the runtime also accepts** · 🟡 low · `lib/types/Plugin.ts`, `lib/types/EventHandler.ts`
 
 Found porting the `plugin/pluginsManager` spec ([step 13 L4d4](steps/13-sprint-10-test-closure.md#what-l4d4-found)), by TS2322 × 18.
