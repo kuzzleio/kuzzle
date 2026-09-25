@@ -92,7 +92,7 @@ class ClusterPublisher {
    * The last messages sent, oldest first, with contiguous ids: what
    * `replay()` answers from. Bounded by `cluster.retransmitBuffer`.
    */
-  private history: SentMessage[];
+  private readonly history: SentMessage[];
 
   private historyBytes: number;
 
