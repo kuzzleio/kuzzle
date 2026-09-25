@@ -23,6 +23,24 @@ describe("BackendConfig", () => {
     application = await createBackend();
   });
 
+  // `content` has a read type and a write type (v2.56.0 declared it
+  // `Partial`), which only an accessor pair can declare — so they are
+  // declared on an interface, and the runtime keeps the plain property it
+  // always had: the one `console.log(app.config)` and `JSON.stringify` show.
+  describe("#content", () => {
+    it("is a plain own property, assignable from a partial configuration", () => {
+      const partial = { limits: application.config.content.limits };
+
+      application.config.content = partial;
+
+      expect(application.config.content).toBe(partial);
+      expect(Object.keys(application.config)).toEqual(["content"]);
+      expect(
+        Object.getOwnPropertyDescriptor(application.config, "content"),
+      ).toMatchObject({ enumerable: true, value: partial, writable: true });
+    });
+  });
+
   describe("#set", () => {
     it("sets a configuration value", () => {
       application.config.set("server.protocols.http.enabled", false);

@@ -156,6 +156,16 @@ export type RawSpecification = Record<
 >;
 
 /**
+ * The configuration's startup specifications (`validation`), read as what
+ * they are. The configuration's type declares them `Record<string, unknown>`
+ * — it is public, and that is what v2.56.0 declared — and what they hold is
+ * checked specification by specification when it is curated.
+ */
+export function configuredSpecifications(): RawSpecification {
+  return global.kuzzle.config.validation as RawSpecification;
+}
+
+/**
  * What the curation methods answer when asked not to fail fast. `errors` is
  * present exactly when `isValid` is false.
  */

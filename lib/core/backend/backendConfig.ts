@@ -26,18 +26,31 @@ import type { Backend } from "./index";
 import { ApplicationManager } from "./index";
 import type {
   IKuzzleConfiguration,
-  KuzzleConfiguration,
+  KuzzleConfigurationOverrides,
 } from "../../types/config/KuzzleConfiguration";
 import { loadConfig } from "../../config/index";
 
 const runtimeError = kerror.wrap("plugin", "runtime");
 
-export class BackendConfig extends ApplicationManager {
+/**
+ * `content` is declared here, as an accessor pair, rather than as a field of
+ * the class: read, it is the whole configuration, which it is once loaded;
+ * assigned, it takes a `Partial` one, which is what v2.56.0 declared it as.
+ * Code compiled against that assigns one, and must still compile; reads no
+ * longer need `?.` at every level. At runtime it is the plain property the
+ * constructor assigns, as it always was — an interface adds no accessor.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- see above: types only, the class declares no `content`
+export interface BackendConfig {
   /**
    * Configuration content.
    */
-  public content: IKuzzleConfiguration;
+  get content(): IKuzzleConfiguration;
+  set content(content: Partial<IKuzzleConfiguration>);
+}
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- see the interface above
+export class BackendConfig extends ApplicationManager {
   constructor(application: Backend) {
     super(application);
 
@@ -67,7 +80,7 @@ export class BackendConfig extends ApplicationManager {
    *
    * @param config - Configuration object to merge
    */
-  merge(config: KuzzleConfiguration) {
+  merge(config: KuzzleConfigurationOverrides) {
     if (this._application.started) {
       throw runtimeError.get("already_started", "config");
     }

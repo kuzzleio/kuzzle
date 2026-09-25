@@ -25,34 +25,33 @@ export type EventGenericDocumentBeforeGet =
  */
 type EventGenericDocument<
   name extends string,
-  // The parameter used to be unconstrained AND named `KDocumentContent`, which
-  // shadowed the SDK's constraint of the same name rather than satisfying it.
-  TContent extends KDocumentContent,
+  // The parameter used to be named `KDocumentContent`, which shadowed the
+  // SDK's constraint of the same name rather than satisfying it. It stays
+  // unconstrained: `KDocumentContent` is a weak type (one optional member),
+  // so `extends KDocumentContent` rejected any content type an application
+  // declares — `EventGenericDocumentAfterGet<Car>` — which v2.56.0 accepted.
+  // The intersection is what satisfies the SDK's constraint instead.
+  TContent,
 > = {
   name: `generic:document:${name}`;
 
-  args: [KDocument<TContent>[], KuzzleRequest];
+  args: [KDocument<TContent & KDocumentContent>[], KuzzleRequest];
 };
 
-export type EventGenericDocumentBeforeWrite<
-  TContent extends KDocumentContent = JSONObject,
-> = EventGenericDocument<"beforeWrite", TContent>;
+export type EventGenericDocumentBeforeWrite<TContent = JSONObject> =
+  EventGenericDocument<"beforeWrite", TContent>;
 
-export type EventGenericDocumentAfterWrite<
-  TContent extends KDocumentContent = JSONObject,
-> = EventGenericDocument<"afterWrite", TContent>;
+export type EventGenericDocumentAfterWrite<TContent = JSONObject> =
+  EventGenericDocument<"afterWrite", TContent>;
 
-export type EventGenericDocumentBeforeUpdate<
-  TContent extends KDocumentContent = JSONObject,
-> = EventGenericDocument<"beforeUpdate", TContent>;
+export type EventGenericDocumentBeforeUpdate<TContent = JSONObject> =
+  EventGenericDocument<"beforeUpdate", TContent>;
 
-export type EventGenericDocumentAfterUpdate<
-  TContent extends KDocumentContent = JSONObject,
-> = EventGenericDocument<"afterUpdate", TContent>;
+export type EventGenericDocumentAfterUpdate<TContent = JSONObject> =
+  EventGenericDocument<"afterUpdate", TContent>;
 
-export type EventGenericDocumentAfterGet<
-  TContent extends KDocumentContent = JSONObject,
-> = EventGenericDocument<"afterGet", TContent>;
+export type EventGenericDocumentAfterGet<TContent = JSONObject> =
+  EventGenericDocument<"afterGet", TContent>;
 
 export type EventGenericDocumentInjectMetadata = {
   name: `generic:document:injectMetadata`;

@@ -35,11 +35,12 @@ export abstract class Controller {
   /**
    * Controller name
    *
-   * Optional: `app.controller.use()` derives it from the class name when the
-   * author has not set one, which is the check that has always made this
-   * field's absence a supported state rather than a missing initialiser.
+   * May be left unset: `app.controller.use()` derives it from the class name
+   * when the author has not set one. Declared as always present (`!`)
+   * because it is from `use()` on, and because v2.56.0 declared it so — an
+   * optional field broke `this.name` read as a `string` under `strict`.
    */
-  public name?: string;
+  public name!: string;
 
   /**
    * Controller definition
@@ -54,12 +55,12 @@ export abstract class Controller {
    *   }
    * }
    *
-   * Optional here because the documented pattern is to assign it in the
-   * subclass constructor, which an `abstract` member forbids. It is
-   * `app.controller.use()` that makes it mandatory, by rejecting a controller
-   * without one — see Plugin.checkControllerDefinition.
+   * The documented pattern is to assign it in the subclass constructor, and
+   * `app.controller.use()` rejects a controller without one — see
+   * Plugin.checkControllerDefinition. Declared as always present (`!`) for
+   * that reason, as v2.56.0 declared it.
    */
-  public definition?: ControllerDefinition;
+  public definition!: ControllerDefinition;
 
   /**
    * EmbeddedSDK instance
