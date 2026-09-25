@@ -27,7 +27,7 @@ import type { Domains } from "./codes";
 import { domains as internalDomains } from "./codes";
 import * as errors from "./errors";
 import type { KuzzleError } from "./errors";
-import { isPlainObject } from "../util/safeObject";
+import { isPlainObject } from "lodash";
 
 /**
  * Gets this file name in the exact same format than the one printed in the
@@ -54,6 +54,15 @@ function _getCurrentFileName(): string {
 }
 
 /**
+ * Whether the last placeholder is the options object: an object literal
+ * only. A class instance is a placeholder like any other value, so it is
+ * formatted into the message rather than taken for options.
+ */
+function isOptions(value: unknown): value is JSONObject {
+  return isPlainObject(value);
+}
+
+/**
  * Construct and return the corresponding error
  *
  * @param  domains - Domains object with subDomains and error names
@@ -75,7 +84,7 @@ export function rawGet(
   // extract options object from the placeholders
   const last = placeholders.at(-1);
 
-  if (isPlainObject(last)) {
+  if (isOptions(last)) {
     options = last;
     placeholders.pop();
   }
