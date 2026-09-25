@@ -22,12 +22,12 @@
 import type {
   RealtimeController,
   Notification,
-  JSONObject,
   ScopeOption,
   UserOption,
   ResponsePayload,
   BaseRequest,
 } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 import { Kuzzle } from "kuzzle-sdk";
 
 import _ from "lodash";

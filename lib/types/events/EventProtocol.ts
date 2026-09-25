@@ -1,4 +1,4 @@
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 import type { PipeEventHandler } from "../../../index";
 import type { ClientConnection } from "../ClientConnection";
 import type { HttpMessage } from "../HttpMessage";

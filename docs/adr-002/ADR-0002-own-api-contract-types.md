@@ -56,8 +56,8 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 01 | Freeze the SDK re-export: explicit list, client transport `@deprecated` | 🟦 In progress | this PR | [detail](steps/01-freeze-sdk-reexport.md) |
-| 02 | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token` | ⬜ To do | — | — |
+| 01 | Freeze the SDK re-export: explicit list, client transport `@deprecated` | 🟦 In progress | #2927 | [detail](steps/01-freeze-sdk-reexport.md) |
+| 02 | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token` | 🟦 In progress | this PR | [detail](steps/02-kuzzle-owns-its-types.md) |
 | 03 | Shared types-only contract package, consumed by `kuzzle` and `kuzzle-sdk` | ⬜ To do | — | — |
 | 04 | Next major: drop the client-runtime re-exports | ⬜ To do (next major) | — | — |
 
@@ -68,12 +68,14 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 - **2026-09-25** — **The server owns its API contract; a types-only package carries it to the SDK.** The maintainer's position ("types should come from kuzzle, the SDK should only build on them") taken as the principle; the third package is the only way to honour it, since the SDK cannot depend on the server.
 - **2026-09-25** — **Not breaking until a major.** Steps 1–3 keep every name and type a v2.56.0 consumer could import; step 4 is deferred to the next major.
 - **2026-09-25** — **Names for the server models:** `KuzzleUser`, `KuzzleToken` (`User` and `Token` are taken — the first by the SDK's client class, the second by the existing interface).
+- **2026-09-25** — **The two `Token`s stay two (TD-07).** The runtime token never carries the exported interface's `connectionId: string | null`, and no non-breaking change can remove or loosen it; `KuzzleToken` names the real one, the interface is documented as not being it ([step 02](steps/02-kuzzle-owns-its-types.md#local-decisions)).
 
 ---
 
 ## Open points
 
-- Step 3's package name and home (`@kuzzleio/types`? its own repo, or a workspace in `sdk-javascript`?), and whether it also absorbs the ES storage types' local `JSONObject`s.
+- Step 3's package name and home (`@kuzzleio/types`? its own repo, or a workspace in `sdk-javascript`?). (Step 02 already folded the ES storage types' local `JSONObject`s into Kuzzle's own.)
+- Whether to mark the `Token` interface's `connectionId` `@deprecated` — it describes nothing Kuzzle produces ([step 02](steps/02-kuzzle-owns-its-types.md#local-decisions)).
 - Whether `JSONObject` should stay `any`-valued in step 2 (identical, non-breaking) or gain a stricter sibling type for new code.
 
 ## References

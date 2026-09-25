@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache } from "./indexCache";

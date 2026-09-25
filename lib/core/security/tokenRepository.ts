@@ -20,7 +20,7 @@
  */
 
 import jwt from "jsonwebtoken";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import _ from "lodash";
 import ms from "ms";
 

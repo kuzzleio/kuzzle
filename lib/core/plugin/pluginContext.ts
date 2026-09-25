@@ -22,7 +22,7 @@
 import Bluebird from "bluebird";
 import _ from "lodash";
 import { Koncorde } from "../shared/KoncordeWrapper";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { KuzzleRequest, RequestContext, RequestInput } from "../../api/request";
 import BaseValidationType from "../validation/baseType";

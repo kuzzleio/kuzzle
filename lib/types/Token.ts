@@ -19,10 +19,14 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "./JSONObject";
 
 /**
- * Kuzzle authentication token.
+ * Kuzzle authentication token, as a plain object.
+ *
+ * Not the type of `request.context.token`: that is the server's token model,
+ * exported as `KuzzleToken`, which has every member below except
+ * `connectionId` (ADR-0002 step 02, TD-07).
  */
 export interface Token extends JSONObject {
   /**
@@ -47,6 +51,10 @@ export interface Token extends JSONObject {
 
   /**
    * Associated connection ID
+   *
+   * Never set on the tokens Kuzzle builds: a token can serve several
+   * connections, and the token manager keeps those links, not the token. The
+   * connection of a request is `request.context.connection.id`.
    */
   connectionId: string | null;
 

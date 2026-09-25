@@ -1,6 +1,6 @@
 import { inspect } from "node:util";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 // A default import, not `import Redis = require(...)`: the latter emits a real
 // `require()` that vite cannot resolve for a `.ts` path, so any vitest spec

@@ -21,7 +21,7 @@
 
 /* eslint sort-keys: 0 */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { wrap } from "../../kerror";
 import type { KuzzleRequest } from "../request";

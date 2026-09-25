@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import { isNil } from "lodash";
 import * as path from "node:path";
 import * as semver from "semver";

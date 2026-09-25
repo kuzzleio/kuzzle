@@ -21,7 +21,7 @@
 
 import { format } from "util";
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 import type { Domains } from "./codes";
 import { domains as internalDomains } from "./codes";

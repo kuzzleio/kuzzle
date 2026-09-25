@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 import type { KuzzleRequest } from "../../api/request";
 
 /**

@@ -20,7 +20,7 @@
  */
 
 import Bluebird from "bluebird";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import type { Koncorde, NormalizedFilter } from "koncorde";
 
 import { KuzzleRequest, Request, RequestContext } from "../../api/request";

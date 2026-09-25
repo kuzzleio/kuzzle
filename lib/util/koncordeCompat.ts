@@ -24,7 +24,7 @@
  */
 
 import { uniq } from "lodash";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 import type { Koncorde } from "koncorde";
 
 import * as kerror from "../kerror";

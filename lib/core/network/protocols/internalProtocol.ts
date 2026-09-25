@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
 
 import createDebug from "../../../util/debug";
 import ClientConnection from "../clientConnection";

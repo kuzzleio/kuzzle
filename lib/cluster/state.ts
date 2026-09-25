@@ -20,7 +20,7 @@
  */
 
 import { NormalizedFilter } from "koncorde";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 import type { RoomList } from "../types";
 import type { FullStateAuthStrategy } from "./protobuf/commandMessages";

@@ -33,7 +33,7 @@ import ApiKey from "../../model/storage/apiKey";
 import * as kerror from "../../kerror";
 import { has } from "../../util/safeObject";
 import { NameGenerator } from "../../util/name-generator";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import type { Profile } from "../../model/security/profile";
 import type { User } from "../../model/security/user";
 

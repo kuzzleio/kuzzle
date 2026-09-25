@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "./JSONObject";
 
 import type { Logger } from "../kuzzle/Logger";
 import type PluginManifest from "../core/plugin/pluginManifest";

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 import isNil from "lodash/isNil";
 
 import type { KuzzleRequest } from "../api/request";

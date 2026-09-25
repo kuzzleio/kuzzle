@@ -1,4 +1,4 @@
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "./JSONObject";
 
 /**
  * @deprecated Use KDocument instead (See https://docs.kuzzle.io/sdk/js/7/essentials/strong-typing/)

@@ -20,7 +20,7 @@
  */
 
 import { KuzzleLogger } from "kuzzle-logger";
-import type { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import type { KuzzleRequest } from "../api/request/kuzzleRequest";
