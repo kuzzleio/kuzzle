@@ -42,9 +42,13 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 ## Cold start
 
-**Where we are (2026-09-25):** ADR accepted; step 01 in progress.
+**Where we are (2026-09-25):** ADR accepted. Step 01 is done in [#2927](https://github.com/kuzzleio/kuzzle/pull/2927) (awaiting merge); step 02 is in progress in a PR stacked on it (after #2927 merges, delete its branch `docs/adr-002-own-contract-types` so GitHub retargets step 02's PR to `2-dev`).
 
-**Next action:** step 01 — the explicit re-export list.
+**Why it matters now:** steps 01–02 are to land **before the beta** that [ADR-0001 step 15](../adr-001/steps/15-consolidation-non-regression.md) prepares — the maintainer's decision. When they merge: add what a user sees (four `@deprecated` client-transport re-exports; new `KuzzleUser` / `KuzzleToken`; Kuzzle's own `JSONObject`) to [step 15's release notes draft](../adr-001/step-15-release-notes.md), and re-run step 15's phase C if `lib/` changed.
+
+**Next action:** merge step 01, finish step 02; then plan step 03 (needs the open points below decided — package name and home — and a `kuzzle-sdk` release).
+
+**Conventions** (same as ADR-0001): base branch `2-dev`; non-breaking only; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands (a stacked PR merges through `gh api -X PUT repos/kuzzleio/kuzzle/pulls/<n>/merge-async -f merge_method=merge`). The typings gate is `npm run typecheck:typings` (`tests/typings/`); `tests/typings/consumer/sdkReexports.ts` pins the 139 re-exported names.
 
 ---
 
