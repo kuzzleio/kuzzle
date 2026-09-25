@@ -225,7 +225,7 @@ class DocumentController extends NativeController {
     const format = request.getString("format", "jsonl");
     const separator = request.getString("separator", ",");
     const query = request.getObjectFromBodyOrArgs("query", {});
-    const sort = request.getObjectFromBodyOrArgs("sort", {});
+    const sort = getExportSort(request);
     const collapse = request.getObjectFromBodyOrArgs("collapse", {});
     const fields = request.getArrayFromBodyOrArgs("fields", []) as string[];
     const fieldsName = request.getObjectFromBodyOrArgs("fieldsName", {});
@@ -250,7 +250,7 @@ class DocumentController extends NativeController {
       searchBody.query = await this.translateKoncorde(searchBody.query || {});
     }
 
-    if (Object.keys(sort).length > 0) {
+    if (sort !== undefined) {
       searchBody.sort = sort;
     }
     let mimeType = "html/text";
@@ -1126,3 +1126,28 @@ function hasMultiTargets(str: string) {
 }
 
 export = DocumentController;
+
+/**
+ * `document:export`'s `sort`, in every form Elasticsearch takes — an object, a
+ * field name, or the array its documentation (and ours) shows — and forwarded
+ * as is, as `document:search` does. `getObjectFromBodyOrArgs` refused the array
+ * outside HTTP GET. An empty value means no sort.
+ */
+function getExportSort(request: KuzzleRequest): unknown {
+  const { misc, protocol } = request.context.connection;
+  const sort: unknown =
+    protocol === "http" && misc.verb === "GET"
+      ? request.getObjectFromBodyOrArgs("sort", {})
+      : request.input.body?.sort;
+
+  if (
+    sort === undefined ||
+    sort === null ||
+    (typeof sort === "object" && Object.keys(sort).length === 0) ||
+    sort === ""
+  ) {
+    return undefined;
+  }
+
+  return sort;
+}

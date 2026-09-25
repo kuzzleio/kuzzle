@@ -547,6 +547,42 @@ describe("#api/controllers/documentController", () => {
       expect(asked(searchEvent)[0][3]).not.toHaveProperty("collapse");
     });
 
+    it.each([
+      ["an array, the documented form", [{ age: "desc" }, "_doc"]],
+      ["an object", { age: "desc" }],
+      ["a field name", "age"],
+    ])("should forward a body sort given as %s", async (_form, sort) => {
+      request.input.body = { query: {}, sort };
+
+      await drain(await controller.export(request));
+
+      expect(asked(searchEvent)[0][3]).toEqual({ query: {}, sort });
+    });
+
+    it.each([[undefined], [null], [{}], [[]], [""]])(
+      "should not forward an empty sort: %j",
+      async (sort) => {
+        request.input.body = { query: {}, sort };
+
+        await drain(await controller.export(request));
+
+        expect(asked(searchEvent)[0][3]).not.toHaveProperty("sort");
+      },
+    );
+
+    it("should read the sort from the query string on HTTP GET", async () => {
+      request.context.connection.misc.verb = "GET";
+      request.input.body = null;
+      request.input.args.sort = JSON.stringify([{ age: "desc" }]);
+
+      await drain(await controller.export(request));
+
+      expect(asked(searchEvent)[0][3]).toEqual({
+        query: {},
+        sort: [{ age: "desc" }],
+      });
+    });
+
     it("should reject unsupported protocols", async () => {
       request.context.connection.protocol = "mqtt";
 
