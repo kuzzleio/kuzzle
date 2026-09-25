@@ -35,14 +35,22 @@ class BaseType<
   TOptions extends TypeOptions = TypeOptions,
   TSpecification extends TypeOptions = TOptions,
 > {
+  /*
+   * Declared, not initialised: the base class sets no own property, so a
+   * plugin subclass (`context.constructors.BaseValidationType`) may provide
+   * these as getters or prototype values, as it could in v2.56.0. An
+   * initialiser here would throw on a getter-only accessor and shadow a
+   * prototype value with the empty default.
+   */
+
   /** Name under which the type is registered */
-  public typeName = "";
+  declare public typeName: string;
 
   /** Whether fields of that type may declare children */
-  public allowChildren = false;
+  declare public allowChildren: boolean;
 
   /** `typeOptions` properties the type recognizes */
-  public allowedTypeOptions: string[] = [];
+  declare public allowedTypeOptions: string[];
 
   /**
    * Validate a document against a registered field type validator

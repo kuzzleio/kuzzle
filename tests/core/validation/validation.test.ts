@@ -1,7 +1,7 @@
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type BaseType from "../../../lib/core/validation/baseType";
+import BaseType from "../../../lib/core/validation/baseType";
 import type {
   CollectionSpecification,
   CuratedCollectionSpecification,
@@ -259,6 +259,43 @@ describe("#core/validation/validation", () => {
 
       expect(validation.types.aType).toBe(validationType);
       expect(validation.typeAllowsChildren).toEqual(["aType"]);
+    });
+
+    /**
+     * A plugin extends `context.constructors.BaseValidationType`, and v2.56.0
+     * let it provide the three members any way JavaScript allows. These two
+     * are the forms an own property set by the base constructor breaks: a
+     * getter-only accessor (the assignment throws) and a prototype value (the
+     * empty default shadows it).
+     */
+    it("keeps a plugin type's members provided as getters", () => {
+      class GetterType extends BaseType {}
+      Object.defineProperties(GetterType.prototype, {
+        allowChildren: { get: () => true },
+        allowedTypeOptions: { get: () => ["anOption"] },
+        typeName: { get: () => "getterType" },
+      });
+
+      const validationType = new GetterType();
+      validation.addType(validationType);
+
+      expect(validation.types.getterType).toBe(validationType);
+      expect(validationType.allowChildren).toBe(true);
+      expect(validationType.allowedTypeOptions).toEqual(["anOption"]);
+    });
+
+    it("keeps a plugin type's members provided as prototype values", () => {
+      class PrototypeType extends BaseType {}
+      PrototypeType.prototype.typeName = "prototypeType";
+      PrototypeType.prototype.allowChildren = true;
+      PrototypeType.prototype.allowedTypeOptions = ["anOption"];
+
+      const validationType = new PrototypeType();
+      validation.addType(validationType);
+
+      expect(validation.types.prototypeType).toBe(validationType);
+      expect(validationType.allowChildren).toBe(true);
+      expect(validationType.allowedTypeOptions).toEqual(["anOption"]);
     });
 
     /**
