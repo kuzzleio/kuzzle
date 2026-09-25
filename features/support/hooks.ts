@@ -7,6 +7,42 @@ import testPermissions from "../fixtures/permissions";
 import testFixtures from "../fixtures/fixtures";
 import KuzzleWorld from "./world";
 
+/**
+ * `admin:resetSecurity` gives the anonymous user back its rights on the node
+ * that answered it; the other nodes learn it from the cluster's sync channel a
+ * moment later, and nginx may send the next request to one of them. An
+ * anonymous `loadSecurities` that lands there first is refused. So it is
+ * retried for as long as the refusal is that one, and only that one.
+ *
+ * Eventual consistency across nodes is how Kuzzle has always worked; what
+ * made the window visible is CI's heartbeat-loss injection, which adds one
+ * retransmit round trip to a message that follows a lost heartbeat
+ * (docs/adr-001/step-15-inventory.md, §5).
+ */
+async function loadSecuritiesAsAnonymous(sdk: Kuzzle) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await sdk.query({
+        action: "loadSecurities",
+        body: testPermissions,
+        controller: "admin",
+        refresh: "wait_for",
+      });
+
+      return;
+    } catch (error) {
+      if (
+        attempt >= 20 ||
+        (error as { id?: string }).id !== "security.rights.unauthorized"
+      ) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+}
+
 async function resetSecurityDefault(sdk: Kuzzle) {
   await sdk.query({
     action: "resetSecurity",
@@ -16,12 +52,7 @@ async function resetSecurityDefault(sdk: Kuzzle) {
 
   sdk.jwt = null;
 
-  await sdk.query({
-    action: "loadSecurities",
-    body: testPermissions,
-    controller: "admin",
-    refresh: "wait_for",
-  });
+  await loadSecuritiesAsAnonymous(sdk);
 
   await sdk.auth.login("local", {
     password: "password",
