@@ -83,7 +83,10 @@ class Protocol<TConfig = Record<string, unknown>> {
    * type-checked and threw on `entryPoint.config` (TD-41).
    */
   public static entryPointOf(args: Protocol.InitArgs): NetworkEntryPoint {
-    const entryPoint = args[0] ?? args[1];
+    // `||`, not `??`: v2.56.0 took any *falsy* first argument as the old shape
+    // (its assert only needed `!name`), so `init("", entryPoint)` and
+    // `init(false, entryPoint)` worked there. `??` kept `""` as the entry point.
+    const entryPoint = args[0] || args[1]; // NOSONAR: falsy, not nullish, on purpose
 
     // Both call shapes crashed on `entryPoint.config` a few lines down when
     // the entry point was missing. Same outcome, with the reason in the

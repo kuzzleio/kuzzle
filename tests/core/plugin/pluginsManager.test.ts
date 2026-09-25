@@ -1207,6 +1207,33 @@ describe("#core/plugin/pluginsManager", () => {
         });
       });
 
+      // v2.56.0 accepted anything with a callable `then` and awaited it; #2748
+      // had started asking for a `catch` too.
+      it.each([
+        [
+          "an object",
+          () => ({ then: (resolve: (v: unknown) => void) => resolve(false) }),
+        ],
+        [
+          "a function",
+          () =>
+            Object.assign(() => {}, {
+              then: (resolve: (v: unknown) => void) => resolve(false),
+            }),
+        ],
+      ])(
+        "awaits a verify answering %s with only a then method",
+        async (_label, thenable) => {
+          instance.verifyFunction.mockReturnValue(thenable());
+
+          expect(await verified("foo", "bar")).toEqual({
+            error: null,
+            message: { message: null },
+            result: false,
+          });
+        },
+      );
+
       it("refuses a verify that resolves to a value that is neither false nor an object", async () => {
         instance.verifyFunction.mockResolvedValue(true);
 

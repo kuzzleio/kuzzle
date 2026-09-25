@@ -916,6 +916,36 @@ describe("ClusterNode", () => {
       // restarted by an `on-failure` policy (#2785).
       expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
+
+    it("still shuts this node down before the handshake gave it an id", async () => {
+      await node.evictSelf("foo");
+
+      expect(node.publisher.sendNodeEvicted).not.toHaveBeenCalled();
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+    });
+  });
+
+  describe("#shutdown", () => {
+    it("announces the shutdown to the other nodes, then disposes", async () => {
+      node.nodeId = "qux";
+
+      await node.shutdown();
+
+      expect(node.publisher.sendNodeShutdown.mock.calls).toEqual([["qux"]]);
+      expect(node.publisher.dispose).toHaveBeenCalledTimes(1);
+      expect(node.command.dispose).toHaveBeenCalledTimes(1);
+    });
+
+    it("still disposes when the handshake has not run yet", async () => {
+      // A SIGTERM during cluster init: `nodeId` throws until the handshake
+      // sets it, which skipped both disposals. v2.56.0 read `null` and went on.
+      await expect(node.shutdown()).resolves.toBeUndefined();
+
+      expect(node.publisher.sendNodeShutdown).not.toHaveBeenCalled();
+      expect(node.idCardHandler.dispose).toHaveBeenCalledTimes(1);
+      expect(node.publisher.dispose).toHaveBeenCalledTimes(1);
+      expect(node.command.dispose).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("#evictNode", () => {
