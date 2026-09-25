@@ -128,6 +128,24 @@ describe("#core/validation/Validation — validate", () => {
       );
     });
 
+    it("should find the specification from the request's args, as they stand when validating", async () => {
+      const request = requestFor({ collection: "other", index: "other" });
+      const recurse = vi
+        .spyOn(internalsOf(validation), "recurseFieldValidation")
+        .mockReturnValue(true);
+
+      specFor({ fields: { children: {} }, strict: false, validators: null });
+
+      await validation.validate(request, false);
+      expect(recurse).not.toHaveBeenCalled();
+
+      request.input.args.index = index;
+      request.input.args.collection = collection;
+
+      await expect(validation.validate(request, false)).resolves.toBe(request);
+      expect(recurse).toHaveBeenCalledOnce();
+    });
+
     it("should answer the request when there is no specification at all", async () => {
       const request = requestFor();
       const recurse = vi.spyOn(
