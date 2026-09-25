@@ -216,7 +216,7 @@ class CacheEngine {
     /**
      * Returns the raw ioredis client instance backing the internal cache.
      * In-process only — never exposed over the network. Used by
-     * lib/util/distributedLock.ts to build a redlock-universal adapter.
+     * lib/util/distributedLock.ts to build its redis-semaphore mutexes.
      */
     global.kuzzle.onAsk(
       "core:cache:internal:client:get",
