@@ -56,6 +56,8 @@ Every item is intended (step 12's strict flip or a TD fix), and none of those PR
 
 Nothing to fix, everything to write down. The beta's release notes are built from this list.
 
+> **Drafted:** [step-15-release-notes.md](step-15-release-notes.md) — the user-facing text, by audience (operators, API clients, developers).
+
 - **Multipart `maxFormFileSize` (default 1 MB) is enforced** — uploads larger than that get a 413 `network.http.file_too_large` even where `maxRequestSize` was raised (TD-52). Migration note. (R-01, B-32)
 - **`Kuzzle.id` is set**: the node name appears in the redis client name, the cluster ID card, every realtime notification's `node`, **every API response's `node`** (absent before) and the **`X-Kuzzle-Node` header** (the literal string `"undefined"` before). The ADR listed only the first three. (C-07)
 - **Cluster**: an evicted node exits 1 instead of staying up as a zombie — also on any sync-handler exception and ID-card worker error; lost sync messages are retransmitted (`cluster.retransmitBuffer`, new key). Rolling upgrade from v2.56.0 is wire-compatible (static analysis). (C-02, B-44, B-102)
