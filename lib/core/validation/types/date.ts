@@ -25,7 +25,11 @@ import moment from "moment";
 import * as kerror from "../../../kerror";
 import { has, isPlainObject } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import type { DateTypeOptions } from "../typeOptions";
+import type {
+  DateRangeBound,
+  DateSpecification,
+  DateTypeOptions,
+} from "../typeOptions";
 
 type DateParser = (date: MomentInput) => Moment;
 
@@ -149,7 +153,7 @@ const formatMap: Record<string, DateParser> = {
 const assertionError = kerror.wrap("validation", "assert"),
   typeError = kerror.wrap("validation", "types");
 
-class DateType extends BaseType<DateTypeOptions> {
+class DateType extends BaseType<DateTypeOptions, DateSpecification> {
   public typeName = "date";
   public allowChildren = false;
   public allowedTypeOptions = ["range", "formats"];
@@ -176,55 +180,63 @@ class DateType extends BaseType<DateTypeOptions> {
   }
 
   /**
+   * Normalises the specification **in place**, as it always has — the caller's
+   * object is the one it answers — which is why the result is `Object.assign`ed
+   * onto it rather than built beside it.
+   *
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions: DateTypeOptions): DateTypeOptions {
-    validateFormats(typeOptions);
-    this.validateRange(typeOptions);
+  validateFieldSpecification(
+    specification: DateSpecification,
+  ): DateTypeOptions {
+    const formats = validateFormats(specification);
+    const range = this.validateRange(specification);
 
-    return typeOptions;
+    return Object.assign(
+      specification,
+      range === undefined ? { formats } : { formats, range },
+    );
   }
 
   /**
-   * Normalizes `range` in place: each bound becomes a moment, except `NOW`,
+   * Converts `range`'s bounds, in place: each becomes a moment, except `NOW`,
    * which is kept verbatim so that it resolves at validation time rather than
    * at specification time.
    *
    * @throws {PreconditionError}
    */
-  private validateRange(typeOptions: DateTypeOptions): void {
-    if (!has(typeOptions, "range")) {
-      return;
+  private validateRange(
+    specification: DateSpecification,
+  ): DateTypeOptions["range"] {
+    if (!has(specification, "range")) {
+      return undefined;
     }
 
-    const { range } = typeOptions;
+    const { range } = specification;
 
     if (!this.checkAllowedProperties(range, ["min", "max"])) {
       throw assertionError.get("unexpected_properties", "range", "min, max");
     }
 
+    const bounds: { min?: DateRangeBound; max?: DateRangeBound } = {};
     let min: Moment | null = null,
       max: Moment | null = null;
 
     if (has(range, "min")) {
       min = convertRangeValue(range.min);
+      bounds.min = range.min === "NOW" ? "NOW" : min;
     }
 
     if (has(range, "max")) {
       max = convertRangeValue(range.max);
+      bounds.max = range.max === "NOW" ? "NOW" : max;
     }
 
     if (min && max?.isBefore(min)) {
       throw assertionError.get("invalid_range", "range", "min", "max");
     }
 
-    if (min && range.min !== "NOW") {
-      range.min = min;
-    }
-
-    if (max && range.max !== "NOW") {
-      range.max = max;
-    }
+    return Object.assign(range, bounds);
   }
 }
 
@@ -284,10 +296,10 @@ function checkRange(
  *
  * @throws {PreconditionError}
  */
-function validateFormats(typeOptions: DateTypeOptions): void {
+function validateFormats(typeOptions: DateSpecification): string[] {
   if (!has(typeOptions, "formats")) {
     typeOptions.formats = ["epoch_millis"];
-    return;
+    return typeOptions.formats;
   }
 
   const { formats } = typeOptions;
@@ -301,6 +313,8 @@ function validateFormats(typeOptions: DateTypeOptions): void {
   if (unrecognized.length > 0) {
     throw typeError.get("invalid_date_format", unrecognized.join(", "));
   }
+
+  return formats;
 }
 
 function convertRangeValue(value: unknown): Moment {

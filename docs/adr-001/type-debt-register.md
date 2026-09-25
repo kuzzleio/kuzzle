@@ -1658,6 +1658,8 @@ Two things are wrong and they pull in opposite directions:
 
 ### TD-75
 
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-75--a-specification-type-for-what-the-user-writes)).** `BaseType` takes a second, defaulted type parameter, `TSpecification` (= `TOptions`), and `validateFieldSpecification(opts: TSpecification): TOptions`. The `date` type declares the input it really takes — `DateSpecification`, whose bounds are `DateSpecificationBound = string | number` — and keeps returning `DateTypeOptions`. The body is unchanged in effect: it still normalises the caller's object in place (now said with `Object.assign`, which is also what makes it type-check without a cast). Every other type keeps one shape; a plugin's `BaseType<T>` means what it meant. The spec's `specification()` cast is gone.
+
 **`DateTypeOptions` describes what `validateFieldSpecification` returns, and is also the type of what it takes** · 🟡 low · `lib/core/validation/typeOptions.ts`, `lib/core/validation/types/date.ts`
 
 Found porting the `validation/types/date` spec ([step 13 L4d1](steps/13-sprint-10-test-closure.md#what-l4d1-found)), by TS2322 × 8.

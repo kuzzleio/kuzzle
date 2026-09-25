@@ -25,9 +25,16 @@ import type { TypeOptions } from "./typeOptions";
  * Base class of every validation type, and the contract `Validation.addType`
  * checks a plugin-provided type against.
  *
- * @typeParam TOptions - the `typeOptions` shape this type accepts
+ * @typeParam TOptions - the `typeOptions` shape this type accepts, once
+ *   `validateFieldSpecification` has run
+ * @typeParam TSpecification - the `typeOptions` shape a user writes, which
+ *   `validateFieldSpecification` checks and normalises into `TOptions`; the
+ *   same shape unless the type converts something
  */
-class BaseType<TOptions extends TypeOptions = TypeOptions> {
+class BaseType<
+  TOptions extends TypeOptions = TypeOptions,
+  TSpecification extends TypeOptions = TOptions,
+> {
   /** Name under which the type is registered */
   public typeName = "";
 
@@ -54,7 +61,8 @@ class BaseType<TOptions extends TypeOptions = TypeOptions> {
    *
    * @throws {KuzzleError}
    */
-  validateFieldSpecification(opts: TOptions): TOptions {
+  validateFieldSpecification(opts: TSpecification): TOptions;
+  validateFieldSpecification(opts: TypeOptions): TypeOptions {
     return opts;
   }
 

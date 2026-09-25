@@ -3,7 +3,7 @@ import moment from "moment";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import BaseType from "../../../../lib/core/validation/baseType";
-import type { DateTypeOptions } from "../../../../lib/core/validation/typeOptions";
+import type { DateSpecification } from "../../../../lib/core/validation/typeOptions";
 import DateType from "../../../../lib/core/validation/types/date";
 import { PreconditionError } from "../../../../lib/kerror/errors/preconditionError";
 import { invalid } from "../../../helpers/invalid";
@@ -84,25 +84,6 @@ vi.mock("moment", async (importOriginal) => {
   };
 });
 
-/**
- * A `date` specification **as a user writes it**: each range bound is an ISO
- * string or an epoch number.
- *
- * ⚠️ That is not what the subject's parameter says a bound is.
- * `DateRangeBound` is `Moment | "NOW"` — the shape
- * `validateFieldSpecification` *returns*, after it has converted the bounds in
- * place — and the same type names its *input*, where a moment is exactly what
- * a caller does not have yet. So every fixture below that exercises the
- * conversion fails to type-check against the very method whose job is to
- * perform it. Recorded as
- * [TD-75](../../../../docs/adr-001/type-debt-register.md#td-75); a
- * test-porting slice leaves `lib/` alone, so the cast is named here instead.
- */
-const specification = (options: {
-  formats?: string[];
-  range?: { max?: number | string; min?: number | string };
-}): DateTypeOptions => options as DateTypeOptions;
-
 describe("#core/validation/types/date", () => {
   const dateType = new DateType();
 
@@ -139,7 +120,7 @@ describe("#core/validation/types/date", () => {
       for (const formats of [[], null]) {
         expect(() =>
           dateType.validateFieldSpecification(
-            invalid<DateTypeOptions>({ formats }),
+            invalid<DateSpecification>({ formats }),
           ),
         ).toThrow(
           expect.objectContaining({
@@ -177,7 +158,7 @@ describe("#core/validation/types/date", () => {
       for (const range of [null, [], { unknown: null }]) {
         expect(() =>
           dateType.validateFieldSpecification(
-            invalid<DateTypeOptions>({ range }),
+            invalid<DateSpecification>({ range }),
           ),
         ).toThrow(
           expect.objectContaining({
@@ -210,7 +191,7 @@ describe("#core/validation/types/date", () => {
       for (const min of ["foobar", null]) {
         expect(() =>
           dateType.validateFieldSpecification(
-            invalid<DateTypeOptions>({ range: { min } }),
+            invalid<DateSpecification>({ range: { min } }),
           ),
         ).toThrow(
           expect.objectContaining({
@@ -225,7 +206,7 @@ describe("#core/validation/types/date", () => {
       for (const max of ["foobar", null]) {
         expect(() =>
           dateType.validateFieldSpecification(
-            invalid<DateTypeOptions>({ range: { max } }),
+            invalid<DateSpecification>({ range: { max } }),
           ),
         ).toThrow(
           expect.objectContaining({
@@ -238,12 +219,10 @@ describe("#core/validation/types/date", () => {
 
     it("throws if max < min", () => {
       expect(() =>
-        dateType.validateFieldSpecification(
-          specification({
-            formats: ["epoch_millis"],
-            range: { max: "2010-01-01", min: "2020-01-01" },
-          }),
-        ),
+        dateType.validateFieldSpecification({
+          formats: ["epoch_millis"],
+          range: { max: "2010-01-01", min: "2020-01-01" },
+        }),
       ).toThrow(
         expect.objectContaining({
           constructor: PreconditionError,
@@ -253,18 +232,36 @@ describe("#core/validation/types/date", () => {
     });
 
     it("converts min and max to moment objects if they are valid", () => {
-      const result = dateType.validateFieldSpecification(
-        specification({
-          formats: ["epoch_millis"],
-          range: { max: "2020-01-01", min: "2010-01-01" },
-        }),
-      );
+      const result = dateType.validateFieldSpecification({
+        formats: ["epoch_millis"],
+        range: { max: "2020-01-01", min: "2010-01-01" },
+      });
 
       const { max, min } = result.range as { max: Moment; min: Moment };
 
       expect(min.isValid()).toBe(true);
       expect(max.isValid()).toBe(true);
       expect(min.isBefore(max)).toBe(true);
+    });
+
+    /**
+     * The caller keeps the object it passed: `Validation` stores the result,
+     * but the raw specification it read it from is the same object, so the
+     * normalisation must stay in place.
+     */
+    it("normalises the specification in place, range included", () => {
+      const specification: DateSpecification = {
+        range: { max: "NOW", min: 1262304000000 },
+      };
+      const { range } = specification;
+
+      const result = dateType.validateFieldSpecification(specification);
+
+      expect(result).toBe(specification);
+      expect(result.range).toBe(range);
+      expect(result.formats).toEqual(["epoch_millis"]);
+      expect(result.range).toEqual({ max: "NOW", min: expect.any(Object) });
+      expect(moment.isMoment(result.range?.min)).toBe(true);
     });
   });
 
@@ -290,24 +287,20 @@ describe("#core/validation/types/date", () => {
     });
 
     it("validates if the date is after the min date", () => {
-      const typeOptions = dateType.validateFieldSpecification(
-        specification({
-          formats: ["epoch_millis", "strict_date"],
-          range: { min: "2013-09-21" },
-        }),
-      );
+      const typeOptions = dateType.validateFieldSpecification({
+        formats: ["epoch_millis", "strict_date"],
+        range: { min: "2013-09-21" },
+      });
 
       expect(dateType.validate(typeOptions, "2014-01-01", [])).toBe(true);
     });
 
     it("does not validate if the date is before the min date", () => {
       const errorMessages: string[] = [];
-      const typeOptions = dateType.validateFieldSpecification(
-        specification({
-          formats: ["epoch_millis"],
-          range: { min: Date.now() },
-        }),
-      );
+      const typeOptions = dateType.validateFieldSpecification({
+        formats: ["epoch_millis"],
+        range: { min: Date.now() },
+      });
 
       expect(
         dateType.validate(typeOptions, Date.now() - 10000, errorMessages),
@@ -318,24 +311,20 @@ describe("#core/validation/types/date", () => {
     });
 
     it("validates if the date is before the max date", () => {
-      const typeOptions = dateType.validateFieldSpecification(
-        specification({
-          formats: ["strict_basic_week_date", "epoch_millis", "strict_date"],
-          range: { max: Date.now() + 1000 },
-        }),
-      );
+      const typeOptions = dateType.validateFieldSpecification({
+        formats: ["strict_basic_week_date", "epoch_millis", "strict_date"],
+        range: { max: Date.now() + 1000 },
+      });
 
       expect(dateType.validate(typeOptions, Date.now(), [])).toBe(true);
     });
 
     it("does not validate if the date is after the max date", () => {
       const errorMessages: string[] = [];
-      const typeOptions = dateType.validateFieldSpecification(
-        specification({
-          formats: ["epoch_millis"],
-          range: { max: Date.now() },
-        }),
-      );
+      const typeOptions = dateType.validateFieldSpecification({
+        formats: ["epoch_millis"],
+        range: { max: Date.now() },
+      });
 
       expect(
         dateType.validate(typeOptions, Date.now() + 1000, errorMessages),

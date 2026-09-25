@@ -554,3 +554,38 @@ to narrow out the array form before calling, so it holds a union either way.
 
 `tests/core/plugin/pluginsManager.test.ts` loses its `byName()` / `asPipe()`
 casts (~20 uses): the assignments themselves are now the type-level test.
+
+### TD-75 — a specification type for what the user writes
+
+`DateTypeOptions` describes a `date` field's options **after**
+`validateFieldSpecification` has converted its range bounds into moments, and
+was also that method's parameter type — so the documented call, with ISO
+strings or epoch numbers as bounds, did not type-check against the method
+whose job is to convert them.
+
+`BaseType<TOptions, TSpecification = TOptions>`: the second parameter names
+the shape a user writes, `validateFieldSpecification(opts: TSpecification):
+TOptions` maps one to the other, and the base implementation (identity) is an
+overload like `validate`'s, so it needs no cast. `DateType` extends
+`BaseType<DateTypeOptions, DateSpecification>`, with `DateSpecification`'s
+bounds typed `DateSpecificationBound = string | number` (`"NOW"` is a string).
+
+The body had to be re-said, not re-done. It mutated the caller's object —
+`range.min = min` — which cannot type-check once the input and output types
+differ. It still does exactly that: `validateRange` builds the converted
+bounds and `Object.assign`s them onto the caller's `range`, and
+`validateFieldSpecification` `Object.assign`s `formats` and that same `range`
+onto the caller's object and returns it. An intersection is assignable to its
+constituents, so the result is a `DateTypeOptions` without an assertion.
+In-place matters: `Validation` stores the returned options, but reads them from
+the raw specification object, which a caller may keep.
+
+**Why it is not breaking:** no runtime change (same object, same `range`
+object, same values, same errors in the same order); the new type parameter is
+defaulted, so every `BaseType<T>` — ours and plugins' — means what it meant.
+
+`tests/core/validation/types/date.test.ts` loses its `specification()` cast;
+its deliberately invalid fixtures are `invalid<DateSpecification>` now, and a
+new test pins the in-place contract (same object, same `range`, `NOW` kept,
+the other bound a moment) so a future "cleaner" version that builds a copy
+fails.
