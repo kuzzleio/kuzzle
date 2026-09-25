@@ -513,7 +513,7 @@ describe("#api/request/KuzzleRequest", () => {
 
         it("should return the default value if provided, when the parameter is missing", () => {
           // `def` is declared `[] | undefined` — the empty TUPLE — on
-          // getBodyArray/getArray/getArrayLegacy, so no caller can pass a
+          // getBodyArray/getArray/getArrayOrCsv, so no caller can pass a
           // default with anything in it without a cast.
           const def = invalid<[]>(["foo"]);
 
@@ -536,7 +536,7 @@ describe("#api/request/KuzzleRequest", () => {
 
         it("should return the default value if one is provided, and if the request has no body", () => {
           // `def` is declared `[] | undefined` — the empty TUPLE — on
-          // getBodyArray/getArray/getArrayLegacy, so no caller can pass a
+          // getBodyArray/getArray/getArrayOrCsv, so no caller can pass a
           // default with anything in it without a cast.
           const def = invalid<[]>(["foo"]);
 
@@ -801,7 +801,7 @@ describe("#api/request/KuzzleRequest", () => {
 
         it("should return the default value if provided, when the parameter is missing", () => {
           // `def` is declared `[] | undefined` — the empty TUPLE — on
-          // getBodyArray/getArray/getArrayLegacy, so no caller can pass a
+          // getBodyArray/getArray/getArrayOrCsv, so no caller can pass a
           // default with anything in it without a cast.
           const def = invalid<[]>(["foo"]);
 
@@ -838,59 +838,83 @@ describe("#api/request/KuzzleRequest", () => {
         });
       });
 
-      describe("#getArrayLegacy", () => {
+      describe("#getArrayOrCsv", () => {
         beforeEach(() => {
           request.context.connection.protocol = "http";
         });
 
         it("extracts the required parameter", () => {
-          expect(request.getArrayLegacy("names")).toBe(
-            request.input.args.names,
-          );
+          expect(request.getArrayOrCsv("names")).toBe(request.input.args.names);
         });
 
         it("should throw if the parameter is missing", () => {
-          throws(() => request.getArrayLegacy("childhood"), {
+          throws(() => request.getArrayOrCsv("childhood"), {
             id: "api.assert.missing_argument",
           });
         });
 
         it("should return the default value if provided, when the parameter is missing", () => {
           // `def` is declared `[] | undefined` — the empty TUPLE — on
-          // getBodyArray/getArray/getArrayLegacy, so no caller can pass a
+          // getBodyArray/getArray/getArrayOrCsv, so no caller can pass a
           // default with anything in it without a cast.
           const def = invalid<[]>(["foo"]);
 
-          expect(request.getArrayLegacy("childhood", def)).toBe(def);
+          expect(request.getArrayOrCsv("childhood", def)).toBe(def);
         });
 
         it("should throw if the parameter is not an array", () => {
-          throws(() => request.getArrayLegacy("age"), {
+          throws(() => request.getArrayOrCsv("age"), {
             id: "api.assert.invalid_type",
           });
         });
 
         it("should try to parse if the value is a string and the protocol is HTTP", () => {
-          expect(request.getArrayLegacy("ids")).toEqual([1, 2, 3]);
+          expect(request.getArrayOrCsv("ids")).toEqual([1, 2, 3]);
         });
 
         it("should split the split if it failed to parse the string as a JSON array when the protocol is HTTP", () => {
-          expect(request.getArrayLegacy("legacyArray")).toEqual([
-            "1",
-            "2",
-            "3",
-          ]);
+          expect(request.getArrayOrCsv("legacyArray")).toEqual(["1", "2", "3"]);
         });
 
         it('should split the string on "," when the protocol is not HTTP', () => {
           request.context.connection.protocol = "ws";
 
-          expect(request.getArrayLegacy("legacyArray")).toEqual([
-            "1",
-            "2",
-            "3",
-          ]);
-          expect(request.getArrayLegacy("ids")).toEqual(["[1", "2", "3]"]);
+          expect(request.getArrayOrCsv("legacyArray")).toEqual(["1", "2", "3"]);
+          expect(request.getArrayOrCsv("ids")).toEqual(["[1", "2", "3]"]);
+        });
+
+        // What sets it apart from getArray: a single query-string value is
+        // not a JSON array, and getArray refuses it.
+        it("returns a single value as a one-element array", () => {
+          request.input.args.single = "foo";
+
+          expect(request.getArrayOrCsv("single")).toEqual(["foo"]);
+          throws(() => request.getArray("single"), {
+            id: "api.assert.invalid_type",
+          });
+        });
+      });
+
+      describe("#getArrayLegacy", () => {
+        // A KuzzleRequest is sealed, so the delegation is checked by its
+        // results rather than with a spy.
+        it("is a deprecated alias of getArrayOrCsv", () => {
+          const def = invalid<[]>(["foo"]);
+
+          for (const protocol of ["http", "ws"]) {
+            request.context.connection.protocol = protocol;
+
+            for (const name of ["names", "ids", "legacyArray"]) {
+              expect(request.getArrayLegacy(name)).toEqual(
+                request.getArrayOrCsv(name),
+              );
+            }
+          }
+
+          expect(request.getArrayLegacy("childhood", def)).toBe(def);
+          throws(() => request.getArrayLegacy("age"), {
+            id: "api.assert.invalid_type",
+          });
         });
       });
 

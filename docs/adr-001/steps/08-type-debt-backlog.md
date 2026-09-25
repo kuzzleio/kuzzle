@@ -617,3 +617,42 @@ verbatim, `idleTimeout: 500` accepted): the first now asserts the offending
 value is printed, the second keeps accepting `500` with a comment saying why.
 The protocol-side fallback is already covered by
 `tests/core/network/protocols/httpwsProtocol.test.ts`.
+
+### TD-20, first half — the CSV form is the API, not a legacy
+
+[#2721](https://github.com/kuzzleio/kuzzle/issues/2721) planned to migrate
+`getArrayLegacy` to `getArray` in the next major, behind a deprecation cycle.
+Reading the routes first changed the decision (taken by the user, option 3-B
+of the #2785/TD-20 review):
+
+- the issue's route table was wrong on two of three rows. The call sites
+  serve `document:mGet` / `document:mExists` (through the generic-event
+  document extractor, which runs before the controller and rewrites `ids` to
+  an array — the controller's own `getArray` would refuse `"a,b"`),
+  `security:mGetUsers` and `server:healthCheck`. `document:mDelete` reads
+  `ids` from the body only;
+- `?ids=a,b` is the documented form on the first three, and the comma list is
+  the **only** documented form of `healthCheck`'s `services` — the one
+  load-balancer and k8s probes send;
+- `getArray` is not a correct target for a query string anyway: `?ids=a` is
+  the string `"a"`, not a JSON array, and it throws.
+
+So the behaviour gets a name and a page instead of a removal date:
+`KuzzleRequest.getArrayOrCsv`, byte-for-byte the former body, documented
+under `doc/2/framework/classes/kuzzle-request/get-array-or-csv`.
+`getArrayLegacy` stays as a `@deprecated` alias because `KuzzleRequest` is
+public plugin API. The three call sites use the new name, and the two
+`NOSONAR: … TD-20` markers and three stale "should be replaced with
+getArray" comments go with them.
+
+What it does not close: an element containing a comma is still split when
+sent as a plain string. That is documented on the new page — the JSON form
+over HTTP, or the body, carries it.
+
+**Why it is not breaking:** no behaviour change anywhere; one method added,
+one aliased.
+
+`tests/api/request/request.test.ts`: the block is now `#getArrayOrCsv`, with
+one new test for what sets it apart from `getArray` (a single value is a
+one-element array, where `getArray` throws), and `#getArrayLegacy` is reduced
+to a test that it delegates.

@@ -395,6 +395,8 @@ Defeats typing at the config assembly point.
 
 ### TD-20
 
+> **🟦 `getArrayLegacy` half fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-20-first-half--the-csv-form-is-the-api-not-a-legacy), [#2721](https://github.com/kuzzleio/kuzzle/issues/2721)) — by deciding the comma-separated form is the API, not by removing it.** The entry's route list was wrong on two of three rows (the real ones are `document:mGet` / `mExists`, `security:mGetUsers`, `server:healthCheck`), CSV is the **only** documented form of `healthCheck`'s `services` (what load-balancer and k8s probes send), and `getArray` is not even a correct target for a query string — `?ids=a` is a string, not a JSON array, so it throws. The behaviour is now `getArrayOrCsv`, public and documented; `getArrayLegacy` is its `@deprecated` alias; the three call sites and their `NOSONAR` markers moved over. Decision recorded in the user's #2785/TD-20 review (option 3-B). **The `setResult` half ([#2688](https://github.com/kuzzleio/kuzzle/issues/2688)) is still open**, and the `Mutex` paragraph below is being split out: it has nothing to do with request APIs.
+
 **Deprecated request APIs kept in converted controllers** · 🟡 low · `lib/api/documentExtractor.ts`, `lib/api/controllers/serverController.ts`
 
 Two `@deprecated` `KuzzleRequest` methods are still called by the files converted in Sprint 4 PR D and were **deliberately kept** rather than migrated, because both "replacements" change observable behaviour — out of scope for a conversion PR (ADR rule: _no behaviour change in a conversion_):

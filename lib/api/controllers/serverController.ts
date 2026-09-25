@@ -217,8 +217,7 @@ class ServerController extends NativeController {
 
     let services;
     if (typeof request.input.args.services === "string") {
-      // @deprecated Should be replaced with request.getArray('services')
-      services = request.getArrayLegacy("services"); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+      services = request.getArrayOrCsv("services");
     }
     if (!services || services.includes("internalCache")) {
       try {

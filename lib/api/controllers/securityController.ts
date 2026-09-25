@@ -680,8 +680,7 @@ class SecurityController extends NativeController {
     if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
       ids = request.getBodyArray("ids");
     } else {
-      // @deprecated Should be replaced with request.getArray('ids')
-      ids = request.getArrayLegacy("ids");
+      ids = request.getArrayOrCsv("ids");
     }
 
     const users = await this.ask("core:security:user:mGet", ids);

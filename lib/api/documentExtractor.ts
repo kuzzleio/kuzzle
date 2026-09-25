@@ -114,8 +114,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
           if (Array.isArray(request.input.args.ids)) {
             ids = request.input.args.ids;
           } else if (typeof request.input.args.ids === "string") {
-            // @deprecated Should be replaced with request.getArray('ids')
-            ids = request.getArrayLegacy("ids"); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+            ids = request.getArrayOrCsv("ids");
           } else {
             throw assertionError.get(
               "invalid_type",
