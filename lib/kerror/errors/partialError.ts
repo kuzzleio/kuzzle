@@ -33,6 +33,11 @@ export class PartialError extends KuzzleError {
     code?: number,
   );
   /**
+   * v2.56.0 declared all four arguments untyped: a body that is not a list of
+   * `KuzzleError` (`[{ _id, reason }]`, `Error[]`) compiled, and must still.
+   */
+  constructor(message?: unknown, body?: unknown, id?: unknown, code?: unknown);
+  /**
    * Two call shapes, both public API: the documented one carries the partial
    * errors — `(message, body, id, code)` — and the one `kerror` uses for every
    * other error class — `(message, id, code)`. They are told apart the way
@@ -40,14 +45,14 @@ export class PartialError extends KuzzleError {
    * arguments are shifted by one.
    */
   constructor(
-    message: string | Error = "",
-    body?: KuzzleError[] | string,
-    id?: string | number,
-    code?: number,
+    message: unknown = "",
+    body?: unknown,
+    id?: unknown,
+    code?: unknown,
   ) {
     let errors: KuzzleError[] = [];
     let errorId: string | undefined;
-    let errorCode: number | undefined;
+    let errorCode: unknown;
 
     if (code === undefined && typeof id === "number") {
       errorCode = id;

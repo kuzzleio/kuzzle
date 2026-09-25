@@ -1,0 +1,33 @@
+{
+  // A TypeScript application or plugin, compiled against the PUBLISHED typings:
+  // `dist/index.d.ts`, reached the way a consumer reaches it — through the
+  // package's `types` — so `npm run build` comes first. Run by
+  // `npm run typecheck:typings`, in this `strict` program and in the non-strict
+  // one next to it (`tsconfig.loose.json`), because a consumer may use either.
+  //
+  // Neither `tsconfig.json` nor `tsconfig.tests.json` can do this: both compile
+  // `lib/` from source, with Kuzzle's own settings. What they cannot see is a
+  // declaration that is true to the implementation and still breaks code that
+  // compiled against the previous release — which is how step 12's strict flip
+  // broke v2.56.0 consumers without a single failing check (ADR-0001 step 15,
+  // TY-01…TY-07). So the files under `consumer/` are written the way plugins
+  // and applications are, against the documented API, and a change that makes
+  // one of them stop compiling is a breaking change of the typings.
+  //
+  // The settings are a typical consumer's, not Kuzzle's: no
+  // `noUncheckedIndexedAccess`, `skipLibCheck` on (a dependency's `.d.ts` is not
+  // what is under test).
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    // The repository root, resolved as a package: its `package.json` `types`.
+    "paths": { "kuzzle": ["../.."] }
+  },
+  "include": ["consumer/**/*.ts"]
+}

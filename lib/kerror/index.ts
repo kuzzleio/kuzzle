@@ -137,10 +137,13 @@ export function rawGet(
     const status = kuzzleError.status || 500;
     kerror = new errors.KuzzleError(message, status, id, code);
   } else {
-    kerror = new errors[kuzzleError.class](message, id as any, code as any);
+    kerror = new errors[kuzzleError.class](message, id, code);
   }
 
-  kerror.props = placeholders;
+  // Not `kerror.props = placeholders`: `props` is declared `string[]`, which
+  // is what code compiled against v2.56.0 reads, and a placeholder may be
+  // anything. See KuzzleError.props.
+  Object.assign(kerror, { props: placeholders });
 
   if (kuzzleError.class !== "InternalError") {
     cleanStackTrace(kerror);

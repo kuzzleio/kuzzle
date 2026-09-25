@@ -22,7 +22,7 @@
 import { KuzzleError } from "./kuzzleError";
 
 export class BadRequestError extends KuzzleError {
-  constructor(message: string | Error = "", id?: string, code?: number) {
+  constructor(message: unknown = "", id?: unknown, code?: unknown) {
     super(message, 400, id, code);
   }
 }

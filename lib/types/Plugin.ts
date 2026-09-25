@@ -86,18 +86,20 @@ export abstract class Plugin {
   /**
    * Plugin context.
    *
-   * Optional: Kuzzle hands it to `init(config, context)` and never assigns it
-   * here — storing it is a convention plugin authors follow, not a contract
-   * the base class fulfils.
+   * Kuzzle hands it to `init(config, context)` and never assigns it here:
+   * storing it is the documented convention plugin authors follow. It is
+   * declared as always present (`!`) because that is what every method but
+   * `init` can rely on, and what v2.56.0 declared — an optional field made
+   * every `this.context.*` of a `strict` plugin a compile error.
    */
-  public context?: PluginContext;
+  public context!: PluginContext;
 
   /**
    * Plugin config.
    *
-   * Optional, for the same reason as {@link context}.
+   * Declared as always present for the same reason as {@link context}.
    */
-  public config?: JSONObject;
+  public config!: JSONObject;
 
   /**
    * Define new API controllers.

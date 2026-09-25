@@ -23,7 +23,8 @@
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1 --passWithNoTests",
     "test:lint": "eslint ./lib ./tests ./bin ./features ./features-legacy",
-    "typecheck:tests": "tsc -p tsconfig.tests.json"
+    "typecheck:tests": "tsc -p tsconfig.tests.json",
+    "typecheck:typings": "tsc -p tests/typings/tsconfig.json && tsc -p tests/typings/tsconfig.loose.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
