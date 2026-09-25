@@ -42,6 +42,27 @@ describe("#core/network/Protocol", () => {
       expect(protocol.initCalled).toBe(true);
     });
 
+    // v2.56.0's only check on the first argument was `!name`, so any falsy
+    // value was the old shape. JavaScript plugins are not held to the `null`
+    // the overload says.
+    it.each([
+      ["an empty string", ""],
+      ["false", false],
+      ["undefined", undefined],
+    ])(
+      "accepts %s as the deprecated first argument, as v2.56.0 did",
+      async (_label, name) => {
+        const protocol = new Protocol("test");
+        const entryPoint = entryPointStub();
+
+        await expect(
+          protocol.init(name as unknown as null, entryPoint),
+        ).resolves.toBe(true);
+
+        expect(protocol.entryPoint).toBe(entryPoint);
+      },
+    );
+
     it("rejects a missing entry point with a reason", async () => {
       const protocol = new Protocol("test");
 
