@@ -21,17 +21,21 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { createLock, IoredisAdapter } from "redlock-universal";
-import type { ExtendedAbortSignal, RedisAdapter } from "redlock-universal";
+import { Mutex as RedisMutex } from "redis-semaphore";
+import type { LockOptions } from "redis-semaphore";
 
+import buildDebug from "./debug";
 import "../types/Global";
+
+const debug = buildDebug("kuzzle:distributedLock");
 
 /**
  * withLock() options
  */
 export interface MutexConfig {
   /**
-   * Maximum number of lock acquisition attempts (default: 10)
+   * Number of acquisition retries after the first failed attempt, i.e. at
+   * most `retryAttempts + 1` attempts are made (default: 10)
    */
   retryAttempts?: number;
 
@@ -58,6 +62,38 @@ export class MutexLockLostError extends Error {
   }
 }
 
+type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
+
+/**
+ * redis-semaphore's mutex, adjusted to what `withLock` promises:
+ *
+ * - the lock lives under the resource key itself, as with the deprecated
+ *   `Mutex` class (redis-semaphore would prefix it with "mutex:"), so both
+ *   still contend on the same Redis key;
+ * - a TTL extension that fails with a Redis error counts as a lost lock
+ *   (redis-semaphore would let the error escape its refresh timer as an
+ *   unhandled rejection, without knowing whether the lock is still held).
+ *   The error is kept, to be reported as the loss's cause.
+ */
+class ResourceMutex extends RedisMutex {
+  refreshError?: Error;
+
+  constructor(client: RedisClient, key: string, options: LockOptions) {
+    super(client, key, options);
+    this._key = key;
+  }
+
+  protected async _refresh(): Promise<boolean> {
+    try {
+      return await super._refresh();
+    } catch (error) {
+      this.refreshError =
+        error instanceof Error ? error : new Error(String(error));
+      return false;
+    }
+  }
+}
+
 /**
  * Tracks, per async context, the set of lock keys already held by an
  * ancestor `withLock` call. Deliberately separate from the shared
@@ -68,63 +104,25 @@ export class MutexLockLostError extends Error {
  */
 const lockContext = new AsyncLocalStorage<Set<string>>();
 
-let adapterPromise: Promise<RedisAdapter> | undefined;
+let clientPromise: Promise<RedisClient> | undefined;
 
 /**
- * Lazily builds and memoizes the redlock-universal adapter wrapping the
- * internal cache's raw ioredis client. Self-healing: if the very first call
- * happens before the cache engine has registered its ask handler (e.g. from
- * an early plugin lifecycle hook), the failure is not cached, so the next
- * call retries instead of permanently failing for the rest of the process.
+ * Lazily fetches and memoizes the internal cache's raw ioredis client.
+ * Self-healing: if the very first call happens before the cache engine has
+ * registered its ask handler (e.g. from an early plugin lifecycle hook), the
+ * failure is not cached, so the next call retries instead of permanently
+ * failing for the rest of the process.
  */
-async function getAdapter(): Promise<RedisAdapter> {
-  if (!adapterPromise) {
-    adapterPromise = (async () => {
-      const client = await global.kuzzle.ask("core:cache:internal:client:get");
-
-      return new IoredisAdapter(client);
-    })().catch((err) => {
-      adapterPromise = undefined;
+async function getClient(): Promise<RedisClient> {
+  clientPromise ??= (async () =>
+    global.kuzzle.ask("core:cache:internal:client:get"))().catch(
+    (err: unknown) => {
+      clientPromise = undefined;
       throw err;
-    });
-  }
+    },
+  );
 
-  return adapterPromise;
-}
-
-/**
- * Races `callbackPromise` against the lock's abort signal. Rejects with
- * `MutexLockLostError` as soon as the signal fires, without waiting for
- * `callbackPromise` to settle. `callbackPromise` itself cannot be cancelled
- * (no cooperative cancellation in JS) and keeps running in the background.
- */
-async function raceAgainstLoss<T>(
-  callbackPromise: Promise<T>,
-  signal: ExtendedAbortSignal,
-  key: string,
-): Promise<T> {
-  if (signal.aborted) {
-    throw new MutexLockLostError(key, signal.error);
-  }
-
-  // The listener is unsubscribed through its own controller rather than
-  // through a handler captured out of the Promise executor: the executor does
-  // run synchronously, so the capture was sound, but nothing in the types says
-  // so, and `signal:` says the same thing without asking to be trusted.
-  const listenerScope = new AbortController();
-  const abortPromise = new Promise<never>((_resolve, reject) => {
-    signal.addEventListener(
-      "abort",
-      () => reject(new MutexLockLostError(key, signal.error)),
-      { once: true, signal: listenerScope.signal },
-    );
-  });
-
-  try {
-    return await Promise.race([callbackPromise, abortPromise]);
-  } finally {
-    listenerScope.abort();
-  }
+  return clientPromise;
 }
 
 /**
@@ -135,6 +133,10 @@ async function raceAgainstLoss<T>(
  * key), `callback` runs immediately with no new Redis round-trip, and
  * `config` is silently ignored (the ancestor's lock/TTL/retry settings
  * apply — this is correct reentrant-mutex semantics, not a bug).
+ *
+ * The lock's TTL is extended in the background while `callback` runs. If
+ * the lock cannot be acquired within `retryAttempts + 1` attempts, the
+ * returned promise rejects without running `callback`.
  *
  * If the lock is lost mid-callback (e.g. TTL extension failed and another
  * node may now hold it), the returned promise rejects with
@@ -163,15 +165,46 @@ export async function withLock<T>(
   }
 
   const { retryAttempts = 10, retryDelay = 200, ttl = 30000 } = config;
-  const adapter = await getAdapter();
-  const lock = createLock({ adapter, key, retryAttempts, retryDelay, ttl });
+  const client = await getClient();
 
-  return lock.using((signal) => {
+  const loss = new AbortController();
+  const lockLost = new Promise<never>((_resolve, reject) => {
+    loss.signal.addEventListener("abort", () => reject(loss.signal.reason), {
+      once: true,
+    });
+  });
+  // Only ever observed through the race below; never an unhandled rejection
+  lockLost.catch(() => undefined);
+
+  const mutex = new ResourceMutex(client, key, {
+    acquireAttemptsLimit: retryAttempts + 1,
+    acquireTimeout: Number.POSITIVE_INFINITY,
+    lockTimeout: ttl,
+    onLockLost: (error) => {
+      loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
+    },
+    retryInterval: retryDelay,
+  });
+
+  if (!(await mutex.tryAcquire())) {
+    throw new Error(
+      `Failed to acquire lock "${key}" after ${retryAttempts + 1} attempts`,
+    );
+  }
+
+  try {
     const nextHeld = new Set(held);
     nextHeld.add(key);
 
     const callbackPromise = lockContext.run(nextHeld, () => callback());
 
-    return raceAgainstLoss(callbackPromise, signal, key);
-  });
+    // Settles as soon as the lock is lost, without waiting for the callback
+    return await Promise.race([callbackPromise, lockLost]);
+  } finally {
+    // A failed release only leaves the key to expire with its TTL: it must
+    // not replace the callback's own outcome
+    await mutex.release().catch((error: unknown) => {
+      debug("Failed to release lock %s: %s", key, error);
+    });
+  }
 }
