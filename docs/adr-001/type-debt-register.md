@@ -1788,6 +1788,8 @@ So a TypeScript plugin that writes either form — the second of which the pipe 
 
 ### TD-79
 
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-79--two-messages-that-now-say-what-they-check)) — both by correcting the message, neither by changing the check.** `accessControlAllowOriginUseRegExp`'s message prints `config.http.…`, the value it checks. `idleTimeout`'s says `integer >= 0 expected`, which is what it enforces: the 1000 ms floor is real but it is the **protocol's** — `httpwsProtocol` replaces a lower value (0 included) with its 60 000 default and warns — so refusing `500` at load time would stop servers that boot today. The entry's "uWebSockets' contract is 0, or at least 8 seconds" is not what the bundled v20.56.0 typings say (seconds, 0 disables, ~4 s granularity); nothing to act on there.
+
 **Two of the configuration checker's messages describe something other than what they check** · 🟡 low · `lib/config/index.ts`
 
 Found porting the `config/index` spec ([step 13 L4e1](steps/13-sprint-10-test-closure.md#what-l4e1-found)), by writing the two assertions the Mocha spec never had.

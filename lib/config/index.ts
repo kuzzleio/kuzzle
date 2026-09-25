@@ -220,9 +220,11 @@ function checkWebSocketOptions(config: RawConfig): void {
     typeof cfg.enabled === "boolean",
     `[websocket] "enabled" parameter: invalid value "${cfg.enabled}" (boolean expected)`,
   );
+  // The 1000 ms floor is the protocol's, not this check's: `httpwsProtocol`
+  // replaces a lower value (0 included) with its default, and warns.
   assert(
     Number.isInteger(cfg.idleTimeout) && cfg.idleTimeout >= 0,
-    `[websocket] "idleTimeout" parameter: invalid value "${cfg.idleTimeout}" (integer >= 1000 expected)`,
+    `[websocket] "idleTimeout" parameter: invalid value "${cfg.idleTimeout}" (integer >= 0 expected)`,
   );
   assert(
     Number.isInteger(cfg.rateLimit) && cfg.rateLimit >= 0,
@@ -256,7 +258,7 @@ function checkHttpOptions(config: RawConfig): void {
   );
   assert(
     typeof config.http.accessControlAllowOriginUseRegExp === "boolean",
-    `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${cfg.accessControlAllowOriginUseRegExp}" (boolean expected)`,
+    `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${config.http.accessControlAllowOriginUseRegExp}" (boolean expected)`,
   );
   assert(
     typeof cfg.enabled === "boolean",

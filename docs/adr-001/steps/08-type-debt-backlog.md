@@ -589,3 +589,31 @@ its deliberately invalid fixtures are `invalid<DateSpecification>` now, and a
 new test pins the in-place contract (same object, same `range`, `NOW` kept,
 the other bound a moment) so a future "cleaner" version that builds a copy
 fails.
+
+### TD-79 — two messages that now say what they check
+
+Both fixes are to a message; neither check changed.
+
+- **`accessControlAllowOriginUseRegExp`** checked `config.http.…` and printed
+  `config.server.protocols.http.…`, a section that never carries the key, so
+  the message always read `invalid value "undefined"`. It prints what it
+  checks.
+- **`idleTimeout`** promised `integer >= 1000` and enforced `>= 0`. The
+  entry left open which side was wrong; reading the consumer settles it. The
+  floor exists, but it belongs to `httpwsProtocol`, which replaces any value
+  below 1000 — 0 included, the value the websocket protocol page's example
+  shows — with its 60 000 default and a warning, *for backward
+  compatibility* by its own comment. Enforcing it in the checker would
+  refuse at load time configurations that boot today, so the message says
+  `integer >= 0 expected`, like `rateLimit`'s, and a comment points at where
+  the floor lives.
+
+**Why it is not breaking:** the set of accepted configurations is unchanged;
+only two error strings differ. Nothing matches on them — they are
+`assert` messages printed at startup.
+
+`tests/config/index.test.ts` asserted both as they were (`"undefined"`
+verbatim, `idleTimeout: 500` accepted): the first now asserts the offending
+value is printed, the second keeps accepting `500` with a comment saying why.
+The protocol-side fallback is already covered by
+`tests/core/network/protocols/httpwsProtocol.test.ts`.
