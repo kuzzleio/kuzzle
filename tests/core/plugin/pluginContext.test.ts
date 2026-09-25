@@ -491,6 +491,19 @@ describe("#core/plugin/pluginContext", () => {
       expect(executePluginRequest).toHaveBeenCalledWith(request);
     });
 
+    it("answers the result through a promise when the callback is null", async () => {
+      const request = requestWith({ requestId: "request" });
+      const result = { foo: "bar" };
+
+      executePluginRequest.mockResolvedValue(result);
+
+      const answer = await context.accessors.execute(request, null);
+
+      present(answer, "the answered request");
+      expect(answer.result).toBe(result);
+      expect(executePluginRequest).toHaveBeenCalledWith(request);
+    });
+
     it("hands the callback the error when the funnel rejects", () => {
       const request = requestWith({ body: { some: "request" } });
       const error = new Error("error");
