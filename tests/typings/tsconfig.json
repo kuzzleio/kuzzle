@@ -27,7 +27,7 @@
     "noEmit": true,
     "types": ["node"],
     // The repository root, resolved as a package: its `package.json` `types`.
-    "paths": { "kuzzle": ["../.."] }
+    "paths": { "kuzzle": ["../.."], "kuzzle/*": ["../../*"] }
   },
   "include": ["consumer/**/*.ts"]
 }

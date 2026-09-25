@@ -18,8 +18,14 @@ import type {
 export interface IKuzzleConfiguration {
   /**
    * Kuzzle version, populated at runtime from `package.json`.
+   *
+   * Optional here, like the other members v2.56.0's declaration did not have
+   * (`cluster.retransmitBuffer`, `internal.allowAllOrigins`, `vault`): a
+   * required new member breaks code that builds this type. The loaded
+   * configuration always has them (the packaged defaults and `loadConfig()`
+   * fill them), so Kuzzle's own readers assert them present.
    */
-  version: string;
+  version?: string;
 
   realtime: {
     /**
@@ -166,8 +172,10 @@ export interface IKuzzleConfiguration {
      * How many of its last sync messages a node keeps, so that a peer that
      * missed some can ask for them again instead of evicting itself. The
      * oldest are dropped as soon as either bound is exceeded; 0 disables it.
+     *
+     * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
      */
-    retransmitBuffer: {
+    retransmitBuffer?: {
       /**
        * @default 1000
        */
@@ -187,8 +195,10 @@ export interface IKuzzleConfiguration {
     /**
      * Derived at startup from "http.accessControlAllowOrigin": true when the
      * configured origins contain the "*" wildcard.
+     *
+     * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
      */
-    allowAllOrigins: boolean;
+    allowAllOrigins?: boolean;
   };
 
   /**
@@ -214,8 +224,10 @@ export interface IKuzzleConfiguration {
 
   /**
    * The vault section lets you configure the secrets vault behavior.
+   *
+   * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
    */
-  vault: {
+  vault?: {
     /**
      * Opt-in for the new vault encryption algorithm (AES-256-GCM) instead
      * of the legacy one (AES-256-CBC).

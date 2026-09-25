@@ -27,7 +27,7 @@ export class MailerPlugin extends Plugin {
       "document:afterCreate": async (request: KuzzleRequest) => {
         this.context.log.info(`created in ${request.input.args.index}`);
       },
-      "server:afterNow": [async () => {}, "onNow"],
+      "server:afterNow": [async () => {}, async () => this.onNow()],
     };
 
     this.pipes = {

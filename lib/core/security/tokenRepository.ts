@@ -50,7 +50,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     }
 
     this.tokenGracePeriod = Math.floor(
-      global.kuzzle.config.security.jwt.gracePeriod,
+      global.kuzzle.config.security.jwt!.gracePeriod,
     );
 
     this.anonymousToken = new Token({ userId: "-1" });
@@ -206,9 +206,9 @@ export class TokenRepository extends ObjectRepository<Token> {
     user: User,
     {
       algorithm = global.kuzzle.config.security.authToken.algorithm ??
-        global.kuzzle.config.security.jwt.algorithm,
+        global.kuzzle.config.security.jwt!.algorithm,
       expiresIn = global.kuzzle.config.security.authToken.expiresIn ??
-        global.kuzzle.config.security.jwt.expiresIn,
+        global.kuzzle.config.security.jwt!.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
       singleUse = false,
@@ -230,7 +230,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       type === "apiKey"
         ? global.kuzzle.config.security.apiKey.maxTTL
         : (global.kuzzle.config.security.authToken.maxTTL ??
-          global.kuzzle.config.security.jwt.maxTTL);
+          global.kuzzle.config.security.jwt!.maxTTL);
 
     if (
       !bypassMaxTTL &&

@@ -149,7 +149,7 @@ class Plugin {
     if (this.manifest?.kuzzleVersion) {
       if (
         !semver.satisfies(
-          global.kuzzle.config.version,
+          global.kuzzle.config.version!,
           this.manifest.kuzzleVersion,
           { includePrerelease: true },
         )
@@ -159,7 +159,7 @@ class Plugin {
           "manifest",
           "version_mismatch",
           this.name,
-          global.kuzzle.config.version,
+          global.kuzzle.config.version!,
           this.manifest.kuzzleVersion,
         );
       }

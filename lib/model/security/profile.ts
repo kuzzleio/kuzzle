@@ -347,10 +347,13 @@ export class Profile {
    * describes the patched function; the implementation is the stub.
    *
    * The patch is `global.kuzzle.hash`, which returns a **number** (`murmur.v3`)
-   * — hence `number | false` and not `string | false`, which is what this
-   * overload first claimed.
+   * — hence `number | false` in practice. Declared `any`, v2.56.0's public
+   * type being `() => boolean`: code compiled against that reads a `boolean`
+   * back or assigns a `boolean`-returning stub, and no narrower type accepts
+   * both that and the patch.
    */
-  static _hash(rightsItem?: unknown): number | false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  static _hash(rightsItem?: unknown): any;
   static _hash(): number | false {
     return false;
   }

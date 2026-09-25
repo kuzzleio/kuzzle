@@ -136,8 +136,27 @@ export class BackendErrors extends ApplicationManager {
    *
    * @param domain Domain name
    * @param subDomain Subdomain to wrap to
+   *
+   * The error name is declared `unknown`, as v2.56.0's `any` accepted
+   * anything; one that is not a registered name gives
+   * `core.fatal.unexpected_error`, as it always has. Methods rather than
+   * function-typed properties, so that `kerror`'s `string`-typed ones fit.
    */
-  wrap(domain: string, subDomain: string) {
+  wrap(
+    domain: string,
+    subDomain: string,
+  ): {
+    get(error: unknown, ...placeholders: unknown[]): KuzzleError;
+    getFrom(
+      source: unknown,
+      error: unknown,
+      ...placeholders: unknown[]
+    ): KuzzleError;
+    reject(
+      error: unknown,
+      ...placeholders: unknown[]
+    ): ReturnType<typeof kerror.reject>;
+  } {
     return kerror.rawWrap(this.domains, domain, subDomain);
   }
 }

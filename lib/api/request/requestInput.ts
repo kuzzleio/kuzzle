@@ -160,7 +160,11 @@ export class RequestInput {
    * format as the one used, for instance, for the Websocket protocol
    *
    * Any undefined option is set to null
+   *
+   * @param data - a non-null object; anything else throws. Declared
+   * `unknown`, as v2.56.0's `any` accepted anything.
    */
+  constructor(data: unknown);
   constructor(data: JSONObject) {
     if (!data || typeof data !== "object" || Array.isArray(data)) {
       throw new InternalError("Input request data must be a non-null object");

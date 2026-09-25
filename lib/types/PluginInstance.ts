@@ -24,11 +24,31 @@ import type { JSONObject } from "kuzzle-sdk";
 import type { Logger } from "../kuzzle/Logger";
 import type PluginManifest from "../core/plugin/pluginManifest";
 import type { PluginContext } from "../core/plugin/pluginContext";
-import type {
-  PluginApiDefinition,
-  PluginHookDefinition,
-  PluginPipeDefinition,
-} from "./Plugin";
+import type { PluginApiDefinition, PluginMethodName } from "./Plugin";
+import type { HookEventHandler, RegisteredPipeHandler } from "./EventHandler";
+
+/**
+ * The hooks Kuzzle accepts off a plugin object: the public
+ * `PluginHookDefinition`, plus a method name in place of a handler — which
+ * the public type leaves out (see there).
+ */
+type InstanceHookDefinition = {
+  [event: string]:
+    | HookEventHandler
+    | PluginMethodName
+    | Array<HookEventHandler | PluginMethodName>;
+};
+
+/**
+ * The pipes Kuzzle accepts off a plugin object: either handler form, or a
+ * method name (see `PluginPipeDefinition`).
+ */
+type InstancePipeDefinition = {
+  [event: string]:
+    | RegisteredPipeHandler
+    | PluginMethodName
+    | Array<RegisteredPipeHandler | PluginMethodName>;
+};
 
 /**
  * What Kuzzle needs of a plugin's own object. The full contract third parties
@@ -57,8 +77,8 @@ export interface PluginInstance {
   _manifest?: PluginManifest;
   api?: PluginApiDefinition;
   imports?: JSONObject;
-  hooks?: PluginHookDefinition;
-  pipes?: PluginPipeDefinition;
+  hooks?: InstanceHookDefinition;
+  pipes?: InstancePipeDefinition;
   /** The pre-Kaaf controller shape: controller → action → handler or method name. */
   controllers?: JSONObject;
   routes?: JSONObject[];

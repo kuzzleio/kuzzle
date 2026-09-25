@@ -172,6 +172,11 @@ export class RequestResponse {
   [_headers]: Headers;
   [_userHeaders]: Set<string>;
 
+  /**
+   * @param request - the request this is the response of. Declared
+   * `unknown`, as v2.56.0's `any` accepted anything.
+   */
+  constructor(request: unknown);
   constructor(request: KuzzleRequest) {
     this.raw = false;
     this[_request] = request;
@@ -360,16 +365,24 @@ export class RequestResponse {
 
   /**
    * Deletes a header (case-insensitive)
+   *
+   * Answers `true`. Declared `any`, as v2.56.0 declared it: a `boolean`
+   * breaks code compiled against that, e.g. `return` of it from a function
+   * declared `void`.
    */
-  removeHeader(name: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  removeHeader(name: string): any {
     return this[_headers].removeHeader(name);
   }
 
   /**
    * Sets a new array. Behaves the same as Node.js' HTTP response.setHeader
    * method (@see https://nodejs.org/api/http.html#http_response_setheader_name_value)
+   *
+   * Answers `true`, declared `any` for the reason given on `removeHeader`.
    */
-  setHeader(name: string, value: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  setHeader(name: string, value: string): any {
     return this[_headers].setHeader(name, value);
   }
 
