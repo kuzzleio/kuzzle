@@ -41,9 +41,14 @@ Every item is intended (step 12's strict flip or a TD fix), and none of those PR
 
 ## 3. Decisions for the maintainer
 
+> **Answered 2026-09-25:** D-1 **no major** — so every §2 item must get a non-breaking fix, none may be "accepted"; D-2 **document**; D-3 cost of keeping Node 20 assessed below, choice pending; D-4 **no-op with a warning**; D-5 **document**.
+
 - **D-1 — version.** Fix sections 1 and 2 to non-breaking and ship a minor, or accept some of section 2 and ship a major. semantic-release will cut a **minor** either way unless a commit says `BREAKING CHANGE` (none does; one says `BREAKING-ish:`, which it ignores).
 - **D-2 — headers in logs (security).** HTTP connections now carry their real headers (they were always `{}`, TD-52). Side effect not recorded anywhere: `authorization` and `cookie` now reach the logstash access log and the `connection:new` / `connection:remove` hook payloads. Redact, or document. (R-02, B-33)
-- **D-3 — Node 20.** New runtime dependency `redlock-universal@0.8.5` declares Node `>=22`; Kuzzle declares `>=20 <25`. Warning by default, `EBADENGINE` with `--engine-strict`. Pin an older release, replace it, or raise `engines` (breaking). (P-01)
+- **D-3 — Node 20.** New runtime dependency `redlock-universal@0.8.5` declares Node `>=22`; Kuzzle declares `>=20 <25`. Warning by default, `EBADENGINE` with `--engine-strict`. Raising `engines` is breaking, so it is ruled out by D-1. (P-01)
+  - **Every** `redlock-universal` release declares `>=22` (0.3.0 → 0.8.5), so pinning older does not help. Upstream's changelog calls the bump "future-proofing"; the 0.8.5 bundle uses no Node-22-only API found by a search, and the unit suite runs its lock logic on Node 20 in CI (through its `MemoryAdapter`). No run against a real Redis on Node 20 yet.
+  - **`withLock` has never been released** — it came with #2664, after v2.56.0, and no core code path uses it (it is exported for applications). Changing the library under it now costs no compatibility at all; after the release it would mean lock-format compatibility between versions.
+  - Alternatives: **`redis-semaphore`** 5.8.0 (Node `>=14.17`, peer `ioredis ^5 || ^6`, maintained — last release 2026-09-10; `Mutex` with `lockTimeout`, `acquireAttemptsLimit`, `retryInterval`, auto-refresh and `onLockLost`, i.e. every feature `withLock` uses, plus a `RedlockMutex`); `@sesamecare-oss/redlock` 1.4.0 (Node `>=16`, ioredis `>=5`); `redlock` 5 is a beta untouched since 2022.
 - **D-4 — `--enable-plugins`.** Now that the CLI options work (TD-84), this one crashes the published build at boot (`MODULE_NOT_FOUND`: `bin/plugins/` is not shipped); on v2.56.0 it was silently ignored. Make it a no-op with a warning, or fix the path. (P-02, C-06)
 - **D-5 — API keys created before the upgrade** cannot be deleted by `key` / `fingerprint` (the new mapping is `dynamic: false`, nothing re-indexes). Re-index at startup, fall back to a scan, or document. (C-10, B-38)
 
