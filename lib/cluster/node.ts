@@ -62,6 +62,21 @@ import ClusterSubscriber from "./subscriber";
 const debug = createDebug("kuzzle:cluster:sync");
 
 /**
+ * How long `addNode()` may wait for a joining node's first sync message before
+ * it answers that node's handshake anyway.
+ *
+ * `addNode()` runs inside the handshake command handler, and the joining node
+ * stops waiting for the answer after 2000 ms — hard-coded in
+ * `ClusterCommand._sendSingleHandshake`, and in every release before it, so a
+ * node joining during a rolling upgrade has the same limit. Waiting up to
+ * `2 × cluster.heartbeat` (4 s by default) there made the joiner give up on a
+ * node that had already added it: a one-sided membership (step 15, F-03).
+ * Half the joiner's limit leaves the rest for the Redis round trip and the
+ * command socket.
+ */
+const HANDSHAKE_PROOF_BUDGET = 1000;
+
+/**
  * Test an IP address and determine if it's in the public or private range.
  *
  * @param  {String}  ip
@@ -386,13 +401,27 @@ class ClusterNode {
     // subscription takes effect the remote's PUB socket drops what it publishes,
     // and `sync()` below would resume from just before the dropped message.
     // TD-65 (#2773).
-    const live = await subscriber.waitForSubscription(this.heartbeatDelay * 2);
+    //
+    // What the wait protects is the *answer*: the joining node publishes
+    // nothing but heartbeats until every node has answered its handshake, so
+    // answering once the subscription is live keeps its first real messages
+    // from being dropped. It is bounded well below the joiner's handshake
+    // timeout (see HANDSHAKE_PROOF_BUDGET): the subscription itself is live
+    // within milliseconds, and what takes up to a heartbeat round is only the
+    // joiner's next heartbeat, the proof. Missing the proof is then routine
+    // rather than a warning, and a message lost anyway is a gap, which is
+    // retransmitted (#2785).
+    const proofTimeout = Math.min(
+      this.heartbeatDelay * 2,
+      HANDSHAKE_PROOF_BUDGET,
+    );
+    const live = await subscriber.waitForSubscription(proofTimeout);
 
     if (!live) {
-      this.logger.warn(
-        `[CLUSTER] No sync message received from node ${id} within ${
-          this.heartbeatDelay * 2
-        }ms: proceeding with a subscription that is not proven live.`,
+      debug(
+        "[CLUSTER] No sync message received from node %s within %dms: answering its handshake with a subscription not proven live yet",
+        id,
+        proofTimeout,
       );
     }
 

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IdCard } from "../../lib/cluster/idCardHandler";
 import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
+import { present } from "../helpers/present";
 import { restoreKuzzle, stubBus, stubKuzzle } from "../mocks/kuzzle";
 
 /**
@@ -868,7 +869,7 @@ describe("ClusterNode", () => {
       ).toBeLessThan(subscriber.sync.mock.invocationCallOrder[0]);
     });
 
-    it("warns but carries on when the subscription cannot be proven live", async () => {
+    it("carries on, without a warning, when the subscription cannot be proven live", async () => {
       const ClusterSubscriberStub = (
         await import("../../lib/cluster/subscriber")
       ).default as unknown as { subscriptionProven: boolean };
@@ -877,13 +878,85 @@ describe("ClusterNode", () => {
       try {
         await node.addNode("foo", "1.2.3.4", Long.fromInt(23, true));
 
-        expect(warn.mock.calls.flat().join("\n")).toMatch(
-          /No sync message received from node foo within \d+ms/,
-        );
+        // Routine now that the wait is bounded below a heartbeat round: the
+        // proof is the joiner's next heartbeat, often not sent yet.
+        expect(warn).not.toHaveBeenCalled();
         expect(node.remoteNodes.get("foo").sync).toHaveBeenCalledTimes(1);
       } finally {
         ClusterSubscriberStub.subscriptionProven = true;
       }
+    });
+
+    /*
+     * Step 15, F-03. `addNode()` runs inside the handshake command handler,
+     * and the joining node gives up on the answer after a hard-coded 2000 ms
+     * — as does every earlier release, so a v2.56.0 node joining during a
+     * rolling upgrade too. Waiting there for the joiner's next heartbeat, up
+     * to 2 × `cluster.heartbeat`, made the joiner drop a node that had just
+     * added it.
+     */
+    describe("answers before the joining node's 2000 ms handshake timeout", () => {
+      const JOINER_HANDSHAKE_TIMEOUT = 2000;
+      let ClusterSubscriberStub: { proofDelay: number | null };
+
+      beforeEach(async () => {
+        ClusterSubscriberStub = (await import("../../lib/cluster/subscriber"))
+          .default as unknown as { proofDelay: number | null };
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        ClusterSubscriberStub.proofDelay = null;
+        vi.useRealTimers();
+      });
+
+      /** Runs `addNode` on fake time; resolves with when it answered. */
+      async function answeredAfter(): Promise<number> {
+        const start = Date.now();
+        const answer: { at?: number } = {};
+
+        node
+          .addNode("foo", "1.2.3.4", Long.fromInt(23, true))
+          .then(() => (answer.at = Date.now()));
+
+        await vi.advanceTimersByTimeAsync(JOINER_HANDSHAKE_TIMEOUT * 10);
+
+        present(answer.at, "the time addNode answered");
+
+        return answer.at - start;
+      }
+
+      it.each([
+        // The default heartbeat, and the joiner's next one about to be due:
+        // the wait used to take all of it.
+        ["the default heartbeat", 2000, 1990],
+        // An operator raised `cluster.heartbeat`: the wait used to take
+        // 2 × 5000 ms whenever the proof did not come first.
+        ["cluster.heartbeat raised to 5000", 5000, 4990],
+      ])("with %s", async (_label, heartbeat, proofDelay) => {
+        node.heartbeatDelay = heartbeat;
+        ClusterSubscriberStub.proofDelay = proofDelay;
+
+        const elapsed = await answeredAfter();
+
+        // Half the joiner's limit: the rest is for the Redis round trip and
+        // the command socket, which fake time does not account for.
+        expect(elapsed).toBeLessThanOrEqual(JOINER_HANDSHAKE_TIMEOUT / 2);
+        expect(node.remoteNodes.get("foo").sync).toHaveBeenCalledTimes(1);
+        expect(node.idCardHandler.addNode.mock.calls).toEqual([["foo"]]);
+      });
+
+      it("still waits for a proof that comes in time", async () => {
+        ClusterSubscriberStub.proofDelay = 300;
+
+        const elapsed = await answeredAfter();
+        const subscriber = node.remoteNodes.get("foo");
+
+        expect(elapsed).toBe(300);
+        expect(
+          subscriber.waitForSubscription.mock.invocationCallOrder[0],
+        ).toBeLessThan(subscriber.sync.mock.invocationCallOrder[0]);
+      });
     });
   });
 

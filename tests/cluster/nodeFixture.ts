@@ -45,14 +45,31 @@ export class ClusterSubscriberStub {
    */
   static subscriptionProven = true;
 
+  /**
+   * When set, the proof arrives this many ms after the wait starts — the
+   * remote node's next heartbeat — and `waitForSubscription` honours its
+   * timeout the way the real one does. For specs running on fake timers.
+   */
+  static proofDelay: number | null = null;
+
   public init = vi.fn(async () => undefined);
   public dispose = vi.fn();
   public sync = vi.fn<(lastMessageId: unknown) => Promise<boolean>>(
     async () => true,
   );
-  public waitForSubscription = vi.fn(
-    async () => ClusterSubscriberStub.subscriptionProven,
-  );
+  public waitForSubscription = vi.fn(async (timeout: number) => {
+    const delay = ClusterSubscriberStub.proofDelay;
+
+    if (delay === null) {
+      return ClusterSubscriberStub.subscriptionProven;
+    }
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(delay, timeout)),
+    );
+
+    return delay <= timeout;
+  });
   public remoteNodeIP = "1.2.3.4";
 
   constructor(
