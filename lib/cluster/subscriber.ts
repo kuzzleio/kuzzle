@@ -999,6 +999,20 @@ class ClusterSubscriber {
       return;
     }
 
+    // BUFFERING is left by `sync()` only, once the handshake has told this
+    // subscriber where to resume from. Setting SANE here used to end it early
+    // whenever the handshake outlasted one check period — which the waits of
+    // TD-65 (#2777, #2781) made routine: `listen()` then applied live messages
+    // against a counter still at 0, and `sync()` replayed a buffer opening on
+    // the very message it resumes after, outside the one state that drops
+    // those. The joining node read it as a loss and left the cluster (step 15,
+    // F-12). And there is no verdict to reach meanwhile: buffered frames are
+    // not applied, so they do not refresh `lastHeartbeat`; the handshake that
+    // owns this phase has its own timeouts.
+    if (this.state === stateEnum.BUFFERING) {
+      return;
+    }
+
     const now = Date.now();
 
     if (now - this.lastHeartbeat > this.heartbeatDelay) {
@@ -1052,30 +1066,36 @@ class ClusterSubscriber {
       return false;
     }
 
-    if (
-      this.state === stateEnum.BUFFERING &&
-      this.lastMessageId.greaterThanOrEqual(messageId)
-    ) {
+    const received = Long.fromValue(messageId);
+
+    // An id this subscriber has already reached is a message already applied
+    // — or, while buffering, one the full state it resumes from already
+    // includes. Nothing is missing, so there is nothing to recover and no
+    // reason to leave the cluster: it used to be dropped while buffering only,
+    // and anywhere else it was reported as a loss of "18446744073709551615"
+    // messages — the difference, negative, printed as an unsigned 64-bit
+    // number (step 15, F-12).
+    if (this.lastMessageId.greaterThanOrEqual(received)) {
+      debug(
+        "Ignoring message %s from node %s: already applied (last applied: %s)",
+        received.toString(),
+        this.remoteNodeId,
+        this.lastMessageId.toString(),
+      );
       return false;
     }
 
     const expected = this.lastMessageId.add(1);
 
-    if (expected.equals(messageId)) {
+    if (expected.equals(received)) {
       this.lastMessageId = expected;
       return true;
     }
 
-    const received = Long.fromValue(messageId);
-
     // Messages were lost in between: ask the remote node for them, and apply
     // them before this one. `recover` leaves `lastMessageId` on the last one
     // it applied, which is then this message's predecessor.
-    if (
-      !this.recovering &&
-      received.greaterThan(expected) &&
-      (await this.recover(expected, received))
-    ) {
+    if (!this.recovering && (await this.recover(expected, received))) {
       this.lastMessageId = received;
       return true;
     }
@@ -1091,7 +1111,9 @@ class ClusterSubscriber {
     // `Long.prototype.valueOf` — which works, loses precision past 2^53, and is
     // what SonarCloud's S3757 objects to. `fromValue` accepts either shape and
     // `subtract` is exact. The count is against the id this node EXPECTED, so
-    // a single-message loss reads "1" — see TD-58 (#2762).
+    // a single-message loss reads "1" — see TD-58 (#2762). `received` is past
+    // `expected` here, as the checks above leave nothing else, so the
+    // difference cannot wrap.
     const lost = received.subtract(expected);
 
     // Stop before evicting, for two reasons. `lastMessageId` is not
