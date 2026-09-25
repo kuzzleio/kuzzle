@@ -77,6 +77,28 @@ describe("#kerror", () => {
     });
   });
 
+  it("formats a class instance given last, rather than taking it for options", () => {
+    class Facility {
+      constructor(
+        readonly name: string,
+        readonly message: string,
+      ) {}
+
+      toString() {
+        return this.name;
+      }
+    }
+
+    const facility = new Facility("Black Mesa", "Anomalous Materials");
+    const err = kerror.get("core", "fatal", "service_unavailable", facility);
+
+    expect(err).toMatchObject({
+      id: "core.fatal.service_unavailable",
+      message: "Service unavailable: Black Mesa.",
+    });
+    expect(err.props).toEqual([facility]);
+  });
+
   it("returns an InternalError with default name, msg and code", () => {
     const err = kerror.get("api", "assert", "fake_error", '{"status":"error"}');
     expect(err).toBeInstanceOf(InternalError);
