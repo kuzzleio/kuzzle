@@ -429,7 +429,13 @@ function execute(
   request: KuzzleRequest,
   callback?: unknown,
 ): Bluebird<KuzzleRequest> | null {
-  if (callback !== undefined && !isPrombackCallback(callback)) {
+  // `null` means "no callback", as `undefined` does: plugins pass it to ask
+  // for a promise explicitly.
+  if (
+    callback !== undefined &&
+    callback !== null &&
+    !isPrombackCallback(callback)
+  ) {
     const error = contextError.get("invalid_callback", typeof callback);
     global.kuzzle.log.error(error);
     return Bluebird.reject(error);
