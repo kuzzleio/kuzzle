@@ -541,6 +541,33 @@ describe("#config", () => {
       },
     );
 
+    it.each([
+      ["messages", -1],
+      ["messages", 1.5],
+      ["bytes", "16MiB"],
+      ["bytes", null],
+    ])(
+      "refuses a retransmitBuffer.%s that is not an integer >= 0: %s",
+      (prop, bad) => {
+        expect(
+          loading({ cluster: { retransmitBuffer: { [prop]: bad } } }),
+        ).toThrow(
+          `[CONFIG] kuzzlerc.cluster.retransmitBuffer.${prop}: integer >= 0 expected`,
+        );
+      },
+    );
+
+    it("accepts a retransmitBuffer of 0, which disables retransmission", () => {
+      const result = load({
+        cluster: { retransmitBuffer: { bytes: 0, messages: 0 } },
+      });
+
+      expect((result.cluster as JSONObject).retransmitBuffer).toEqual({
+        bytes: 0,
+        messages: 0,
+      });
+    });
+
     it("refuses an ipv6 that is not a boolean", () => {
       expect(loading({ cluster: { ipv6: "yes" } })).toThrow(
         "[CONFIG] kuzzlerc.cluster.ipv6: boolean expected",

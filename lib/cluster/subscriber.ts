@@ -128,6 +128,13 @@ type SubscribingNode = {
     options: { broadcast: boolean; reason: string },
   ): Promise<void>;
   evictSelf(reason: string, error?: Error): Promise<void>;
+  command: {
+    requestRetransmit(
+      ip: string,
+      from: Long,
+      to: Long,
+    ): Promise<BufferedFrame[] | null>;
+  };
 };
 
 /**
@@ -182,6 +189,9 @@ class ClusterSubscriber {
 
   private buffer: BufferedFrame[];
 
+  /** Whether `recover()` is applying retransmitted messages. */
+  private recovering: boolean;
+
   private heartbeatTimer: NodeJS.Timeout | null;
 
   public lastHeartbeat: number;
@@ -234,6 +244,7 @@ class ClusterSubscriber {
     // This delays applying sync messages while the local node initializes
     this.state = stateEnum.BUFFERING;
     this.buffer = [];
+    this.recovering = false;
 
     // keeps track of the remote node heartbeats, and evicts it if no
     // heartbeats have been received after some time
@@ -527,7 +538,8 @@ class ClusterSubscriber {
       this.logger.error(
         `[CLUSTER] Node evicted by ${message.evictor}. Reason: ${message.reason}`,
       );
-      global.kuzzle.shutdown();
+      // A failure, like `evictSelf`'s: exit non-zero (#2785).
+      global.kuzzle.shutdown(1);
       return;
     }
 
@@ -1033,40 +1045,106 @@ class ClusterSubscriber {
       return false;
     }
 
-    this.lastMessageId = this.lastMessageId.add(1);
+    const expected = this.lastMessageId.add(1);
 
-    if (this.lastMessageId.notEquals(messageId)) {
-      // `lastMessageId` was advanced to the id this node EXPECTS on the line
-      // above, so the number of missing messages is the plain difference. The
-      // `- 1` this used to carry computed the gap against the previous id, so a
-      // single-message loss — by far the most frequent — reported "0 messages
-      // lost", which reads as a spurious eviction and got this detector
-      // dismissed through five reviews of TD-33 (#2715). See TD-58 (#2762).
-      //
-      // Long arithmetic rather than `-`: message ids are 64-bit and
-      // `message.messageId` may arrive as a Long or as a number depending on
-      // how the protobuf reader was configured, so subtracting with `-` leans
-      // on `Long.prototype.valueOf` — which works, loses precision past 2^53,
-      // and is what SonarCloud's S3757 objects to. `fromValue` accepts either
-      // shape and `subtract` is exact.
-      const lost = Long.fromValue(messageId).subtract(this.lastMessageId);
+    if (expected.equals(messageId)) {
+      this.lastMessageId = expected;
+      return true;
+    }
 
-      // Stop before evicting, for two reasons. `lastMessageId` is advanced by
-      // exactly one per message and is not resynchronised here, so leaving this
-      // subscriber running would re-trip this same check on every subsequent
-      // message: one drop was reported nine times in five seconds in CI, and
-      // occurrence counts read off those lines overcount. It also ends
-      // `listen()`'s loop, which is what "this node is out of the cluster"
-      // should mean locally. See TD-67 (#2776).
-      this.state = stateEnum.EVICTED;
+    const received = Long.fromValue(messageId);
 
-      await this.localNode.evictSelf(
-        `Node out-of-sync: ${lost.toString()} messages lost from node ${
-          this.remoteNodeId
-        }`,
-      );
+    // Messages were lost in between: ask the remote node for them, and apply
+    // them before this one. `recover` leaves `lastMessageId` on the last one
+    // it applied, which is then this message's predecessor.
+    if (
+      !this.recovering &&
+      received.greaterThan(expected) &&
+      (await this.recover(expected, received))
+    ) {
+      this.lastMessageId = received;
+      return true;
+    }
+
+    // `recover` may have evicted this node itself, applying a replayed message.
+    if (this.state === stateEnum.EVICTED) {
       return false;
     }
+
+    // Long arithmetic rather than `-`: message ids are 64-bit and
+    // `message.messageId` may arrive as a Long or as a number depending on how
+    // the protobuf reader was configured, so subtracting with `-` leans on
+    // `Long.prototype.valueOf` — which works, loses precision past 2^53, and is
+    // what SonarCloud's S3757 objects to. `fromValue` accepts either shape and
+    // `subtract` is exact. The count is against the id this node EXPECTED, so
+    // a single-message loss reads "1" — see TD-58 (#2762).
+    const lost = received.subtract(expected);
+
+    // Stop before evicting, for two reasons. `lastMessageId` is not
+    // resynchronised here, so leaving this subscriber running would re-trip
+    // this same check on every subsequent message: one drop was reported nine
+    // times in five seconds in CI, and occurrence counts read off those lines
+    // overcount. It also ends `listen()`'s loop, which is what "this node is
+    // out of the cluster" should mean locally. See TD-67 (#2776).
+    this.state = stateEnum.EVICTED;
+
+    await this.localNode.evictSelf(
+      `Node out-of-sync: ${lost.toString()} messages lost from node ${
+        this.remoteNodeId
+      }`,
+    );
+    return false;
+  }
+
+  /**
+   * Fetches the messages with ids `from` to `upTo - 1` from the remote node,
+   * which keeps its last ones for that purpose, and applies them in order
+   * (#2785).
+   *
+   * Awaited where the gap is found, so nothing that came after it is applied
+   * before it: `listen()` stops reading meanwhile (ZeroMQ queues what arrives)
+   * and `sync()` stops replaying.
+   *
+   * @return whether every missing message was applied; `false` leaves the
+   *         decision — eviction — to the caller
+   */
+  private async recover(from: Long, upTo: Long): Promise<boolean> {
+    const to = upTo.subtract(1);
+    const frames = await this.localNode.command.requestRetransmit(
+      this.remoteNodeIP,
+      from,
+      to,
+    );
+
+    if (frames === null || this.state === stateEnum.EVICTED) {
+      return false;
+    }
+
+    // Each frame goes through `validateMessage` again, which is what checks
+    // that the remote node answered with the ids that were asked for. A gap
+    // found *there* is not recovered from a second time: the remote node just
+    // answered with something other than what it was asked.
+    this.recovering = true;
+
+    try {
+      for (const [topic, data] of frames) {
+        await this.processData(topic, data);
+
+        if (this.state === stateEnum.EVICTED) {
+          return false;
+        }
+      }
+    } finally {
+      this.recovering = false;
+    }
+
+    if (!this.lastMessageId.equals(to)) {
+      return false;
+    }
+
+    this.logger.warn(
+      `[CLUSTER] Recovered ${frames.length} message(s) lost from node ${this.remoteNodeId}`,
+    );
 
     return true;
   }

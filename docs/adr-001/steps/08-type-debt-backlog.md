@@ -617,3 +617,195 @@ verbatim, `idleTimeout: 500` accepted): the first now asserts the offending
 value is printed, the second keeps accepting `500` with a comment saying why.
 The protocol-side fallback is already covered by
 `tests/core/network/protocols/httpwsProtocol.test.ts`.
+
+### TD-20, first half — the CSV form is the API, not a legacy
+
+[#2721](https://github.com/kuzzleio/kuzzle/issues/2721) planned to migrate
+`getArrayLegacy` to `getArray` in the next major, behind a deprecation cycle.
+Reading the routes first changed the decision (taken by the user, option 3-B
+of the #2785/TD-20 review):
+
+- the issue's route table was wrong on two of three rows. The call sites
+  serve `document:mGet` / `document:mExists` (through the generic-event
+  document extractor, which runs before the controller and rewrites `ids` to
+  an array — the controller's own `getArray` would refuse `"a,b"`),
+  `security:mGetUsers` and `server:healthCheck`. `document:mDelete` reads
+  `ids` from the body only;
+- `?ids=a,b` is the documented form on the first three, and the comma list is
+  the **only** documented form of `healthCheck`'s `services` — the one
+  load-balancer and k8s probes send;
+- `getArray` is not a correct target for a query string anyway: `?ids=a` is
+  the string `"a"`, not a JSON array, and it throws.
+
+So the behaviour gets a name and a page instead of a removal date:
+`KuzzleRequest.getArrayOrCsv`, byte-for-byte the former body, documented
+under `doc/2/framework/classes/kuzzle-request/get-array-or-csv`.
+`getArrayLegacy` stays as a `@deprecated` alias because `KuzzleRequest` is
+public plugin API. The three call sites use the new name, and the two
+`NOSONAR: … TD-20` markers and three stale "should be replaced with
+getArray" comments go with them.
+
+What it does not close: an element containing a comma is still split when
+sent as a plain string. That is documented on the new page — the JSON form
+over HTTP, or the body, carries it.
+
+**Why it is not breaking:** no behaviour change anywhere; one method added,
+one aliased.
+
+`tests/api/request/request.test.ts`: the block is now `#getArrayOrCsv`, with
+one new test for what sets it apart from `getArray` (a single value is a
+one-element array, where `getArray` throws), and `#getArrayLegacy` is reduced
+to a test that it delegates.
+
+### TD-20, second half — `configure` takes a result
+
+[#2688](https://github.com/kuzzleio/kuzzle/issues/2688) was blocked on an API
+shape: `setResult(result, options)` is `@deprecated` in favour of
+`response.configure`, which took no result, and the `response.result =`
+setter calls `setResult(r)` — which forces the status to 200, so it would
+turn `server:healthCheck`'s 503 into a 200 for the probes reading it. Twelve
+core call sites carried a `NOSONAR` instead of a migration. The user took
+option 2-A of the #2785/TD-20 review.
+
+`RequestResponse.configure` accepts `result`. It is applied **first**, so a
+refused result — an `Error`, or an `HttpStream` outside HTTP, the checks
+`setResult` always made — throws before headers, status or format change.
+It is set only when the key is present (`{ result: null }` clears), and it
+does not touch the status: that stays `configure`'s existing rule — an
+explicit `status` wins, otherwise a pending 102 becomes 200 and anything else
+is kept. The checks moved into `KuzzleRequest.assertResultAllowed`, shared by
+`setResult` and a new `@internal` `assignResult`, which is what `configure`
+calls.
+
+**`setResult` itself is untouched, and that was a correction, not the plan.**
+The first version made it delegate to `configure`. That constructs the
+`RequestResponse` on every call, and a response reads `global.kuzzle.id` when
+built — so `setResult` would have started throwing wherever no Kuzzle is
+running, a plugin's own unit tests included. The `documentExtractor` spec,
+which builds requests with no global, is what said so. `setResult` keeps its
+body; only the two checks are shared.
+
+The 12 call sites keep the exact status each passed:
+
+| Site | Before | After |
+|---|---|---|
+| `funnel` (controller result), `pluginContext` (plugin request) | status: 102 → 200, else kept | `configure({ result })` — the same rule, now `configure`'s default |
+| `funnel` (unserializable plugin result), `httpRouter` HEAD `/` and OPTIONS | status 200 | `configure({ result, status: 200 })` |
+| `documentExtractor` × 7 | `{ status: request.status }` | `configure({ result, status: request.status })` |
+
+`documentExtractor` could have dropped its explicit status — it only runs in
+the "after" phase, once the funnel has converted 102 — but a plugin's "after"
+pipe can set any status in between, and passing it keeps the result
+identical in that case too.
+
+**Why it is not breaking:** `configure` gains an optional property;
+`setResult`, the `result` setter and every call site's resulting status are
+unchanged. The one new effect is that those internal sites build the
+request's `RequestResponse` earlier than before — always inside a running
+Kuzzle, where the node id it reads exists.
+
+**Not decided here:** whether `setResult`'s deprecation becomes public. Its
+doc page still presents it as a normal API (with a 302 redirection example);
+the `configure` page now documents `result` with a `SinceBadge`.
+
+The five comments that deferred the `Mutex` → `withLock` migration "to TD-20
+(#2688)" point at [#2894](https://github.com/kuzzleio/kuzzle/issues/2894),
+where it was split out: it had nothing to do with request APIs.
+
+Tests: `requestResponse.test.ts` gains a `configure` → `result` block (the
+102 rule, a kept 503 next to the setter still resetting to 200, all four
+options at once, `null` vs absent, an `Error` refused with nothing else
+changed, a stream refused outside HTTP and accepted over it).
+`documentExtractor.test.ts` now stubs the global, since inserting into a
+result builds the response.
+
+### #2785 — retransmit what was lost before evicting
+
+[TD-67](../type-debt-register.md#td-67) left one decision open: a node that
+misses a sync message evicts itself — since TD-67, it shuts down — and
+[#2785](https://github.com/kuzzleio/kuzzle/issues/2785) asked whether it
+should resynchronise instead. The review that decided it (option 1-B, taken
+by the user) found the issue's framing out of date and its proposed remedy
+too weak:
+
+- **Out of date.** The issue describes a node that keeps serving behind the
+  load balancer. Since TD-67 it exits — but with code 0, which an
+  `on-failure` restart policy does not restart. The real cost was one lost
+  message = one node down, possibly for good.
+- **Too weak.** A full state (`FullStateResponse`) carries rooms,
+  subscriptions and auth strategies. Of `sync.proto`'s 24 message types,
+  nine only touch local caches (index cache, profile and role
+  invalidations, validators — a lost `InvalidateRole` is stale permissions)
+  and eight are one-off events (notifications, `ClusterWideEvent`, dump,
+  shutdown). A state resync recovers none of those, and would lose the
+  events *silently*, where eviction at least made the loss loud.
+
+So the node recovers the **messages**, not a state derived from them:
+
+- `ClusterPublisher` keeps its last sent messages, encoded, oldest first,
+  with contiguous ids (`history`), bounded by `cluster.retransmitBuffer` —
+  1 000 messages / 16 MiB by default, whichever is hit first, and 0 turns it
+  off. `replay(from, to)` answers all of them or `null`.
+- `ClusterCommand` gains a `RETRANSMIT` topic (`RetransmitRequest` /
+  `RetransmitResponse` in `command.proto`): the server answers from
+  `replay`, or `DISCARDED`; `requestRetransmit` returns the frames only if
+  there are exactly as many as asked, within `cluster.syncTimeout`.
+- `ClusterSubscriber.validateMessage`: on an id **above** the expected one,
+  `recover()` asks the sender for the missing ids and runs each returned
+  frame through `processData` — so each is validated again (that is what
+  checks the sender answered with the right ids) and applied by its normal
+  handler — then accepts the message that revealed the gap. Recovery is
+  awaited where the gap is found, so nothing after the gap is applied
+  before it: `listen()` stops reading meanwhile (ZeroMQ queues), and
+  `sync()`'s replay does too. A gap found *while* applying recovered frames
+  is not recovered from again. An id **below** the expected one still
+  evicts at once: that is not a loss.
+- Fallback, unchanged in substance: no answer, messages no longer kept, a
+  partial answer, or a peer running an older version — which answers
+  `DISCARDED` to a topic it does not know, so a mixed-version cluster during
+  a rolling upgrade behaves exactly as before. `evictSelf` and
+  `handleNodeEviction` now call `kuzzle.shutdown(1)`: an eviction is a
+  failure and should be restarted as one. A requested cluster shutdown
+  still exits 0.
+
+That also closes [TD-65](../type-debt-register.md#td-65)'s residual race.
+A joining node resumes each peer's stream from the counter **the node it
+loaded the full state from** had reached, which is correct — the state
+reflects exactly those messages — and a peer that published past it before
+the new subscription was live leaves a gap. The replay in `sync()` now finds
+that gap and fills it from the peer, instead of shutting the new node down.
+
+**Testing it end to end.** Nothing in the functional suites could lose a
+message on purpose, so a test-only switch was added:
+`KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY=N` makes a node record every Nth
+heartbeat as sent without handing it to the socket. `.ci/test-cluster-{7,8}.yml`
+sets it to 5 on `kuzzle_node_2` — a loss every ~10 s — so **every
+functional job now runs with lost messages**: if retransmission regresses, a
+node is evicted and the job fails. Unset, the publisher behaves exactly as
+before.
+
+⚠️ **Heartbeats only, and the first CI run is why.** The switch first dropped
+one message in 50, of any kind. Every loss was recovered — three per job, on
+all three peers, no eviction — and five jobs failed anyway, each on a
+scenario reading another node right after an index or collection change
+(`collection … does not exist`, `index … already exists`). A loss is only
+noticed when the sender's **next** message arrives, which can be a heartbeat
+later (2 s): until then the peers apply nothing newer from that sender, but
+they also do not know they are behind. That latency is a property of the
+design — detection needs a later message — and is the price of a loss that
+used to cost a node; the injection just made it happen on purpose, mid
+scenario. Dropping only heartbeats exercises the same path (request, replay,
+re-validation) without putting a state change behind it.
+
+**Why it is not breaking:** the protocol change is additive and degrades to
+the old behaviour against an older peer; the config key is new, with a
+default; `Kuzzle.shutdown` gains an optional argument. What changes for an
+operator is intended: a node that would have left the cluster stays, and one
+that does leave exits 1.
+
+Unit tests: `publisher.test.ts` (replay in order, the window, both bounds,
+0 disables, the drop switch dropping heartbeats and nothing else), `subscriber.test.ts` (gap filled then accepted,
+wrong ids evict once, no answer evicts, an older id asks for nothing),
+`command.test.ts` (real sockets: frames in order, `null` when no longer
+kept, on a partial answer, and on silence), `config/index.test.ts`,
+`kuzzle.test.ts` (exit code), and the eviction specs pin `shutdown(1)`.

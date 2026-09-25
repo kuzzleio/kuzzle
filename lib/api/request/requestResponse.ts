@@ -295,9 +295,17 @@ export class RequestResponse {
    * Configure the response
    *
    * @param [options]
+   * @param [options.result] - Response result. Set only when the key is
+   *   present, so `{ result: null }` clears it; the status is left to the
+   *   `status` option, unlike the `result` setter, which resets it to 200
    * @param [options.headers] - Additional protocol headers
-   * @param [options.status=200] - HTTP status code
+   * @param [options.status] - HTTP status code. When absent, a pending 102
+   *   becomes 200 and any other status is kept
    * @param [options.format] - Response format, standard or raw
+   *
+   * @throws {InternalError} if the result is an Error
+   * @throws {api.assert.forbidden_stream} if the result is an HttpStream and
+   *   the protocol is not HTTP
    *
    * @returns void
    */
@@ -306,8 +314,15 @@ export class RequestResponse {
       headers?: JSONObject;
       status?: number;
       format?: "standard" | "raw";
+      result?: unknown;
     } = {},
   ): void {
+    // First, so that a refused result (an Error, a stream outside HTTP)
+    // throws before anything else is changed.
+    if ("result" in options) {
+      this[_request].assignResult(options.result);
+    }
+
     if (options.headers) {
       this.setHeaders(options.headers);
 

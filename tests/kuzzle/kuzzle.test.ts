@@ -436,6 +436,14 @@ describe("#kuzzle/Kuzzle", () => {
       expect(flush).toHaveBeenCalledOnce();
       expect(kuzzle.log.flush).toHaveBeenCalledOnce();
     });
+
+    it("exits with the code it is given", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+
+      await kuzzle.shutdown(1);
+
+      expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
   });
 
   describe("#install", () => {

@@ -163,6 +163,23 @@ export interface IKuzzleConfiguration {
      * @default 5000
      */
     syncTimeout: number;
+
+    /**
+     * How many of its last sync messages a node keeps, so that a peer that
+     * missed some can ask for them again instead of evicting itself. The
+     * oldest are dropped as soon as either bound is exceeded; 0 disables it.
+     */
+    retransmitBuffer: {
+      /**
+       * @default 1000
+       */
+      messages: number;
+
+      /**
+       * @default 16777216 (16 MiB)
+       */
+      bytes: number;
+    };
   };
 
   internal: {

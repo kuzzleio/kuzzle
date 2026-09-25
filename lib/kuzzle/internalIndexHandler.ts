@@ -111,7 +111,7 @@ class InternalIndexHandler extends Store {
 
     // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
     // incompatible acquisition/TTL formats and must not contend on the same
-    // key — swapping it is a behaviour change, deferred to TD-20 (#2688).
+    // key — swapping it is a behaviour change, deferred to #2894.
     const lockOptions = { timeout: -1, ttl: 30000 };
     const mutex = new Mutex("InternalIndexBootstrap", lockOptions); // NOSONAR
 

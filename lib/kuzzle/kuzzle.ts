@@ -373,9 +373,13 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Gracefully exits after processing remaining requests
    *
+   * @param exitCode - the process exit code: 0 for a requested shutdown, and
+   *   non-zero when the node leaves because of a failure (e.g. a cluster
+   *   eviction), so that an `on-failure` restart policy brings it back
+   *
    * @returns {Promise}
    */
-  async shutdown(): Promise<void> {
+  async shutdown(exitCode = 0): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info("Initiating shutdown...");
@@ -407,7 +411,7 @@ class Kuzzle extends KuzzleEventEmitter {
     // application's buffered logs were dropped on shutdown (TD-51).
     await this?.pluginsManager?.application?.instance?.log?.flush?.();
 
-    process.exit(0);
+    process.exit(exitCode);
   }
 
   /**
@@ -798,7 +802,7 @@ class Kuzzle extends KuzzleEventEmitter {
         // use incompatible acquisition/TTL formats and must not contend on the
         // same key — every other node still takes this lock with `Mutex`, so
         // swapping one site would remove the exclusion it exists for. Deferred
-        // to TD-20 (#2688), like the remaining call sites.
+        // to #2894, like the remaining call sites.
         const lockOptions = { timeout: 0, ttl: 60000 };
         const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
 

@@ -321,6 +321,14 @@ function checkClusterOptions(config: RawConfig): void {
     );
   }
 
+  for (const prop of ["messages", "bytes"]) {
+    assert(
+      Number.isInteger(cfg.retransmitBuffer?.[prop]) &&
+        cfg.retransmitBuffer[prop] >= 0,
+      `[CONFIG] kuzzlerc.cluster.retransmitBuffer.${prop}: integer >= 0 expected`,
+    );
+  }
+
   assert(
     typeof cfg.ipv6 === "boolean",
     "[CONFIG] kuzzlerc.cluster.ipv6: boolean expected",

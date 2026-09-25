@@ -266,7 +266,7 @@ export class KuzzleRequest {
   /**
    * Sets the request result and status
    *
-   * @deprecated Use request.response.configure instead
+   * @deprecated Use `request.response.configure({ result, status, headers, format })`
    *
    * @param result Request result. Will be converted to JSON unless `raw` option is set to `true`
    * @param options Additional options
@@ -291,16 +291,7 @@ export class KuzzleRequest {
       raw?: boolean;
     } = {},
   ) {
-    if (result instanceof Error) {
-      throw new InternalError("cannot set an error as a request's response");
-    }
-
-    if (
-      this.context.connection.protocol !== "http" &&
-      result instanceof HttpStream
-    ) {
-      throw kerror.get("api", "assert", "forbidden_stream");
-    }
+    this.assertResultAllowed(result);
 
     this.status = options.status || 200;
 
@@ -315,6 +306,34 @@ export class KuzzleRequest {
     }
 
     this[_result] = result;
+  }
+
+  /**
+   * Sets the result and nothing else, after the checks every result goes
+   * through. What `response.configure({ result })` calls; plugins use that.
+   *
+   * @internal
+   */
+  assignResult(result: unknown): void {
+    this.assertResultAllowed(result);
+    this[_result] = result;
+  }
+
+  /**
+   * @throws {InternalError} if the result is an Error
+   * @throws {api.assert.forbidden_stream} for an HttpStream outside HTTP
+   */
+  private assertResultAllowed(result: unknown): void {
+    if (result instanceof Error) {
+      throw new InternalError("cannot set an error as a request's response");
+    }
+
+    if (
+      this.context.connection.protocol !== "http" &&
+      result instanceof HttpStream
+    ) {
+      throw kerror.get("api", "assert", "forbidden_stream");
+    }
   }
 
   /**
@@ -665,13 +684,15 @@ export class KuzzleRequest {
   }
 
   /**
-   * @deprecated do not use, Use getArray instead
+   * Gets a parameter from a request arguments as an array, also accepting a
+   * **comma-separated string** — the form the API documents for `ids` on
+   * `document:mGet`, `document:mExists` and `security:mGetUsers`, and the only
+   * form it documents for `server:healthCheck`'s `services`.
    *
-   * Gets a parameter from a request arguments and checks that it is an array
-   *
-   * If the request argument is a String instead of an array, it will be JSON parsed
-   * and returned if it is a valid JSON array, otherwise it will return the string splitted on `,`.
-   *
+   * An array is returned as is. A string is, over HTTP only, first parsed as a
+   * JSON array — the one way to pass an element that contains a comma — and
+   * otherwise split on `,`, on every protocol. Unlike `getArray`, a single
+   * query-string value (`?ids=a`) is therefore a one-element array.
    *
    * @param name parameter name
    * @param def default value to return if the parameter is not set
@@ -680,7 +701,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
    */
-  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+  getArrayOrCsv(name: string, def: [] | undefined = undefined): unknown[] {
     const value = get(this.input.args, name, def);
 
     if (value === undefined) {
@@ -710,6 +731,15 @@ export class KuzzleRequest {
     }
 
     return value.split(",");
+  }
+
+  /**
+   * @deprecated Use {@link getArrayOrCsv}, which it is an alias of: same
+   * behaviour, named after what it does. Kept because `KuzzleRequest` is part
+   * of the public plugin API.
+   */
+  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+    return this.getArrayOrCsv(name, def);
   }
 
   /**

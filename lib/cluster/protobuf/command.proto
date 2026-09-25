@@ -60,3 +60,21 @@ message HandshakeResponse {
   bool added = 1;
   uint64 lastMessageId = 2;
 }
+
+// Retransmit request: the messages a subscriber missed from this node's sync
+// stream, by message id, both ends included (#2785)
+message RetransmitRequest {
+  uint64 from = 1;
+  uint64 to = 2;
+}
+
+// Retransmit response: the missed messages, in order, exactly as they were
+// published (topic + encoded sync message)
+message RetransmitResponse {
+  message Frame {
+    string topic = 1;
+    bytes data = 2;
+  }
+
+  repeated Frame frames = 1;
+}

@@ -48,6 +48,24 @@ type PublishingNode = {
   config: IKuzzleConfiguration["cluster"];
 };
 
+/**
+ * A sent message, kept so that a subscriber that missed it can ask for it again
+ * instead of evicting itself (#2785).
+ */
+type SentMessage = BufferedMessage & { messageId: Long };
+
+/**
+ * Test-only fault injection: when set to N > 0, every Nth **heartbeat** this
+ * node publishes is recorded as sent but never handed to the socket, so that
+ * the functional suites exercise the retransmission path. Unset in production.
+ *
+ * Heartbeats only: a loss is noticed when the sender's *next* message arrives,
+ * up to one heartbeat later, so dropping a state message (a new collection,
+ * say) would let a scenario read another node before the gap is filled — a
+ * timing artefact of the injection, not a retransmission failure.
+ */
+const DROP_HEARTBEAT_EVERY_ENV = "KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY";
+
 type BufferedMessage = {
   topic: string;
   /**
@@ -76,6 +94,18 @@ class ClusterPublisher {
   private buffer: BufferedMessage[];
 
   /**
+   * The last messages sent, oldest first, with contiguous ids: what
+   * `replay()` answers from. Bounded by `cluster.retransmitBuffer`.
+   */
+  private readonly history: SentMessage[];
+
+  private historyBytes: number;
+
+  private readonly dropHeartbeatEvery: number;
+
+  private heartbeatsSent: number;
+
+  /**
    * @param node the cluster node this publisher belongs to
    */
   constructor(node: PublishingNode) {
@@ -92,6 +122,17 @@ class ClusterPublisher {
     // by bufferizing requests to send
     this.state = STATE.READY;
     this.buffer = [];
+
+    this.history = [];
+    this.historyBytes = 0;
+
+    const dropEvery = Number.parseInt(
+      process.env[DROP_HEARTBEAT_EVERY_ENV] ?? "",
+      10,
+    );
+    this.dropHeartbeatEvery =
+      Number.isInteger(dropEvery) && dropEvery > 0 ? dropEvery : 0;
+    this.heartbeatsSent = 0;
   }
 
   async init(): Promise<void> {
@@ -383,6 +424,16 @@ class ClusterPublisher {
     const type = this.protoroot.lookupType(topic);
     const buffer = type.encode(type.create(payload)).finish();
 
+    this.remember(this.lastMessageId, topic, buffer);
+
+    if (this.dropHeartbeatEvery > 0 && topic === "Heartbeat") {
+      this.heartbeatsSent++;
+
+      if (this.heartbeatsSent % this.dropHeartbeatEvery === 0) {
+        return this.lastMessageId;
+      }
+    }
+
     // DO NOT AWAIT: bufferSend is built to bufferize payloads to be sent, and
     // it makes sure that they are sent in order and serially (0mq publisher
     // sockets can only send 1 message at a time, otherwise it throws with a
@@ -394,6 +445,59 @@ class ClusterPublisher {
     this.bufferSend(topic, buffer);
 
     return this.lastMessageId;
+  }
+
+  /**
+   * The messages sent with ids `from` to `to`, both included, in order — or
+   * `null` if any of them is no longer kept (or never was).
+   */
+  replay(from: Long, to: Long): BufferedMessage[] | null {
+    const oldest = this.history[0];
+    const newest = this.history.at(-1);
+
+    if (
+      oldest === undefined ||
+      newest === undefined ||
+      from.greaterThan(to) ||
+      from.lessThan(oldest.messageId) ||
+      to.greaterThan(newest.messageId)
+    ) {
+      return null;
+    }
+
+    // Ids are contiguous, so offsets are plain differences; both are bounded
+    // by the history's length, far below 2^53.
+    const start = from.subtract(oldest.messageId).toNumber();
+    const end = to.subtract(oldest.messageId).toNumber();
+
+    return this.history
+      .slice(start, end + 1)
+      .map(({ data, topic }) => ({ data, topic }));
+  }
+
+  /**
+   * Keeps a sent message for `replay()`, then trims the oldest ones until
+   * both of `cluster.retransmitBuffer`'s bounds hold. A bound of 0 keeps
+   * nothing: retransmission is disabled.
+   */
+  private remember(messageId: Long, topic: string, data: Uint8Array): void {
+    const { bytes, messages } = this.node.config.retransmitBuffer;
+
+    if (messages <= 0 || bytes <= 0) {
+      return;
+    }
+
+    this.history.push({ data, messageId, topic });
+    this.historyBytes += data.byteLength;
+
+    while (
+      this.history.length > messages ||
+      (this.historyBytes > bytes && this.history.length > 0)
+    ) {
+      const dropped = this.history.shift();
+
+      this.historyBytes -= dropped?.data.byteLength ?? 0;
+    }
   }
 
   /**

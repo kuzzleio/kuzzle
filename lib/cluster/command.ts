@@ -20,7 +20,7 @@
  */
 
 import Bluebird from "bluebird";
-import type Long from "long";
+import Long from "long";
 import * as protobuf from "protobufjs";
 import { Reply, Request } from "zeromq";
 
@@ -31,6 +31,8 @@ import type {
   FullStateResponse,
   HandshakeRequest,
   HandshakeResponse,
+  RetransmitRequest,
+  RetransmitResponse,
 } from "./protobuf/commandMessages";
 import { commandTopic } from "./protobuf/commandMessages";
 
@@ -74,7 +76,13 @@ type CommandingNode = {
   activity: Activity[];
   /** Only `serialize()`: the command layer never mutates the state. */
   fullState: { serialize(): SerializedState };
-  publisher: { lastMessageId: Long };
+  publisher: {
+    lastMessageId: Long;
+    replay(
+      from: Long,
+      to: Long,
+    ): Array<{ topic: string; data: Uint8Array }> | null;
+  };
   remoteNodes: Map<string, { lastMessageId: Long }>;
   addNode(id: string, ip: string, lastMessageId: Long): Promise<boolean>;
 };
@@ -215,6 +223,14 @@ class ClusterCommand {
 
             await this.handleHandshake(data);
             break;
+          case commandTopic.RETRANSMIT:
+            if (data === undefined) {
+              await this.server.send([commandTopic.DISCARDED, null]);
+              break;
+            }
+
+            await this.handleRetransmit(data);
+            break;
           default:
             // REP/REQ sockets expect a reply to each request made, so we have
             // to send some kind of response on an invalid request received
@@ -299,6 +315,93 @@ class ClusterCommand {
     const buffer = encoder.encode(encoder.create(response)).finish();
 
     await this.server.send([commandTopic.HANDSHAKE, buffer]);
+  }
+
+  /**
+   * Answers a peer that missed messages of this node's sync stream with those
+   * messages, as they were published — or with DISCARDED when they are no
+   * longer kept, which the peer treats as it treats a node that predates
+   * retransmission: it evicts itself (#2785).
+   */
+  async handleRetransmit(data: Buffer): Promise<void> {
+    const decoder = this.protoroot.lookupType("RetransmitRequest");
+    const request: Decoded<RetransmitRequest> = decoder.toObject(
+      decoder.decode(data),
+    );
+
+    const frames =
+      request.from === undefined || request.to === undefined
+        ? null
+        : this.node.publisher.replay(
+            Long.fromValue(request.from),
+            Long.fromValue(request.to),
+          );
+
+    if (frames === null) {
+      await this.server.send([commandTopic.DISCARDED, null]);
+      return;
+    }
+
+    const encoder = this.protoroot.lookupType("RetransmitResponse");
+    const response: RetransmitResponse = { frames };
+    const buffer = encoder.encode(encoder.create(response)).finish();
+
+    await this.server.send([commandTopic.RETRANSMIT, buffer]);
+  }
+
+  /**
+   * Asks the node at `ip` for the messages of its sync stream with ids `from`
+   * to `to`, both included.
+   *
+   * @returns the messages in order, as `[topic, data]` frames, or `null` if
+   *          the node could not provide all of them: it no longer keeps them,
+   *          predates retransmission (it answers DISCARDED to an unknown
+   *          topic), or did not answer within `cluster.syncTimeout`.
+   */
+  async requestRetransmit(
+    ip: string,
+    from: Long,
+    to: Long,
+  ): Promise<Array<[topic: string, data: Buffer]> | null> {
+    const encoder = this.protoroot.lookupType("RetransmitRequest");
+    const payload: RetransmitRequest = { from, to };
+    const encoded = encoder.encode(encoder.create(payload)).finish();
+
+    const req = new Request();
+    req.receiveTimeout = this.node.config.syncTimeout;
+    req.connect(`tcp://${ip}:${this.node.config.ports.command}`);
+
+    let topic: Buffer | undefined;
+    let response: Buffer | undefined;
+
+    try {
+      await req.send([commandTopic.RETRANSMIT, encoded]);
+      [topic, response] = await req.receive();
+    } catch {
+      return null;
+    } finally {
+      req.close();
+    }
+
+    if (topic?.toString() !== commandTopic.RETRANSMIT || !response) {
+      return null;
+    }
+
+    const decoder = this.protoroot.lookupType("RetransmitResponse");
+    const decoded: Decoded<RetransmitResponse> = decoder.toObject(
+      decoder.decode(response),
+    );
+    const frames = decoded.frames ?? [];
+
+    // All of them or nothing: a partial answer cannot close the gap.
+    if (frames.length !== to.subtract(from).toNumber() + 1) {
+      return null;
+    }
+
+    return frames.map(({ data, topic: frameTopic }) => [
+      frameTopic,
+      Buffer.from(data),
+    ]);
   }
 
   /**

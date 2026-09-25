@@ -1,7 +1,11 @@
+import { PassThrough } from "node:stream";
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { KuzzleRequest, RequestResponse } from "../../../lib/api/request";
 import { BadRequestError } from "../../../lib/kerror/errors/badRequestError";
+import { InternalError } from "../../../lib/kerror/errors/internalError";
+import { HttpStream } from "../../../lib/types";
 import { invalid } from "../../helpers/invalid";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
@@ -263,6 +267,92 @@ describe("#api/request/RequestResponse", () => {
 
       response.configure({ format: "standard" });
       expect(response.raw).toBe(false);
+    });
+
+    /*
+     * `result` (TD-20, #2688): what `setResult(result, options)` pointed at
+     * and could not reach. Unlike the `result` setter, it leaves the status
+     * to the `status` option.
+     */
+    describe("result", () => {
+      const result = { foo: "bar" };
+
+      it("sets the result, and turns a pending 102 into 200", () => {
+        expect(request.status).toBe(102);
+
+        response.configure({ result });
+
+        expect(request.result).toBe(result);
+        expect(request.status).toBe(200);
+      });
+
+      it("keeps a status already set, where the setter resets it to 200", () => {
+        request.status = 503;
+        response.configure({ result });
+
+        expect(request.result).toBe(result);
+        expect(request.status).toBe(503);
+
+        response.result = result;
+
+        expect(request.status).toBe(200);
+      });
+
+      it("sets result, status, headers and format together", () => {
+        response.configure({
+          format: "raw",
+          headers: { "X-Foo": "foo" },
+          result,
+          status: 201,
+        });
+
+        expect(request.result).toBe(result);
+        expect(request.status).toBe(201);
+        expect(response.getHeader("X-Foo")).toBe("foo");
+        expect(response.raw).toBe(true);
+      });
+
+      it("clears the result with an explicit null, and leaves it alone when absent", () => {
+        response.configure({ result });
+        response.configure({ status: 202 });
+
+        expect(request.result).toBe(result);
+
+        response.configure({ result: null });
+
+        expect(request.result).toBeNull();
+      });
+
+      it("refuses an Error, and changes nothing else", () => {
+        request.status = 503;
+
+        expect(() =>
+          response.configure({
+            headers: { "X-Foo": "foo" },
+            result: new Error("nope"),
+            status: 201,
+          }),
+        ).toThrow(InternalError);
+
+        expect(request.result).toBeNull();
+        expect(request.status).toBe(503);
+        expect(response.getHeader("X-Foo")).toBeUndefined();
+      });
+
+      it("refuses a stream outside HTTP, and accepts it over HTTP", () => {
+        const stream = new HttpStream(new PassThrough());
+
+        request.context.connection.protocol = "websocket";
+
+        expect(() => response.configure({ result: stream })).toThrow(
+          expect.objectContaining({ id: "api.assert.forbidden_stream" }),
+        );
+
+        request.context.connection.protocol = "http";
+        response.configure({ result: stream });
+
+        expect(request.result).toBe(stream);
+      });
     });
   });
 

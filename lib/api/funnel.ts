@@ -802,8 +802,8 @@ class Funnel {
         throw this._wrapControllerError(_request, causeOf(e));
       }
 
-      const status = _request.status === 102 ? 200 : _request.status;
-      _request.setResult(responseData, { status }); // NOSONAR: TD-20 (#2688)
+      // No status: a pending 102 becomes 200, any other is kept.
+      _request.response.configure({ result: responseData });
 
       if (
         !this.isNativeController(_request.input.controller) &&
@@ -815,7 +815,7 @@ class Funnel {
             JSON.stringify(responseData);
           }
         } catch {
-          _request.setResult(null); // NOSONAR: TD-20 (#2688)
+          _request.response.configure({ result: null, status: 200 });
           throw kerror.get("plugin", "controller", "unserializable_response");
         }
       }
