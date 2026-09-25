@@ -236,7 +236,6 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [lint]
     strategy:
       matrix:
         # One runner, so no suite dimension: `mocha` left this matrix with the last
@@ -263,7 +262,6 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
 
   build-and-run-kuzzle:
-    needs: [lint]
     name: Build and Run
     runs-on: ubuntu-24.04
     strategy:
@@ -288,7 +286,7 @@ jobs:
     # Not `needs: [sonarqube]`: nothing in the functional suite consumes the
     # Sonar scan, and depending on a fork-gated job skipped this whole matrix
     # on every pull request from a fork (TD-38).
-    needs: [build, unit-tests]
+    needs: [build]
     strategy:
       # One flaky variant must not cancel the 29 others: a re-run is otherwise
       # the only way to learn whether anything else was broken.
