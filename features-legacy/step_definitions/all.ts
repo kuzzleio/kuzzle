@@ -1,14 +1,13 @@
 import { Then } from "@cucumber/cucumber";
 import _ from "lodash";
-import type KWorld from "../support/world";
 
 // TODO should is deprecated it needs to be removed
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const should = require("should");
 
 Then(
   /^The (sorted )?result should match the (regex|json) (.*?)$/,
-  function (this: KWorld, sorted, type, pattern, callback) {
+  function (sorted, type, pattern, callback) {
     let regex,
       val = this.result.result;
 
@@ -53,7 +52,7 @@ Then(
 
 Then(
   "The result should raise an error with message {string}",
-  function (this: KWorld, message, callback) {
+  function (message, callback) {
     const val = _.get(this.result, "error.error") || this.result.error;
 
     try {
@@ -73,7 +72,7 @@ Then(
 
 Then(
   /^The mapping should contain a nested "(.*?)" field with property "(.*?)" of type "(.*?)"$/,
-  function (this: KWorld, field, prop, type, callback) {
+  function (field, prop, type, callback) {
     if (!this.result[field]) {
       return callback(new Error("Field " + field + " not found in mapping"));
     }
@@ -108,7 +107,7 @@ Then(
 
 Then(
   /^The mapping should contain "(.*?)" field of type "(.*?)"$/,
-  function (this: KWorld, field, type, callback) {
+  function (field, type, callback) {
     if (!this.result[field]) {
       return callback(new Error("Field " + field + " not found in mapping"));
     }

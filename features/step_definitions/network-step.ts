@@ -5,42 +5,8 @@ import requestPromise from "request-promise";
 
 import { Then, When } from "@cucumber/cucumber";
 
-import type KuzzleWorld from "../support/world";
-
-/** What both senders answer, and what the `Then` steps below read. */
-type RawHttpResponse = {
-  body: string;
-  headers: Record<string, unknown>;
-  statusCode?: number;
-};
-
-/**
- * A data table's values are `eval`'d by `parseObject`, so they arrive as any
- * JavaScript value. HTTP request headers are not: narrowing here fails the step
- * by name instead of sending `[object Object]` and failing on the response.
- */
-function asRequestHeaders(
-  parsed: Record<string, unknown>,
-): Record<string, string> {
-  const headers: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(parsed)) {
-    if (typeof value !== "string" && typeof value !== "number") {
-      throw new Error(
-        `Header "${key}" must be a string or a number, got ${JSON.stringify(value)}`,
-      );
-    }
-
-    headers[key] = String(value);
-  }
-
-  return headers;
-}
-
-function normalizeHeaders(
-  headers: Record<string, unknown> = {},
-): Record<string, unknown> {
-  const normalized: Record<string, unknown> = {};
+function normalizeHeaders(headers = {}) {
+  const normalized = {};
 
   for (const [key, value] of Object.entries(headers)) {
     normalized[key.toLowerCase()] = value;
@@ -49,22 +15,9 @@ function normalizeHeaders(
   return normalized;
 }
 
-async function sendRawRequest(
-  world: KuzzleWorld,
-  {
-    method,
-    path,
-    port,
-    headers = {},
-  }: {
-    headers?: Record<string, string>;
-    method: string;
-    path: string;
-    port: number;
-  },
-): Promise<RawHttpResponse> {
+async function sendRawRequest(world, { method, path, port, headers = {} }) {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
+    const chunks = [];
 
     const req = http.request(
       {
@@ -92,9 +45,9 @@ async function sendRawRequest(
 }
 
 async function sendHttpRequest(
-  world: KuzzleWorld,
+  world,
   { method, url, headers = {}, body }: any,
-): Promise<RawHttpResponse> {
+) {
   const requestHeaders = { ...headers };
 
   if (
@@ -123,7 +76,7 @@ async function sendHttpRequest(
 
 When(
   "I send a raw HTTP {string} request to {string} on port {int}",
-  async function (this: KuzzleWorld, method, path, port) {
+  async function (method, path, port) {
     this.props.httpResponse = await sendRawRequest(this, {
       method,
       path,
@@ -134,8 +87,8 @@ When(
 
 When(
   "I send a raw HTTP {string} request to {string} on port {int} with headers:",
-  async function (this: KuzzleWorld, method, path, port, dataTable) {
-    const headers = asRequestHeaders(this.parseObject(dataTable));
+  async function (method, path, port, dataTable) {
+    const headers = this.parseObject(dataTable);
 
     this.props.httpResponse = await sendRawRequest(this, {
       headers,
@@ -148,14 +101,14 @@ When(
 
 When(
   "I send a HTTP {string} request to {string}",
-  async function (this: KuzzleWorld, method, url) {
+  async function (method, url) {
     this.props.httpResponse = await sendHttpRequest(this, { method, url });
   },
 );
 
 When(
   "I send a HTTP {string} request to {string} with headers:",
-  async function (this: KuzzleWorld, method, url, dataTable) {
+  async function (method, url, dataTable) {
     const headers = this.parseObject(dataTable);
     const postData = YAML.stringify({ name: "Martial" });
     this.props.httpResponse = await sendHttpRequest(this, {
@@ -167,34 +120,25 @@ When(
   },
 );
 
-Then(
-  "The raw HTTP response headers should match:",
-  function (this: KuzzleWorld, dataTable) {
-    const expected = this.parseObject(dataTable);
-    const headers = this.props.httpResponse.headers;
+Then("The raw HTTP response headers should match:", function (dataTable) {
+  const expected = this.parseObject(dataTable);
+  const headers = this.props.httpResponse.headers;
 
-    should(headers).not.be.undefined();
+  should(headers).not.be.undefined();
 
-    for (const [key, value] of Object.entries(expected)) {
-      should(headers[key]).be.eql(value);
-    }
-  },
-);
+  for (const [key, value] of Object.entries(expected)) {
+    should(headers[key]).be.eql(value);
+  }
+});
 
-Then(
-  "The HTTP response JSON should match:",
-  function (this: KuzzleWorld, dataTable) {
-    const expected = this.parseObject(dataTable);
-    const body = this.props.httpResponse.body || "{}";
-    const json = JSON.parse(body);
+Then("The HTTP response JSON should match:", function (dataTable) {
+  const expected = this.parseObject(dataTable);
+  const body = this.props.httpResponse.body || "{}";
+  const json = JSON.parse(body);
 
-    should(json).match(expected);
-  },
-);
+  should(json).match(expected);
+});
 
-Then(
-  "The HTTP response status should be {int}",
-  function (this: KuzzleWorld, status) {
-    should(this.props.httpResponse.statusCode).be.eql(status);
-  },
-);
+Then("The HTTP response status should be {int}", function (status) {
+  should(this.props.httpResponse.statusCode).be.eql(status);
+});

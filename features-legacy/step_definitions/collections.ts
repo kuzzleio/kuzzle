@@ -1,13 +1,10 @@
 import { When, Then } from "@cucumber/cucumber";
 import should from "should";
 import stepUtils from "../support/stepUtils";
-import type { JSONObject } from "kuzzle-sdk";
-
-import type KWorld from "../support/world";
 
 When(
   /^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/,
-  function (this: KWorld, type, index, callback) {
+  function (type, index, callback) {
     this.api
       .listCollections(index, type)
       .then((response) => {
@@ -27,29 +24,26 @@ When(
   },
 );
 
-When(
-  "I try to create the collection {string}",
-  async function (this: KWorld, collection) {
-    try {
-      const response = await this.api.createCollection(undefined, collection);
+When("I try to create the collection {string}", async function (collection) {
+  try {
+    const response = await this.api.createCollection(null, collection);
 
-      this.result = response;
-    } catch (error) {
-      this.result = { error };
-    }
-  },
-);
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
+});
 
 When(
   "I create a collection named {string} in index {string}",
-  async function (this: KWorld, collection, index) {
+  async function (collection, index) {
     await this.api.createCollection(index, collection);
   },
 );
 
 Then(
   /^I can ?(not)* find a ?(.*?) collection ?(.*)$/,
-  function (this: KWorld, not, type, collection, callback) {
+  function (not, type, collection, callback) {
     if (!this.result.collections) {
       return callback(
         "Expected a collections list result, got: " + this.result,
@@ -70,7 +64,7 @@ Then(
 
     if (
       this.result.collections.filter(
-        (item: JSONObject) => item.type === type && item.name === collection,
+        (item) => item.type === type && item.name === collection,
       ).length !== 0
     ) {
       if (not) {
@@ -95,7 +89,7 @@ Then(
 
 Then(
   /^I change the mapping(?: in index "([^"]*)")?$/,
-  function (this: KWorld, index, callback) {
+  function (index, callback) {
     this.api
       .updateMapping()
       .then((body) => {
@@ -114,7 +108,7 @@ Then(
 
 Then(
   /^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/,
-  function (this: KWorld, collection, index, callback) {
+  function (collection, index, callback) {
     this.api
       .truncateCollection(index, collection)
       .then((body) => {
@@ -128,26 +122,23 @@ Then(
   },
 );
 
-Then(
-  /I refresh the collection( "(.*?)")?/,
-  function (this: KWorld, indexCollection) {
-    indexCollection = indexCollection
-      ? indexCollection
-      : this.fakeIndex + ":" + this.fakeCollection;
+Then(/I refresh the collection( "(.*?)")?/, function (indexCollection) {
+  indexCollection = indexCollection
+    ? indexCollection
+    : this.fakeIndex + ":" + this.fakeCollection;
 
-    const [index, collection] = indexCollection.split(":");
+  const [index, collection] = indexCollection.split(":");
 
-    return this.api.refreshCollection(index, collection);
-  },
-);
+  return this.api.refreshCollection(index, collection);
+});
 
-When(/^I check if index "(.*?)" exists$/, function (this: KWorld, index, cb) {
+When(/^I check if index "(.*?)" exists$/, function (index, cb) {
   return stepUtils.getReturn.call(this, "indexExists", index, cb);
 });
 
 When(
   /I check if collection "(.*?)" exists on index "(.*?)"$/,
-  function (this: KWorld, collection, index, cb) {
+  function (collection, index, cb) {
     return stepUtils.getReturn.call(
       this,
       "collectionExists",
@@ -160,7 +151,7 @@ When(
 
 When(
   /I create a collection "([\w-]+)":"([\w-]+)"( with "([\d]+)" documents)?/,
-  function (this: KWorld, index, collection, countRaw) {
+  function (index, collection, countRaw) {
     return this.api.createCollection(index, collection).then(() => {
       const promises = [],
         count = parseInt(countRaw);
@@ -178,7 +169,7 @@ When(
 
 Then(
   "The mapping dynamic field of {string}:{string} is {string}",
-  function (this: KWorld, index, collection, dynamicValue) {
+  function (index, collection, dynamicValue) {
     return this.api
       .getCollectionMapping(index, collection)
       .then(({ result }) => {
@@ -194,7 +185,7 @@ Then(
 
 When(
   "I update the mapping of {string}:{string} with {string}",
-  function (this: KWorld, index, collection, rawMapping) {
+  function (index, collection, rawMapping) {
     const mapping = JSON.parse(rawMapping);
 
     return this.api.updateMapping(index, collection, mapping);
@@ -203,7 +194,7 @@ When(
 
 Then(
   "The mapping properties field of {string}:{string} is {string}",
-  function (this: KWorld, index, collection, rawMapping) {
+  function (index, collection, rawMapping) {
     const includeKuzzleMeta = rawMapping === "the default value";
 
     return this.api
@@ -221,7 +212,7 @@ Then(
 
 Then(
   "The mapping _meta field of {string}:{string} is {string}",
-  function (this: KWorld, index, collection, rawMapping) {
+  function (index, collection, rawMapping) {
     const mapping = JSON.parse(rawMapping);
 
     return this.api

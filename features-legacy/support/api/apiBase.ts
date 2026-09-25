@@ -5,29 +5,15 @@
  * NOTE: must be added in api HTTP because the apiHttp file doesn't extend this ApiRT
  */
 
-import type { JSONObject } from "kuzzle-sdk";
-
 import Bluebird from "bluebird";
 
 type ApiMessage = Record<string, any>;
 
-/**
- * A Kuzzle API response as the step definitions read it. Named rather than
- * spelled out at each of the ~120 call sites: the suite asserts on `.result`,
- * `.error` and `.status` by hand, and pinning a shape here would be inventing
- * one that no step definition agrees to.
- */
-type ApiResponse = Record<string, any>;
-
 export default abstract class ApiBase {
   protected world: any;
   protected clientId: string | null;
-  // Public because the realtime step definitions assert on them: the room a
-  // scenario opened and the notification it received are what `features-legacy`
-  // is testing, not an implementation detail of the wrapper. Marking them
-  // `protected` in M1 was a guess about a caller set M1 could not see.
-  subscribedRooms: Record<string, any>;
-  responses: any;
+  protected subscribedRooms: Record<string, any>;
+  protected responses: any;
   protected isRealTimeCapable: boolean;
 
   constructor(world: any) {
@@ -40,24 +26,9 @@ export default abstract class ApiBase {
     this.isRealTimeCapable = true;
   }
 
-  abstract send(
-    msg: ApiMessage,
-    getAnswer?: boolean,
-    socketName?: string,
-  ): Promise<ApiResponse>;
+  abstract send(msg: ApiMessage, getAnswer?: boolean, socketName?: string);
 
-  abstract sendAndListen(
-    msg: ApiMessage,
-    socketName?: string,
-  ): Promise<ApiResponse>;
-
-  /**
-   * Both realtime protocols implement this identically, and the `@realtime`
-   * teardown hook calls it on whichever one the run is using. It belongs to
-   * the realtime contract, so it is declared here rather than being reachable
-   * only through one of the two concrete classes.
-   */
-  abstract unsubscribeAll(): Promise<unknown>;
+  abstract sendAndListen(msg: ApiMessage, socketName?: string);
 
   adminResetDatabase() {
     const msg = {
@@ -77,7 +48,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  bulkImport(bulk: JSONObject[], index?: string, collection?: string) {
+  bulkImport(bulk, index, collection) {
     const msg = {
       action: "import",
       body: { bulkData: bulk },
@@ -89,7 +60,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  bulkMWrite(index: string, collection: string, body: JSONObject) {
+  bulkMWrite(index, collection, body) {
     const msg = {
       action: "mWrite",
       body,
@@ -101,7 +72,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  bulkWrite(index: string, collection: string, body: JSONObject, _id = null) {
+  bulkWrite(index, collection, body, _id = null) {
     const msg = {
       _id,
       action: "write",
@@ -114,7 +85,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  collectionExists(index: string, collection: string) {
+  collectionExists(index, collection) {
     return this.send({
       action: "exists",
       collection,
@@ -123,11 +94,8 @@ export default abstract class ApiBase {
     });
   }
 
-  callMemoryStorage(command: string, args: JSONObject) {
-    // `ApiMessage`, not an inferred literal: the loop below writes keys that
-    // are only known at runtime, which an inferred literal type has no index
-    // signature for.
-    const msg: ApiMessage = {
+  callMemoryStorage(command, args) {
+    const msg = {
       action: command,
       controller: "ms",
     };
@@ -145,7 +113,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  checkToken(token: string) {
+  checkToken(token) {
     let _token = null;
 
     if (this.world.currentUser && this.world.currentUser.token) {
@@ -158,14 +126,14 @@ export default abstract class ApiBase {
       body: { token },
       controller: "auth",
     })
-      .then((response: ApiResponse) => {
+      .then((response) => {
         if (_token !== null) {
           this.world.currentUser.token = _token;
         }
 
         return response;
       })
-      .catch((error: Error) => {
+      .catch((error) => {
         if (_token !== null) {
           this.world.currentUser.token = _token;
         }
@@ -174,7 +142,7 @@ export default abstract class ApiBase {
       });
   }
 
-  count(query: JSONObject, index?: string, collection?: string) {
+  count(query, index, collection) {
     const msg = {
       action: "count",
       body: query,
@@ -225,7 +193,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createIndex(index: string) {
+  createIndex(index) {
     const msg = {
       action: "create",
       controller: "index",
@@ -235,11 +203,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createCollection(
-    index: string | undefined,
-    collection: string,
-    mappings?: JSONObject,
-  ) {
+  createCollection(index, collection, mappings) {
     const msg = {
       action: "create",
       body: mappings,
@@ -251,11 +215,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getCollectionMapping(
-    index: string,
-    collection: string,
-    includeKuzzleMeta = false,
-  ) {
+  getCollectionMapping(index, collection, includeKuzzleMeta = false) {
     const msg = {
       action: "getMapping",
       collection,
@@ -267,7 +227,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createCredentials(strategy: string, userId: string, body: JSONObject) {
+  createCredentials(strategy, userId, body) {
     return this.send({
       _id: userId,
       action: "createCredentials",
@@ -277,7 +237,7 @@ export default abstract class ApiBase {
     });
   }
 
-  createMyCredentials(strategy: string, body: JSONObject) {
+  createMyCredentials(strategy, body) {
     return this.send({
       action: "createMyCredentials",
       body,
@@ -286,7 +246,7 @@ export default abstract class ApiBase {
     });
   }
 
-  createOrReplace(body: JSONObject, index?: string, collection?: string) {
+  createOrReplace(body, index, collection) {
     const msg: any = {
       action: "createOrReplace",
       body: body,
@@ -303,7 +263,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createOrReplaceProfile(id: string, body: JSONObject) {
+  createOrReplaceProfile(id, body) {
     const msg = {
       _id: id,
       action: "createOrReplaceProfile",
@@ -314,7 +274,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createOrReplaceRole(id: string, body: JSONObject) {
+  createOrReplaceRole(id, body) {
     const msg = {
       _id: id,
       action: "createOrReplaceRole",
@@ -325,7 +285,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createRestrictedUser(body: JSONObject, id?: string) {
+  createRestrictedUser(body, id) {
     const msg: any = {
       action: "createRestrictedUser",
       body: body,
@@ -338,7 +298,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createUser(body: JSONObject, id?: string) {
+  createUser(body, id) {
     const msg: any = {
       action: "createUser",
       body,
@@ -353,7 +313,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  createFirstAdmin(body: JSONObject, id?: string, reset?: boolean) {
+  createFirstAdmin(body, id, reset) {
     const msg: any = {
       action: "createFirstAdmin",
       body: body,
@@ -371,7 +331,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  credentialsExist(strategy: string, body: JSONObject) {
+  credentialsExist(strategy, body) {
     return this.send({
       action: "credentialsExist",
       body,
@@ -380,7 +340,7 @@ export default abstract class ApiBase {
     });
   }
 
-  deleteById(id: string, index?: string) {
+  deleteById(id, index) {
     const msg = {
       _id: id,
       action: "delete",
@@ -392,7 +352,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteByQuery(query: JSONObject, index?: string, collection?: string) {
+  deleteByQuery(query, index, collection) {
     const msg = {
       action: "deleteByQuery",
       body: query,
@@ -404,7 +364,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteCredentials(strategy: string, userId: string) {
+  deleteCredentials(strategy, userId) {
     return this.send({
       _id: userId,
       action: "deleteCredentials",
@@ -413,7 +373,7 @@ export default abstract class ApiBase {
     });
   }
 
-  deleteIndex(index: string) {
+  deleteIndex(index) {
     const msg = {
       action: "delete",
       controller: "index",
@@ -432,7 +392,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteMyCredentials(strategy: string) {
+  deleteMyCredentials(strategy) {
     return this.send({
       action: "deleteMyCredentials",
       controller: "auth",
@@ -440,7 +400,7 @@ export default abstract class ApiBase {
     });
   }
 
-  deleteProfile(id: string, waitFor = false) {
+  deleteProfile(id, waitFor = false) {
     const msg: any = {
       _id: id,
       action: "deleteProfile",
@@ -454,7 +414,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteProfiles(ids: string[], waitFor = false) {
+  deleteProfiles(ids, waitFor = false) {
     const msg: any = {
       action: "mDeleteProfiles",
       body: {
@@ -470,7 +430,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteRole(id: string, waitFor = false) {
+  deleteRole(id, waitFor = false) {
     const msg: any = {
       _id: id,
       action: "deleteRole",
@@ -484,7 +444,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteRoles(ids: string[], waitFor = false) {
+  deleteRoles(ids, waitFor = false) {
     const msg: any = {
       action: "mDeleteRoles",
       body: {
@@ -500,7 +460,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteSpecifications(index: string, collection: string) {
+  deleteSpecifications(index, collection) {
     return this.send({
       action: "deleteSpecifications",
       body: null,
@@ -510,7 +470,7 @@ export default abstract class ApiBase {
     });
   }
 
-  deleteUser(id: string, waitFor = false) {
+  deleteUser(id, waitFor = false) {
     const msg: any = {
       _id: id,
       action: "deleteUser",
@@ -524,7 +484,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  deleteUsers(ids: string[], waitFor = false) {
+  deleteUsers(ids, waitFor = false) {
     const msg: any = {
       action: "mDeleteUsers",
       body: {
@@ -540,7 +500,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  exists(id: string, index?: string) {
+  exists(id, index) {
     const msg = {
       _id: id,
       action: "exists",
@@ -552,7 +512,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  get(id: string, index?: string, collection?: string) {
+  get(id, index, collection) {
     const msg = {
       _id: id,
       action: "get",
@@ -581,7 +541,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getCredentials(strategy: string, userId: string) {
+  getCredentials(strategy, userId) {
     return this.send({
       _id: userId,
       action: "getCredentials",
@@ -590,7 +550,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getCredentialsById(strategy: string, userId: string) {
+  getCredentialsById(strategy, userId) {
     return this.send({
       _id: userId,
       action: "getCredentialsById",
@@ -615,7 +575,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getMyCredentials(strategy: string) {
+  getMyCredentials(strategy) {
     return this.send({
       action: "getMyCredentials",
       controller: "auth",
@@ -623,7 +583,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getMyRights(id?: string) {
+  getMyRights(id) {
     return this.send({
       _id: id,
       action: "getMyRights",
@@ -631,7 +591,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getProfile(id: string) {
+  getProfile(id) {
     const msg = {
       _id: id,
       action: "getProfile",
@@ -650,7 +610,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getProfileRights(id: string) {
+  getProfileRights(id) {
     const msg = {
       _id: id,
       action: "getProfileRights",
@@ -660,7 +620,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getRole(id: string) {
+  getRole(id) {
     const msg = {
       _id: id,
       action: "getRole",
@@ -679,7 +639,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getSpecifications(index: string, collection: string) {
+  getSpecifications(index, collection) {
     return this.send({
       action: "getSpecifications",
       collection: collection,
@@ -688,7 +648,7 @@ export default abstract class ApiBase {
     });
   }
 
-  getStats(dates: JSONObject) {
+  getStats(dates) {
     const msg = {
       action: "getStats",
       body: dates,
@@ -698,7 +658,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getUser(id: string) {
+  getUser(id) {
     return this.send({
       _id: id,
       action: "getUser",
@@ -715,7 +675,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  getUserRights(id: string) {
+  getUserRights(id) {
     return this.send({
       _id: id,
       action: "getUserRights",
@@ -723,7 +683,7 @@ export default abstract class ApiBase {
     });
   }
 
-  hasCredentials(strategy: string, userId: string) {
+  hasCredentials(strategy, userId) {
     return this.send({
       _id: userId,
       action: "hasCredentials",
@@ -732,7 +692,7 @@ export default abstract class ApiBase {
     });
   }
 
-  indexExists(index: string) {
+  indexExists(index) {
     return this.send({
       action: "exists",
       controller: "index",
@@ -740,7 +700,7 @@ export default abstract class ApiBase {
     });
   }
 
-  refreshCollection(index?: string, collection?: string) {
+  refreshCollection(index, collection) {
     const msg = {
       action: "refresh",
       collection: collection || this.world.fakeCollection,
@@ -751,7 +711,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  listCollections(index: string, type: string) {
+  listCollections(index, type) {
     const msg = {
       action: "list",
       body: { type },
@@ -780,7 +740,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  login(strategy: string, credentials: JSONObject) {
+  login(strategy, credentials) {
     const msg = {
       action: "login",
       body: {
@@ -795,7 +755,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  logout(jwtToken: string, global = false) {
+  logout(jwtToken, global = false) {
     const msg: ApiMessage = {
       action: "logout",
       controller: "auth",
@@ -808,12 +768,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mCreate(
-    body: JSONObject,
-    index?: string,
-    collection?: string,
-    jwtToken?: string,
-  ) {
+  mCreate(body, index, collection, jwtToken) {
     const msg: ApiMessage = {
       action: "mCreate",
       body,
@@ -831,7 +786,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mCreateOrReplace(body: JSONObject, index?: string, collection?: string) {
+  mCreateOrReplace(body, index, collection) {
     const msg = {
       action: "mCreateOrReplace",
       body: body,
@@ -843,7 +798,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mDelete(body: JSONObject, index?: string, collection?: string) {
+  mDelete(body, index, collection) {
     const msg = {
       action: "mDelete",
       body,
@@ -855,7 +810,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mGet(body: JSONObject, index?: string, collection?: string) {
+  mGet(body, index, collection) {
     const msg = {
       action: "mGet",
       body,
@@ -867,7 +822,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mGetProfiles(body: JSONObject) {
+  mGetProfiles(body) {
     const msg = {
       action: "mGetProfiles",
       body: body,
@@ -877,7 +832,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mGetRoles(body: JSONObject) {
+  mGetRoles(body) {
     const msg = {
       action: "mGetRoles",
       body: body,
@@ -887,7 +842,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mReplace(body: JSONObject, index?: string, collection?: string) {
+  mReplace(body, index, collection) {
     const msg = {
       action: "mReplace",
       body: body,
@@ -899,7 +854,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  mUpdate(body: JSONObject, index?: string, collection?: string) {
+  mUpdate(body, index, collection) {
     const msg = {
       action: "mUpdate",
       body: body,
@@ -920,7 +875,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  postDocument(index: string, collection: string, document: JSONObject) {
+  postDocument(index, collection, document) {
     return this.send({
       action: "create",
       body: document,
@@ -930,7 +885,7 @@ export default abstract class ApiBase {
     });
   }
 
-  publish(body: JSONObject, index?: string) {
+  publish(body, index) {
     const msg = {
       action: "publish",
       body: body,
@@ -949,7 +904,7 @@ export default abstract class ApiBase {
     });
   }
 
-  replace(body: JSONObject, index?: string, collection?: string) {
+  replace(body, index, collection) {
     const msg: ApiMessage = {
       action: "replace",
       body: body,
@@ -966,7 +921,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  replaceUser(id: string, body: JSONObject) {
+  replaceUser(id, body) {
     return this.send({
       _id: id,
       action: "replaceUser",
@@ -975,7 +930,7 @@ export default abstract class ApiBase {
     });
   }
 
-  revokeTokens(id: string) {
+  revokeTokens(id) {
     return this.send({
       _id: id,
       action: "revokeTokens",
@@ -983,7 +938,7 @@ export default abstract class ApiBase {
     });
   }
 
-  scroll(scrollId: string, scroll?: string) {
+  scroll(scrollId, scroll) {
     const msg = {
       action: "scroll",
       controller: "document",
@@ -994,7 +949,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  scrollProfiles(scrollId: string) {
+  scrollProfiles(scrollId) {
     return this.send({
       action: "scrollProfiles",
       controller: "security",
@@ -1002,7 +957,7 @@ export default abstract class ApiBase {
     });
   }
 
-  scrollSpecifications(scrollId: string) {
+  scrollSpecifications(scrollId) {
     return this.send({
       action: "scrollSpecifications",
       controller: "collection",
@@ -1010,7 +965,7 @@ export default abstract class ApiBase {
     });
   }
 
-  scrollUsers(scrollId: string) {
+  scrollUsers(scrollId) {
     return this.send({
       action: "scrollUsers",
       controller: "security",
@@ -1018,13 +973,8 @@ export default abstract class ApiBase {
     });
   }
 
-  search(
-    query: JSONObject,
-    index?: string,
-    collection?: string,
-    args?: JSONObject,
-  ) {
-    const msg: ApiMessage = {
+  search(query, index, collection, args) {
+    const msg = {
       action: "search",
       body: query,
       collection: collection || this.world.fakeCollection,
@@ -1041,8 +991,8 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchProfiles(roles: string[], args?: JSONObject) {
-    const msg: ApiMessage = {
+  searchProfiles(roles, args) {
+    const msg = {
       action: "searchProfiles",
       body: {
         roles,
@@ -1059,8 +1009,8 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchRoles(body: JSONObject, args?: JSONObject) {
-    const msg: ApiMessage = {
+  searchRoles(body, args) {
+    const msg = {
       action: "searchRoles",
       body,
       controller: "security",
@@ -1075,7 +1025,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchSpecifications(body: JSONObject, args?: JSONObject) {
+  searchSpecifications(body, args) {
     const msg: ApiMessage = {
       action: "searchSpecifications",
       body: body,
@@ -1089,8 +1039,8 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  searchUsers(query: JSONObject, args?: JSONObject) {
-    const msg: ApiMessage = {
+  searchUsers(query, args) {
+    const msg = {
       action: "searchUsers",
       body: {
         query,
@@ -1105,7 +1055,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  subscribe(filters: JSONObject, client?: string, authentified = false) {
+  subscribe(filters, client, authentified = false) {
     const msg: ApiMessage = {
       action: "subscribe",
       body: null,
@@ -1126,7 +1076,7 @@ export default abstract class ApiBase {
     return this.sendAndListen(msg, client);
   }
 
-  truncateCollection(index?: string, collection?: string) {
+  truncateCollection(index, collection) {
     const msg = {
       action: "truncate",
       collection: collection || this.world.fakeCollection,
@@ -1137,24 +1087,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  /**
-   * ⚠️ The return type is wider than this implementation, which always sends.
-   * Both overrides — `MqttApi` and `WebSocketApiBase` — return early with
-   * `undefined` when the client, the socket or the room is unknown, so the
-   * family's contract is "a response, or nothing at all". Declaring that is
-   * what makes the overrides legal; whether returning nothing is *right* is a
-   * separate question, filed as TD-82: a caller awaiting `undefined` continues
-   * as though it had unsubscribed.
-   *
-   * The third parameter is theirs too — this implementation always sends with
-   * `getAnswer: false`.
-   */
-  unsubscribe(
-    room: string,
-    clientId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    waitForResponse?: boolean,
-  ): Promise<ApiResponse> | undefined {
+  unsubscribe(room, clientId) {
     const msg = {
       action: "unsubscribe",
       body: { roomId: room },
@@ -1170,7 +1103,7 @@ export default abstract class ApiBase {
     return this.send(msg, false);
   }
 
-  update(id: string, body: JSONObject, index?: string, collection?: string) {
+  update(id, body, index, collection) {
     const msg = {
       _id: id,
       action: "update",
@@ -1183,7 +1116,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  updateCredentials(strategy: string, userId: string, body: JSONObject) {
+  updateCredentials(strategy, userId, body) {
     return this.send({
       _id: userId,
       action: "updateCredentials",
@@ -1193,7 +1126,7 @@ export default abstract class ApiBase {
     });
   }
 
-  updateMapping(index?: string, collection?: string, mapping?: JSONObject) {
+  updateMapping(index, collection, mapping) {
     const msg = {
       action: "updateMapping",
       body: mapping || this.world.mapping,
@@ -1205,7 +1138,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  updateMyCredentials(strategy: string, body: JSONObject) {
+  updateMyCredentials(strategy, body) {
     return this.send({
       action: "updateMyCredentials",
       body,
@@ -1234,7 +1167,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  updateSelf(body: JSONObject) {
+  updateSelf(body) {
     return this.send({
       action: "updateSelf",
       body: body,
@@ -1242,11 +1175,7 @@ export default abstract class ApiBase {
     });
   }
 
-  updateSpecifications(
-    index: string,
-    collection: string,
-    specifications: JSONObject,
-  ) {
+  updateSpecifications(index, collection, specifications) {
     return this.send({
       action: "updateSpecifications",
       body: specifications,
@@ -1266,7 +1195,7 @@ export default abstract class ApiBase {
     return this.send(msg);
   }
 
-  validateCredentials(strategy: string, userId: string, body: JSONObject) {
+  validateCredentials(strategy, userId, body) {
     return this.send({
       _id: userId,
       action: "validateCredentials",
@@ -1276,11 +1205,11 @@ export default abstract class ApiBase {
     });
   }
 
-  validateDocument(index: string, collection: string, document: JSONObject) {
+  validateDocument(index, collection, document) {
     return this.create(document, index, collection);
   }
 
-  validateMyCredentials(strategy: string, body: JSONObject) {
+  validateMyCredentials(strategy, body) {
     return this.send({
       action: "validateMyCredentials",
       body,
@@ -1289,11 +1218,7 @@ export default abstract class ApiBase {
     });
   }
 
-  validateSpecifications(
-    index: string,
-    collection: string,
-    specifications: JSONObject,
-  ) {
+  validateSpecifications(index, collection, specifications) {
     return this.send({
       action: "validateSpecifications",
       body: specifications,
@@ -1303,7 +1228,7 @@ export default abstract class ApiBase {
     });
   }
 
-  resetCache(database: string) {
+  resetCache(database) {
     return this.send({
       action: "resetCache",
       controller: "admin",
@@ -1333,7 +1258,7 @@ export default abstract class ApiBase {
     });
   }
 
-  loadMappings(body: JSONObject) {
+  loadMappings(body) {
     return this.send({
       action: "loadMappings",
       body,
@@ -1342,7 +1267,7 @@ export default abstract class ApiBase {
     });
   }
 
-  loadFixtures(body: JSONObject) {
+  loadFixtures(body) {
     return this.send({
       action: "loadFixtures",
       body,
@@ -1351,7 +1276,7 @@ export default abstract class ApiBase {
     });
   }
 
-  loadSecurities(body: JSONObject) {
+  loadSecurities(body) {
     return this.send({
       action: "loadSecurities",
       body,

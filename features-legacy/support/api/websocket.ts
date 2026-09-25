@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import Bluebird from "bluebird";
-import type { RawData } from "ws";
-import WebSocket from "ws";
+import WebSocket, { RawData } from "ws";
 
 import WebSocketApiBase from "./websocketBase";
 
@@ -16,7 +15,7 @@ type Subscription = {
 class WebSocketApi extends WebSocketApiBase {
   sockets: Record<string, WebSocket>;
   requests: Record<string, (data: any) => void>;
-  subscribedRooms: Record<string, Record<string, Subscription>>;
+  protected subscribedRooms: Record<string, Record<string, Subscription>>;
 
   constructor(world: any) {
     super(world);

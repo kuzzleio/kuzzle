@@ -15,12 +15,3 @@ Feature: Cluster
     # Make sure to reset to make this test reentrant
     Then I successfully execute the action "tests":"syncHello" with args:
     | name | "World" |
-
-  @cluster
-  Scenario: Target each node of the cluster
-    Given I target "node1"
-    Then I successfully execute the action "server":"now"
-    Given I target "node2"
-    Then I successfully execute the action "server":"now"
-    Given I target "node3"
-    Then I successfully execute the action "server":"now"

@@ -1,30 +1,26 @@
 import { Given, Then } from "@cucumber/cucumber";
-import { asError, realtimeApi } from "../support/stepUtils";
-import type KWorld from "../support/world";
 
 Given(
   /^A room subscription listening to "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/,
-  function (this: KWorld, key, value, socketName) {
+  function (key, value, socketName) {
     const filter = {
       equals: {
         [key]: value,
       },
     };
 
-    return realtimeApi(this)
-      .subscribe(filter, socketName)
-      .then((body) => {
-        if (body.error) {
-          throw body.error;
-        }
-      });
+    return this.api.subscribe(filter, socketName).then((body) => {
+      if (body.error) {
+        throw body.error;
+      }
+    });
   },
 );
 
 Given(
   /^A room subscription listening to the whole collection$/,
-  function (this: KWorld, callback) {
-    realtimeApi(this)
+  function (callback) {
+    this.api
       .subscribe({})
       .then((body) => {
         if (body.error !== null) {
@@ -42,10 +38,10 @@ Given(
 
 Given(
   /^A room subscription listening field "([^"]*)" doesn't exists$/,
-  function (this: KWorld, key, callback) {
+  function (key, callback) {
     const filter = { not: { exists: { field: key } } };
 
-    realtimeApi(this)
+    this.api
       .subscribe(filter)
       .then((body) => {
         if (body.error !== null) {
@@ -61,82 +57,63 @@ Given(
   },
 );
 
-Then(
-  /^I unsubscribe(?: socket "([^"]*)")?/,
-  function (this: KWorld, socketName, callback) {
-    let rooms;
+Then(/^I unsubscribe(?: socket "([^"]*)")?/, function (socketName, callback) {
+  let rooms;
 
-    if (socketName) {
-      rooms = Object.keys(realtimeApi(this).subscribedRooms[socketName]);
-    } else {
-      socketName = Object.keys(realtimeApi(this).subscribedRooms)[0];
-      rooms = Object.keys(realtimeApi(this).subscribedRooms[socketName]);
-    }
+  if (socketName) {
+    rooms = Object.keys(this.api.subscribedRooms[socketName]);
+  } else {
+    socketName = Object.keys(this.api.subscribedRooms)[0];
+    rooms = Object.keys(this.api.subscribedRooms[socketName]);
+  }
 
-    if (rooms.length === 0) {
-      callback(new Error("Cannot unsubscribe: no subscribed rooms"));
-      return false;
-    }
+  if (rooms.length === 0) {
+    callback(new Error("Cannot unsubscribe: no subscribed rooms"));
+    return false;
+  }
 
-    const room = rooms[rooms.length - 1];
-    // `unsubscribe` answers nothing when the socket or the room has already
-    // gone, and the step used to call `.then` on that nothing.
-    const unsubscribed = realtimeApi(this).unsubscribe(room, socketName);
+  this.api
+    .unsubscribe(rooms[rooms.length - 1], socketName)
+    .then(function () {
+      callback();
+    })
+    .catch(function (error) {
+      callback(new Error(error));
+    });
+});
 
-    if (!unsubscribed) {
-      callback(
-        new Error(
-          `Cannot unsubscribe: room "${room}" is not open on "${socketName}"`,
-        ),
-      );
-      return;
-    }
+Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
+  this.api
+    .countSubscription()
+    .then(function (response) {
+      if (response.error) {
+        return callback(new Error(response.error.message));
+      }
 
-    unsubscribed
-      .then(function () {
-        callback();
-      })
-      .catch(function (error) {
-        callback(asError(error));
-      });
-  },
-);
+      if (!response.result.count) {
+        return callback(new Error('Expected a "count" value in response'));
+      }
 
-Then(
-  /^I can count "([^"]*)" subscription/,
-  function (this: KWorld, number, callback) {
-    realtimeApi(this)
-      .countSubscription()
-      .then(function (response) {
-        if (response.error) {
-          return callback(new Error(response.error.message));
-        }
+      if (response.result.count !== parseInt(number)) {
+        return callback(
+          new Error(
+            "No correct value for count. Expected " +
+              number +
+              ", got " +
+              JSON.stringify(response.result.count),
+          ),
+        );
+      }
 
-        if (!response.result.count) {
-          return callback(new Error('Expected a "count" value in response'));
-        }
+      callback();
+    })
+    .catch(function (error) {
+      callback(new Error(error));
+    });
+});
 
-        if (response.result.count !== parseInt(number)) {
-          return callback(
-            new Error(
-              "No correct value for count. Expected " +
-                number +
-                ", got " +
-                JSON.stringify(response.result.count),
-            ),
-          );
-        }
-
-        callback();
-      })
-      .catch(function (error) {
-        callback(new Error(error));
-      });
-  },
-);
-
-Then(/^I get the list subscriptions$/, function (this: KWorld, callback) {
-  realtimeApi(this)
+Then(/^I get the list subscriptions$/, function (callback) {
+  this.api
     .listSubscriptions()
     .then((response) => {
       if (response.error) {
@@ -157,7 +134,7 @@ Then(/^I get the list subscriptions$/, function (this: KWorld, callback) {
 
 Then(
   /^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/,
-  function (this: KWorld, collection, countRooms, countSubscribers, callback) {
+  function (collection, countRooms, countSubscribers, callback) {
     const rooms = Object.keys(this.result[this.fakeIndex][collection]);
     let count = 0;
 
@@ -205,19 +182,17 @@ Then(
 
 Then(
   /^I use my JWT to subscribe to field "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/,
-  function (this: KWorld, key, value, socketName) {
+  function (key, value, socketName) {
     const filter = {
       equals: {
         [key]: value,
       },
     };
 
-    return realtimeApi(this)
-      .subscribe(filter, socketName, true)
-      .then((body) => {
-        if (body.error) {
-          throw body.error;
-        }
-      });
+    return this.api.subscribe(filter, socketName, true).then((body) => {
+      if (body.error) {
+        throw body.error;
+      }
+    });
   },
 );
