@@ -1,10 +1,9 @@
 import * as zlib from "zlib";
 import _ from "lodash";
-import type { JSONObject } from "kuzzle-sdk";
 import rp from "request-promise";
 
 import routes from "../../../lib/api/httpRoutes";
-import type KWorld from "../world";
+import KWorld from "../world";
 
 type CompressionAlgorithm = "identity" | "gzip" | "deflate";
 
@@ -84,7 +83,7 @@ export default class HttpApi {
     }
 
     routes.some((route) => {
-      const hits: string[] = [];
+      const hits = [];
 
       // Try / Catch mechanism avoids to match routes that have not all
       // the mandatory arguments for the route
@@ -92,12 +91,7 @@ export default class HttpApi {
         if (route.controller === controller && route.action === action) {
           verb = route.verb.toUpperCase();
 
-          // `route.path`, not `route.url`: the two are the same string —
-          // httpRoutes.ts ends with `route.url = route.path` and documents `url`
-          // as a deprecated alias — but only `path` is declared non-optional, and
-          // reading the alias means asserting a population step this file cannot
-          // see.
-          url = route.path
+          url = route.url
             .replace(/(:[^/]+)/g, function (match) {
               hits.push(match.substring(1));
 
@@ -158,7 +152,7 @@ export default class HttpApi {
 
           return true;
         }
-      } catch {
+      } catch (error) {
         return false;
       }
 
@@ -201,7 +195,7 @@ export default class HttpApi {
     });
   }
 
-  bulkImport(bulk: JSONObject[], index?: string) {
+  bulkImport(bulk, index) {
     return this.callApi({
       body: { bulkData: bulk },
       method: "POST",
@@ -211,7 +205,7 @@ export default class HttpApi {
     });
   }
 
-  bulkMWrite(index: string, collection: string, body: JSONObject) {
+  bulkMWrite(index, collection, body) {
     return this.callApi({
       body,
       method: "POST",
@@ -224,7 +218,7 @@ export default class HttpApi {
     });
   }
 
-  bulkWrite(index: string, collection: string, body: JSONObject, _id = null) {
+  bulkWrite(index, collection, body, _id = null) {
     let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
 
     if (_id) {
@@ -293,13 +287,13 @@ export default class HttpApi {
     return response;
   }
 
-  callMemoryStorage(command: string, args: JSONObject) {
+  callMemoryStorage(command, args) {
     return this.callApi(
       this._getRequest({ action: command, args, controller: "ms" }),
     );
   }
 
-  checkToken(token: string) {
+  checkToken(token) {
     let _token = null;
     const request = {
       body: { token },
@@ -329,7 +323,7 @@ export default class HttpApi {
       });
   }
 
-  collectionExists(index: string, collection: string) {
+  collectionExists(index, collection) {
     return this.callApi(
       this._getRequest({
         action: "exists",
@@ -340,7 +334,7 @@ export default class HttpApi {
     );
   }
 
-  count(query: JSONObject, index?: string, collection?: string) {
+  count(query, index, collection) {
     return this.callApi({
       body: query,
       method: "POST",
@@ -353,13 +347,7 @@ export default class HttpApi {
     });
   }
 
-  create(
-    body: JSONObject,
-    index?: string,
-    collection?: string,
-    jwtToken?: string,
-    id?: string,
-  ) {
+  create(body, index, collection, jwtToken, id) {
     const url = id
       ? this.apiPath(
           this.util.getIndex(index) +
@@ -390,11 +378,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  createCollection(
-    index: string | undefined,
-    collection: string,
-    mappings?: JSONObject,
-  ) {
+  createCollection(index, collection, mappings) {
     index = index || this.world.fakeIndex;
 
     return this.callApi({
@@ -404,11 +388,7 @@ export default class HttpApi {
     });
   }
 
-  getCollectionMapping(
-    index: string,
-    collection: string,
-    includeKuzzleMeta = false,
-  ) {
+  getCollectionMapping(index, collection, includeKuzzleMeta = false) {
     const url = `${index}/${collection}/_mapping${includeKuzzleMeta ? "?includeKuzzleMeta" : ""}`;
 
     return this.callApi({
@@ -417,7 +397,7 @@ export default class HttpApi {
     });
   }
 
-  createCredentials(strategy: string, userId: string, body: JSONObject) {
+  createCredentials(strategy, userId, body) {
     return this.callApi({
       body,
       method: "POST",
@@ -425,7 +405,7 @@ export default class HttpApi {
     });
   }
 
-  createFirstAdmin(body: JSONObject, id?: string, reset?: boolean) {
+  createFirstAdmin(body, id, reset) {
     const options = {
       body,
       method: "POST",
@@ -443,14 +423,14 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  createIndex(index: string) {
+  createIndex(index) {
     return this.callApi({
       method: "POST",
       url: this.apiPath(index + "/_create"),
     });
   }
 
-  createMyCredentials(strategy: string, body: JSONObject) {
+  createMyCredentials(strategy, body) {
     return this.callApi({
       body,
       method: "POST",
@@ -458,7 +438,7 @@ export default class HttpApi {
     });
   }
 
-  createOrReplace(body: JSONObject, index?: string, collection?: string) {
+  createOrReplace(body, index, collection) {
     const options = {
       body,
       method: "PUT",
@@ -476,7 +456,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  createOrReplaceProfile(id: string, body: JSONObject) {
+  createOrReplaceProfile(id, body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -484,7 +464,7 @@ export default class HttpApi {
     });
   }
 
-  createOrReplaceRole(id: string, body: JSONObject) {
+  createOrReplaceRole(id, body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -492,7 +472,7 @@ export default class HttpApi {
     });
   }
 
-  createRestrictedUser(body: JSONObject, id: string) {
+  createRestrictedUser(body, id) {
     return this.callApi({
       body,
       method: "POST",
@@ -500,7 +480,7 @@ export default class HttpApi {
     });
   }
 
-  createUser(body: JSONObject, id: string) {
+  createUser(body, id) {
     return this.callApi({
       body,
       method: "POST",
@@ -508,14 +488,14 @@ export default class HttpApi {
     });
   }
 
-  credentialsExist(strategy: string) {
+  credentialsExist(strategy) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("credentials/" + strategy + "/_me/_exists"),
     });
   }
 
-  deleteById(id: string, index?: string) {
+  deleteById(id, index) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(
@@ -524,7 +504,7 @@ export default class HttpApi {
     });
   }
 
-  deleteByQuery(query: JSONObject, index?: string, collection?: string) {
+  deleteByQuery(query, index, collection) {
     return this.callApi({
       body: query,
       method: "DELETE",
@@ -537,14 +517,14 @@ export default class HttpApi {
     });
   }
 
-  deleteCredentials(strategy: string, userId: string) {
+  deleteCredentials(strategy, userId) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath("credentials/" + strategy + "/" + userId),
     });
   }
 
-  deleteIndex(index: string) {
+  deleteIndex(index) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(index),
@@ -558,14 +538,14 @@ export default class HttpApi {
     });
   }
 
-  deleteMyCredentials(strategy: string) {
+  deleteMyCredentials(strategy) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath("credentials/" + strategy + "/_me"),
     });
   }
 
-  deleteProfile(id: string, waitFor = false) {
+  deleteProfile(id, waitFor = false) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(
@@ -574,7 +554,7 @@ export default class HttpApi {
     });
   }
 
-  deleteProfiles(ids: string[], waitFor = false) {
+  deleteProfiles(ids, waitFor = false) {
     return this.callApi({
       body: {
         ids,
@@ -586,14 +566,14 @@ export default class HttpApi {
     });
   }
 
-  deleteRole(id: string, waitFor = false) {
+  deleteRole(id, waitFor = false) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath("roles/" + id + (waitFor ? "?refresh=wait_for" : "")),
     });
   }
 
-  deleteRoles(ids: string[], waitFor = false) {
+  deleteRoles(ids, waitFor = false) {
     return this.callApi({
       body: {
         ids,
@@ -605,21 +585,21 @@ export default class HttpApi {
     });
   }
 
-  deleteSpecifications(index: string, collection: string) {
+  deleteSpecifications(index, collection) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(index + "/" + collection + "/_specifications"),
     });
   }
 
-  deleteUser(id: string, waitFor = false) {
+  deleteUser(id, waitFor = false) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath("users/" + id + (waitFor ? "?refresh=wait_for" : "")),
     });
   }
 
-  deleteUsers(ids: string[], waitFor = false) {
+  deleteUsers(ids, waitFor = false) {
     return this.callApi({
       body: {
         ids,
@@ -633,7 +613,7 @@ export default class HttpApi {
 
   disconnect() {}
 
-  exists(id: string, index?: string) {
+  exists(id, index) {
     return this.callApi({
       method: "GET",
       url: this.apiPath(
@@ -647,7 +627,7 @@ export default class HttpApi {
     });
   }
 
-  get(id: string, index?: string) {
+  get(id, index) {
     return this.callApi({
       method: "GET",
       url: this.apiPath(
@@ -670,14 +650,14 @@ export default class HttpApi {
     });
   }
 
-  getCredentials(strategy: string, userId: string) {
+  getCredentials(strategy, userId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("credentials/" + strategy + "/" + userId),
     });
   }
 
-  getCredentialsById(strategy: string, userId: string) {
+  getCredentialsById(strategy, userId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("credentials/" + strategy + "/" + userId + "/_byId"),
@@ -698,7 +678,7 @@ export default class HttpApi {
     });
   }
 
-  getMyCredentials(strategy: string) {
+  getMyCredentials(strategy) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("credentials/" + strategy + "/_me"),
@@ -712,7 +692,7 @@ export default class HttpApi {
     });
   }
 
-  getProfile(id: string) {
+  getProfile(id) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("profiles/" + id),
@@ -726,14 +706,14 @@ export default class HttpApi {
     });
   }
 
-  getProfileRights(id: string) {
+  getProfileRights(id) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("profiles/" + id + "/_rights"),
     });
   }
 
-  getRole(id: string) {
+  getRole(id) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("roles/" + id),
@@ -747,14 +727,14 @@ export default class HttpApi {
     });
   }
 
-  getSpecifications(index: string, collection: string) {
+  getSpecifications(index, collection) {
     return this.callApi({
       method: "GET",
       url: this.apiPath(index + "/" + collection + "/_specifications"),
     });
   }
 
-  getStats(dates: JSONObject) {
+  getStats(dates) {
     return this.callApi(
       this._getRequest({
         action: "getStats",
@@ -764,7 +744,7 @@ export default class HttpApi {
     );
   }
 
-  getUser(id: string) {
+  getUser(id) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("users/" + id),
@@ -778,27 +758,27 @@ export default class HttpApi {
     });
   }
 
-  getUserRights(id: string) {
+  getUserRights(id) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("users/" + id + "/_rights"),
     });
   }
 
-  hasCredentials(strategy: string, userId: string) {
+  hasCredentials(strategy, userId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("credentials/" + strategy + "/" + userId + "/_exists"),
     });
   }
 
-  indexExists(index: string) {
+  indexExists(index) {
     return this.callApi(
       this._getRequest({ action: "exists", controller: "index", index }),
     );
   }
 
-  refreshCollection(index?: string, collection?: string) {
+  refreshCollection(index, collection) {
     const _index = index || this.world.fakeIndex,
       _collection = collection || this.world.fakeCollection,
       options = {
@@ -809,7 +789,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  listCollections(index?: string, type?: string) {
+  listCollections(index, type) {
     const options = {
       method: "GET",
       url: this.apiPath(`${index || this.world.fakeIndex}/_list`),
@@ -828,7 +808,7 @@ export default class HttpApi {
     });
   }
 
-  login(strategy: string, credentials: JSONObject) {
+  login(strategy, credentials) {
     return this.callApi({
       body: {
         password: credentials.password,
@@ -839,7 +819,7 @@ export default class HttpApi {
     });
   }
 
-  logout(jwtToken: string) {
+  logout(jwtToken) {
     return this.callApi({
       headers: {
         authorization: "Bearer " + jwtToken,
@@ -849,12 +829,7 @@ export default class HttpApi {
     });
   }
 
-  mCreate(
-    body: JSONObject,
-    index?: string,
-    collection?: string,
-    jwtToken?: string,
-  ) {
+  mCreate(body, index, collection, jwtToken) {
     const options: any = {
       body,
       method: "POST",
@@ -875,7 +850,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  mCreateOrReplace(body: JSONObject, index?: string, collection?: string) {
+  mCreateOrReplace(body, index, collection) {
     return this.callApi({
       body,
       method: "PUT",
@@ -888,7 +863,7 @@ export default class HttpApi {
     });
   }
 
-  mDelete(body: JSONObject, index?: string, collection?: string) {
+  mDelete(body, index, collection) {
     return this.callApi({
       body,
       method: "DELETE",
@@ -901,7 +876,7 @@ export default class HttpApi {
     });
   }
 
-  mGet(body: JSONObject, index?: string, collection?: string) {
+  mGet(body, index, collection) {
     return this.callApi({
       body,
       method: "POST",
@@ -914,7 +889,7 @@ export default class HttpApi {
     });
   }
 
-  mGetProfiles(body: JSONObject) {
+  mGetProfiles(body) {
     return this.callApi({
       body,
       method: "POST",
@@ -922,7 +897,7 @@ export default class HttpApi {
     });
   }
 
-  mGetRoles(body: JSONObject) {
+  mGetRoles(body) {
     return this.callApi({
       body,
       method: "POST",
@@ -930,7 +905,7 @@ export default class HttpApi {
     });
   }
 
-  mReplace(body: JSONObject, index?: string, collection?: string) {
+  mReplace(body, index, collection) {
     return this.callApi({
       body,
       method: "PUT",
@@ -943,7 +918,7 @@ export default class HttpApi {
     });
   }
 
-  mUpdate(body: JSONObject, index?: string, collection?: string) {
+  mUpdate(body, index, collection) {
     return this.callApi({
       body,
       method: "PUT",
@@ -963,7 +938,7 @@ export default class HttpApi {
     });
   }
 
-  postDocument(index: string, collection: string, document: JSONObject) {
+  postDocument(index, collection, document) {
     return this.callApi({
       body: document,
       method: "POST",
@@ -971,7 +946,7 @@ export default class HttpApi {
     });
   }
 
-  publish(body: JSONObject, index?: string) {
+  publish(body, index) {
     return this.callApi({
       body,
       method: "POST",
@@ -991,7 +966,7 @@ export default class HttpApi {
     });
   }
 
-  replace(body: JSONObject, index?: string, collection?: string) {
+  replace(body, index, collection) {
     const options = {
       body,
       method: "PUT",
@@ -1010,7 +985,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  replaceUser(id: string, body: JSONObject) {
+  replaceUser(id, body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -1018,14 +993,14 @@ export default class HttpApi {
     });
   }
 
-  revokeTokens(id: string) {
+  revokeTokens(id) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(`users/${id}/tokens`),
     });
   }
 
-  scroll(scrollId: string, scroll?: string) {
+  scroll(scrollId, scroll) {
     const options = {
       method: "GET",
       url: this.apiPath(`_scroll/${scrollId}`),
@@ -1038,33 +1013,28 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  scrollProfiles(scrollId: string) {
+  scrollProfiles(scrollId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("profiles/_scroll/" + scrollId),
     });
   }
 
-  scrollSpecifications(scrollId: string) {
+  scrollSpecifications(scrollId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("validations/_scroll/" + scrollId),
     });
   }
 
-  scrollUsers(scrollId: string) {
+  scrollUsers(scrollId) {
     return this.callApi({
       method: "GET",
       url: this.apiPath("users/_scroll/" + scrollId),
     });
   }
 
-  search(
-    query: JSONObject,
-    index?: string,
-    collection?: string,
-    args?: JSONObject,
-  ) {
+  search(query, index, collection, args) {
     const options = {
       body: query,
       method: "POST",
@@ -1096,7 +1066,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  searchProfiles(roles: string[], args?: JSONObject) {
+  searchProfiles(roles, args) {
     const options = {
       body: {
         roles,
@@ -1116,7 +1086,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  searchRoles(body: JSONObject, args?: JSONObject) {
+  searchRoles(body, args) {
     const options = {
       body,
       method: "POST",
@@ -1140,7 +1110,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  searchSpecifications(body: JSONObject, args?: JSONObject) {
+  searchSpecifications(body, args) {
     const options = {
       body,
       method: "POST",
@@ -1158,7 +1128,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  searchUsers(query: JSONObject, args?: JSONObject) {
+  searchUsers(query, args) {
     const options = {
       body: {
         query,
@@ -1178,7 +1148,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  truncateCollection(index?: string, collection?: string) {
+  truncateCollection(index, collection) {
     return this.callApi({
       method: "DELETE",
       url: this.apiPath(
@@ -1190,7 +1160,7 @@ export default class HttpApi {
     });
   }
 
-  update(id: string, body: JSONObject, index?: string, collection?: string) {
+  update(id, body, index, collection) {
     const _collection = collection || this.world.fakeCollection,
       options = {
         body,
@@ -1205,7 +1175,7 @@ export default class HttpApi {
     return this.callApi(options);
   }
 
-  updateCredentials(strategy: string, userId: string, body: JSONObject) {
+  updateCredentials(strategy, userId, body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -1221,7 +1191,7 @@ export default class HttpApi {
     });
   }
 
-  updateMapping(index?: string, collection?: string, mapping?: JSONObject) {
+  updateMapping(index, collection, mapping) {
     return this.callApi({
       body: mapping || this.world.mapping,
       method: "PUT",
@@ -1229,7 +1199,7 @@ export default class HttpApi {
     });
   }
 
-  updateMyCredentials(strategy: string, body: JSONObject) {
+  updateMyCredentials(strategy, body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -1245,7 +1215,7 @@ export default class HttpApi {
     });
   }
 
-  updateSelf(body: JSONObject) {
+  updateSelf(body) {
     return this.callApi({
       body,
       method: "PUT",
@@ -1253,11 +1223,7 @@ export default class HttpApi {
     });
   }
 
-  updateSpecifications(
-    index: string,
-    collection: string,
-    specifications: JSONObject,
-  ) {
+  updateSpecifications(index, collection, specifications) {
     return this.callApi({
       body: specifications,
       method: "PUT",
@@ -1273,7 +1239,7 @@ export default class HttpApi {
     });
   }
 
-  validateCredentials(strategy: string, userId: string, body: JSONObject) {
+  validateCredentials(strategy, userId, body) {
     return this.callApi({
       body,
       method: "POST",
@@ -1283,7 +1249,7 @@ export default class HttpApi {
     });
   }
 
-  validateDocument(index: string, collection: string, document: JSONObject) {
+  validateDocument(index, collection, document) {
     return this.callApi({
       body: document,
       method: "POST",
@@ -1291,7 +1257,7 @@ export default class HttpApi {
     });
   }
 
-  validateMyCredentials(strategy: string, body: JSONObject) {
+  validateMyCredentials(strategy, body) {
     return this.callApi({
       body,
       method: "POST",
@@ -1299,11 +1265,7 @@ export default class HttpApi {
     });
   }
 
-  validateSpecifications(
-    index: string,
-    collection: string,
-    specifications: JSONObject,
-  ) {
+  validateSpecifications(index, collection, specifications) {
     return this.callApi({
       body: specifications,
       method: "POST",
@@ -1315,7 +1277,7 @@ export default class HttpApi {
     });
   }
 
-  resetCache(database: string) {
+  resetCache(database) {
     return this.callApi({
       method: "POST",
       url: this.apiPath(`admin/_resetCache/${database}`),
@@ -1346,7 +1308,7 @@ export default class HttpApi {
     });
   }
 
-  loadMappings(body: JSONObject) {
+  loadMappings(body) {
     return this.callApi({
       body,
       method: "POST",
@@ -1354,7 +1316,7 @@ export default class HttpApi {
     });
   }
 
-  loadFixtures(body: JSONObject) {
+  loadFixtures(body) {
     return this.callApi({
       body,
       method: "POST",
@@ -1362,7 +1324,7 @@ export default class HttpApi {
     });
   }
 
-  loadSecurities(body: JSONObject) {
+  loadSecurities(body) {
     return this.callApi({
       body,
       method: "POST",

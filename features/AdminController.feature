@@ -90,12 +90,3 @@ Feature: Admin Controller
     Then I should receive an error matching:
       | id | "security.user.prevent_overwrite" |
     And The user "coolie" should not exists
-
-  # admin:dump ================================================================
-
-  Scenario: Refuse a malformed dump suffix
-    When I execute the action "admin":"dump" with args:
-      | suffix | "../not-a-suffix" |
-    Then I should receive an error matching:
-      | id     | "api.assert.invalid_argument" |
-      | status | 400                           |

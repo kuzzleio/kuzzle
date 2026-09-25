@@ -1,9 +1,8 @@
 import { Then, When } from "@cucumber/cucumber";
-import type KWorld from "../support/world";
 
 When(
   /^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/,
-  function (this: KWorld, cantLogin, login, password, expiration, callback) {
+  function (cantLogin, login, password, expiration, callback) {
     this.api
       .login("local", {
         expiresIn: expiration,
@@ -49,7 +48,7 @@ When(
   },
 );
 
-Then(/^I log ?out$/, function (this: KWorld, callback) {
+Then(/^I log ?out$/, function (callback) {
   if (!this.currentUser || !this.currentUser.token) {
     callback(new Error("Cannot retrieve jwt token"));
     return false;
@@ -70,7 +69,7 @@ Then(/^I log ?out$/, function (this: KWorld, callback) {
     });
 });
 
-Then(/^I logout all sessions at once/, function (this: KWorld, callback) {
+Then(/^I logout all sessions at once/, function (callback) {
   if (!this.currentUser || !this.currentUser.token) {
     callback(new Error("Cannot retrieve jwt token"));
     return false;
@@ -91,27 +90,25 @@ Then(/^I logout all sessions at once/, function (this: KWorld, callback) {
     });
 });
 
-Then(/^I check the JWT Token$/, function (this: KWorld, callback) {
-  const token = this.currentToken;
-
-  if (!token || !token.jwt) {
+Then(/^I check the JWT Token$/, function (callback) {
+  if (!this.currentToken || !this.currentToken.jwt) {
     return callback(new Error("Cannot retrieve the JWT token"));
   }
 
   this.api
-    .checkToken(token.jwt)
+    .checkToken(this.currentToken.jwt)
     .then((body) => {
       if (body.error) {
         return callback(new Error(body.error.message));
       }
 
-      token.tokenValidity = body.result;
+      this.currentToken.tokenValidity = body.result;
       callback();
     })
     .catch((err) => callback(err));
 });
 
-Then(/^The token is (.*?)$/, function (this: KWorld, state, callback) {
+Then(/^The token is (.*?)$/, function (state, callback) {
   if (!this.currentToken || !this.currentToken.tokenValidity) {
     return callback(new Error("Cannot check the JWT token validity"));
   }
@@ -132,7 +129,7 @@ Then(/^The token is (.*?)$/, function (this: KWorld, state, callback) {
 
 Then(
   /^I update current user with data \{(.*?)}$/,
-  function (this: KWorld, dataBody, callback) {
+  function (dataBody, callback) {
     this.api
       .updateSelf(JSON.parse("{" + dataBody + "}"))
       .then((body) => {
@@ -145,40 +142,37 @@ Then(
   },
 );
 
-Then(
-  /^I get the registrated authentication strategies$/,
-  function (this: KWorld, callback) {
-    this.api
-      .getAuthenticationStrategies()
-      .then((response) => {
-        if (response.error) {
-          return callback(new Error(response.error.message));
-        }
+Then(/^I get the registrated authentication strategies$/, function (callback) {
+  this.api
+    .getAuthenticationStrategies()
+    .then((response) => {
+      if (response.error) {
+        return callback(new Error(response.error.message));
+      }
 
-        if (!response.result) {
-          return callback(new Error("No result provided"));
-        }
+      if (!response.result) {
+        return callback(new Error("No result provided"));
+      }
 
-        if (!response.result || !Array.isArray(response.result)) {
-          return callback(new Error("Invalid response format"));
-        }
+      if (!response.result || !Array.isArray(response.result)) {
+        return callback(new Error("Invalid response format"));
+      }
 
-        if (response.result.indexOf("local") === -1) {
-          return callback(
-            new Error(
-              "The default 'local' authentication strategy wasn't found in the list of registrated strategies",
-            ),
-          );
-        }
+      if (response.result.indexOf("local") === -1) {
+        return callback(
+          new Error(
+            "The default 'local' authentication strategy wasn't found in the list of registrated strategies",
+          ),
+        );
+      }
 
-        this.result = response.result;
-        callback();
-      })
-      .catch((error) => callback(error));
-  },
-);
+      this.result = response.result;
+      callback();
+    })
+    .catch((error) => callback(error));
+});
 
-Then(/^I refresh the JWT Token$/, function (this: KWorld, callback) {
+Then(/^I refresh the JWT Token$/, function (callback) {
   this.api
     .refreshToken()
     .then((response) => {

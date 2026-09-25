@@ -1,16 +1,8 @@
 import { When, Given, Then } from "@cucumber/cucumber";
 import _ from "lodash";
 import async from "async";
-import {
-  asError,
-  type AsyncCallback,
-  type RetryFailure,
-} from "../support/stepUtils";
-import type { JSONObject } from "kuzzle-sdk";
 
-import type KWorld from "../support/world";
-
-When(/^I get the user mapping$/, function (this: KWorld) {
+When(/^I get the user mapping$/, function () {
   return this.api.getUserMapping().then((response) => {
     if (response.error) {
       throw new Error(response.error.message);
@@ -28,7 +20,7 @@ When(/^I get the user mapping$/, function (this: KWorld) {
   });
 });
 
-Then(/^I change the user mapping$/, function (this: KWorld) {
+Then(/^I change the user mapping$/, function () {
   return this.api.updateUserMapping().then((body) => {
     if (body.error !== null) {
       throw new Error(body.error.message);
@@ -39,16 +31,19 @@ Then(/^I change the user mapping$/, function (this: KWorld) {
 When(
   /^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/,
   { timeout: 20000 },
-  function (this: KWorld, not, isRestricted, user, id, callback) {
+  function (not, isRestricted, user, id, callback) {
     const userObject = this.users[user];
+    let method;
+
+    if (isRestricted) {
+      method = "createRestrictedUser";
+    } else {
+      method = "createUser";
+    }
 
     id = this.idPrefix + id;
 
-    const created = isRestricted
-      ? this.api.createRestrictedUser(userObject, id)
-      : this.api.createUser(userObject, id);
-
-    created
+    this.api[method](userObject, id)
       .then((body) => {
         if (body.error) {
           if (not) {
@@ -69,7 +64,7 @@ When(
 When(
   /^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/,
   { timeout: 20000 },
-  function (this: KWorld, id, reset, callback) {
+  function (id, reset, callback) {
     const userObject = this.users.useradmin;
 
     delete userObject.content.profileIds;
@@ -90,7 +85,7 @@ When(
 
 Then(
   /^I am able to get the user "(.*?)"(?: matching {(.*)})?$/,
-  function (this: KWorld, id, match) {
+  function (id, match) {
     id = this.idPrefix + id;
 
     return this.api.getUser(id).then((body) => {
@@ -119,12 +114,12 @@ Then(
 
 Then(
   /^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/,
-  function (this: KWorld, query, count, match, callback) {
+  function (query, count, match, callback) {
     if (count) {
       count = parseInt(count);
     }
 
-    const run = (cb: AsyncCallback) => {
+    const run = (cb) => {
       query = query.replace(/#prefix#/g, this.idPrefix);
 
       this.api
@@ -152,7 +147,7 @@ Then(
 
             const matchFunc = _.matches(JSON.parse("{" + match + "}"));
 
-            if (!body.result.hits.every((hit: JSONObject) => matchFunc(hit))) {
+            if (!body.result.hits.every((hit) => matchFunc(hit))) {
               return cb(
                 new Error(
                   "Error: " +
@@ -169,35 +164,27 @@ Then(
         .catch((error) => cb(error));
     };
 
-    async.retry<void, RetryFailure>(
-      { interval: 50, times: 40 },
-      run,
-      (failure) => {
-        if (failure) {
-          callback(asError(failure));
-          return;
-        }
+    async.retry({ interval: 50, times: 40 }, run, (err) => {
+      if (err) {
+        return callback(new Error(err.message));
+      }
 
-        callback();
-      },
-    );
+      return callback();
+    });
   },
 );
 
-Then(
-  /^I replace the user "(.*?)" with data {(.*?)}$/,
-  function (this: KWorld, id, data) {
-    return this.api
-      .replaceUser(this.idPrefix + id, JSON.parse("{" + data + "}"))
-      .then((body) => {
-        if (body.error) {
-          throw new Error(body.error.message);
-        }
-      });
-  },
-);
+Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
+  return this.api
+    .replaceUser(this.idPrefix + id, JSON.parse("{" + data + "}"))
+    .then((body) => {
+      if (body.error) {
+        throw new Error(body.error.message);
+      }
+    });
+});
 
-Then(/^I revoke all tokens of the user "(.*?)"$/, function (this: KWorld, id) {
+Then(/^I revoke all tokens of the user "(.*?)"$/, function (id) {
   return this.api.revokeTokens(this.idPrefix + id).then((body) => {
     if (body.error) {
       throw new Error(body.error.message);
@@ -205,7 +192,7 @@ Then(/^I revoke all tokens of the user "(.*?)"$/, function (this: KWorld, id) {
   });
 });
 
-Then(/^I delete the user "(.*?)"$/, function (this: KWorld, id) {
+Then(/^I delete the user "(.*?)"$/, function (id) {
   return this.api.deleteUser(this.idPrefix + id, true).then((body) => {
     if (body.error) {
       throw new Error(body.error.message);
@@ -215,7 +202,7 @@ Then(/^I delete the user "(.*?)"$/, function (this: KWorld, id) {
 
 Then(
   /^I am getting the current user, which matches \{(.*?)}$/,
-  function (this: KWorld, match) {
+  function (match) {
     return this.api.getCurrentUser().then((body) => {
       if (body.error) {
         throw new Error(body.error.message);
@@ -233,7 +220,7 @@ Then(
 
 Then(
   /^I'm ?(not)* able to find rights for user "([^"]*)"$/,
-  function (this: KWorld, not, id, callback) {
+  function (not, id, callback) {
     id = this.idPrefix + id;
 
     this.api
@@ -255,7 +242,7 @@ Then(
 
 Then(
   /^I'm ?(not)* able to check the token for current user/,
-  function (this: KWorld, not, callback) {
+  function (not, callback) {
     this.api.checkToken(this.currentUser.token).then((body) => {
       if (!body.result.valid) {
         if (not) {
@@ -268,7 +255,7 @@ Then(
   },
 );
 
-Then(/^I'm able to find my rights$/, function (this: KWorld) {
+Then(/^I'm able to find my rights$/, function () {
   return this.api.getMyRights().then((body) => {
     if (body.error) {
       throw new Error(body.error.message);
@@ -276,7 +263,7 @@ Then(/^I'm able to find my rights$/, function (this: KWorld) {
   });
 });
 
-Given(/^A scrolled search on users$/, function (this: KWorld) {
+Given(/^A scrolled search on users$/, function () {
   this.scrollId = null;
 
   return this.api.searchUsers({}, { scroll: "2s" }).then((response) => {
@@ -292,7 +279,7 @@ Given(/^A scrolled search on users$/, function (this: KWorld) {
   });
 });
 
-Then(/^I am able to perform a scrollUsers request$/, function (this: KWorld) {
+Then(/^I am able to perform a scrollUsers request$/, function () {
   if (!this.scrollId) {
     throw new Error("No previous scrollId found");
   }
