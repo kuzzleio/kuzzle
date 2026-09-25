@@ -1,69 +1,9 @@
-export * from "./lib/core/backend";
-
-export * from "./lib/types";
-
-export * from "./lib/core/plugin/pluginContext";
-
-export * from "./lib/core/shared/sdk/embeddedSdk";
-
-export * from "./lib/api/request";
-
-export * from "./lib/kerror/errors";
-
-export * from "./lib/util/mutex";
-
-export * from "./lib/util/distributedLock";
-
-export * from "./lib/util/Inflector";
-
-export { NameGenerator } from "./lib/util/name-generator";
-
-// The SDK names this package has always re-exported (it was `export * from
-// "kuzzle-sdk"`), listed so that the SDK's next additions no longer become part
-// of Kuzzle's API unannounced — ADR-0002 step 01
-// (docs/adr-002/ADR-0002-own-api-contract-types.md). The typings gate asserts
-// every one of them is still here (tests/typings/consumer/sdkReexports.ts).
-//
-// Values (classes and enums) — the SDK's client runtime, and the result classes
-// `app.sdk.*` answers with:
-export {
-  AuthController,
-  BaseController,
-  BatchController,
-  CollectionController,
-  Document,
-  DocumentController,
-  DocumentSearchResult,
-  /** @deprecated A client transport: import it from "kuzzle-sdk". */
-  Http,
-  IndexController,
-  /** @deprecated The SDK's client. On the server, `app.sdk` is already one (an `EmbeddedSDK`); to open a client connection, import it from "kuzzle-sdk". */
-  Kuzzle,
-  /** @deprecated A client transport base class: import it from "kuzzle-sdk". */
-  KuzzleAbstractProtocol,
-  KuzzleEventEmitter,
-  Observer,
-  /** The SDK's client-side profile, as `app.sdk.security.*` returns it. */
-  Profile,
-  ProfileSearchResult,
-  RealtimeController,
-  RealtimeDocument,
-  /** The SDK's client-side role, as `app.sdk.security.*` returns it. */
-  Role,
-  RoleSearchResult,
-  ScopeOption,
-  SearchResultBase,
-  ServerController,
-  SpecificationsSearchResult,
-  /** The SDK's client-side user, as `app.sdk.security.*` returns it — not the type of `request.context.user`. */
-  User,
-  UserOption,
-  UserSearchResult,
-  /** @deprecated A client transport: import it from "kuzzle-sdk". */
-  WebSocket,
-} from "kuzzle-sdk";
-
-// Types — the API contract, which ADR-0002 moves out of the SDK:
+/**
+ * Every SDK name `kuzzle` re-exported through `export * from "kuzzle-sdk"` up to
+ * ADR-0002 step 01, which replaced it with an explicit list. A consumer may
+ * import any of them from "kuzzle"; this re-export stops compiling if one goes
+ * missing. Removing one is a breaking change — ADR-0002 step 04, next major.
+ */
 export type {
   ApiKey,
   ArgsAuthControllerCheckRights,
@@ -137,34 +77,61 @@ export type {
   ArgsServerControllerGetStats,
   ArgsServerControllerInfo,
   ArgsServerControllerNow,
+  AuthController,
+  BaseController,
   BaseNotification,
   BaseRequest,
+  BatchController,
+  CollectionController,
   CollectionMappings,
+  Document,
   DocumentContent,
+  DocumentController,
   DocumentHit,
   DocumentMetadata,
   DocumentNotification,
+  DocumentSearchResult,
+  Http,
   HttpRoutes,
+  IndexController,
   JSONObject,
   KDocument,
   KDocumentContent,
   KDocumentContentGeneric,
   KDocumentKuzzleInfo,
   KHit,
+  Kuzzle,
+  KuzzleAbstractProtocol,
+  KuzzleEventEmitter,
   MappingsProperties,
   Notification,
   NotificationType,
+  Observer,
   ObserverOptions,
   PrivateAndPublicSDKEvents,
+  Profile,
   ProfilePolicy,
+  ProfileSearchResult,
   PublicKuzzleEvents,
+  RealtimeController,
+  RealtimeDocument,
   RequestPayload,
   ResponsePayload,
+  Role,
   RoleRightsDefinition,
+  RoleSearchResult,
+  ScopeOption,
   SearchResult,
+  SearchResultBase,
+  ServerController,
   ServerNotification,
+  SpecificationsSearchResult,
   UpdateByQueryResponse,
+  User,
   UserNotification,
+  UserOption,
+  UserSearchResult,
+  WebSocket,
   mCreateOrReplaceRequest,
   mCreateOrReplaceResponse,
   mCreateRequest,
@@ -177,16 +144,4 @@ export type {
   mUpdateResponse,
   mUpsertRequest,
   mUpsertResponse,
-} from "kuzzle-sdk";
-
-export * from "./lib/core/shared/KoncordeWrapper";
-
-export * from "./lib/core/shared/ObjectRepository";
-
-export * from "./lib/core/shared/store";
-
-export * from "./lib/core/cache/cacheDbEnum";
-
-export * from "./lib/core/storage/storeScopeEnum";
-
-export * from "./lib/service/storage/commons/queryTranslator";
+} from "kuzzle";
