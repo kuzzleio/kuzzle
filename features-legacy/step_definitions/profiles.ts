@@ -2,16 +2,8 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import async from "async";
 import _ from "lodash";
 import stringify from "json-stable-stringify";
-import {
-  asError,
-  type AsyncCallback,
-  type RetryFailure,
-} from "../support/stepUtils";
-import type { JSONObject } from "kuzzle-sdk";
 
-import type KWorld from "../support/world";
-
-When(/^I get the profile mapping$/, function (this: KWorld) {
+When(/^I get the profile mapping$/, function () {
   return this.api.getProfileMapping().then((response) => {
     if (response.error) {
       throw new Error(response.error.message);
@@ -29,7 +21,7 @@ When(/^I get the profile mapping$/, function (this: KWorld) {
   });
 });
 
-Then(/^I change the profile mapping$/, function (this: KWorld) {
+Then(/^I change the profile mapping$/, function () {
   return this.api.updateProfileMapping().then((body) => {
     if (body.error !== null) {
       throw new Error(body.error.message);
@@ -40,7 +32,7 @@ Then(/^I change the profile mapping$/, function (this: KWorld) {
 When(
   /^I create a new profile "([^"]*)" with id "([^"]*)"$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, profile, id) {
+  function (profile, id) {
     if (!this.profiles[profile]) {
       throw new Error("Fixture for profile " + profile + " does not exists");
     }
@@ -60,7 +52,7 @@ When(
 Then(
   /^I cannot create an invalid profile$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, callback) {
+  function (callback) {
     this.api
       .createOrReplaceProfile("invalid-profile", this.profiles.invalidProfile)
       .then(() => {
@@ -77,7 +69,7 @@ Then(
 Then(
   /^I cannot create a profile with an empty set of roles$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, callback) {
+  function (callback) {
     this.api
       .createOrReplaceProfile("invalid-profile", this.profiles.empty)
       .then(() => {
@@ -91,7 +83,7 @@ Then(
   },
 );
 
-Then(/^I cannot get a profile without ID$/, function (this: KWorld, callback) {
+Then(/^I cannot get a profile without ID$/, function (callback) {
   this.api
     .getProfile("")
     .then(() => {
@@ -105,7 +97,7 @@ Then(/^I cannot get a profile without ID$/, function (this: KWorld, callback) {
 Then(
   /^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: with profile "([^"]*)")?$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, not, _default, id, profile, callback) {
+  function (not, _default, id, profile, callback) {
     if (profile && !this.profiles[profile]) {
       return callback(
         new Error("Fixture for profile " + profile + " not exists"),
@@ -116,7 +108,7 @@ Then(
       id = this.idPrefix + id;
     }
 
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+    const main = function (callbackAsync) {
       setTimeout(() => {
         this.api
           .getProfile(id)
@@ -130,7 +122,7 @@ Then(
             }
 
             if (profile) {
-              const compare = (a: JSONObject, b: JSONObject) => {
+              const compare = (a, b) => {
                   return a.roleId <= b.roleId;
                 },
                 policies = stringify(
@@ -151,10 +143,9 @@ Then(
       }, 20); // end setTimeout
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
-      if (failure) {
-        callback(asError(failure));
-        return;
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        return callback(err);
       }
 
       callback();
@@ -165,7 +156,7 @@ Then(
 Then(
   /^I'm ?(not)* able to find rights for profile "([^"]*)"$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, not, id) {
+  function (not, id) {
     return this.api
       .getProfileRights(this.idPrefix + id)
       .then((body) => {
@@ -195,24 +186,21 @@ Then(
   },
 );
 
-When(
-  /^I delete the profile (?:with id )?"([^"]*)"$/,
-  function (this: KWorld, id) {
-    if (id) {
-      id = this.idPrefix + id;
-    }
+When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id) {
+  if (id) {
+    id = this.idPrefix + id;
+  }
 
-    return this.api.deleteProfile(id).then((body) => {
-      if (body.error) {
-        throw new Error(body.error.message);
-      }
-    });
-  },
-);
+  return this.api.deleteProfile(id).then((body) => {
+    if (body.error) {
+      throw new Error(body.error.message);
+    }
+  });
+});
 
 Then(
   /^I'm not able to delete profile (?:with id )?"([^"]*)"$/,
-  function (this: KWorld, id, callback) {
+  function (id, callback) {
     if (id) {
       id = this.idPrefix + id;
     }
@@ -232,14 +220,14 @@ Then(
 
 Then(
   /^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/,
-  function (this: KWorld, profilesCount, roleId, callback) {
-    const roles: string[] = [];
+  function (profilesCount, roleId, callback) {
+    const roles = [];
 
     if (roleId) {
       roles.push(this.idPrefix + roleId);
     }
 
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+    const main = function (callbackAsync) {
       setTimeout(() => {
         this.api
           .searchProfiles(roles)
@@ -261,8 +249,8 @@ Then(
             }
 
             if (!response.result.hits) {
-              response.result.hits = response.result.hits.filter(
-                (doc: JSONObject) => doc._id.indexOf(this.idPrefix),
+              response.result.hits = response.result.hits.filter((doc) =>
+                doc._id.indexOf(this.idPrefix),
               );
 
               if (response.result.hits.length !== parseInt(profilesCount)) {
@@ -278,10 +266,9 @@ Then(
       }, 200);
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
-      if (failure) {
-        callback(asError(failure));
-        return;
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        return callback(new Error(err));
       }
 
       callback();
@@ -292,7 +279,7 @@ Then(
 Given(
   /^I update the ?(default)* profile with id "([^"]*)" by adding the role "([^"]*)"$/,
   { timeout: 20 * 1000 },
-  function (this: KWorld, _default, profileId, roleId) {
+  function (_default, profileId, roleId) {
     if (!this.roles[roleId]) {
       throw new Error("Fixture for role " + roleId + " does not exists");
     }
@@ -319,12 +306,12 @@ Given(
 
 Then(
   /^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/,
-  function (this: KWorld, profiles, count, callback) {
+  function (profiles, count, callback) {
     const body = {
-      ids: profiles.split(",").map((roleId: string) => this.idPrefix + roleId),
+      ids: profiles.split(",").map((roleId) => this.idPrefix + roleId),
     };
 
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+    const main = function (callbackAsync) {
       setTimeout(() => {
         this.api
           .mGetProfiles(body)
@@ -351,10 +338,9 @@ Then(
       }, 100); // end setTimeout
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
-      if (failure) {
-        callback(asError(failure));
-        return;
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        return callback(err);
       }
 
       callback();
@@ -362,7 +348,7 @@ Then(
   },
 );
 
-Given(/^A scrolled search on profiles$/, function (this: KWorld) {
+Given(/^A scrolled search on profiles$/, function () {
   this.scrollId = null;
 
   return this.api.searchProfiles([], { scroll: "2s" }).then((response) => {
@@ -378,25 +364,22 @@ Given(/^A scrolled search on profiles$/, function (this: KWorld) {
   });
 });
 
-Then(
-  /^I am able to perform a scrollProfiles request$/,
-  function (this: KWorld) {
-    if (!this.scrollId) {
-      throw new Error("No previous scrollId found");
+Then(/^I am able to perform a scrollProfiles request$/, function () {
+  if (!this.scrollId) {
+    throw new Error("No previous scrollId found");
+  }
+
+  return this.api.scrollProfiles(this.scrollId).then((response) => {
+    if (response.error) {
+      throw new Error(response.error.message);
     }
 
-    return this.api.scrollProfiles(this.scrollId).then((response) => {
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      if (
-        ["hits", "scrollId", "total"].some(
-          (prop) => response.result[prop] === undefined,
-        )
-      ) {
-        throw new Error("Incomplete scroll results");
-      }
-    });
-  },
-);
+    if (
+      ["hits", "scrollId", "total"].some(
+        (prop) => response.result[prop] === undefined,
+      )
+    ) {
+      throw new Error("Incomplete scroll results");
+    }
+  });
+});

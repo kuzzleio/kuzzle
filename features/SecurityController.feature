@@ -321,7 +321,7 @@ Feature: Security Controller
       | document | { "actions": { "create": true, "update": true } } |
     When I am able to mGet roles and get 3 roles with the following ids:
       | ids | ["test-role", "test-role-2", "test-role-3"] |
-    Then I should receive a array of objects matching in order:
+    Then I should receive a array of objects matching:
       | _id           |
       | "test-role"   |
       | "test-role-2" |

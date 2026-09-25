@@ -2,26 +2,17 @@ import http from "http";
 import _ from "lodash";
 import should from "should";
 import { Given, Then } from "@cucumber/cucumber";
-import type { KDocumentContentGeneric } from "kuzzle-sdk";
-import type KuzzleWorld from "../support/world";
-import { invokeAction } from "../support/invoke";
 
 Given(
   /I can( not)? create the following document:/,
-  async function (this: KuzzleWorld, not, dataTable) {
+  async function (not, dataTable) {
     const document = this.parseObject(dataTable);
 
     const index = document.index || this.props.index;
     const collection = document.collection || this.props.collection;
 
     await this.tryAction(
-      this.sdk.document.create(
-        index,
-        collection,
-        // Evaluated from the feature table; the server validates both.
-        document.body as KDocumentContentGeneric,
-        document._id as string | undefined,
-      ),
+      this.sdk.document.create(index, collection, document.body, document._id),
       not,
       "Document should not have been created",
     );
@@ -34,7 +25,7 @@ Given(
 
 Then(
   "The document {string} content match:",
-  async function (this: KuzzleWorld, documentId, dataTable) {
+  async function (documentId, dataTable) {
     const expectedContent = this.parseObject(dataTable);
 
     const document = await this.sdk.document.get(
@@ -51,14 +42,12 @@ Then(
 
 Then(
   "I {string} the following multiple documents:",
-  async function (this: KuzzleWorld, action, dataTable) {
+  async function (action, dataTable) {
     action = `m${action[0].toUpperCase() + action.slice(1)}`;
 
     const documents = this.parseObjectArray(dataTable);
 
-    this.props.result = await invokeAction(
-      this.sdk.document,
-      action,
+    this.props.result = await this.sdk.document[action](
       this.props.index,
       this.props.collection,
       documents,
@@ -68,7 +57,7 @@ Then(
 
 Then(
   /I execute the "(.*?)" action on the following documents:$/,
-  async function (this: KuzzleWorld, action, dataTable) {
+  async function (action, dataTable) {
     const documents = this.parseObjectArray(dataTable);
 
     const response = await this.sdk.query({
@@ -85,22 +74,18 @@ Then(
 
 Then(
   "I {string} the document {string} with content:",
-  async function (this: KuzzleWorld, action, _id, dataTable) {
+  async function (action, _id, dataTable) {
     const body = this.parseObject(dataTable);
 
     if (action === "create") {
-      this.props.result = await invokeAction(
-        this.sdk.document,
-        action,
+      this.props.result = await this.sdk.document[action](
         this.props.index,
         this.props.collection,
         body,
         _id,
       );
     } else {
-      this.props.result = await invokeAction(
-        this.sdk.document,
-        action,
+      this.props.result = await this.sdk.document[action](
         this.props.index,
         this.props.collection,
         _id,
@@ -110,21 +95,18 @@ Then(
   },
 );
 
-Then(
-  "I count {int} documents",
-  async function (this: KuzzleWorld, expectedCount) {
-    const count = await this.sdk.document.count(
-      this.props.index,
-      this.props.collection,
-    );
+Then("I count {int} documents", async function (expectedCount) {
+  const count = await this.sdk.document.count(
+    this.props.index,
+    this.props.collection,
+  );
 
-    should(count).be.eql(expectedCount);
-  },
-);
+  should(count).be.eql(expectedCount);
+});
 
 Then(
   "I count {int} documents matching:",
-  async function (this: KuzzleWorld, expectedCount, dataTable) {
+  async function (expectedCount, dataTable) {
     const properties = this.parseObject(dataTable);
 
     const query = {
@@ -143,28 +125,25 @@ Then(
   },
 );
 
-Then(
-  /The document "(.*?)" should( not)? exist/,
-  async function (this: KuzzleWorld, id, not) {
-    const exists = await this.sdk.document.exists(
-      this.props.index,
-      this.props.collection,
-      id,
-    );
+Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
+  const exists = await this.sdk.document.exists(
+    this.props.index,
+    this.props.collection,
+    id,
+  );
 
-    if (not && exists) {
-      throw new Error(`Document ${id} exists, but it shouldn't`);
-    }
+  if (not && exists) {
+    throw new Error(`Document ${id} exists, but it shouldn't`);
+  }
 
-    if (!not && !exists) {
-      throw new Error(`Expected document ${id} to exist`);
-    }
-  },
-);
+  if (!not && !exists) {
+    throw new Error(`Expected document ${id} to exist`);
+  }
+});
 
 Then(
   /I "(.*?)" the following document ids( with verb "(.*?)")?:/,
-  async function (this: KuzzleWorld, action, verb, dataTable) {
+  async function (action, verb, dataTable) {
     const options = verb
       ? { refresh: "wait_for", verb }
       : { refresh: "wait_for" };
@@ -172,9 +151,7 @@ Then(
       JSON.parse(obj),
     );
 
-    this.props.result = await invokeAction(
-      this.sdk.document,
-      action,
+    this.props.result = await this.sdk.document[action](
       this.props.index,
       this.props.collection,
       ids,
@@ -183,43 +160,34 @@ Then(
   },
 );
 
-Then(
-  "I search documents with the following query:",
-  function (this: KuzzleWorld, queryRaw) {
-    const query = JSON.parse(queryRaw);
+Then("I search documents with the following query:", function (queryRaw) {
+  const query = JSON.parse(queryRaw);
 
-    this.props.searchBody = { query };
-  },
-);
+  this.props.searchBody = { query };
+});
 
 Then(
   "I search documents with the following search body:",
-  function (this: KuzzleWorld, searchBodyRaw) {
+  function (searchBodyRaw) {
     const searchBody = JSON.parse(searchBodyRaw);
 
     this.props.searchBody = searchBody;
   },
 );
 
-Then(
-  "with the following highlights:",
-  function (this: KuzzleWorld, highlightsRaw) {
-    const highlights = JSON.parse(highlightsRaw);
+Then("with the following highlights:", function (highlightsRaw) {
+  const highlights = JSON.parse(highlightsRaw);
 
-    this.props.searchBody.highlight = highlights;
-  },
-);
+  this.props.searchBody.highlight = highlights;
+});
 
-Then(
-  "with the following search options:",
-  function (this: KuzzleWorld, optionsRaw) {
-    const options = JSON.parse(optionsRaw);
+Then("with the following search options:", function (optionsRaw) {
+  const options = JSON.parse(optionsRaw);
 
-    this.props.searchOptions = options;
-  },
-);
+  this.props.searchOptions = options;
+});
 
-Then("I execute the search query", async function (this: KuzzleWorld) {
+Then("I execute the search query", async function () {
   // temporary use of sdk.query until we add the new "remaining" property
   // in the SDK's SearchResults class
   const response = await this.sdk.query({
@@ -234,25 +202,22 @@ Then("I execute the search query", async function (this: KuzzleWorld) {
   this.props.result = response.result;
 });
 
-Then(
-  "I execute the multisearch query:",
-  async function (this: KuzzleWorld, dataTable) {
-    const targets = this.parseObjectArray(dataTable);
-    // temporary use of sdk.query until we add the new "remaining" property
-    // in the SDK's SearchResults class
-    const response = await this.sdk.query({
-      action: "search",
-      body: this.props.searchBody,
-      controller: "document",
-      targets,
-      ...this.props.searchOptions,
-    });
+Then("I execute the multisearch query:", async function (dataTable) {
+  const targets = this.parseObjectArray(dataTable);
+  // temporary use of sdk.query until we add the new "remaining" property
+  // in the SDK's SearchResults class
+  const response = await this.sdk.query({
+    action: "search",
+    body: this.props.searchBody,
+    controller: "document",
+    targets,
+    ...this.props.searchOptions,
+  });
 
-    this.props.result = response.result;
-  },
-);
+  this.props.result = response.result;
+});
 
-Then("I scroll to the next page", async function (this: KuzzleWorld) {
+Then("I scroll to the next page", async function () {
   // temporary use of raw results, until the "remaining" propery is made
   // available to the SearchResults SDK class
   if (!this.props.result.scrollId) {
@@ -269,29 +234,26 @@ Then("I scroll to the next page", async function (this: KuzzleWorld) {
   this.props.result = response.result;
 });
 
-Then(
-  'I execute the search query with verb "GET"',
-  async function (this: KuzzleWorld) {
-    const request: any = {
-      action: "search",
-      collection: this.props.collection,
-      controller: "document",
-      index: this.props.index,
-    };
-    const options: any = {};
+Then('I execute the search query with verb "GET"', async function () {
+  const request: any = {
+    action: "search",
+    collection: this.props.collection,
+    controller: "document",
+    index: this.props.index,
+  };
+  const options: any = {};
 
-    if (this.protocol === "http") {
-      request.searchBody = JSON.stringify(this.props.searchBody);
-      options.verb = "GET";
-    } else {
-      request.body = this.props.searchBody;
-    }
-    const { result } = await this.sdk.query(request, options);
-    this.props.result = result;
-  },
-);
+  if (this.kuzzleConfig.PROTOCOL === "http") {
+    request.searchBody = JSON.stringify(this.props.searchBody);
+    options.verb = "GET";
+  } else {
+    request.body = this.props.searchBody;
+  }
+  const { result } = await this.sdk.query(request, options);
+  this.props.result = result;
+});
 
-Then("I delete the document {string}", async function (this: KuzzleWorld, id) {
+Then("I delete the document {string}", async function (id) {
   this.props.result = await this.sdk.document.delete(
     this.props.index,
     this.props.collection,
@@ -301,7 +263,7 @@ Then("I delete the document {string}", async function (this: KuzzleWorld, id) {
 
 Then(
   "I export the collection {string}:{string} in the format {string}",
-  async function (this: KuzzleWorld, index, collection, format) {
+  async function (index, collection, format) {
     this.props.result = await new Promise((resolve, reject) => {
       const req = http.request(
         {
@@ -311,7 +273,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data: string[] = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -334,7 +296,7 @@ Then(
 
 Then(
   "I export the collection {string}:{string} in the format {string} with GET:",
-  async function (this: KuzzleWorld, index, collection, format, dataTable) {
+  async function (index, collection, format, dataTable) {
     const options = this.parseObject(dataTable);
     let path = `/${index}/${collection}/_export?format=${format}&size=1`;
 
@@ -359,7 +321,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data: string[] = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -382,7 +344,7 @@ Then(
 
 Then(
   "I export the collection {string}:{string} in the format {string} with POST:",
-  async function (this: KuzzleWorld, index, collection, format, dataTable) {
+  async function (index, collection, format, dataTable) {
     const options = this.parseObject(dataTable);
     const path = `/${index}/${collection}/_export?format=${format}&size=1`;
 
@@ -395,7 +357,7 @@ Then(
           port: this.port,
         },
         (response) => {
-          const data: string[] = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());

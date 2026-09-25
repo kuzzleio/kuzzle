@@ -1,15 +1,9 @@
 import { Then } from "@cucumber/cucumber";
 import async from "async";
-import {
-  asError,
-  type AsyncCallback,
-  type RetryFailure,
-} from "../support/stepUtils";
-import type KWorld from "../support/world";
 
 Then(
   /^I remove the document(?: in index "([^"]*)")?$/,
-  function (this: KWorld, index, callback) {
+  function (index, callback) {
     this.api
       .deleteById(this.result._id, index)
       .then((body) => {
@@ -28,11 +22,13 @@ Then(
 
 Then(
   /^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/,
-  function (this: KWorld, field, value, index, callback) {
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+  function (field, value, index, callback) {
+    const main = function (callbackAsync) {
       setTimeout(
-        function (this: KWorld) {
-          const query = { query: { match: { [field]: value } } };
+        function () {
+          const query = { query: { match: {} } };
+
+          query.query.match[field] = value;
 
           this.api
             .deleteByQuery(query, index)
@@ -57,10 +53,10 @@ Then(
       ); // end setTimeout
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
-      if (failure) {
-        callback(asError(failure));
-        return;
+    async.retry(20, main.bind(this), function (err) {
+      if (err) {
+        callback(err);
+        return false;
       }
 
       callback();
@@ -70,7 +66,7 @@ Then(
 
 Then(
   /^I remove the documents '([^']+)'( and get partial errors)?$/,
-  function (this: KWorld, documents, withErrors, callback) {
+  function (documents, withErrors, callback) {
     documents = JSON.parse(documents);
 
     this.api

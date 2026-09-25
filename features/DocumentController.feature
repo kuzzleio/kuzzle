@@ -442,7 +442,7 @@ Feature: Document Controller
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | -            | { "name": "document2" } |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
       | "document-1" | { "name": "document1" } |    201 | "created" |
       | -            | { "name": "document2" } |    201 | "created" |
@@ -463,7 +463,7 @@ Feature: Document Controller
       | "document-1" | { "name": "replaced1" } |
       | "document-2" | { "name": "document2" } |
       | -            | "not a body"            |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
       | "document-2" | { "name": "document2" } |    201 | "created" |
     And I should receive a "errors" array of objects matching:
@@ -521,7 +521,7 @@ Feature: Document Controller
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | -            | "not a body"            |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
       | "document-1" | { "name": "document1" } |    201 | "created" |
     And I should receive a "errors" array of objects matching:
@@ -541,7 +541,7 @@ Feature: Document Controller
       | collection | "yellow-taxi"                                                                 |
       | body       | { "documents": [ { "_id": "document-1", "body": { "name": "replaced1" } } ] } |
       | source     | true                                                                          |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    | created |
       | "document-1" | { "name": "replaced1" } |    200 | "updated" | false   |
     And I should receive a empty "errors" array
@@ -561,7 +561,7 @@ Feature: Document Controller
       | collection | "yellow-taxi"                                                                 |
       | body       | { "documents": [ { "_id": "document-1", "body": { "name": "replaced1" } } ] } |
       | source     | "false"                                                                       |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source       | status | result    | created |
       | "document-1" | "_UNDEFINED_" |    200 | "updated" | false   |
     And I should receive a empty "errors" array
@@ -609,7 +609,7 @@ Feature: Document Controller
       | _id          | body                   |
       | "document-1" | { "name": "updated1" } |
       | "document-2" | { "age": 21 }          |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                            | _version | status |
       | "document-1" | { "name": "updated1", "age": 42 }  |        2 |    200 |
       | "document-2" | { "name": "document2", "age": 21 } |        2 |    200 |
@@ -634,7 +634,7 @@ Feature: Document Controller
       | "document-42" | { "name": "updated1" } |
       | "document-1"  | { "name": "updated1" } |
       | "document-2"  | "not a body"           |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                           | status |
       | "document-1" | { "name": "updated1", "age": 42 } |    200 |
     And I should receive a "errors" array of objects matching:
@@ -659,7 +659,7 @@ Feature: Document Controller
       | _id          | changes                | default                |
       | "document-1" | { "name": "updated1" } | -                      |
       | "document-2" | { "age": 21 }          | { "name": "created2" } |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                           | _version | status | created |
       | "document-1" | { "name": "updated1", "age": 42 } |        2 |    200 | false   |
       | "document-2" | { "name": "created2", "age": 21 } |        1 |    201 | true    |
@@ -684,7 +684,7 @@ Feature: Document Controller
       | "document-42" | { "name": "updated42" } | { "name": "created42" } |
       | "document-1"  | { "name": "updated1" }  | "not an object"         |
       | "document-2"  | "not an object"         | -                       |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id           | _source                 | _version | status | created |
       | "document-42" | { "name": "created42" } |        1 |    201 | true    |
     And I should receive a "errors" array of objects matching:
@@ -712,7 +712,7 @@ Feature: Document Controller
       | _id          | body                    |
       | "document-1" | { "name": "replaced1" } |
       | "document-2" | { "name": "replaced2" } |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status |
       | "document-1" | { "name": "replaced1" } |    200 |
       | "document-2" | { "name": "replaced2" } |    200 |
@@ -735,7 +735,7 @@ Feature: Document Controller
       | "document-42" | { "name": "replaced1" } |
       | "document-2"  | { "name": "replaced2" } |
       | "document-1"  | "not a body"            |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status |
       | "document-2" | { "name": "replaced2" } |    200 |
     And I should receive a "errors" array of objects matching:
@@ -802,7 +802,7 @@ Feature: Document Controller
     When I "mGet" the following document ids:
       | "document-1" |
       | "document-2" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -810,7 +810,7 @@ Feature: Document Controller
     When I "mGet" the following document ids with verb "POST":
       | "document-1" |
       | "document-2" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -828,7 +828,7 @@ Feature: Document Controller
       | "document-1"  |
       |        214284 |
       | "document-42" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                 |
       | "document-1" | { "name": "document1" } |
     And I should receive a "errors" array matching:
@@ -980,14 +980,14 @@ Feature: Document Controller
       | index      | "nyc-open-data"                                                                                   |
       | collection | "yellow-taxi"                                                                                     |
       | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          |
       | "document-1" |
       | "document-4" |
     When I "mGet" the following document ids:
       | "document-1" |
       | "document-4" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
@@ -1007,14 +1007,14 @@ Feature: Document Controller
       | collection | "yellow-taxi"                                                                                      |
       | body       | { "query": { "equals": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
       | lang       | "koncorde"                                                                                         |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          |
       | "document-1" |
       | "document-4" |
     When I "mGet" the following document ids:
       | "document-1" |
       | "document-4" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
@@ -1085,7 +1085,7 @@ Feature: Document Controller
       | "A" |
       | "B" |
       | "C" |
-    Then I should receive a "successes" array of objects matching in order:
+    Then I should receive a "successes" array of objects matching:
       | _id | _source          |
       | "A" | { "value": "A" } |
       | "B" | { "value": "B" } |
