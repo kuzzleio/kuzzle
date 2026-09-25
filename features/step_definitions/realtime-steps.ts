@@ -1,13 +1,12 @@
 import { Then } from "@cucumber/cucumber";
-import type KuzzleWorld from "../support/world";
 
 // TODO should is deprecated it needs to be removed
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const should = require("should");
 
 Then(
   "I subscribe to {string}:{string} notifications",
-  async function (this: KuzzleWorld, index, collection) {
+  async function (index, collection) {
     if (!this.props.subscriptions) {
       this.props.subscriptions = {};
     }
@@ -30,28 +29,25 @@ Then(
   },
 );
 
-Then(
-  "I unsubscribe from the current room via the plugin",
-  async function (this: KuzzleWorld) {
-    const roomId = this.props.result.roomId;
-    const connectionId = this.props.result.connectionId;
+Then("I unsubscribe from the current room via the plugin", async function () {
+  const roomId = this.props.result.roomId;
+  const connectionId = this.props.result.connectionId;
 
-    const response = await this.sdk.query({
-      action: "unregisterSubscription",
-      body: {
-        connectionId,
-        roomId,
-      },
-      controller: "functional-test-plugin/accessors",
-    });
+  const response = await this.sdk.query({
+    action: "unregisterSubscription",
+    body: {
+      connectionId,
+      roomId,
+    },
+    controller: "functional-test-plugin/accessors",
+  });
 
-    this.props.result = response.result;
-  },
-);
+  this.props.result = response.result;
+});
 
 Then(
   "I should have receive {string} notifications for {string}:{string}",
-  function (this: KuzzleWorld, rawNumber, index, collection) {
+  function (rawNumber, index, collection) {
     return this.retry(() => {
       const expectedCount = parseInt(rawNumber, 10);
 
@@ -64,7 +60,7 @@ Then(
 
 Then(
   "I should receive realtime notifications for {string}:{string} matching:",
-  function (this: KuzzleWorld, index, collection, datatable, done) {
+  function (index, collection, datatable, done) {
     const tryAssert = () => {
       const expectedNotifications = this.parseObjectArray(datatable);
 
@@ -90,7 +86,7 @@ Then(
         tryAssert();
 
         done();
-      } catch {
+      } catch (error) {
         // retry later
         setTimeout(() => {
           tryAssert();

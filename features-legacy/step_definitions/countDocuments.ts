@@ -1,17 +1,11 @@
 import { Then } from "@cucumber/cucumber";
 import _ from "lodash";
 import async from "async";
-import {
-  asError,
-  type AsyncCallback,
-  type RetryFailure,
-} from "../support/stepUtils";
-import type KWorld from "../support/world";
 
 Then(
   /^I count ([\d]*) documents(?: in index "([^"]*)"(:"([\w-]+)")?)?$/,
-  function (this: KWorld, number, index, collection, callback) {
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+  function (number, index, collection, callback) {
+    const main = function (callbackAsync) {
       setTimeout(() => {
         if (_.isFunction(collection)) {
           callback = collection;
@@ -37,10 +31,14 @@ Then(
       }, 100); // end setTimeout
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (err) => {
+    async.retry(20, main.bind(this), function (err) {
       if (err) {
-        callback(asError(err));
-        return;
+        if (err.message) {
+          err = `${err.statusCode}: ${err.message}`;
+        }
+
+        callback(new Error(err));
+        return false;
       }
 
       callback();
@@ -50,15 +48,17 @@ Then(
 
 Then(
   /^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "([^"]*)")?"/,
-  function (this: KWorld, number, value, field, index, callback) {
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+  function (number, value, field, index, callback) {
+    const main = function (callbackAsync) {
       setTimeout(
-        function (this: KWorld) {
+        function () {
           const query = {
             query: {
-              match: { [field]: value },
+              match: {},
             },
           };
+
+          query.query.match[field] = value;
 
           this.api
             .count(query, index)
@@ -88,10 +88,10 @@ Then(
       );
     };
 
-    async.retry<void, RetryFailure>(20, main.bind(this), (error) => {
+    async.retry(20, main.bind(this), function (error) {
       if (error) {
-        callback(asError(error));
-        return;
+        callback(new Error(error));
+        return false;
       }
 
       callback();

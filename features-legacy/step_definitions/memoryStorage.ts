@@ -1,34 +1,29 @@
 import { Then, When } from "@cucumber/cucumber";
 import Bluebird from "bluebird";
 import should from "should";
-import type { JSONObject } from "kuzzle-sdk";
-
-import type KWorld from "../support/world";
 
 When(
   /^I call the (.*?) method of the memory storage with arguments$/,
-  function (this: KWorld, command, args) {
+  function (command, args) {
     const realArgs = args
       ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix))
       : args;
 
-    return this.api
-      .callMemoryStorage(command, realArgs)
-      .then((response: JSONObject) => {
-        if (response.error) {
-          return Bluebird.reject(response.error);
-        }
+    return this.api.callMemoryStorage(command, realArgs).then((response) => {
+      if (response.error) {
+        return Bluebird.reject(response.error);
+      }
 
-        this.memoryStorageResult = response;
+      this.memoryStorageResult = response;
 
-        return response;
-      });
+      return response;
+    });
   },
 );
 
 When(
   /^I scan the database using the (.+?) method with arguments$/,
-  function (this: KWorld, command, args) {
+  function (command, args) {
     const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
 
     if (parsed.args) {
@@ -45,7 +40,7 @@ When(
 
 Then(
   /^The (sorted )?ms result should match the (regex|json) (.*?)$/,
-  function (this: KWorld, sorted, type, pattern, callback) {
+  function (sorted, type, pattern, callback) {
     let regex,
       val = this.memoryStorageResult.result;
 
@@ -75,7 +70,7 @@ Then(
       try {
         should(JSON.parse(pattern)).be.eql(val);
         callback();
-      } catch {
+      } catch (err) {
         return callback(
           new Error(
             "Error: " + JSON.stringify(val) + " does not match " + pattern,
@@ -93,13 +88,9 @@ Then(
  * @param {object} world - functional tests global object
  * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
  * @param {object} args - scan arguments
- * @returns {Promise<object>}
+ * @returns {Bluebird<object>}
  */
-function scanRedis(
-  world: KWorld,
-  command: string,
-  args: JSONObject,
-): Promise<JSONObject> {
+function scanRedis(world, command, args) {
   return world.api.callMemoryStorage(command, args).then((response) => {
     if (response.error) {
       return Bluebird.reject(response.error);

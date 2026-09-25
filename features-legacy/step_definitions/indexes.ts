@@ -1,46 +1,34 @@
 import { When, Then } from "@cucumber/cucumber";
 import async from "async";
-import {
-  asError,
-  type AsyncCallback,
-  type RetryFailure,
-} from "../support/stepUtils";
-import type KWorld from "../support/world";
 
-When(
-  /^I create an index named "([^"]*)"$/,
-  async function (this: KWorld, index) {
-    const { result: exists } = await this.api.indexExists(index);
+When(/^I create an index named "([^"]*)"$/, async function (index) {
+  const { result: exists } = await this.api.indexExists(index);
 
-    if (exists) {
-      await this.api.deleteIndex(index);
-    }
+  if (exists) {
+    await this.api.deleteIndex(index);
+  }
 
-    const body = await this.api.createIndex(index);
+  const body = await this.api.createIndex(index);
 
-    if (body.error) {
-      throw new Error(body.error.message);
-    }
-  },
-);
+  if (body.error) {
+    throw new Error(body.error.message);
+  }
+});
 
-When(
-  "I try to create the index {string}",
-  async function (this: KWorld, index) {
-    try {
-      const response = await this.api.createIndex(index);
+When("I try to create the index {string}", async function (index) {
+  try {
+    const response = await this.api.createIndex(index);
 
-      this.result = response;
-    } catch (error) {
-      this.result = { error };
-    }
-  },
-);
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
+});
 
 Then(
   /^I'm ?(not)* able to find the index named "([^"]*)" in index list$/,
-  function (this: KWorld, not, index, callback) {
-    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+  function (not, index, callback) {
+    const main = function (callbackAsync) {
       this.api
         .listIndexes()
         .then((body) => {
@@ -92,24 +80,22 @@ Then(
         });
     };
 
-    async.retry<void, RetryFailure>(
-      { interval: 20, times: 20 },
-      main.bind(this),
-      (failure) => {
-        if (failure) {
-          callback(asError(failure));
-          return;
+    async.retry({ interval: 20, times: 20 }, main.bind(this), function (err) {
+      if (err) {
+        if (err.message) {
+          err = err.message;
         }
-
-        callback();
-      },
-    );
+        callback(new Error(err));
+        return false;
+      }
+      callback();
+    });
   },
 );
 
 Then(
   /^I'm able to delete the index named "([^"]*)"$/,
-  function (this: KWorld, index, callback) {
+  function (index, callback) {
     this.api
       .deleteIndex(index)
       .then((body) => {

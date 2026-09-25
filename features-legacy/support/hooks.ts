@@ -2,8 +2,20 @@ import { After, Before, BeforeAll } from "@cucumber/cucumber";
 
 import fixtures from "../fixtures/functionalTestsFixtures.json";
 import Http from "./api/http";
-import { httpApi, realtimeApi } from "./stepUtils";
 import World from "./world";
+
+type HookWorld = {
+  api: any;
+  currentUser?: any;
+  currentToken?: any;
+  users?: any;
+  idPrefix: string;
+  fakeIndex: string;
+  fakeAltIndex: string;
+  fakeNewIndex: string;
+  fakeCollection: string;
+  fakeAltCollection: string;
+};
 
 async function bootstrapDatabase() {
   const world = new World({ parameters: parseWorldParameters() });
@@ -60,7 +72,7 @@ BeforeAll(async function () {
   await bootstrapDatabase();
 });
 
-Before({ timeout: 10 * 2000 }, async function (this: World) {
+Before({ timeout: 10 * 2000 }, async function (this: HookWorld) {
   const world = new World({ parameters: parseWorldParameters() });
 
   try {
@@ -81,61 +93,54 @@ Before({ timeout: 10 * 2000 }, async function (this: World) {
   await this.api.resetSecurity();
 });
 
-Before(
-  { tags: "@resetDatabase", timeout: 10 * 2000 },
-  async function (this: World) {
-    await cleanDatabase();
-    await bootstrapDatabase();
-  },
-);
+Before({ tags: "@resetDatabase", timeout: 10 * 2000 }, async function () {
+  await cleanDatabase();
+  await bootstrapDatabase();
+});
 
-After(async function (this: World) {
+After(async function (this: HookWorld) {
   return this.api.disconnect();
 });
 
-After({ tags: "@realtime" }, function (this: World) {
-  return realtimeApi(this)
-    .unsubscribeAll()
-    .catch(() => true);
+After({ tags: "@realtime" }, function (this: HookWorld) {
+  return this.api.unsubscribeAll().catch(() => true);
 });
 
-Before({ tags: "@security" }, function (this: World) {
+Before({ tags: "@security" }, function (this: HookWorld) {
   return cleanSecurity.call(this);
 });
 
-Before({ tags: "@firstAdmin" }, function (this: World) {
+Before({ tags: "@firstAdmin" }, function (this: HookWorld) {
   return cleanSecurity.call(this);
 });
 
-After({ tags: "@firstAdmin" }, async function (this: World) {
+After({ tags: "@firstAdmin" }, async function (this: HookWorld) {
   await grantDefaultRoles.call(this);
   return cleanSecurity.call(this);
 });
 
-Before({ tags: "@redis" }, function (this: World) {
+Before({ tags: "@redis" }, function (this: HookWorld) {
   return cleanRedis.call(this);
 });
 
-After({ tags: "@redis" }, function (this: World) {
+After({ tags: "@redis" }, function (this: HookWorld) {
   return cleanRedis.call(this);
 });
 
-Before({ tags: "@validation" }, function (this: World) {
+Before({ tags: "@validation" }, function (this: HookWorld) {
   return cleanValidations.call(this);
 });
 
-After({ tags: "@validation" }, function (this: World) {
+After({ tags: "@validation" }, function (this: HookWorld) {
   return cleanValidations.call(this);
 });
 
-After({ tags: "@http" }, function (this: World) {
-  const api = httpApi(this);
-
-  api.encode("identity");
-  api.decode("identity");
+After({ tags: "@http" }, function (this: HookWorld) {
+  this.api.encode("identity");
+  this.api.decode("identity");
 });
 
-function cleanSecurity(this: World) {
+function cleanSecurity(this: HookWorld) {
   if (this.currentUser) {
     delete this.currentUser;
   }
@@ -143,7 +148,7 @@ function cleanSecurity(this: World) {
   return this.api.resetSecurity();
 }
 
-async function grantDefaultRoles(this: World) {
+async function grantDefaultRoles(this: HookWorld) {
   const body = await this.api.login(
     "local",
     this.users.useradmin.credentials.local,
@@ -179,7 +184,7 @@ async function grantDefaultRoles(this: World) {
   });
 }
 
-function cleanRedis(this: World) {
+function cleanRedis(this: HookWorld) {
   return this.api
     .callMemoryStorage("keys", { args: { pattern: `${this.idPrefix}*` } })
     .then((response) => {
@@ -193,7 +198,7 @@ function cleanRedis(this: World) {
     });
 }
 
-async function cleanValidations(this: World) {
+async function cleanValidations(this: HookWorld) {
   const body = await this.api.searchSpecifications({
     query: {
       match_all: { boost: 1 },
