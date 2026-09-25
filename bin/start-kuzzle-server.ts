@@ -25,6 +25,7 @@
 
 import * as fs from "fs";
 import { createRequire } from "module";
+import { join } from "path";
 
 import type { JSONObject } from "kuzzle-sdk";
 import yargs from "yargs";
@@ -63,10 +64,14 @@ type ServerOptions = {
  *
  * ⚠️ `--enable-plugins` only has something to load when the entrypoint runs
  * from the source tree: `bin/plugins/` is not part of the published build, so
- * in the container this throws `MODULE_NOT_FOUND`. See
+ * in the container there is nothing under `pluginsDir`. `startKuzzle` checks
+ * each plugin's directory first and skips a missing one with a warning:
+ * v2.56.0 ignored the option altogether, and fixing its parsing (TD-84) was not
+ * meant to turn it into a `MODULE_NOT_FOUND` at boot. See
  * docs/adr-001/type-debt-register.md, TD-84.
  */
 const loadPlugin = createRequire(__filename);
+const pluginsDir = join(__dirname, "plugins", "available");
 
 function loadJson<T>(path: string): T {
   return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -87,8 +92,19 @@ function stringOption(
     return undefined;
   }
 
+  // yargs reads `--vault-key 12345` as a number and a repeated option as an
+  // array: "expects a value" would send the user looking for an argument that
+  // is not missing. Named the way it is typed, not yargs' camelCase key.
+  const flag = `--${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+
+  if (value === true) {
+    throw new Error(`${flag} expects a value`);
+  }
+
   if (typeof value !== "string") {
-    throw new Error(`--${name} expects a value`);
+    throw new Error(
+      `${flag} expects a single string value, got ${JSON.stringify(value)}`,
+    );
   }
 
   return value;
@@ -104,6 +120,13 @@ async function startKuzzle(options: ServerOptions = {}): Promise<void> {
       .map((x) => x.trim().replace(/(^")|("$)/g, ""));
 
     for (const additionalPlugin of additionalPlugins) {
+      if (!fs.existsSync(join(pluginsDir, additionalPlugin))) {
+        app.log.warn(
+          `[!] --enable-plugins: plugin "${additionalPlugin}" not found in ${pluginsDir}, ignored (the option only works from a source checkout)`,
+        );
+        continue;
+      }
+
       const pluginPath = `./plugins/available/${additionalPlugin}`;
       const PluginClass = loadPlugin(pluginPath);
       const manifest = loadPlugin(`${pluginPath}/manifest.json`);
@@ -209,7 +232,7 @@ const argv = yargs(hideBin(process.argv))
   .describe("mappings", "Apply mappings from file")
   .describe("securities", "Import roles, profiles and users from file")
   .describe("vault-key", "Vault key used to decrypt secrets")
-  .describe("secrets-file", "Output file to write decrypted secrets")
+  .describe("secrets-file", "Encrypted secrets file to decrypt at startup")
   .describe(
     "enable-plugins",
     'Enable plugins from "plugins/available" directory',
