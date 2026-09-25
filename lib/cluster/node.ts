@@ -438,7 +438,10 @@ class ClusterNode {
     // only node that needs it. Without this call the node leaves the cluster and
     // keeps answering requests behind the load balancer, from state that has
     // stopped advancing. See TD-67 (#2776).
-    global.kuzzle.shutdown();
+    //
+    // Exit code 1: this is a failure, and a node that exits 0 is not restarted
+    // by an `on-failure` policy (#2785).
+    global.kuzzle.shutdown(1);
   }
 
   /**

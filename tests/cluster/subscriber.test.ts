@@ -1,4 +1,5 @@
 import Long from "long";
+import * as protobuf from "protobufjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { restoreKuzzle, stubKuzzle } from "../mocks/kuzzle";
@@ -58,6 +59,13 @@ const stubLocalNode = () => ({
   eventEmitter: { emit: vi.fn() },
   config: { ports: { sync: 7511 } },
   heartbeatDelay: 20,
+  // Answers "not available" unless a test says otherwise: the node then
+  // evicts itself on a gap, as it did before retransmission existed (#2785).
+  command: {
+    requestRetransmit: vi.fn<
+      (ip: string, from: Long, to: Long) => Promise<[string, Buffer][] | null>
+    >(async () => null),
+  },
 });
 
 describe("ClusterSubscriber", () => {
@@ -503,6 +511,98 @@ describe("ClusterSubscriber", () => {
         expect(localNode.evictSelf).toHaveBeenCalledTimes(1);
       });
 
+      /*
+       * #2785: before evicting itself, the node asks the remote one for what it
+       * missed, and applies it in order.
+       */
+      describe("with a gap the remote node can fill", () => {
+        let syncRoot: protobuf.Root;
+
+        const heartbeat = (n: number): [string, Buffer] => {
+          const type = syncRoot.lookupType("Heartbeat");
+
+          return [
+            "Heartbeat",
+            Buffer.from(
+              type
+                .encode(
+                  type.create({
+                    address: "tcp://remote",
+                    messageId: Long.fromNumber(n, true),
+                  }),
+                )
+                .finish(),
+            ),
+          ];
+        };
+
+        beforeEach(async () => {
+          syncRoot = await protobuf.load(
+            `${process.cwd()}/lib/cluster/protobuf/sync.proto`,
+          );
+          subscriber.state = stateEnum().SANE;
+        });
+
+        it("applies the missing messages, then accepts this one", async () => {
+          localNode.command.requestRetransmit.mockResolvedValueOnce([
+            heartbeat(1),
+            heartbeat(2),
+          ]);
+          message.messageId = new Long(3, 0, true);
+
+          await expect(subscriber.validateMessage(message)).resolves.toBe(true);
+
+          const [[ip, from, to]] =
+            localNode.command.requestRetransmit.mock.calls;
+          expect(ip).toBe(remoteNodeIP);
+          expect([from.toNumber(), to.toNumber()]).toEqual([1, 2]);
+          expect(subscriber.lastMessageId.toNumber()).toBe(3);
+          expect(subscriber.state).toBe(stateEnum().SANE);
+          expect(localNode.evictSelf).not.toHaveBeenCalled();
+        });
+
+        it("evicts itself, once, when the answer holds other ids", async () => {
+          localNode.command.requestRetransmit.mockResolvedValueOnce([
+            heartbeat(1),
+            heartbeat(5),
+          ]);
+          message.messageId = new Long(3, 0, true);
+
+          await expect(subscriber.validateMessage(message)).resolves.toBe(
+            false,
+          );
+
+          expect(localNode.command.requestRetransmit).toHaveBeenCalledTimes(1);
+          expect(localNode.evictSelf).toHaveBeenCalledTimes(1);
+          expect(subscriber.state).toBe(stateEnum().EVICTED);
+        });
+
+        it("evicts itself when the remote node cannot answer", async () => {
+          message.messageId = new Long(3, 0, true);
+
+          await expect(subscriber.validateMessage(message)).resolves.toBe(
+            false,
+          );
+
+          expect(localNode.command.requestRetransmit).toHaveBeenCalledTimes(1);
+          expect(localNode.evictSelf.mock.calls[0][0]).toMatch(
+            /^Node out-of-sync: 2 /,
+          );
+        });
+
+        it("asks for nothing on an id older than the expected one", async () => {
+          subscriber.lastMessageId = new Long(5, 0, true);
+          message.messageId = new Long(3, 0, true);
+
+          await expect(subscriber.validateMessage(message)).resolves.toBe(
+            false,
+          );
+
+          expect(localNode.command.requestRetransmit).not.toHaveBeenCalled();
+          expect(localNode.evictSelf).toHaveBeenCalledTimes(1);
+        });
+      });
+
       it("reports a single-message loss as one, not as zero", async () => {
         // The case TD-58 (#2762) got wrong, and the frequent one: expected 1,
         // received 2, so the message with id 1 is missing. It used to print
@@ -542,7 +642,8 @@ describe("ClusterSubscriber", () => {
         });
 
         expect(localNode.evictNode).not.toHaveBeenCalled();
-        expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+        // A failure, like `evictSelf`: exit non-zero (#2785).
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
       });
 
       it("evicts the remote node without rebroadcasting", async () => {
@@ -798,7 +899,8 @@ describe("ClusterSubscriber", () => {
       it("#handleShutdown shuts kuzzle down", () => {
         subscriber.handleShutdown();
 
-        expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+        // A requested cluster shutdown is not a failure: default exit code.
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith();
       });
 
       it("#handleRefreshValidators curates the specification again", () => {

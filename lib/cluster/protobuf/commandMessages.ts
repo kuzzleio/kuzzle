@@ -117,8 +117,24 @@ export type HandshakeResponse = {
  * anything else: REQ/REP requires a reply to every request, so an unknown topic
  * still gets an (empty) answer rather than leaving the peer waiting.
  */
+export type RetransmitRequest = {
+  from: Long;
+  to: Long;
+};
+
+/** One sync message as it was published: its topic and its encoded payload. */
+export type RetransmitFrame = {
+  topic: string;
+  data: Uint8Array;
+};
+
+export type RetransmitResponse = {
+  frames: RetransmitFrame[];
+};
+
 export const commandTopic = Object.freeze({
   DISCARDED: "discarded",
   FULLSTATE: "fullstate",
   HANDSHAKE: "handshake",
+  RETRANSMIT: "retransmit",
 });

@@ -1109,6 +1109,14 @@
   //      fullstate from another node. If the cluster holds a very large number
   //      of realtime subscriptions, it might be necessary to allow more time
   //      for a fullstate to be sent to new nodes.
+  //  * retransmitBuffer:
+  //      How many of its last sync messages each node keeps in memory, so that
+  //      a node that missed some (a network hiccup, a slow consumer) asks for
+  //      them again instead of leaving the cluster. The oldest messages are
+  //      dropped as soon as either bound is exceeded. Setting either to 0
+  //      disables retransmission: a node that misses a message evicts itself.
+  //       * messages: maximum number of messages kept
+  //       * bytes: maximum total size of the messages kept
   "cluster": {
     "activityDepth": 50,
     "heartbeat": 2000,
@@ -1120,6 +1128,10 @@
     "ports": {
       "command": 7510,
       "sync": 7511
+    },
+    "retransmitBuffer": {
+      "messages": 1000,
+      "bytes": 16777216
     },
     "syncTimeout": 5000
   },

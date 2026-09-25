@@ -912,7 +912,9 @@ describe("ClusterNode", () => {
 
       await node.evictSelf("foo");
 
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      // Exit code 1: an eviction is a failure, and a node that exits 0 is not
+      // restarted by an `on-failure` policy (#2785).
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
 

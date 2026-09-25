@@ -463,6 +463,10 @@ const defaultConfig: PackagedKuzzleConfiguration = {
       command: 7510,
       sync: 7511,
     },
+    retransmitBuffer: {
+      bytes: 16777216,
+      messages: 1000,
+    },
     syncTimeout: 5000,
   },
   validation: {},

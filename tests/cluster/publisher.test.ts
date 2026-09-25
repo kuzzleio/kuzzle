@@ -1,5 +1,6 @@
 import { NormalizedFilter } from "koncorde";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import Long from "long";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * The 0mq publisher socket. The subject imports `{ Publisher }` from `zeromq`
@@ -25,7 +26,12 @@ async function loadSubject() {
   return (await import("../../lib/cluster/publisher")).default;
 }
 
-const node = { config: { ports: { sync: 7511 } } } as never;
+const node = {
+  config: {
+    ports: { sync: 7511 },
+    retransmitBuffer: { bytes: 16777216, messages: 1000 },
+  },
+} as never;
 
 describe("ClusterPublisher", () => {
   let publisher: any;
@@ -69,6 +75,107 @@ describe("ClusterPublisher", () => {
 
       expect(publisher.send("DumpRequest", {}).toNumber()).toBe(-1);
       expect(publisher.bufferSend).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * What a peer that missed messages asks for again (#2785): the last ones
+   * sent, bounded by `cluster.retransmitBuffer`.
+   */
+  describe("#replay", () => {
+    let ClusterPublisher: any;
+
+    const publisherKeeping = async (messages: number, bytes: number) => {
+      const subject = new ClusterPublisher({
+        config: {
+          ports: { sync: 7511 },
+          retransmitBuffer: { bytes, messages },
+        },
+      });
+
+      subject.bufferSend = vi.fn();
+      await subject.init();
+
+      return subject;
+    };
+
+    /** Sends `count` heartbeats, and answers what bufferSend was handed. */
+    const sendHeartbeats = (subject: any, count: number) => {
+      for (let i = 0; i < count; i++) {
+        subject.sendHeartbeat(`address-${i}`);
+      }
+
+      return subject.bufferSend.mock.calls.map(
+        ([topic, data]: [string, Uint8Array]) => ({ data, topic }),
+      );
+    };
+
+    const id = (n: number) => Long.fromNumber(n, true);
+
+    beforeEach(async () => {
+      ClusterPublisher = await loadSubject();
+    });
+
+    it("answers the messages sent, in order, exactly as they were sent", async () => {
+      const subject = await publisherKeeping(1000, 16777216);
+      const sent = sendHeartbeats(subject, 5);
+
+      expect(subject.replay(id(2), id(4))).toEqual(sent.slice(1, 4));
+      expect(subject.replay(id(5), id(5))).toEqual(sent.slice(4));
+    });
+
+    it("answers null for anything outside what it still keeps", async () => {
+      const subject = await publisherKeeping(3, 16777216);
+
+      sendHeartbeats(subject, 5);
+
+      // ids 3 to 5 are kept
+      expect(subject.replay(id(3), id(5))).toHaveLength(3);
+      expect(subject.replay(id(2), id(5))).toBeNull();
+      expect(subject.replay(id(3), id(6))).toBeNull();
+      expect(subject.replay(id(5), id(4))).toBeNull();
+    });
+
+    it("drops the oldest messages once the byte bound is exceeded", async () => {
+      const subject = await publisherKeeping(1000, 1);
+
+      sendHeartbeats(subject, 3);
+
+      // every heartbeat is larger than one byte: nothing can be kept
+      expect(subject.replay(id(3), id(3))).toBeNull();
+    });
+
+    it("keeps nothing when either bound is 0", async () => {
+      for (const [messages, bytes] of [
+        [0, 16777216],
+        [1000, 0],
+      ]) {
+        const subject = await publisherKeeping(messages, bytes);
+
+        sendHeartbeats(subject, 2);
+
+        expect(subject.replay(id(1), id(2))).toBeNull();
+      }
+    });
+
+    describe(`with ${"KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY"} set`, () => {
+      beforeEach(() => {
+        vi.stubEnv("KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY", "3");
+      });
+
+      afterEach(() => {
+        vi.unstubAllEnvs();
+      });
+
+      it("does not send every Nth message, and still replays it", async () => {
+        const subject = await publisherKeeping(1000, 16777216);
+
+        sendHeartbeats(subject, 7);
+
+        expect(subject.bufferSend).toHaveBeenCalledTimes(5);
+        expect(subject.replay(id(3), id(3))).toHaveLength(1);
+        expect(subject.replay(id(6), id(6))).toHaveLength(1);
+      });
     });
   });
 

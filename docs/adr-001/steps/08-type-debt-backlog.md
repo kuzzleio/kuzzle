@@ -718,3 +718,80 @@ options at once, `null` vs absent, an `Error` refused with nothing else
 changed, a stream refused outside HTTP and accepted over it).
 `documentExtractor.test.ts` now stubs the global, since inserting into a
 result builds the response.
+
+### #2785 — retransmit what was lost before evicting
+
+[TD-67](../type-debt-register.md#td-67) left one decision open: a node that
+misses a sync message evicts itself — since TD-67, it shuts down — and
+[#2785](https://github.com/kuzzleio/kuzzle/issues/2785) asked whether it
+should resynchronise instead. The review that decided it (option 1-B, taken
+by the user) found the issue's framing out of date and its proposed remedy
+too weak:
+
+- **Out of date.** The issue describes a node that keeps serving behind the
+  load balancer. Since TD-67 it exits — but with code 0, which an
+  `on-failure` restart policy does not restart. The real cost was one lost
+  message = one node down, possibly for good.
+- **Too weak.** A full state (`FullStateResponse`) carries rooms,
+  subscriptions and auth strategies. Of `sync.proto`'s 24 message types,
+  nine only touch local caches (index cache, profile and role
+  invalidations, validators — a lost `InvalidateRole` is stale permissions)
+  and eight are one-off events (notifications, `ClusterWideEvent`, dump,
+  shutdown). A state resync recovers none of those, and would lose the
+  events *silently*, where eviction at least made the loss loud.
+
+So the node recovers the **messages**, not a state derived from them:
+
+- `ClusterPublisher` keeps its last sent messages, encoded, oldest first,
+  with contiguous ids (`history`), bounded by `cluster.retransmitBuffer` —
+  1 000 messages / 16 MiB by default, whichever is hit first, and 0 turns it
+  off. `replay(from, to)` answers all of them or `null`.
+- `ClusterCommand` gains a `RETRANSMIT` topic (`RetransmitRequest` /
+  `RetransmitResponse` in `command.proto`): the server answers from
+  `replay`, or `DISCARDED`; `requestRetransmit` returns the frames only if
+  there are exactly as many as asked, within `cluster.syncTimeout`.
+- `ClusterSubscriber.validateMessage`: on an id **above** the expected one,
+  `recover()` asks the sender for the missing ids and runs each returned
+  frame through `processData` — so each is validated again (that is what
+  checks the sender answered with the right ids) and applied by its normal
+  handler — then accepts the message that revealed the gap. Recovery is
+  awaited where the gap is found, so nothing after the gap is applied
+  before it: `listen()` stops reading meanwhile (ZeroMQ queues), and
+  `sync()`'s replay does too. A gap found *while* applying recovered frames
+  is not recovered from again. An id **below** the expected one still
+  evicts at once: that is not a loss.
+- Fallback, unchanged in substance: no answer, messages no longer kept, a
+  partial answer, or a peer running an older version — which answers
+  `DISCARDED` to a topic it does not know, so a mixed-version cluster during
+  a rolling upgrade behaves exactly as before. `evictSelf` and
+  `handleNodeEviction` now call `kuzzle.shutdown(1)`: an eviction is a
+  failure and should be restarted as one. A requested cluster shutdown
+  still exits 0.
+
+That also closes [TD-65](../type-debt-register.md#td-65)'s residual race.
+A joining node resumes each peer's stream from the counter **the node it
+loaded the full state from** had reached, which is correct — the state
+reflects exactly those messages — and a peer that published past it before
+the new subscription was live leaves a gap. The replay in `sync()` now finds
+that gap and fills it from the peer, instead of shutting the new node down.
+
+**Testing it end to end.** Nothing in the functional suites could lose a
+message on purpose, so a test-only switch was added:
+`KUZZLE_TEST_CLUSTER_SYNC_DROP_EVERY=N` makes a node record every Nth
+message as sent without handing it to the socket. `.ci/test-cluster-{7,8}.yml`
+sets it to 50 on `kuzzle_node_2`, so **every functional job now runs with
+lost messages**: if retransmission regresses, a node is evicted and the job
+fails. Unset, the publisher behaves exactly as before.
+
+**Why it is not breaking:** the protocol change is additive and degrades to
+the old behaviour against an older peer; the config key is new, with a
+default; `Kuzzle.shutdown` gains an optional argument. What changes for an
+operator is intended: a node that would have left the cluster stays, and one
+that does leave exits 1.
+
+Unit tests: `publisher.test.ts` (replay in order, the window, both bounds,
+0 disables, the drop switch), `subscriber.test.ts` (gap filled then accepted,
+wrong ids evict once, no answer evicts, an older id asks for nothing),
+`command.test.ts` (real sockets: frames in order, `null` when no longer
+kept, on a partial answer, and on silence), `config/index.test.ts`,
+`kuzzle.test.ts` (exit code), and the eviction specs pin `shutdown(1)`.

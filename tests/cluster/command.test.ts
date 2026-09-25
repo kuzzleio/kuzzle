@@ -37,6 +37,7 @@ const PORT = {
   broadcastHandshake: 24005,
   fullStateClient: 24004,
   getFullState: 24001,
+  retransmit: 24006,
   sendSingleHandshake: 24002,
   server: 24003,
 };
@@ -59,6 +60,7 @@ function fakeNode({
   lastMessageId = 12,
   port,
   remoteNodes = new Map(),
+  replay = vi.fn(() => null),
   rooms = [],
 }: {
   addNode?: Mock<AddNode>;
@@ -73,6 +75,9 @@ function fakeNode({
   lastMessageId?: number;
   port: number;
   remoteNodes?: Map<string, { lastMessageId: number }>;
+  replay?: Mock<
+    (from: Long, to: Long) => Array<{ topic: string; data: Uint8Array }> | null
+  >;
   rooms?: SerializedRoomState[];
 }) {
   return {
@@ -87,7 +92,10 @@ function fakeNode({
     fullState: { serialize: () => ({ authStrategies: [], rooms }) },
     ip: "127.0.0.1",
     nodeId: "knode-local",
-    publisher: { lastMessageId: Long.fromNumber(lastMessageId, true) },
+    publisher: {
+      lastMessageId: Long.fromNumber(lastMessageId, true),
+      replay,
+    },
     remoteNodes: new Map(
       Array.from(remoteNodes.entries(), ([id, { lastMessageId: id_ }]) => [
         id,
@@ -262,6 +270,84 @@ describe("#cluster/ClusterCommand", () => {
       // REP/REQ is strictly alternating: a request with no reply would wedge
       // the remote node's socket for good, so an invalid topic still answers.
       expect(topic.toString()).toBe("discarded");
+    });
+  });
+
+  /*
+   * #2785, end to end: a real server answering from `publisher.replay`, and a
+   * real client asking it.
+   */
+  describe("#requestRetransmit / #handleRetransmit", () => {
+    const frame = (topic: string, hex: string) => ({
+      data: Buffer.from(hex, "hex"),
+      topic,
+    });
+    const id = (n: number) => Long.fromNumber(n, true);
+
+    async function retransmit(
+      replay: Mock<
+        (
+          from: Long,
+          to: Long,
+        ) => Array<{ topic: string; data: Uint8Array }> | null
+      >,
+      from: number,
+      to: number,
+    ) {
+      const server = new ClusterCommand(
+        fakeNode({ port: PORT.retransmit, replay }),
+      );
+      await server.init();
+
+      try {
+        command = new ClusterCommand(fakeNode({ port: PORT.retransmit }));
+        await command.loadProtobuf();
+
+        return await command.requestRetransmit("127.0.0.1", id(from), id(to));
+      } finally {
+        server.dispose();
+      }
+    }
+
+    it("answers the frames the publisher replays, in order", async () => {
+      const replay = vi.fn<
+        (from: Long, to: Long) => Array<{ topic: string; data: Uint8Array }>
+      >(() => [frame("Heartbeat", "0802"), frame("Subscription", "0803")]);
+
+      const frames = await retransmit(replay, 2, 3);
+
+      expect(frames).toEqual([
+        ["Heartbeat", Buffer.from("0802", "hex")],
+        ["Subscription", Buffer.from("0803", "hex")],
+      ]);
+
+      const [[from, to]] = replay.mock.calls;
+      expect([from.toNumber(), to.toNumber()]).toEqual([2, 3]);
+    });
+
+    it("answers null when the publisher no longer keeps them", async () => {
+      await expect(
+        retransmit(
+          vi.fn(() => null),
+          2,
+          3,
+        ),
+      ).resolves.toBeNull();
+    });
+
+    it("answers null on a partial answer, which cannot close the gap", async () => {
+      const replay = vi.fn(() => [frame("Heartbeat", "0802")]);
+
+      await expect(retransmit(replay, 2, 3)).resolves.toBeNull();
+    });
+
+    it("answers null when nothing answers within syncTimeout", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.retransmit }));
+      await command.loadProtobuf();
+
+      await expect(
+        command.requestRetransmit("127.0.0.1", id(2), id(3)),
+      ).resolves.toBeNull();
     });
   });
 
