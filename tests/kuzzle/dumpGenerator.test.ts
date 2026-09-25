@@ -112,9 +112,19 @@ describe("#kuzzle/DumpGenerator", () => {
       const rejection = generator.dump("test/../../../../dumpe-me");
 
       await expect(rejection).rejects.toBeInstanceOf(BadRequestError);
-      await expect(rejection).rejects.toThrow(/Invalid suffix/);
+      await expect(rejection).rejects.toThrow(/Invalid argument "suffix"/);
 
       expect(fs.mkdirSync).not.toHaveBeenCalled();
+    });
+
+    /* A client reads an error by its id: the check used to raise a bare
+     * `BadRequestError`, with neither an id nor a code (step 15, F-05). */
+    it("should reject a malformed suffix with a documented error id", async () => {
+      await expect(generator.dump("a".repeat(65))).rejects.toMatchObject({
+        code: 0x02010002,
+        id: "api.assert.invalid_argument",
+        status: 400,
+      });
     });
 
     /**
@@ -423,6 +433,30 @@ describe("#kuzzle/DumpGenerator", () => {
       for (const i of [8, 9, 10]) {
         expect(fs.unlinkSync).not.toHaveBeenCalledWith(`/tmp/${i}/core.gz`);
       }
+    });
+
+    /* `slice(0, dumps.length - coredump)` with a negative end counts from the
+     * end of the list: two dumps for `coredump: 3` lost the oldest one's core
+     * file (step 15, F-05). */
+    it("should keep every core file while under the coredump limit", async () => {
+      fs.accessSync.mockImplementation((target: unknown) => {
+        if (target === "/tmp") {
+          return undefined;
+        }
+
+        throw new Error("no coredump here");
+      });
+      fs.readdirSync.mockReturnValue(["1", "2"]);
+
+      const listFilesMatching = vi
+        .spyOn(internalsOf(generator), "_listFilesMatching")
+        .mockImplementation((directory: string) => [`${directory}/core.gz`]);
+
+      await generator.dump(suffix);
+
+      expect(listFilesMatching).not.toHaveBeenCalledWith("/tmp/1", "core");
+      expect(fs.unlinkSync).not.toHaveBeenCalledWith("/tmp/1/core.gz");
+      expect(fs.unlinkSync).not.toHaveBeenCalledWith("/tmp/2/core.gz");
     });
   });
 });
