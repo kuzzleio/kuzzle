@@ -55,7 +55,7 @@ Once A–C are resolved: merge `2-dev` into `beta`, which publishes an npm prere
 
 - [x] Every Phase A diff read, and each difference listed in Phase B's inventory.
 - [x] Every accidental breaking change fixed on `2-dev` (inventory §1, §2); every intended one documented ([release notes draft](../step-15-release-notes.md)).
-- [ ] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change. _Passed on `0855cd70f` ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)); to re-run on the head the beta is cut from, since the fixes changed `lib/`._
+- [x] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change. _Passed on `0855cd70f` ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)) and again on `26c6b96a7`, with every fix in ([#2924](https://github.com/kuzzleio/kuzzle/pull/2924)): all 30 functional jobs, the 6 monkey jobs, build-and-run. Re-run it if `lib/` changes before the beta is cut._
 - [ ] Beta published, and the side-by-side comparison in real projects done.
 - [ ] Nothing left open in the inventory — only then does the beta become a release.
 
