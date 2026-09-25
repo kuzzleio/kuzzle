@@ -590,6 +590,61 @@ describe("ClusterSubscriber", () => {
           );
         });
 
+        /*
+         * Step 15, F-04. The recovery holds `listen()` until the remote node
+         * answers, for up to `cluster.syncTimeout`, so its heartbeats queue up
+         * unread while the heartbeat timer keeps running: two checks in that
+         * window used to broadcast the eviction of a node that was alive and
+         * about to answer.
+         */
+        it("does not evict the remote node while waiting for its retransmission", async () => {
+          vi.useFakeTimers();
+
+          try {
+            // Re-armed on fake time: the heartbeat timer `init()` starts is
+            // what drives the check here, not a call made by the spec.
+            const listen = subscriber.listen;
+            subscriber.listen = vi.fn();
+            await subscriber.init();
+            subscriber.listen = listen;
+
+            // Answers after four check periods: the second missed check, which
+            // evicts, falls well inside the wait.
+            const answerAfter = subscriber.heartbeatDelay * 4;
+            localNode.command.requestRetransmit.mockImplementationOnce(
+              () =>
+                new Promise((resolve) => {
+                  setTimeout(
+                    () => resolve([heartbeat(1), heartbeat(2)]),
+                    answerAfter,
+                  );
+                }),
+            );
+            subscriber.lastHeartbeat = Date.now();
+            message.messageId = new Long(3, 0, true);
+
+            const validated = subscriber.validateMessage(message);
+
+            await vi.advanceTimersByTimeAsync(answerAfter - 1);
+
+            expect(localNode.evictNode).not.toHaveBeenCalled();
+
+            await vi.advanceTimersByTimeAsync(1);
+
+            await expect(validated).resolves.toBe(true);
+            expect(localNode.evictSelf).not.toHaveBeenCalled();
+
+            // Back to normal once recovered: the retransmitted messages count
+            // as heartbeats, and the next check finds the node alive.
+            await vi.advanceTimersByTimeAsync(subscriber.heartbeatDelay);
+
+            expect(subscriber.state).toBe(stateEnum().SANE);
+            expect(localNode.evictNode).not.toHaveBeenCalled();
+          } finally {
+            vi.useRealTimers();
+          }
+        });
+
         it("asks for nothing on an id older than the expected one", async () => {
           subscriber.lastMessageId = new Long(5, 0, true);
           message.messageId = new Long(3, 0, true);

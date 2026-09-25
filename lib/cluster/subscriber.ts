@@ -189,7 +189,10 @@ class ClusterSubscriber {
 
   private buffer: BufferedFrame[];
 
-  /** Whether `recover()` is applying retransmitted messages. */
+  /**
+   * Whether `recover()` is running: waiting for the remote node to retransmit
+   * what was lost, or applying it.
+   */
   private recovering: boolean;
 
   private heartbeatTimer: NodeJS.Timeout | null;
@@ -985,6 +988,17 @@ class ClusterSubscriber {
       return;
     }
 
+    // A recovery holds `listen()` until the remote node has retransmitted
+    // (up to `cluster.syncTimeout`), so its heartbeats wait unread in the
+    // socket and `lastHeartbeat` goes stale while the node is alive and
+    // answering. Evicting it for that would broadcast the eviction of a
+    // healthy node (step 15, F-04). The recovery settles it either way: the
+    // retransmitted messages count as heartbeats, and a node that does not
+    // answer makes this node evict itself, as it did before #2785.
+    if (this.recovering) {
+      return;
+    }
+
     const now = Date.now();
 
     if (now - this.lastHeartbeat > this.heartbeatDelay) {
@@ -1110,23 +1124,28 @@ class ClusterSubscriber {
    */
   private async recover(from: Long, upTo: Long): Promise<boolean> {
     const to = upTo.subtract(1);
-    const frames = await this.localNode.command.requestRetransmit(
-      this.remoteNodeIP,
-      from,
-      to,
-    );
 
-    if (frames === null || this.state === stateEnum.EVICTED) {
-      return false;
-    }
-
-    // Each frame goes through `validateMessage` again, which is what checks
-    // that the remote node answered with the ids that were asked for. A gap
-    // found *there* is not recovered from a second time: the remote node just
-    // answered with something other than what it was asked.
+    // Set for the whole recovery, the wait included. Each frame goes through
+    // `validateMessage` again, which is what checks that the remote node
+    // answered with the ids that were asked for; a gap found *there* is not
+    // recovered from a second time: the remote node just answered with
+    // something other than what it was asked. And `checkHeartbeat` stands
+    // down meanwhile — see there.
     this.recovering = true;
 
+    let frames: Array<[topic: string, data: Buffer]> | null;
+
     try {
+      frames = await this.localNode.command.requestRetransmit(
+        this.remoteNodeIP,
+        from,
+        to,
+      );
+
+      if (frames === null || this.state === stateEnum.EVICTED) {
+        return false;
+      }
+
       for (const [topic, data] of frames) {
         await this.processData(topic, data);
 
