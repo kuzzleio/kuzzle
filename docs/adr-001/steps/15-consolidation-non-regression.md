@@ -1,6 +1,6 @@
 # Step 15 — consolidation: non-regression, breaking-change audit, then beta
 
-**Status:** ⬜ To do — announced 2026-09-25, opens once the in-flight follow-ups are merged · **PR(s):** — · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress — opened 2026-09-25; phases A, B and C done, fixes next · **PR(s):** phase C measurement [#2901](https://github.com/kuzzleio/kuzzle/pull/2901) (draft, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -61,4 +61,16 @@ Once A–C are resolved: merge `2-dev` into `beta`, which publishes an npm prere
 
 ## What was done
 
-_Nothing yet — the step opens once the in-flight follow-ups are merged._
+### Phases A, B and C — 2026-09-25
+
+Run on two frozen, built trees: `v2.56.0` and `2-dev` at `0855cd70f`. Phase A was split per surface (typings, package, API and events, error codes, config / CLI / cluster / storage), Phase B worked from the 207 commits that touch shipped code, as an independent cross-check. The raw reports are frozen in [`../step-15-audit/`](../step-15-audit/); **the living list is [`../step-15-inventory.md`](../step-15-inventory.md)** — read that, not the reports.
+
+- **Nothing public was removed or renamed** (exports, routes, actions, events, error ids).
+- **Phase C passed**: v2.56.0's functional suites and test application, byte for byte, green against `2-dev` on all 30 functional jobs and the 6 monkey jobs ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)).
+- **And it was not enough**: the audit found **11 accidental regressions to fix** (inventory §1), two of them confirmed by hand — F-01 (`not_found` → `unexpected_not_found` on every missing document) and F-02 (`document:export` rejects an array `sort`) — and **the typings break TypeScript consumers** (§2: 11 new errors with `strict: false`, 35 with `strict: true`, on a fixture written from the docs). Five decisions are the maintainer's (§3).
+
+### What the phases found about the method
+
+- **A green functional suite is not a non-regression proof.** F-01 changes the error id of every missing-document answer, and none of the 30 green jobs noticed: the scenarios assert the status, not the id. _A suite only protects what it asserts_ — Phase C bounds the regressions, it does not exclude them.
+- **The fixture that hid F-01 is the same shape as the bug.** The unit specs build ES errors as plain objects, where `body` is an own property that a spread copies; the real client's `ResponseError` has it as a prototype getter. _A fixture that is structurally easier than the real value tests the fixture._
+- **"Not breaking" was checked per PR and failed in sum.** 15 PR bodies are contradicted by their own diff (Phase B). Each claim was written against its author's idea of the surface — mostly the runtime API — while the step-12 PRs changed the exported types that external TypeScript consumers compile against, and no PR had such a consumer to compile.
