@@ -13,17 +13,17 @@
 
 | # | What breaks | Source IDs | Status |
 | --- | --- | --- | --- |
-| **F-01** | A missing document on `document:get` / `delete` / `deleteFields` answers `services.storage.unexpected_not_found` (code 34) instead of `services.storage.not_found` (code 11). `formatESError` spreads the ES `ResponseError`, whose `body` is a prototype getter, so `body._index` is lost. **Confirmed by hand** with the real ES client class. Unit fixtures build plain objects and hide it. | C-01, B-58 (#2802) | ⬜ fix |
-| **F-02** | `document:export` rejects an array `sort` — the standard ES form, and the documented one — with `api.assert.invalid_type` (except over HTTP GET). v2.56.0 ignored `sort` entirely, so a request that worked now fails. **Confirmed by reading** (`getObjectFromBodyOrArgs` → `getBodyObject`). | B-02 (#2666) | ⬜ fix |
-| **F-03** | Cluster join: an existing node's `addNode()` waits up to 2 × `cluster.heartbeat` (4 s) before answering; the joiner gives up after a hard-coded 2 000 ms (`lib/cluster/command.ts`). Membership can end one-sided, including against a v2.56.0 node in a rolling upgrade. Static analysis — needs a runtime check. | C-03, B-43 (#2777, #2781) | ⬜ verify, then fix |
-| **F-04** | Retransmit recovery pauses the subscriber up to `syncTimeout`; the heartbeat check meanwhile can evict a healthy peer. | B-103 (#2896) | ⬜ verify, then fix |
-| **F-05** | Dumps: the new 64-char suffix check rejects the funnel's own uncapped `handled-…` suffixes → the dump is lost in an unhandled rejection, which stops Kuzzle under `NODE_ENV=development` (only with `dump.enabled`). And `slice(0, negative)` deletes the oldest dump's core file when there are fewer dumps than `history.coredump`. The suffix error also has no id/code. | C-04, C-05, E-07 (#2665) | ⬜ fix |
-| **F-06** | `accessors.execute(req, null)` rejects with `plugin.context.invalid_callback`; `null` meant "no callback". | B-82(a) (#2803) | ⬜ fix |
-| **F-07** | A function in the Redis config (e.g. `retryStrategy`, set from code) crashes startup: the config is copied with `structuredClone`. | C-19, B-07 (#2676) | ⬜ fix |
-| **F-08** | `kerror`: a class instance passed as the last placeholder is taken as the options object (`safeObject.isPlainObject` replaced lodash's) — literal `%s` in the message, value lost from `props`. Reaches plugins (`context.kerror`) and apps (`app.errors`). | E-01, B-72 | ⬜ fix |
-| **F-09** | Plugin `BaseType` subclasses using getters or prototype values break (fields now initialised in the constructor); a validation spec with a truthy non-boolean `strict` is no longer strict. | B-17 (#2722), B-63 (#2803) | ⬜ fix |
-| **F-10** | A `KuzzleError` thrown in the WebSocket `afterParsingPayload` pipe reaches the client as-is instead of `network.websocket.unexpected_error` (400); a non-Error thrown by a plugin is `util.inspect`-ed into the client message; a non-Error `{message}` pipe rejection prints `undefined`. | R-04, B-70, B-31 | ⬜ decide per item (fix or changelog) |
-| **F-11** | Small crash-path changes: `ClusterNode.nodeId` throws before the handshake (a shutdown during init skips `dispose`); `Protocol.init("", entryPoint)` now crashes; a `then`-only thenable from a strategy `verify` is rejected. | B-77, B-23(c), B-29 | ⬜ fix |
+| **F-01** | A missing document on `document:get` / `delete` / `deleteFields` answers `services.storage.unexpected_not_found` (code 34) instead of `services.storage.not_found` (code 11). `formatESError` spreads the ES `ResponseError`, whose `body` is a prototype getter, so `body._index` is lost. **Confirmed by hand** with the real ES client class. Unit fixtures build plain objects and hide it. | C-01, B-58 (#2802) | ✅ [#2903](https://github.com/kuzzleio/kuzzle/pull/2903) |
+| **F-02** | `document:export` rejects an array `sort` — the standard ES form, and the documented one — with `api.assert.invalid_type` (except over HTTP GET). v2.56.0 ignored `sort` entirely, so a request that worked now fails. **Confirmed by reading** (`getObjectFromBodyOrArgs` → `getBodyObject`). | B-02 (#2666) | ✅ [#2904](https://github.com/kuzzleio/kuzzle/pull/2904) |
+| **F-03** | Cluster join: an existing node's `addNode()` waits up to 2 × `cluster.heartbeat` (4 s) before answering; the joiner gives up after a hard-coded 2 000 ms (`lib/cluster/command.ts`). Membership can end one-sided, including against a v2.56.0 node in a rolling upgrade. Static analysis — needs a runtime check. | C-03, B-43 (#2777, #2781) | ✅ real (1–3 % of joins at the default heartbeat, 3 in 5 at 5 s) — [#2913](https://github.com/kuzzleio/kuzzle/pull/2913) |
+| **F-04** | Retransmit recovery pauses the subscriber up to `syncTimeout`; the heartbeat check meanwhile can evict a healthy peer. | B-103 (#2896) | ✅ real (a retransmit slower than ~4 s evicted a healthy peer) — [#2914](https://github.com/kuzzleio/kuzzle/pull/2914) |
+| **F-05** | Dumps: the new 64-char suffix check rejects the funnel's own uncapped `handled-…` suffixes → the dump is lost in an unhandled rejection, which stops Kuzzle under `NODE_ENV=development` (only with `dump.enabled`). And `slice(0, negative)` deletes the oldest dump's core file when there are fewer dumps than `history.coredump`. The suffix error also has no id/code. | C-04, C-05, E-07 (#2665) | ✅ [#2909](https://github.com/kuzzleio/kuzzle/pull/2909) — the core-file deletion was a step-12 regression too |
+| **F-06** | `accessors.execute(req, null)` rejects with `plugin.context.invalid_callback`; `null` meant "no callback". | B-82(a) (#2803) | ✅ [#2906](https://github.com/kuzzleio/kuzzle/pull/2906) |
+| **F-07** | A function in the Redis config (e.g. `retryStrategy`, set from code) crashes startup: the config is copied with `structuredClone`. | C-19, B-07 (#2676) | ✅ [#2910](https://github.com/kuzzleio/kuzzle/pull/2910) |
+| **F-08** | `kerror`: a class instance passed as the last placeholder is taken as the options object (`safeObject.isPlainObject` replaced lodash's) — literal `%s` in the message, value lost from `props`. Reaches plugins (`context.kerror`) and apps (`app.errors`). | E-01, B-72 | ✅ [#2916](https://github.com/kuzzleio/kuzzle/pull/2916) |
+| **F-09** | Plugin `BaseType` subclasses using getters or prototype values break (fields now initialised in the constructor); a validation spec with a truthy non-boolean `strict` is no longer strict. | B-17 (#2722), B-63 (#2803) | ✅ [#2905](https://github.com/kuzzleio/kuzzle/pull/2905), [#2908](https://github.com/kuzzleio/kuzzle/pull/2908) |
+| **F-10** | A `KuzzleError` thrown in the WebSocket `afterParsingPayload` pipe reaches the client as-is instead of `network.websocket.unexpected_error` (400); a non-Error thrown by a plugin is `util.inspect`-ed into the client message; a non-Error `{message}` pipe rejection prints `undefined`. | R-04, B-70, B-31 | ✅ all three restored — [#2915](https://github.com/kuzzleio/kuzzle/pull/2915) |
+| **F-11** | Small crash-path changes: `ClusterNode.nodeId` throws before the handshake (a shutdown during init skips `dispose`); `Protocol.init("", entryPoint)` now crashes; a `then`-only thenable from a strategy `verify` is rejected. | B-77, B-23(c), B-29 | ✅ [#2911](https://github.com/kuzzleio/kuzzle/pull/2911) |
 
 ## 2. Typings — breaking under this step's rule
 
@@ -41,7 +41,7 @@ Every item is intended (step 12's strict flip or a TD fix), and none of those PR
 
 ## 3. Decisions for the maintainer
 
-> **Answered 2026-09-25:** D-1 **no major** — so every §2 item must get a non-breaking fix, none may be "accepted"; D-2 **document**; D-3 cost of keeping Node 20 assessed below, choice pending; D-4 **no-op with a warning**; D-5 **document**.
+> **Answered 2026-09-25:** D-1 **no major** — so every §2 item must get a non-breaking fix, none may be "accepted"; D-2 **document**; D-3 **replace the library** (done in [#2912](https://github.com/kuzzleio/kuzzle/pull/2912): `redis-semaphore`, every production dependency now satisfies Node 20); D-4 **no-op with a warning** (done, [#2907](https://github.com/kuzzleio/kuzzle/pull/2907)); D-5 **document**.
 
 - **D-1 — version.** Fix sections 1 and 2 to non-breaking and ship a minor, or accept some of section 2 and ship a major. semantic-release will cut a **minor** either way unless a commit says `BREAKING CHANGE` (none does; one says `BREAKING-ish:`, which it ignores).
 - **D-2 — headers in logs (security).** HTTP connections now carry their real headers (they were always `{}`, TD-52). Side effect not recorded anywhere: `authorization` and `cookie` now reach the logstash access log and the `connection:new` / `connection:remove` hook payloads. Redact, or document. (R-02, B-33)
@@ -63,11 +63,20 @@ Nothing to fix, everything to write down. The beta's release notes are built fro
 - **CLI**: the six `start-kuzzle-server` options take effect (they were all ignored); `--help` / `--version` exit; a flag without a value exits 1. (C-06, TD-84)
 - **Smaller**: `document:export` honours `sort`; API keys deletable by `key` / `fingerprint` (new `DELETE /users/:userId/api-keys` route — the HTTP form puts the clear key in the URL); logout cookie `authToken=` (was `authToken=null`); anonymous `auth:getCurrentUser` → `strategies: []` (was `[[]]`); realtime `users: "out"` subscriptions get their own channel (TD-74); `Protocol.entryPoint` is read-only for protocol plugins (R-05); HTTP streamed-response errors no longer crash the node (B-28); deep `require("kuzzle/dist/lib/…")` shapes changed for 4 modules, 2 files gone (P-03, P-04).
 
+- **Introduced by the §1 fixes themselves**, each stated in its PR: the Redis config is copied with `cloneDeep`, where v2.56.0 used a JSON round-trip — a `Buffer` or `Infinity` in it now reaches ioredis as written instead of as `{type,data}` / `null` (F-07); a rejected dump suffix answers `api.assert.invalid_argument` (400) instead of an id-less `BadRequestError` (F-05); a thrown `null` gives "…: undefined" instead of crashing (F-10); before the handshake, a shutting-down node sends no `NodeShutdown` (it carried a null id on v2.56.0, which no peer could use — F-11).
+
 ## 5. Pre-existing — same on v2.56.0, not regressions
 
 - Neither version loads on Node < 20.19 (`uuid@13` is ESM-only), despite `engines >=20.0.0`. (A2)
 - `statistics.ts` wraps `services.stats` instead of `services.statistics`: with statistics disabled, `server:getStats` answers `core.fatal.unexpected_error`. (A4)
 - `.kuzzlerc.sample.jsonc` and the defaults disagree in places (one new gap: the `fingerprint` mapping). (A5)
+
+- `checkHeartbeat()` overwrites a subscriber's `BUFFERING` state during a slow handshake (found while fixing F-04). Same on v2.56.0.
+- Before F-05, a failed dump (lock held, unwritable path) already surfaced as an unhandled rejection on v2.56.0; #2665 made it happen on almost every handled-error dump. Both are closed by [#2909](https://github.com/kuzzleio/kuzzle/pull/2909).
+
+### A recurring CI instability
+
+The functional scenario _"Create first admin then reset anonymous and default roles"_ failed its `After` hook with `Unauthorized` on `admin:loadSecurities`, on the **same cell** (`http`, Node 22, ES 8), on two unrelated PRs ([#2910](https://github.com/kuzzleio/kuzzle/pull/2910), [#2912](https://github.com/kuzzleio/kuzzle/pull/2912)) the same day; a rerun passed. Not caused by either change — but twice in one cell is a pattern, not noise. ⬜ To investigate before the beta: a flaky scenario is a scenario that cannot report a regression.
 
 ## 6. Not verified yet
 
