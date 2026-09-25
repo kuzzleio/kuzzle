@@ -38,27 +38,35 @@ const assertionError = kerror.wrap("api", "assert");
 /** @internal */
 type InternalProfilePolicy = {
   role: Role;
-  /** Carried straight off the optimized policy, which may not have one. */
-  restrictedTo?: OptimizedPolicyRestrictions;
+  /**
+   * Carried straight off the optimized policy, which may not have one.
+   * Declared as always present all the same, as v2.56.0 declared it: this
+   * reaches plugins through `getPolicies()`.
+   */
+  restrictedTo: OptimizedPolicyRestrictions;
 };
 
 /**
  * @class Profile
  */
 export class Profile {
-  /** `null` until the profile is stored — see ADR-0001, TD-62. */
-  public _id: string | null;
+  /**
+   * `null` until the profile is stored — see ADR-0001, TD-62. Declared
+   * `string` all the same, as v2.56.0 declared it (see `User._id`).
+   */
+  public _id: string;
   public policies: Policy[];
   /**
    * Unset while the profile is persisted — `persistToDatabase` clears it so the
-   * derived form is never written — and the two readers below already test for
-   * `undefined`. The declaration says so (ADR-0001, TD-40 / TD-56).
+   * derived form is never written — and the two readers below test for
+   * `undefined` (ADR-0001, TD-40 / TD-56). Declared as always present all the
+   * same, as v2.56.0 declared it.
    */
-  public optimizedPolicies: OptimizedPolicy[] | undefined;
+  public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
 
   constructor() {
-    this._id = null;
+    this._id = null!;
     this.policies = [];
     this.optimizedPolicies = [];
     this.rateLimit = 0;
@@ -78,7 +86,7 @@ export class Profile {
       this.optimizedPolicies ?? [],
       async ({ restrictedTo, roleId }) => {
         const role = await global.kuzzle.ask("core:security:role:get", roleId);
-        return { restrictedTo, role };
+        return { restrictedTo: restrictedTo!, role };
       },
     );
   }

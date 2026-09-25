@@ -98,8 +98,10 @@ class DocumentController extends NativeController {
    */
   async search(request: KuzzleRequest) {
     const { from, size, scrollTTL, searchBody } = request.getSearchParams();
-    const index = request.getIndex({ required: false });
-    const collection = request.getCollection({ required: false });
+    const index: string | null = request.getIndex({ required: false });
+    const collection: string | null = request.getCollection({
+      required: false,
+    });
     const targets = request.getArray("targets", []);
     const lang = request.getLangParam();
 
@@ -343,7 +345,7 @@ class DocumentController extends NativeController {
    * @returns {Promise<Object>}
    */
   async create(request: KuzzleRequest) {
-    const id = request.getId({ ifMissing: "ignore" });
+    const id: string | null = request.getId({ ifMissing: "ignore" });
     const userId = request.getKuid();
     const refresh = request.getRefresh();
     const silent = request.getBoolean("silent");

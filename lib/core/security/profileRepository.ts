@@ -524,7 +524,9 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       throw kerror.get("security", "profile", "missing_anonymous_role");
     }
 
-    profile.optimizedPolicies = undefined; // Remove optimized policies
+    // Remove optimized policies. `undefined!`: declared as always present,
+    // see Profile.optimizedPolicies.
+    profile.optimizedPolicies = undefined!;
     await super.persistToDatabase(profile, {
       method,
       refresh,

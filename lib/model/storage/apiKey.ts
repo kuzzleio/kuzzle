@@ -213,7 +213,7 @@ class ApiKey extends BaseModel {
     userId: string,
     request: KuzzleRequest,
   ): Promise<ApiKey> {
-    const apiKeyId = request.getId({ ifMissing: "ignore" });
+    const apiKeyId: string | null = request.getId({ ifMissing: "ignore" });
 
     if (apiKeyId) {
       return this.load(userId, apiKeyId);
