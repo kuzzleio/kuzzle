@@ -31,14 +31,19 @@ import type { Target } from "../../types";
  * @class User
  */
 export class User {
-  /** `null` until the user is stored — see ADR-0001, TD-62. */
-  public _id: string | null;
+  /**
+   * `null` until the user is stored — see ADR-0001, TD-62. Declared `string`
+   * all the same, as v2.56.0 declared it: `request.context.user._id` read as
+   * a `string` is everywhere in plugins and applications, and a
+   * `string | null` broke every one of them under `strict`.
+   */
+  public _id: string;
   public profileIds: string[];
   // TODO modify this type to reflect the real type
   public strategies: any;
 
   constructor() {
-    this._id = null;
+    this._id = null!;
     this.profileIds = [];
   }
 

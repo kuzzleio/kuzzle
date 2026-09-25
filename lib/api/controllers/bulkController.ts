@@ -82,7 +82,7 @@ class BulkController extends NativeController {
    */
   async write(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
-    const id = request.getId({ ifMissing: "ignore" });
+    const id: string | null = request.getId({ ifMissing: "ignore" });
     const content = request.getBody();
     const refresh = request.getRefresh();
     const notify = request.getBoolean("notify");

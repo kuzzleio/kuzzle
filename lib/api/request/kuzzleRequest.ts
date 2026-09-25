@@ -32,6 +32,7 @@ import { RequestContext } from "./requestContext";
 import { KuzzleError, InternalError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
 import type { Deprecation } from "../../types";
+import type { User } from "../../model/security/user";
 import { HttpStream } from "../../types";
 import * as assert from "../../util/assertType";
 
@@ -398,24 +399,28 @@ export class KuzzleRequest {
    *
    * This can be used to match Koncorde filter rather than the Request object
    * because it has properties defined with invisible unicode characters.
+   *
+   * The `!`s are not claims: each of these may be `null`, as on the request
+   * itself. The copy is typed as v2.56.0 typed it, non-nullable, because
+   * nullable members broke code compiled against that.
    */
   pojo() {
     return {
       context: {
         connection: this.context.connection,
-        token: this.context.token,
-        user: this.context.user,
+        token: this.context.token!,
+        user: this.context.user!,
       },
       deprecations: this.deprecations,
-      error: this.error,
+      error: this.error!,
       id: this.id,
       input: {
-        action: this.input.action,
+        action: this.input.action!,
         args: this.input.args,
-        body: this.input.body,
-        controller: this.input.controller,
-        jwt: this.input.jwt,
-        volatile: this.input.volatile,
+        body: this.input.body!,
+        controller: this.input.controller!,
+        jwt: this.input.jwt!,
+        volatile: this.input.volatile!,
       },
       internalId: this.internalId,
       response: {
@@ -430,16 +435,23 @@ export class KuzzleRequest {
 
   /**
    * Return the requested controller
+   *
+   * `null` on a request built without one. Declared `string` all the same,
+   * as v2.56.0 declared it: a `string | null` return broke code compiled
+   * against it. `input.controller` is the nullable form.
    */
-  getController(): string | null {
-    return this[_input].controller;
+  getController(): string {
+    return this[_input].controller!;
   }
 
   /**
    * Returns the requested controller's action
+   *
+   * `null` and declared `string` as {@link getController} is;
+   * `input.action` is the nullable form.
    */
-  getAction(): string | null {
-    return this[_input].action;
+  getAction(): string {
+    return this[_input].action!;
   }
 
   /**
@@ -805,28 +817,32 @@ export class KuzzleRequest {
 
   /**
    * Returns the index specified in the request
+   *
+   * With `{ required: false }` and no index, this returns `null`. It is
+   * declared `string` all the same: that is what v2.56.0 declared, and a
+   * `string | null` overload broke code compiled against it — so Kuzzle's own
+   * callers of the optional form annotate the result `string | null`.
    */
-  getIndex(options?: { required?: true }): string;
-  getIndex(options: { required: false }): string | null;
-  getIndex({ required = true } = {}): string | null {
+  getIndex({ required = true }: { required?: boolean } = {}): string {
     const index = this.input.args.index;
 
     this.checkRequired(index, "index", required);
 
-    return index ? String(index) : null;
+    return index ? String(index) : null!;
   }
 
   /**
    * Returns the collection specified in the request
+   *
+   * `null` under the same conditions as {@link getIndex}, and declared
+   * `string` for the same reason.
    */
-  getCollection(options?: { required?: true }): string;
-  getCollection(options: { required: false }): string | null;
-  getCollection({ required = true } = {}): string | null {
+  getCollection({ required = true }: { required?: boolean } = {}): string {
     const collection = this.input.args.collection;
 
     this.checkRequired(collection, "collection", required);
 
-    return collection ? String(collection) : null;
+    return collection ? String(collection) : null!;
   }
 
   /**
@@ -874,21 +890,15 @@ export class KuzzleRequest {
    *    - `ifMissing`: method behavior if the ID is missing (default: 'error')
    *    - `generator`: function used to generate an ID (default: 'uuid.v4')
    *
+   * With `ifMissing: 'ignore'` and no ID, this returns `null`. It is declared
+   * `string` all the same, for the reason given on {@link getIndex}.
    */
-  getId(options?: {
-    ifMissing?: "error" | "generate";
-    generator?: () => string;
-  }): string;
-  getId(options: {
-    ifMissing: "ignore";
-    generator?: () => string;
-  }): string | null;
   getId(
     options: {
       ifMissing?: "error" | "generate" | "ignore";
       generator?: () => string;
     } = { generator: uuid.v4, ifMissing: "error" },
-  ): string | null {
+  ): string {
     const id = this.input.args._id;
 
     options.generator = options.generator || uuid.v4; // Default to uuid v4
@@ -899,7 +909,7 @@ export class KuzzleRequest {
       }
 
       if (options.ifMissing === "ignore") {
-        return null;
+        return null!;
       }
 
       throw assertionError.get("missing_argument", "_id");
@@ -925,13 +935,16 @@ export class KuzzleRequest {
 
   /**
    * Returns the current user
+   *
+   * `null` when the request carries none. Declared `User`, as v2.56.0
+   * declared it; `context.user` is the nullable form.
    */
-  getUser() {
+  getUser(): User {
     if (this.context?.user) {
       return this.context.user;
     }
 
-    return null;
+    return null!;
   }
 
   /**
@@ -1047,7 +1060,7 @@ export class KuzzleRequest {
    * Returns true if the current user have `admin` profile
    */
   userIsAdmin(): boolean {
-    const user = this.getUser();
+    const user: User | null = this.getUser();
 
     if (!user) {
       return false;

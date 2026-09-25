@@ -20,6 +20,7 @@
  */
 
 import type { KuzzleRequest } from "./request";
+import type { User } from "../model/security/user";
 
 class RateLimiter {
   private readonly loginsPerSecond: number;
@@ -62,7 +63,7 @@ class RateLimiter {
       count = this.frame[cid] = (this.frame[cid] || 0) + 1;
       limit = this.loginsPerSecond;
     } else {
-      const user = request.getUser();
+      const user: User | null = request.getUser();
 
       // No user resolved means no profile, and a profile's rateLimit is the
       // only thing this branch reads. Falling through would leave `limit` at

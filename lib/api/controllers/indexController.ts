@@ -20,6 +20,7 @@
  */
 
 import type { KuzzleRequest } from "../request";
+import type { User } from "../../model/security/user";
 import { Request } from "../request";
 import { NativeController } from "./baseController";
 
@@ -159,7 +160,7 @@ class IndexController extends NativeController {
    * @param {String[]} publicIndexes - Public indexes list
    */
   _allowedIndexes(request: KuzzleRequest, publicIndexes: string[]) {
-    const user = request.getUser();
+    const user: User | null = request.getUser();
 
     if (user === null) {
       return publicIndexes;

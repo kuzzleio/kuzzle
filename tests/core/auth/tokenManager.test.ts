@@ -16,7 +16,7 @@ type ManagedToken = {
 };
 
 describe("#core/auth/TokenManager", () => {
-  const anonymousToken = new Token({ _id: null, userId: "-1" });
+  const anonymousToken = new Token({ userId: "-1" });
 
   let manager: TokenManager;
   let token: Token;
