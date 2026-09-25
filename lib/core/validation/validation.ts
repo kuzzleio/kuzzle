@@ -262,7 +262,9 @@ class Validation {
       isValid = this.checkDocumentFields(
         body,
         children,
-        collectionSpec.strict === true,
+        // Truthiness, as in v2.56.0: curation stores `spec.strict || false`
+        // unchecked, so a stored `"true"` or `1` has always meant strict.
+        Boolean(collectionSpec.strict),
         errorMessages,
         verbose,
       );

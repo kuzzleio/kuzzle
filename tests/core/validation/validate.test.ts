@@ -277,6 +277,36 @@ describe("#core/validation/Validation — validate", () => {
       ).rejects.toMatchObject({ id: "validation.check.failed_document" });
     });
 
+    /**
+     * The documented form is a boolean, but curation stores `spec.strict ||
+     * false` without checking its type, and v2.56.0 read the stored value by
+     * truthiness: a specification saved with `strict: "true"` or `strict: 1`
+     * was strict. It goes through the real curation so the value is the one
+     * `updateSpecifications` would store.
+     */
+    it.each(["true", 1])(
+      "should treat a truthy non-boolean strict (%j) as strict",
+      async (strict) => {
+        const curated = await validation.curateCollectionSpecification(
+          index,
+          collection,
+          invalid({ fields: { aField: { type: "typeNoChild" } }, strict }),
+          true,
+        );
+
+        specFor(invalid(curated));
+
+        await expect(
+          validation.validate(
+            requestFor({ body: { aField: "aValue", anotherField: "x" } }),
+            false,
+          ),
+        ).rejects.toThrow(
+          'The document validation is strict. Cannot add unspecified sub-field "anotherField"',
+        );
+      },
+    );
+
     it("should turn a strictness error into the message it is for", async () => {
       const error = invalid<Error>(new BadRequestError("strictness"));
 
