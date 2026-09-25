@@ -79,17 +79,29 @@ export class KuzzleError extends Error {
    * untyped ones, so `new InternalError(caught)` with a `catch` variable of
    * type `unknown` compiled, and must still.
    *
-   * A `message` that is not an `Error` is stringified, as `Error` itself
-   * does; `undefined` and `null` give an empty one — `doc/build-error-codes.js`
-   * constructs one of each class with no arguments just to read its `status`.
+   * A `message` that is not an `Error` is handed to `Error`, which
+   * stringifies it; `undefined` and `null` give an empty one —
+   * `doc/build-error-codes.js` constructs one of each class with no arguments
+   * just to read its `status`.
    *
    * @param message - a string, or an `Error` whose message and stack are kept
    * @param status - HTTP status code
    * @param id - error unique identifier (a string)
    * @param code - error unique code (a number)
    */
-  constructor(message: unknown, status: number, id?: unknown, code?: unknown) {
-    super(isError(message) ? message.message : String(message ?? ""));
+  constructor(message: unknown, status: number, id?: unknown, code?: unknown);
+  /**
+   * The implementation names what `message` is meant to be; the public
+   * signature above is what it may be. Anything else goes straight to
+   * `Error`'s own conversion.
+   */
+  constructor(
+    message: string | Error | undefined,
+    status: number,
+    id?: unknown,
+    code?: unknown,
+  ) {
+    super(isError(message) ? message.message : (message ?? ""));
 
     this.status = status;
     // The three fields declared above as always present, stored as handed:
