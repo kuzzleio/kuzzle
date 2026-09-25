@@ -48,7 +48,7 @@ export class Headers {
     this.headers = {};
     this.proxy = new Proxy(this.headers, {
       deleteProperty: (target, name) => this.removeHeader(name as string),
-      get: (target, name) => this.getHeader(name as string),
+      get: (target, name) => this.getHeader(name),
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
@@ -349,9 +349,13 @@ export class RequestResponse {
 
   /**
    * Gets a header value (case-insensitive)
+   *
+   * A missing header gives `undefined`, as it always has. The declared
+   * `string | null` is v2.56.0's, which code compiled against it assigns to
+   * a `string | null` — so test a result with `== null`, which covers both.
    */
-  getHeader(name: string): string | undefined {
-    return this[_headers].getHeader(name);
+  getHeader(name: string): string | null {
+    return this[_headers].getHeader(name)!;
   }
 
   /**
@@ -401,7 +405,7 @@ export class RequestResponse {
 
     const filteredHeaders: Record<string, string | undefined> = {};
     for (const name of this[_userHeaders]) {
-      filteredHeaders[name] = this.getHeader(name);
+      filteredHeaders[name] = this[_headers].getHeader(name);
     }
 
     /**

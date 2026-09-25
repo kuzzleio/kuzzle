@@ -86,10 +86,10 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
   }
 
   /**
-   * Resolves `null` when the document does not carry an `_id` — see `load()`
-   * for why the whole load path is nullable (ADR-0001, TD-40 — #2727).
+   * Resolves `null` when the document does not carry an `_id` — declared
+   * `Promise<TObject>` all the same: see `load()`.
    */
-  async loadOneFromDatabase(id: string): Promise<TObject | null> {
+  async loadOneFromDatabase(id: string): Promise<TObject> {
     let response;
 
     try {
@@ -114,7 +114,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
       return this.fromDTO(dto);
     }
 
-    return null;
+    return null!;
   }
 
   async loadMultiFromDatabase(ids: string[]): Promise<TObject[]> {
@@ -183,7 +183,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
   async loadFromCache(
     id: string,
     options: { key?: string } = {},
-  ): Promise<TObject | null> {
+  ): Promise<TObject> {
     const key = options.key || this.getCacheKey(id);
     let response;
 
@@ -191,7 +191,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
       response = await global.kuzzle.ask(`core:cache:${this.cacheDb}:get`, key);
 
       if (response === null || response === undefined) {
-        return null;
+        return null!;
       }
 
       return await this.fromDTO({ ...JSON.parse(response) });
@@ -210,13 +210,12 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * Returns a promise that resolves either to the
    * retrieved object of null in case it is not found.
    *
-   * The `| null` is not new behaviour: all three of `load`, `loadFromCache`
-   * and `loadOneFromDatabase` have always had a `return null` path, and the
-   * declared `Promise<TObject>` was simply wrong about them. It is stated now
-   * because a subclass that resolves `null` on purpose — `PluginRepository`
-   * does, for a missing user — could not say so against the old signature
-   * without a double cast, and so said nothing at all. ADR-0001, TD-40
-   * (#2727).
+   * All three of `load`, `loadFromCache` and `loadOneFromDatabase` have
+   * always had a `return null` path, and are declared `Promise<TObject>` all
+   * the same (the `null!`s): that is what v2.56.0 declared, and plugins and
+   * applications subclass this — `(await this.load(id)).name` compiled
+   * against it under `strict`. Stating the `| null` (ADR-0001, TD-40, #2727)
+   * broke them; a caller that can meet the `null` checks for it.
    *
    * If the object is not found in Cache and found in the Database,
    * it will be written to cache also.
@@ -229,10 +228,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param id - The id of the object to get
    * @param options.key - Optional cache key
    */
-  async load(
-    id: string,
-    options: { key?: string } = {},
-  ): Promise<TObject | null> {
+  async load(id: string, options: { key?: string } = {}): Promise<TObject> {
     if (this.cacheDb === cacheDbEnum.NONE) {
       return this.loadOneFromDatabase(id);
     }
@@ -241,7 +237,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
 
     if (object === null) {
       if (this.store === null) {
-        return null;
+        return null!;
       }
 
       const objectFromDatabase = await this.loadOneFromDatabase(id);

@@ -232,7 +232,8 @@ describe("#core/network/Router", () => {
        * plumbing is what the assertions see.
        */
       const config = loadConfig();
-      config.http.accessControlAllowOrigin = ["foobar"];
+      // An array, as a loaded configuration holds it; the type says `string`.
+      Object.assign(config.http, { accessControlAllowOrigin: ["foobar"] });
       /* Set automatically when accessControlAllowOrigin has no wildcard. */
       config.internal.allowAllOrigins = false;
 

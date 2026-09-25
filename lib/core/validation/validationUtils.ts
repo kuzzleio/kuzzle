@@ -41,6 +41,7 @@ import type {
   StructuredFieldSpecification,
   VerboseErrorMessages,
 } from "./specification";
+import { configuredSpecifications } from "./specification";
 
 const assertionError = kerror.wrap("validation", "assert");
 
@@ -235,7 +236,7 @@ export function getValidationConfiguration(): Promise<RawSpecification> {
     .then((result) => {
       if (!result || !Array.isArray(result.hits) || result.hits.length === 0) {
         // We can't wait prepareDb as it runs outside of the rest of the start
-        return global.kuzzle.config.validation || {};
+        return configuredSpecifications() || {};
       }
 
       const validation: RawSpecification = {};

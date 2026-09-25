@@ -1,5 +1,3 @@
-import type { RawSpecification } from "../../core/validation/specification";
-
 import type {
   DumpConfiguration,
   HttpConfiguration,
@@ -197,8 +195,11 @@ export interface IKuzzleConfiguration {
    * Collection specifications to apply at startup, by index then collection.
    * Read when the internal index holds none of its own — the database is not
    * necessarily prepared when validation first loads.
+   *
+   * Their shape is a `RawSpecification`, which validation reads it as; the
+   * declaration is v2.56.0's, which code compiled against it assigns to.
    */
-  validation: RawSpecification;
+  validation: Record<string, unknown>;
 
   controllers: {
     definition: {
@@ -264,4 +265,12 @@ type DeepPartial<T> = T extends unknown[]
  * {@link IKuzzleConfiguration}. One name used for both is what kept every
  * config reader out of `strict`: see ADR-0001, TD-53 (#2756).
  */
-export type KuzzleConfiguration = DeepPartial<IKuzzleConfiguration>;
+export type KuzzleConfigurationOverrides = DeepPartial<IKuzzleConfiguration>;
+
+/**
+ * v2.56.0's name for a configuration that may omit whole sections — but not
+ * keys within one: `Partial`, not {@link KuzzleConfigurationOverrides}. Kept
+ * as it was, because code compiled against it reads a section it set back
+ * without `?.` (`config.limits!.documentsFetchCount` as a `number`).
+ */
+export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;

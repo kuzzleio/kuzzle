@@ -26,6 +26,7 @@ import Bluebird from "bluebird";
 import { Store } from "../core/shared/store";
 import type { StorageEngineElasticsearch } from "../types";
 import { storeScopeEnum } from "../core/storage/storeScopeEnum";
+import { configuredSpecifications } from "../core/validation/specification";
 import * as kerror from "../kerror";
 import createDebug from "../util/debug";
 import { Mutex } from "../util/mutex"; // NOSONAR: see init()
@@ -197,7 +198,7 @@ class InternalIndexHandler extends Store {
   }
 
   async createInitialValidations(): Promise<void> {
-    const initialValidations = global.kuzzle.config.validation;
+    const initialValidations = configuredSpecifications();
     const promises = [];
 
     for (const [index, collection] of Object.entries(initialValidations)) {

@@ -185,10 +185,12 @@ export type PluginsConfiguration = {
      */
     passwordPolicies: PasswordPolicy[];
   };
-
-  // `kuzzle-plugin-logger` above is optional, so its type includes `undefined`
-  // and the index signature has to admit it. Reads through the index already
-  // carried `| undefined` under `noUncheckedIndexedAccess`; this says the same
-  // thing about the declared optional property.
-  [pluginName: string]: JSONObject | undefined;
+} & {
+  // Any other plugin's configuration, read as v2.56.0 declared it: a
+  // `JSONObject`, so `plugins["my-plugin"].option` compiles under `strict`.
+  // An intersection rather than one object type, because in one the optional
+  // `kuzzle-plugin-logger` above would have to be assignable to the index
+  // signature, which would then have to admit `undefined`. Kuzzle's own reads
+  // through the index still carry `| undefined`: `noUncheckedIndexedAccess`.
+  [pluginName: string]: JSONObject;
 };

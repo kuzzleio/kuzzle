@@ -116,7 +116,8 @@ describe("core/network/protocols/httpwsProtocol", () => {
 
     const config = structuredClone(loadConfig());
 
-    config.http.accessControlAllowOrigin = ["foo"];
+    // An array, as a loaded configuration holds it; the type says `string`.
+    Object.assign(config.http, { accessControlAllowOrigin: ["foo"] });
     config.http.cookieAuthentication = true;
     config.internal.allowAllOrigins = false;
 

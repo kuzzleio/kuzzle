@@ -1285,8 +1285,10 @@ class Funnel {
       return true;
     }
 
+    const allowed = loadedOrigins(httpConfig);
+
     if (httpConfig.accessControlAllowOriginUseRegExp) {
-      for (const re of httpConfig.accessControlAllowOrigin as RegExp[]) {
+      for (const re of allowed as RegExp[]) {
         if (re.test(origin)) {
           return true;
         }
@@ -1294,8 +1296,20 @@ class Funnel {
       return false;
     }
 
-    return (httpConfig.accessControlAllowOrigin as string[]).includes(origin);
+    return (allowed as string[]).includes(origin);
   }
+}
+
+/**
+ * What `http.accessControlAllowOrigin` holds once the configuration is
+ * loaded. It is declared `string` (see HttpConfiguration); the parameter's
+ * wider type is what lets the caller say so without a cast, and without the
+ * narrowing an annotated local would get from its initializer.
+ */
+function loadedOrigins(httpConfig: {
+  accessControlAllowOrigin: string | string[] | RegExp[];
+}): string | string[] | RegExp[] {
+  return httpConfig.accessControlAllowOrigin;
 }
 
 /**

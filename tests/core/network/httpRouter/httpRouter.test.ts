@@ -290,7 +290,10 @@ describe("core/network/httpRouter", () => {
 
     it("answers an OPTIONS request itself, and pipes http:options", async () => {
       global.kuzzle.config.internal.allowAllOrigins = false;
-      global.kuzzle.config.http.accessControlAllowOrigin = ["foo"];
+      // An array, as a loaded configuration holds it; the type says `string`.
+      Object.assign(global.kuzzle.config.http, {
+        accessControlAllowOrigin: ["foo"],
+      });
 
       const httpMessage = message("options", "/", "", {
         "content-type": "application/json",
@@ -322,7 +325,10 @@ describe("core/network/httpRouter", () => {
 
     it("answers a HEAD request on the default / route", async () => {
       global.kuzzle.config.internal.allowAllOrigins = false;
-      global.kuzzle.config.http.accessControlAllowOrigin = ["foo"];
+      // An array, as a loaded configuration holds it; the type says `string`.
+      Object.assign(global.kuzzle.config.http, {
+        accessControlAllowOrigin: ["foo"],
+      });
 
       const httpMessage = message("head", "/", "", {
         "content-type": "application/json",
@@ -349,7 +355,10 @@ describe("core/network/httpRouter", () => {
 
     it("rejects an unknown HTTP method", async () => {
       global.kuzzle.config.internal.allowAllOrigins = false;
-      global.kuzzle.config.http.accessControlAllowOrigin = ["foo"];
+      // An array, as a loaded configuration holds it; the type says `string`.
+      Object.assign(global.kuzzle.config.http, {
+        accessControlAllowOrigin: ["foo"],
+      });
 
       router.post("/foo/bar", handler);
 

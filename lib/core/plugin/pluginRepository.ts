@@ -102,14 +102,13 @@ class PluginRepository extends ObjectRepository<PluginDocument> {
    * If we load a user that does not exists, we have to resolve the promise with
    * null instead of throwing NotFoundError.
    *
-   * The `| null` is the base's now (ADR-0001, TD-40 — #2727): this override
-   * used to declare `Promise<PluginDocument>` and resolve `null` anyway, which
-   * type-checked only because the file was held out of strict.
+   * Declared `Promise<PluginDocument>` all the same, as the base's `load()`
+   * is — see there.
    */
-  load(documentId: string): Promise<PluginDocument | null> {
+  load(documentId: string): Promise<PluginDocument> {
     return super.load(documentId).catch((error) => {
       if (this.collection === "users" && error instanceof NotFoundError) {
-        return null;
+        return null!;
       }
 
       throw error;
