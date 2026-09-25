@@ -27,20 +27,24 @@
 
 ## 2. Typings — breaking under this step's rule
 
+> **✅ Closed 2026-09-25.** A consumer fixture written from the docs went from **11 / 35** errors that v2.56.0 does not have (`strict: false` / `strict: true`) to **0 / 0**, in four PRs: [#2917](https://github.com/kuzzleio/kuzzle/pull/2917), [#2918](https://github.com/kuzzleio/kuzzle/pull/2918), [#2919](https://github.com/kuzzleio/kuzzle/pull/2919) and [#2922](https://github.com/kuzzleio/kuzzle/pull/2922) (the residuals: T-12/T-14, T-16, T-24, T-26, and the parameters v2.56.0 left untyped). **A permanent gate** — `tests/typings/`, an application and a plugin written against the documented API, compiled against the built `dist/index.d.ts` in both modes by `npm run typecheck:typings` in the `build` job — keeps it so. Cost, stated in the PRs: `any` 175 → 185 (12 added, each commented as v2.56.0's public type kept for compatibility; the ratchet's grep misses `Promise<any>`); several v2.56.0 declarations that the runtime does not always honour are restored as they were, with JSDoc saying what the runtime does; the method-name form of plugin hooks/pipes that #2891 had typed publicly (after v2.56.0, never released) is typed on the internal view only.
+
 Every item is intended (step 12's strict flip or a TD fix), and none of those PRs checked an **external** consumer. [A1](step-15-audit/A1-typings.md) proposes a non-breaking fix for most of them.
 
 | # | Change | Breaks | Source IDs | Proposed direction |
 | --- | --- | --- | --- | --- |
-| **TY-01** | `Plugin.context` / `Plugin.config` optional | `strict` — every plugin using `this.context.*`, the documented pattern | T-01 (#2800) | definite assignment (`context!: PluginContext`) — what the runtime guarantees after `init` |
-| **TY-02** | `accessors.execute()` returns `Promise<KuzzleRequest> \| null` | `strict` — `await execute(r)` then a read | T-04 (#2803) | overloads: no callback → `Promise<KuzzleRequest>` |
-| **TY-03** | `getIndex` / `getCollection` / `getId` overloads reject a non-literal option | **both modes** (TS2769) | T-03 | catch-all overload |
-| **TY-04** | `EventGenericDocument*<T>` requires `T extends KDocumentContent` | **both modes** (TS2559 on any user content type) | T-07 | relax the constraint |
-| **TY-05** | `KuzzleError.code` / `.id` possibly `undefined`; `.props` `unknown[] \| undefined`; constructors narrowed from `any` | `props` both modes, rest `strict` | T-05, T-06, E-10 | restore `string[]`; decide on the rest |
-| **TY-06** | `getController()` / `getAction()` / `getUser()` / `pojo()` fields and `User._id` / `Token` fields nullable | `strict` | T-02, T-27 | decide: accurate types vs compatibility |
-| **TY-07** | Each `PluginsConfiguration` entry possibly `undefined`; `Controller.name` / `definition` optional; config assignment shapes; `getHeader()` → `undefined`; `ObjectRepository` loads nullable | `strict` (mostly) | T-08 – T-12, T-16, T-26 | case by case |
+| **TY-01** | `Plugin.context` / `Plugin.config` optional | `strict` — every plugin using `this.context.*`, the documented pattern | T-01 (#2800) | definite assignment (`context!: PluginContext`) — what the runtime guarantees after `init` → ✅ [#2917](https://github.com/kuzzleio/kuzzle/pull/2917) |
+| **TY-02** | `accessors.execute()` returns `Promise<KuzzleRequest> \| null` | `strict` — `await execute(r)` then a read | T-04 (#2803) | overloads: no callback → `Promise<KuzzleRequest>` → ✅ [#2917](https://github.com/kuzzleio/kuzzle/pull/2917) |
+| **TY-03** | `getIndex` / `getCollection` / `getId` overloads reject a non-literal option | **both modes** (TS2769) | T-03 | catch-all overload → ✅ [#2918](https://github.com/kuzzleio/kuzzle/pull/2918) |
+| **TY-04** | `EventGenericDocument*<T>` requires `T extends KDocumentContent` | **both modes** (TS2559 on any user content type) | T-07 | relax the constraint → ✅ [#2919](https://github.com/kuzzleio/kuzzle/pull/2919) |
+| **TY-05** | `KuzzleError.code` / `.id` possibly `undefined`; `.props` `unknown[] \| undefined`; constructors narrowed from `any` | `props` both modes, rest `strict` | T-05, T-06, E-10 | restore `string[]`; decide on the rest → ✅ [#2917](https://github.com/kuzzleio/kuzzle/pull/2917) |
+| **TY-06** | `getController()` / `getAction()` / `getUser()` / `pojo()` fields and `User._id` / `Token` fields nullable | `strict` | T-02, T-27 | decide: accurate types vs compatibility → ✅ [#2918](https://github.com/kuzzleio/kuzzle/pull/2918) |
+| **TY-07** | Each `PluginsConfiguration` entry possibly `undefined`; `Controller.name` / `definition` optional; config assignment shapes; `getHeader()` → `undefined`; `ObjectRepository` loads nullable | `strict` (mostly) | T-08 – T-12, T-16, T-26 | case by case → ✅ [#2919](https://github.com/kuzzleio/kuzzle/pull/2919) |
 
 ## 3. Decisions for the maintainer
 
+> **D-2 and D-5 are written up** in [the release notes draft](step-15-release-notes.md).
+>
 > **Answered 2026-09-25:** D-1 **no major** — so every §2 item must get a non-breaking fix, none may be "accepted"; D-2 **document**; D-3 **replace the library** (done in [#2912](https://github.com/kuzzleio/kuzzle/pull/2912): `redis-semaphore`, every production dependency now satisfies Node 20); D-4 **no-op with a warning** (done, [#2907](https://github.com/kuzzleio/kuzzle/pull/2907)); D-5 **document**.
 
 - **D-1 — version.** Fix sections 1 and 2 to non-breaking and ship a minor, or accept some of section 2 and ship a major. semantic-release will cut a **minor** either way unless a commit says `BREAKING CHANGE` (none does; one says `BREAKING-ish:`, which it ignores).

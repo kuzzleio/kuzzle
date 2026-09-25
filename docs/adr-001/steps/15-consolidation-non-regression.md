@@ -1,6 +1,6 @@
 # Step 15 — consolidation: non-regression, breaking-change audit, then beta
 
-**Status:** 🟦 In progress — opened 2026-09-25; phases A, B and C done, fixes next · **PR(s):** phase C measurement [#2901](https://github.com/kuzzleio/kuzzle/pull/2901) (draft, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done; beta next · **PR(s):** phase C measurement [#2901](https://github.com/kuzzleio/kuzzle/pull/2901) (draft, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -53,9 +53,9 @@ Once A–C are resolved: merge `2-dev` into `beta`, which publishes an npm prere
 
 ## Exit criteria
 
-- [ ] Every Phase A diff read, and each difference listed in Phase B's inventory.
-- [ ] Every accidental breaking change fixed on `2-dev`; every intended one documented (changelog + migration note).
-- [ ] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change.
+- [x] Every Phase A diff read, and each difference listed in Phase B's inventory.
+- [x] Every accidental breaking change fixed on `2-dev` (inventory §1, §2); every intended one documented ([release notes draft](../step-15-release-notes.md)).
+- [ ] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change. _Passed on `0855cd70f` ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)); to re-run on the head the beta is cut from, since the fixes changed `lib/`._
 - [ ] Beta published, and the side-by-side comparison in real projects done.
 - [ ] Nothing left open in the inventory — only then does the beta become a release.
 
@@ -68,6 +68,12 @@ Run on two frozen, built trees: `v2.56.0` and `2-dev` at `0855cd70f`. Phase A wa
 - **Nothing public was removed or renamed** (exports, routes, actions, events, error ids).
 - **Phase C passed**: v2.56.0's functional suites and test application, byte for byte, green against `2-dev` on all 30 functional jobs and the 6 monkey jobs ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)).
 - **And it was not enough**: the audit found **11 accidental regressions to fix** (inventory §1), two of them confirmed by hand — F-01 (`not_found` → `unexpected_not_found` on every missing document) and F-02 (`document:export` rejects an array `sort`) — and **the typings break TypeScript consumers** (§2: 11 new errors with `strict: false`, 35 with `strict: true`, on a fixture written from the docs). Five decisions are the maintainer's (§3).
+
+### The fixes — 2026-09-25
+
+Every inventory item in §1 (eleven accidental regressions), §2 (the typings) and §3 (D-3, D-4) is fixed and merged, in 19 PRs: [#2903](https://github.com/kuzzleio/kuzzle/pull/2903)–[#2919](https://github.com/kuzzleio/kuzzle/pull/2919), [#2921](https://github.com/kuzzleio/kuzzle/pull/2921), [#2922](https://github.com/kuzzleio/kuzzle/pull/2922), plus the docs in [#2902](https://github.com/kuzzleio/kuzzle/pull/2902) and [#2920](https://github.com/kuzzleio/kuzzle/pull/2920). Each behaviour fix ships a spec verified to fail without it; F-01 and the dump suffix also got a functional scenario. F-03 and F-04, found by static analysis, were measured before being fixed (1–3 % of cluster joins failed at the default heartbeat; a retransmit slower than ~4 s evicted a healthy peer). D-2 and D-5 are documented, not changed, by the maintainer's decision.
+
+Two things this pass added that outlive it: **the typings gate** (`tests/typings/`, run by `npm run typecheck:typings` in the `build` job) — the check whose absence let step 12 break every TypeScript consumer without a single red job; and **the functional scenarios that pin error ids**, the blind spot phase C exposed.
 
 ### What the phases found about the method
 
