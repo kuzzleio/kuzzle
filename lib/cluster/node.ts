@@ -341,7 +341,13 @@ class ClusterNode {
       subscriber.dispose();
     }
 
-    this.publisher.sendNodeShutdown(this.nodeId);
+    // `_nodeId`, not the accessor, which throws before the handshake: a SIGTERM
+    // during cluster init must still reach the two disposals below, as it did
+    // on v2.56.0. No peer knows this node before it has an id, so there is
+    // nobody to announce the shutdown to.
+    if (this._nodeId !== null) {
+      this.publisher.sendNodeShutdown(this._nodeId);
+    }
 
     await this.publisher.dispose();
     this.command.dispose();
@@ -429,7 +435,11 @@ class ClusterNode {
       this.logger.error(error.stack);
     }
 
-    this.publisher.sendNodeEvicted(this.nodeId, this.nodeId, reason);
+    // Same guard as `shutdown()`: before the handshake there is no id to
+    // broadcast, and throwing here would skip the shutdown below.
+    if (this._nodeId !== null) {
+      this.publisher.sendNodeEvicted(this._nodeId, this._nodeId, reason);
+    }
 
     // The broadcast above tells the *other* nodes to forget this one. It cannot
     // tell this one: a ZeroMQ PUB socket does not deliver to its own process, so
