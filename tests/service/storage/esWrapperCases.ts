@@ -24,7 +24,23 @@ type ESWrapperClass = new (client: unknown) => {
 /** The one thing an error's `meta` has to carry for the wrapper to read it. */
 type ESError = Error & { body?: unknown; meta?: unknown };
 
-export function describeESWrapper(version: string, ESWrapper: ESWrapperClass) {
+/**
+ * The client's own `ResponseError`, which the cases above cannot stand in for:
+ * it exposes `body` as a prototype getter, not an own property.
+ */
+type ResponseErrorClass = new (meta: {
+  body: unknown;
+  headers: Record<string, string>;
+  meta: Record<string, unknown>;
+  statusCode: number;
+  warnings: string[] | null;
+}) => Error;
+
+export function describeESWrapper(
+  version: string,
+  ESWrapper: ESWrapperClass,
+  ResponseError: ResponseErrorClass,
+) {
   describe(`#service/storage/${version}/esWrapper`, () => {
     let wrapper: InstanceType<ESWrapperClass>;
     let emit: ReturnType<typeof vi.fn>;
@@ -114,6 +130,46 @@ export function describeESWrapper(version: string, ESWrapper: ESWrapperClass) {
             'Document "mehry" not found in "nyc-open-data":"yellow-taxi".',
         });
       });
+
+      it("names a document not found from the client's own ResponseError", () => {
+        // A plain object built like the case above has `body` as an own
+        // property, which is what hid a spread that lost the real one's.
+        const error = new ResponseError({
+          body: {
+            _id: "mehry",
+            _index: "&nyc-open-data.yellow-taxi",
+            found: false,
+          },
+          headers: {},
+          meta: {},
+          statusCode: 404,
+          warnings: null,
+        });
+
+        expect(wrapper.formatESError(error)).toMatchObject({
+          id: "services.storage.not_found",
+          message:
+            'Document "mehry" not found in "nyc-open-data":"yellow-taxi".',
+        });
+      });
+
+      it.each([
+        [400, "services.storage.unexpected_bad_request"],
+        [409, "services.storage.unexpected_error"],
+      ])(
+        "hands the client's own ResponseError to the %i handler",
+        (statusCode, id) => {
+          const error = new ResponseError({
+            body: { error: { reason: "something unmapped" } },
+            headers: {},
+            meta: {},
+            statusCode,
+            warnings: null,
+          });
+
+          expect(wrapper.formatESError(error)).toMatchObject({ id });
+        },
+      );
 
       it("falls back when a not-found carries no index", () => {
         const error = withMeta("test", { statusCode: 404 });

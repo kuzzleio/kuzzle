@@ -880,6 +880,28 @@ Feature: Document Controller
       | lang       | "koncorde"                                       |
     Then I should receive a result matching:
       | count | 2 |
+  # missing document ===========================================================
+
+  # The id, not only the status: v2.56.0's suites asserted the 404 alone, and
+  # stayed green while every missing document answered `unexpected_not_found`
+  # (docs/adr-001/step-15-inventory.md, F-01).
+  @mappings
+  Scenario Outline: <action> a missing document answers services.storage.not_found
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I execute the action "document":"<action>" with args:
+      | index      | "nyc-open-data" |
+      | collection | "yellow-taxi"   |
+      | _id        | "missing"       |
+    Then I should receive an error matching:
+      | id      | "services.storage.not_found"                                   |
+      | status  | 404                                                            |
+      | message | "Document \\"missing\\" not found in \\"nyc-open-data\\":\\"yellow-taxi\\"." |
+
+    Examples:
+      | action |
+      | get    |
+      | delete |
+
   # document:delete ============================================================
 
   @mappings

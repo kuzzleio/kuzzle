@@ -50,6 +50,10 @@ type ThrownESError = Error & { meta?: JSONObject; body?: JSONObject };
  */
 type ThrownESResponseError = ThrownESError & { meta: JSONObject };
 
+function isResponseError(error: ThrownESError): error is ThrownESResponseError {
+  return Boolean(error.meta);
+}
+
 interface ESErrorMapping {
   regex: RegExp;
   /**
@@ -252,22 +256,20 @@ class ESWrapper {
     }
 
     // Try to match using error codes
-    if (esError.meta) {
-      // `meta` is what tells a cluster response from a client-side failure, so
-      // the three handlers below are declared to require it rather than
-      // re-checking it four times each.
-      const responseError: ThrownESResponseError = {
-        ...esError,
-        meta: esError.meta,
-      };
-
+    // `meta` is what tells a cluster response from a client-side failure, so
+    // the three handlers below are declared to require it rather than
+    // re-checking it four times each. The error itself is handed over, never a
+    // copy: the client's `ResponseError` exposes `body` as a prototype getter,
+    // which a spread does not carry — and without it every missing document
+    // answered `unexpected_not_found` instead of `not_found`.
+    if (isResponseError(esError)) {
       switch (esError.meta.statusCode) {
         case 400:
-          return this._handleBadRequestError(responseError, message);
+          return this._handleBadRequestError(esError, message);
         case 404:
-          return this._handleNotFoundError(responseError, message);
+          return this._handleNotFoundError(esError, message);
         case 409:
-          return this._handleConflictError(responseError, message);
+          return this._handleConflictError(esError, message);
         default:
           break;
       }
