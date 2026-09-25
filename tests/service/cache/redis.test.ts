@@ -161,6 +161,19 @@ describe("#service/cache/Redis", () => {
       dnsLookup("an.address", answer);
 
       expect(answer).toHaveBeenCalledWith(null, "an.address");
+      // The override goes to the client, not into the service configuration.
+      expect(config.clusterOptions).toEqual({ enableReadyCheck: true });
+    });
+
+    it("should hand the client a function set in the options from code", async () => {
+      const retryStrategy = () => 1000;
+
+      config.options = { retryStrategy };
+      redis = new Redis(invalid(config), "internalCache");
+
+      await redis.init();
+
+      expect(clientOf(redis).options).toMatchObject({ retryStrategy });
     });
   });
 

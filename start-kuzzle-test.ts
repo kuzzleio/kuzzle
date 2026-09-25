@@ -493,6 +493,15 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = "secret-password";
 
+// A function in the Redis options, as an app sets it from code: startup must
+// hand it to ioredis rather than fail to copy the configuration. This is
+// ioredis' own default strategy, so the cluster reconnects as before.
+const { internalCache } = app.config.content.services;
+internalCache.options = {
+  ...internalCache.options,
+  retryStrategy: (times: number) => Math.min(times * 50, 2000),
+};
+
 // Ensure imports before startup are working
 app.import.mappings(functionalFixtures.mappings);
 app.import.profiles(functionalFixtures.profiles);

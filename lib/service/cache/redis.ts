@@ -22,6 +22,7 @@
 import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
+import { cloneDeep } from "lodash";
 import type { RedisCommander } from "ioredis";
 import IORedis, { Cluster } from "ioredis";
 
@@ -105,7 +106,11 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * flush it to make sure we start from a clean state
    */
   protected _initSequence(): Promise<void> {
-    const config = structuredClone(this._config);
+    // A copy, so the DNS lookup override below does not leak into the
+    // service configuration. `cloneDeep` rather than `structuredClone`: a
+    // config set from code may hold functions (e.g. an ioredis
+    // `retryStrategy`), which `structuredClone` refuses to copy.
+    const config = cloneDeep(this._config); // NOSONAR structuredClone throws on functions, see above
 
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
