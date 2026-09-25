@@ -33,8 +33,8 @@ Feature: Backend Import
   Scenario: Check if profiles have been correctly imported
     Given I have imported profiles in the app before startup
     Then The profile "profileA" policies should match:
-      | roleId  | restrictedTo                                                      |
-      | "roleB" | { index: 'index1', collections: [ 'collection1', 'collection2'] } |
+      | roleId  | restrictedTo                                                        |
+      | "roleB" | [{ index: 'index1', collections: [ 'collection1', 'collection2'] }] |
     And The profile "profileB" policies should match:
       | roleId  |
       | "roleA" |

@@ -1,8 +1,9 @@
 import should from "should";
 import { Given, Then, When } from "@cucumber/cucumber";
 import ws from "ws";
+import type KuzzleWorld from "../support/world";
 
-Given("I open a new local websocket connection", function () {
+Given("I open a new local websocket connection", function (this: KuzzleWorld) {
   return new Promise((resolve) => {
     this.props.client = new ws("ws://localhost:7512");
     this.props.client.on("message", (data: ws.RawData) => {
@@ -17,25 +18,28 @@ Given("I open a new local websocket connection", function () {
 
 When(
   "I send the message {string} to Kuzzle through websocket",
-  function (message) {
+  function (this: KuzzleWorld, message) {
     this.props.client.send(message);
   },
 );
 
-Then("I wait to receive a websocket response from Kuzzle", function () {
-  return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      if (this.props.result) {
-        clearInterval(interval);
-        return resolve(true);
-      }
-    }, 200);
-  });
-});
+Then(
+  "I wait to receive a websocket response from Kuzzle",
+  function (this: KuzzleWorld) {
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (this.props.result) {
+          clearInterval(interval);
+          return resolve(true);
+        }
+      }, 200);
+    });
+  },
+);
 
 Then(
   "I should receive a response message from Kuzzle through websocket matching:",
-  function (dataTable) {
+  function (this: KuzzleWorld, dataTable) {
     const message = this.parseObject(dataTable);
     should(this.props.result).be.eql(message);
   },

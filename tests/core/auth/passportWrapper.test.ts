@@ -129,16 +129,16 @@ describe("#core/auth/PassportWrapper", () => {
       expect(wrapper.options.foobar).toBeUndefined();
 
       /*
-       * ⚠️ Passport reports an unknown strategy by calling `next(error)` —
-       * and the wrapper invokes the middleware with `(request, response)`
-       * only. So the rejection an operator sees for a mistyped strategy name
-       * is `next is not a function`, not
-       * `Unknown authentication strategy "foobar"`. Pinned as it is; see
-       * [TD-80](../../../docs/adr-001/type-debt-register.md#td-80).
+       * Passport reports an unknown strategy by calling `next(error)`. The
+       * wrapper used to invoke the middleware with `(request, response)` only,
+       * so this was answered `next is not a function`
+       * ([TD-80](../../../docs/adr-001/type-debt-register.md#td-80)).
        */
       await expect(wrapper.authenticate({}, "foobar")).rejects.toMatchObject({
         id: "plugin.runtime.unexpected_error",
-        message: expect.stringContaining("next is not a function"),
+        message: expect.stringContaining(
+          'Unknown authentication strategy "foobar"',
+        ),
       });
     });
   });

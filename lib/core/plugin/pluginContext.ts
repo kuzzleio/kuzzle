@@ -195,7 +195,7 @@ export class PluginContext {
     /**
      * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
      */
-    Koncorde: Koncorde;
+    Koncorde: typeof Koncorde;
     /**
      * Mutex class
      */
@@ -205,17 +205,17 @@ export class PluginContext {
      */
     Repository: new (collection: string, objectConstructor: any) => Repository;
     /**
-     * Instantiate a new Request from the original one.
+     * Instantiate a new Request from the original one, or from raw data.
      */
-    Request: KuzzleRequest;
+    Request: PluginRequestConstructor;
     /**
      * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
      */
-    RequestContext: RequestContext;
+    RequestContext: typeof RequestContext;
     /**
      * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
      */
-    RequestInput: RequestInput;
+    RequestInput: typeof RequestInput;
 
     /**
      * Constructor for Elasticsearch SDK Client
@@ -334,15 +334,17 @@ export class PluginContext {
     this.constructors = {
       BaseValidationType,
       ESClient: PluginContextESClient as any,
-      Koncorde: Koncorde as any,
+      Koncorde,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (
         collection: string,
         objectConstructor: any,
       ) => Repository,
-      Request: instantiateRequest as any,
-      RequestContext: RequestContext as any,
-      RequestInput: RequestInput as any,
+      // A plain function called with `new`: it returns an object, so `new`
+      // yields that object — which is what plugins have always relied on.
+      Request: instantiateRequest as unknown as PluginRequestConstructor,
+      RequestContext,
+      RequestInput,
     };
 
     Object.freeze(this.constructors);
@@ -529,6 +531,19 @@ function inheritResource(target: KuzzleRequest, source: KuzzleRequest): void {
  * @param {Object} [options]
  * @returns {Request}
  */
+/**
+ * `context.constructors.Request`'s two call shapes: from an original request,
+ * whose context and input the new one inherits, or from raw request data.
+ */
+export type PluginRequestConstructor = {
+  new (
+    request: KuzzleRequest,
+    data?: JSONObject,
+    options?: JSONObject,
+  ): KuzzleRequest;
+  new (data: JSONObject, options?: JSONObject): KuzzleRequest;
+};
+
 function instantiateRequest(
   request: KuzzleRequest | JSONObject | null,
   data?: JSONObject,

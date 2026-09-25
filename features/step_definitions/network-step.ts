@@ -167,25 +167,34 @@ When(
   },
 );
 
-Then("The raw HTTP response headers should match:", function (dataTable) {
-  const expected = this.parseObject(dataTable);
-  const headers = this.props.httpResponse.headers;
+Then(
+  "The raw HTTP response headers should match:",
+  function (this: KuzzleWorld, dataTable) {
+    const expected = this.parseObject(dataTable);
+    const headers = this.props.httpResponse.headers;
 
-  should(headers).not.be.undefined();
+    should(headers).not.be.undefined();
 
-  for (const [key, value] of Object.entries(expected)) {
-    should(headers[key]).be.eql(value);
-  }
-});
+    for (const [key, value] of Object.entries(expected)) {
+      should(headers[key]).be.eql(value);
+    }
+  },
+);
 
-Then("The HTTP response JSON should match:", function (dataTable) {
-  const expected = this.parseObject(dataTable);
-  const body = this.props.httpResponse.body || "{}";
-  const json = JSON.parse(body);
+Then(
+  "The HTTP response JSON should match:",
+  function (this: KuzzleWorld, dataTable) {
+    const expected = this.parseObject(dataTable);
+    const body = this.props.httpResponse.body || "{}";
+    const json = JSON.parse(body);
 
-  should(json).match(expected);
-});
+    should(json).match(expected);
+  },
+);
 
-Then("The HTTP response status should be {int}", function (status) {
-  should(this.props.httpResponse.statusCode).be.eql(status);
-});
+Then(
+  "The HTTP response status should be {int}",
+  function (this: KuzzleWorld, status) {
+    should(this.props.httpResponse.statusCode).be.eql(status);
+  },
+);

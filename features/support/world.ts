@@ -17,6 +17,11 @@ export default class KuzzleWorld extends World {
   private _protocol: string;
   public readonly kuzzleConfig: ReturnType<typeof loadConfig>;
   public readonly props: Record<string, any>;
+  /**
+   * One SDK per cluster node, connected by the `@cluster` hook; `I target
+   * {string}` makes one of them the scenario's `sdk`.
+   */
+  public nodes: Record<string, Kuzzle> = {};
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -35,6 +40,10 @@ export default class KuzzleWorld extends World {
 
   get sdk() {
     return this._sdk;
+  }
+
+  set sdk(sdk: Kuzzle) {
+    this._sdk = sdk;
   }
 
   get host() {
@@ -100,17 +109,21 @@ export default class KuzzleWorld extends World {
   /**
    * Intantiate a SDK
    *
+   * @param options.host
    * @param options.port Used to connect the SDK to a specific node of the cluster
    */
-  getSDK({ port } = { port: this.port }) {
+  getSDK({
+    host = this.host,
+    port = this.port,
+  }: { host?: string; port?: string | number } = {}) {
     let protocol: any;
 
     switch (this.protocol) {
       case "http":
-        protocol = new Http(this.host, { port: Number(port) });
+        protocol = new Http(host, { port: Number(port) });
         break;
       case "websocket":
-        protocol = new WebSocket(this.host, { port: Number(port) });
+        protocol = new WebSocket(host, { port: Number(port) });
         break;
       default:
         throw new Error(`Unknown protocol "${this.protocol}".`);

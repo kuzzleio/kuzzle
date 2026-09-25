@@ -34,21 +34,12 @@ const SECRETS = {
 };
 
 /**
- * ⚠️ `context.constructors` holds constructors, and four of its seven entries
- * are declared as the **instances** they build: `Koncorde: Koncorde`,
- * `Request: KuzzleRequest`, `RequestContext: RequestContext`,
- * `RequestInput: RequestInput`. `Mutex`, `Repository` and `ESClient` are
- * declared correctly, so the shape is not a convention — it is a mistake in
- * four places, hidden by the `as any` each one carries at its assignment.
- *
- * The consequence is that the documented use of this public API —
- * `new (constructorOf<KuzzleRequest>(context.constructors.Request))(request, {})`, which is what every plugin
- * writes — does not type-check. Recorded as
- * [TD-76](../../../docs/adr-001/type-debt-register.md#td-76); a test-porting
- * slice leaves `lib/` alone, so the cast is named here instead.
+ * `context.constructors` holds constructors. Four of its entries used to be
+ * declared as the instances they build, so `new context.constructors.Request(…)`
+ * — what every plugin writes — did not type-check and this spec cast around it
+ * ([TD-76](../../../docs/adr-001/type-debt-register.md#td-76)). The calls
+ * below are uncast on purpose: they are the type-level test of that fix.
  */
-const constructorOf = <T>(declared: unknown) =>
-  declared as new (...args: unknown[]) => T;
 
 /**
  * ⚠️ `lib/util/mutex` is the one substitution this spec genuinely needs, and
@@ -141,14 +132,9 @@ describe("#core/plugin/pluginContext", () => {
     });
 
     it("exposes the constructors a plugin builds with", () => {
+      expect(new context.constructors.Koncorde()).toBeInstanceOf(Koncorde);
       expect(
-        new (constructorOf<Koncorde>(context.constructors.Koncorde))(),
-      ).toBeInstanceOf(Koncorde);
-      expect(
-        new (constructorOf<KuzzleRequest>(context.constructors.Request))(
-          new Request({}),
-          {},
-        ),
+        new context.constructors.Request(new Request({}), {}),
       ).toBeInstanceOf(KuzzleRequest);
       expect(new context.constructors.Mutex("resource")).toBeInstanceOf(Mutex);
 
@@ -203,10 +189,8 @@ describe("#core/plugin/pluginContext", () => {
 
     describe("#Request", () => {
       it("throws when given no data at all", () => {
-        expect(
-          () =>
-            new (constructorOf<KuzzleRequest>(context.constructors.Request))(),
-        ).toThrow(
+        // @ts-expect-error -- the misuse under test: the type requires data
+        expect(() => new context.constructors.Request()).toThrow(
           expect.objectContaining({
             constructor: PluginImplementationError,
             id: "plugin.context.missing_request_data",
@@ -232,9 +216,7 @@ describe("#core/plugin/pluginContext", () => {
           { connectionId: "connectionId", protocol: "protocol" },
         );
 
-        const pluginRequest = new (constructorOf<KuzzleRequest>(
-          context.constructors.Request,
-        ))(request, {});
+        const pluginRequest = new context.constructors.Request(request, {});
 
         expect(pluginRequest.context.protocol).toEqual("protocol");
         expect(pluginRequest.context.connectionId).toEqual("connectionId");
@@ -273,9 +255,7 @@ describe("#core/plugin/pluginContext", () => {
           { connectionId: "connectionId", protocol: "protocol" },
         );
 
-        const pluginRequest = new (constructorOf<KuzzleRequest>(
-          context.constructors.Request,
-        ))(request, {
+        const pluginRequest = new context.constructors.Request(request, {
           action: "pluginAction",
           collection: "pluginCollection",
           controller: "pluginController",
@@ -310,9 +290,7 @@ describe("#core/plugin/pluginContext", () => {
       });
 
       it("builds a request without an original one", () => {
-        const request = new (constructorOf<KuzzleRequest>(
-          context.constructors.Request,
-        ))({
+        const request = new context.constructors.Request({
           action: "bar",
           controller: "foo",
         });

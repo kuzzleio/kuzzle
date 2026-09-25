@@ -93,12 +93,6 @@
           "code": 15,
           "message": "Plugin \"%s\" not found.%s",
           "class": "NotFoundError"
-        },
-        "invalid_openapi_schema": {
-          "description": "OpenAPI specification is invalid",
-          "code": 16,
-          "message": "Invalid OpenAPI specification: \"%s\"",
-          "class": "PluginImplementationError"
         }
       }
     },
@@ -348,12 +342,6 @@
           "description": "API actions added by plugins must return a promise",
           "code": 9,
           "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
-          "class": "PluginImplementationError"
-        },
-        "invalid_openapi_schema": {
-          "description": "OpenAPI specification is invalid",
-          "code": 10,
-          "message": "Invalid OpenAPI specification in \"%s:%s\", %s : %s",
           "class": "PluginImplementationError"
         }
       }

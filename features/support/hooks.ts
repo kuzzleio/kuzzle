@@ -1,12 +1,13 @@
 import { After, Before, BeforeAll } from "@cucumber/cucumber";
 
-import type { EmbeddedSDK } from "../../lib/core/shared/sdk/embeddedSdk";
+import type { Kuzzle } from "kuzzle-sdk";
+
 import testMappings from "../fixtures/mappings";
 import testPermissions from "../fixtures/permissions";
 import testFixtures from "../fixtures/fixtures";
-import World from "./world";
+import KuzzleWorld from "./world";
 
-async function resetSecurityDefault(sdk: EmbeddedSDK) {
+async function resetSecurityDefault(sdk: Kuzzle) {
   await sdk.query({
     action: "resetSecurity",
     controller: "admin",
@@ -32,7 +33,7 @@ async function resetSecurityDefault(sdk: EmbeddedSDK) {
 
 BeforeAll({ timeout: 10 * 1000 }, async function () {
   try {
-    const world = new World({} as any);
+    const world = new KuzzleWorld({} as any);
 
     await world.sdk.connect();
 
@@ -51,7 +52,7 @@ BeforeAll({ timeout: 10 * 1000 }, async function () {
   }
 });
 
-Before({ timeout: 10 * 1000 }, async function () {
+Before({ timeout: 10 * 1000 }, async function (this: KuzzleWorld) {
   await this.sdk.connect();
 
   await this.sdk.auth.login("local", {
@@ -60,7 +61,7 @@ Before({ timeout: 10 * 1000 }, async function () {
   });
 });
 
-Before({ tags: "not @preserveDatabase" }, async function () {
+Before({ tags: "not @preserveDatabase" }, async function (this: KuzzleWorld) {
   await this.sdk.query({
     action: "resetDatabase",
     controller: "admin",
@@ -68,34 +69,34 @@ Before({ tags: "not @preserveDatabase" }, async function () {
   });
 });
 
-After(async function () {
-  // Clean values stored by the scenario
-  this.props = {};
+After(async function (this: KuzzleWorld) {
+  // No `props` reset: cucumber builds a new World, and so a new `props`, for
+  // every scenario. The assignment that stood here wrote to a `readonly` field.
 
   if (this.sdk && typeof this.sdk.disconnect === "function") {
     this.sdk.disconnect();
   }
 });
 
-Before({ tags: "@production" }, async function () {
+Before({ tags: "@production" }, async function (this: KuzzleWorld) {
   if (process.env.NODE_ENV !== "production") {
     return "skipped";
   }
 });
 
-Before({ tags: "@development" }, async function () {
+Before({ tags: "@development" }, async function (this: KuzzleWorld) {
   if (process.env.NODE_ENV !== "development") {
     return "skipped";
   }
 });
 
-Before({ tags: "@http" }, async function () {
+Before({ tags: "@http" }, async function (this: KuzzleWorld) {
   if (process.env.KUZZLE_PROTOCOL !== "http") {
     return "skipped";
   }
 });
 
-Before({ tags: "@not-http" }, async function () {
+Before({ tags: "@not-http" }, async function (this: KuzzleWorld) {
   if (process.env.KUZZLE_PROTOCOL === "http") {
     return "skipped";
   }
@@ -103,7 +104,7 @@ Before({ tags: "@not-http" }, async function () {
 
 // firstAdmin hooks ============================================================
 
-Before({ tags: "@firstAdmin" }, async function () {
+Before({ tags: "@firstAdmin" }, async function (this: KuzzleWorld) {
   await this.sdk.query({
     action: "resetSecurity",
     controller: "admin",
@@ -113,19 +114,25 @@ Before({ tags: "@firstAdmin" }, async function () {
   this.sdk.jwt = null;
 });
 
-After({ tags: "@firstAdmin", timeout: 60 * 1000 }, async function () {
-  await resetSecurityDefault(this.sdk);
-});
+After(
+  { tags: "@firstAdmin", timeout: 60 * 1000 },
+  async function (this: KuzzleWorld) {
+    await resetSecurityDefault(this.sdk);
+  },
+);
 
 // security hooks ==============================================================
 
-After({ tags: "@security", timeout: 60 * 1000 }, async function () {
-  await resetSecurityDefault(this.sdk);
-});
+After(
+  { tags: "@security", timeout: 60 * 1000 },
+  async function (this: KuzzleWorld) {
+    await resetSecurityDefault(this.sdk);
+  },
+);
 
 // mappings hooks ==============================================================
 
-Before({ tags: "@mappings" }, async function () {
+Before({ tags: "@mappings" }, async function (this: KuzzleWorld) {
   await this.sdk.query({
     action: "loadMappings",
     body: testMappings,
@@ -143,7 +150,7 @@ Before({ tags: "@mappings" }, async function () {
 
 // events hooks ================================================================
 
-After({ tags: "@events" }, async function () {
+After({ tags: "@events" }, async function (this: KuzzleWorld) {
   await this.sdk.query({
     action: "deactivateAll",
     controller: "functional-test-plugin/pipes",
@@ -157,7 +164,7 @@ After({ tags: "@events" }, async function () {
 
 // login hooks =================================================================
 
-After({ tags: "@login" }, async function () {
+After({ tags: "@login" }, async function (this: KuzzleWorld) {
   await this.sdk.auth.login("local", {
     password: "password",
     username: "test-admin",
@@ -178,7 +185,7 @@ function isUnsubscribable(
 
 // realtime hooks ==============================================================
 
-After({ tags: "@realtime" }, function () {
+After({ tags: "@realtime" }, function (this: KuzzleWorld) {
   if (!this.props.subscriptions) {
     return;
   }
@@ -201,28 +208,44 @@ After({ tags: "@realtime" }, function () {
   return Promise.all(promises);
 });
 
-After({ tags: "@websocket" }, function () {
+After({ tags: "@websocket" }, function (this: KuzzleWorld) {
   this.props.client.terminate();
 });
 
 // cluster hooks ===============================================================
 
-Before({ tags: "@cluster" }, async function () {
+Before({ tags: "@cluster" }, async function (this: KuzzleWorld) {
+  // The default `Before` logged `this.sdk` in; its token is valid on every
+  // node, so each node's SDK acts as the same user.
+  const jwt = this.sdk.jwt;
+
   this.sdk.disconnect();
 
-  this.node1 = this.getSDK({ port: 17510 });
-  this.node2 = this.getSDK({ port: 17511 });
-  this.node3 = this.getSDK({ port: 17512 });
+  // Nodes 1-3 by published port from the CI runner; `docker-test.sh` runs the
+  // suite inside the compose network and names them by service instead.
+  const nodes = (
+    process.env.KUZZLE_CLUSTER_NODES ||
+    "localhost:17510,localhost:17511,localhost:17512"
+  ).split(",");
 
-  await Promise.all([
-    this.node1.connect(),
-    this.node2.connect(),
-    this.node3.connect(),
-  ]);
+  this.nodes = Object.fromEntries(
+    nodes.map((address, i) => {
+      const [host, port] = address.split(":");
+
+      return [`node${i + 1}`, this.getSDK({ host, port })];
+    }),
+  );
+
+  await Promise.all(
+    Object.values(this.nodes).map(async (sdk) => {
+      await sdk.connect();
+      sdk.jwt = jwt;
+    }),
+  );
 });
 
-After({ tags: "@cluster" }, async function () {
-  this.node1.disconnect();
-  this.node2.disconnect();
-  this.node3.disconnect();
+After({ tags: "@cluster" }, async function (this: KuzzleWorld) {
+  for (const sdk of Object.values(this.nodes)) {
+    sdk.disconnect();
+  }
 });

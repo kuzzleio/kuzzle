@@ -97,12 +97,14 @@ run_functional() {
 
   trap - ERR
 
-  # Scenarios that address one node rather than nginx (features/StackTrace.feature)
+  # Scenarios that address one node rather than nginx (features/StackTrace.feature,
+  # features/Cluster.feature's @cluster)
   # reach it by published port from the CI runner, and by service name from in
   # here — same reason KUZZLE_HOST is set above.
   local node_env_flags=(
     -e KUZZLE_DEV_HOST=kuzzle_node_1 -e KUZZLE_DEV_PORT=7512
     -e KUZZLE_PROD_HOST=kuzzle_node_prod -e KUZZLE_PROD_PORT=7512
+    -e KUZZLE_CLUSTER_NODES=kuzzle_node_1:7512,kuzzle_node_2:7512,kuzzle_node_3:7512
   )
 
   if [ "${#extra_args[@]}" -gt 0 ] && [ "${extra_args[0]}" = "--" ]; then

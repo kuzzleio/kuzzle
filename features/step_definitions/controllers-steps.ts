@@ -6,6 +6,7 @@ import { Then } from "@cucumber/cucumber";
 import Bluebird from "bluebird";
 
 import { isApiError } from "../support/errors";
+import type KuzzleWorld from "../support/world";
 
 // TODO should is deprecated it needs to be removed
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -13,7 +14,13 @@ const should = require("should");
 
 Then(
   /I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/,
-  async function (expectSuccess, controller, action, dataTable) {
+  async function (
+    this: KuzzleWorld,
+    expectSuccess,
+    controller,
+    action,
+    dataTable,
+  ) {
     const args = this.parseObject(dataTable);
 
     try {
@@ -33,7 +40,13 @@ Then(
 
 Then(
   /I (successfully )?execute the action "(.*?)":"(.*?)" with body:$/,
-  async function (expectSuccess, controller, action, bodyRaw) {
+  async function (
+    this: KuzzleWorld,
+    expectSuccess,
+    controller,
+    action,
+    bodyRaw,
+  ) {
     const body = JSON.parse(bodyRaw);
 
     try {
@@ -53,7 +66,7 @@ Then(
 
 Then(
   /I (successfully )?execute the action "(.*?)":"(.*?)"$/,
-  async function (expectSuccess, controller, action) {
+  async function (this: KuzzleWorld, expectSuccess, controller, action) {
     try {
       const response = await this.sdk.query({ action, controller });
 
@@ -110,7 +123,7 @@ function matchObjectsInAnyOrder(result: unknown[], expected: unknown[]) {
 
 Then(
   /I should receive a ("(.*?)" )?array (of objects )?matching( in order)?:/,
-  function (name, objects, inOrder, dataTable) {
+  function (this: KuzzleWorld, name, objects, inOrder, dataTable) {
     const expected = objects
       ? this.parseObjectArray(dataTable)
       : _.flatten(dataTable.rawTable).map((obj: any) => JSON.parse(obj));
@@ -139,32 +152,38 @@ Then(
 
 Then(
   /I should receive a ("(.*?)" )?array containing (\d+) elements/,
-  function (name, expectedCount) {
+  function (this: KuzzleWorld, name, expectedCount) {
     const result = name ? this.props.result[name] : this.props.result;
 
     should(result).have.length(expectedCount);
   },
 );
 
-Then("I should receive a result matching:", function (dataTable) {
-  const expectedResult = this.parseObject(dataTable);
+Then(
+  "I should receive a result matching:",
+  function (this: KuzzleWorld, dataTable) {
+    const expectedResult = this.parseObject(dataTable);
 
-  should(this.props.result).not.be.undefined();
+    should(this.props.result).not.be.undefined();
 
-  should(this.props.result).matchObject(expectedResult);
-});
+    should(this.props.result).matchObject(expectedResult);
+  },
+);
 
-Then("I should receive a response matching:", function (dataTable) {
-  const expectedResult = this.parseObject(dataTable);
+Then(
+  "I should receive a response matching:",
+  function (this: KuzzleWorld, dataTable) {
+    const expectedResult = this.parseObject(dataTable);
 
-  should(this.props).have.property("response");
+    should(this.props).have.property("response");
 
-  should(this.props.response).matchObject(expectedResult);
-});
+    should(this.props.response).matchObject(expectedResult);
+  },
+);
 
 Then(
   "The property {string} of the result should match:",
-  function (path, dataTable) {
+  function (this: KuzzleWorld, path, dataTable) {
     const expectedProperty = this.parseObject(dataTable);
 
     const property = _.get(this.props.result, path);
@@ -179,7 +198,7 @@ Then(
   },
 );
 
-Then("The result should be {string}", function (rawValue) {
+Then("The result should be {string}", function (this: KuzzleWorld, rawValue) {
   const expectedValue = JSON.parse(rawValue);
 
   should(this.props.result).be.eql(expectedValue);
@@ -187,7 +206,7 @@ Then("The result should be {string}", function (rawValue) {
 
 Then(
   "The result should contain a property {string} of type {string}",
-  function (path, type) {
+  function (this: KuzzleWorld, path, type) {
     const property = _.get(this.props.result, path);
 
     should(property).not.be.undefined();
@@ -198,7 +217,7 @@ Then(
 
 Then(
   "I should receive a {string} result equals to {string}",
-  function (type, rawResult) {
+  function (this: KuzzleWorld, type, rawResult) {
     let expectedResult;
 
     if (type === "string") {
@@ -215,19 +234,22 @@ Then(
   },
 );
 
-Then("I should receive an empty result", function () {
+Then("I should receive an empty result", function (this: KuzzleWorld) {
   should(this.props.result).be.undefined();
 });
 
-Then("I should receive an error matching:", function (dataTable) {
-  const expectedError = this.parseObject(dataTable);
+Then(
+  "I should receive an error matching:",
+  function (this: KuzzleWorld, dataTable) {
+    const expectedError = this.parseObject(dataTable);
 
-  should(this.props.error).not.be.undefined();
+    should(this.props.error).not.be.undefined();
 
-  should(this.props.error).match(expectedError);
-});
+    should(this.props.error).match(expectedError);
+  },
+);
 
-Then("I debug {string}", function (path) {
+Then("I debug {string}", function (this: KuzzleWorld, path) {
   const prop = _.get(this.props, path);
 
   try {
@@ -237,11 +259,14 @@ Then("I debug {string}", function (path) {
   }
 });
 
-Then("I should receive a empty {string} array", function (name) {
-  should(this.props.result[name]).be.Array().be.empty();
-});
+Then(
+  "I should receive a empty {string} array",
+  function (this: KuzzleWorld, name) {
+    should(this.props.result[name]).be.Array().be.empty();
+  },
+);
 
-Then("I got an error with id {string}", function (id) {
+Then("I got an error with id {string}", function (this: KuzzleWorld, id) {
   assert(
     this.props.error !== null,
     "Expected the previous step to return an error",
@@ -255,7 +280,7 @@ Then("I got an error with id {string}", function (id) {
 
 Then(
   "The response headers in the body should be equal:",
-  async function (dataTable) {
+  async function (this: KuzzleWorld, dataTable) {
     const expectedResult = this.parseObject(dataTable);
     should(this.props.response.headers).deepEqual(expectedResult);
   },
@@ -263,7 +288,7 @@ Then(
 
 Then(
   "The response should contains an array of {string} in the response matching:",
-  async function (key, dataTable) {
+  async function (this: KuzzleWorld, key, dataTable) {
     const array = this.parseObjectArray(dataTable);
     should(this.props.response[key]).deepEqual(array);
   },
@@ -271,12 +296,12 @@ Then(
 
 Then(
   "The response should contains a {string} equals to undefined",
-  async function (key) {
+  async function (this: KuzzleWorld, key) {
     should(this.props.response[key]).equal(undefined);
   },
 );
 
-Then("The raw response should match:", function (dataTable) {
+Then("The raw response should match:", function (this: KuzzleWorld, dataTable) {
   const expectedResult = this.parseObject(dataTable);
 
   should(this.props.rawResponse).not.be.undefined();
@@ -286,7 +311,7 @@ Then("The raw response should match:", function (dataTable) {
 
 Then(
   /I send a (bad )?HTTP "(.*?)" request with:$/,
-  async function (expectError, method, dataTable) {
+  async function (this: KuzzleWorld, expectError, method, dataTable) {
     const body = this.parseObject(dataTable);
 
     const options = {
@@ -298,7 +323,7 @@ Then(
       json: true,
       method,
       resolveWithFullResponse: true,
-      url: `http://${this._host}:${this._port}/_query`,
+      url: `http://${this.host}:${this.port}/_query`,
     };
 
     body.headers = undefined;
@@ -323,26 +348,29 @@ Then(
   },
 );
 
-Then("I wait {int} milliseconds", async function (ms) {
+Then("I wait {int} milliseconds", async function (this: KuzzleWorld, ms) {
   await Bluebird.delay(ms);
 });
 
-Then(/I have .* in the app before startup/, function () {
+Then(/I have .* in the app before startup/, function (this: KuzzleWorld) {
   // Do nothing, purpose here is only readability
   // To check what have been done, refer to:
   // - docker/scripts/start-kuzzle-dev
   // - features/fixtures/imports
 });
 
-Then("the streamed data should be equal to:", async function (dataTable) {
-  const lines = dataTable.rawTable.map((row: string[]) => {
-    return row[0];
-  });
+Then(
+  "the streamed data should be equal to:",
+  async function (this: KuzzleWorld, dataTable) {
+    const lines = dataTable.rawTable.map((row: string[]) => {
+      return row[0];
+    });
 
-  const resultLines = this.props.result.split("\n");
-  for (let i = 0; i < resultLines.length; i++) {
-    const regexp = new RegExp(lines[i]);
+    const resultLines = this.props.result.split("\n");
+    for (let i = 0; i < resultLines.length; i++) {
+      const regexp = new RegExp(lines[i]);
 
-    should(resultLines[i]).match(regexp);
-  }
-});
+      should(resultLines[i]).match(regexp);
+    }
+  },
+);

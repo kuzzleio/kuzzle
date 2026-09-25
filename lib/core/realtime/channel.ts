@@ -20,6 +20,13 @@
  */
 
 import type { RealtimeScope, RealtimeUsers } from "../../types";
+
+/**
+ * A channel's document scope. Wider than `RealtimeScope`, which also types a
+ * document *notification* and so cannot hold `"none"`: a `"none"`-scoped
+ * channel takes user events and no document event (TD-74).
+ */
+export type ChannelScope = RealtimeScope | "none";
 import * as kerror from "../../kerror";
 
 const realtimeError = kerror.wrap("core", "realtime");
@@ -61,8 +68,13 @@ export class Channel {
       case "in":
         str += "2";
         break;
+      // "out" and "none" both hashed to "3", so two subscriptions to one room
+      // that differed only there shared a channel, and the second got the
+      // first one's configuration (`Room.createChannel` keeps the first).
+      // "none" keeps "3" — it is the default, and every default channel keeps
+      // its name — and "out" takes the next free digit (TD-74).
       case "out":
-        str += "3";
+        str += "4";
         break;
       case "none":
         str += "3";
@@ -88,14 +100,24 @@ export class Channel {
       case "out":
         str += "3";
         break;
+      // No case for "none", on purpose: it adds no digit, and since every
+      // other field always adds exactly one, a two-digit suffix is already
+      // unique to it. A case would only rename those channels (TD-74).
     }
 
     return str;
   }
 
-  static USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
+  static readonly USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
 
-  static SCOPE_ALLOWED_VALUES = Channel.USERS_ALLOWED_VALUES;
+  // Its own array: it used to be `USERS_ALLOWED_VALUES` itself, which is how
+  // `"none"` became a valid scope without the type or the hash knowing.
+  static readonly SCOPE_ALLOWED_VALUES: readonly string[] = [
+    "all",
+    "in",
+    "out",
+    "none",
+  ] satisfies readonly ChannelScope[];
 
   /**
    * Identifier of the channel.
@@ -110,7 +132,7 @@ export class Channel {
    *
    * @default "all"
    */
-  public scope: RealtimeScope;
+  public scope: ChannelScope;
 
   /**
    * Define if notification should be send when users join or leave the channel.
@@ -135,7 +157,7 @@ export class Channel {
       users = "none",
       propagate = true,
     }: {
-      scope?: RealtimeScope;
+      scope?: ChannelScope;
       users?: RealtimeUsers;
       propagate?: boolean;
     } = {},

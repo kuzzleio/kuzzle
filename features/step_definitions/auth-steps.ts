@@ -3,10 +3,11 @@ import _ from "lodash";
 import { Given } from "@cucumber/cucumber";
 
 import { isApiError } from "../support/errors";
+import type KuzzleWorld from "../support/world";
 
 Given(
   "I'm logged in Kuzzle as user {string} with password {string}",
-  async function (username, password) {
+  async function (this: KuzzleWorld, username, password) {
     this.props.result = await this.sdk.auth.login("local", {
       password,
       username,
@@ -14,13 +15,13 @@ Given(
   },
 );
 
-Given("I'm logged as the anonymous user", function () {
+Given("I'm logged as the anonymous user", function (this: KuzzleWorld) {
   this.sdk.jwt = null;
 });
 
 Given(
   /I can( not)? login with the previously created API key/,
-  async function (not) {
+  async function (this: KuzzleWorld, not) {
     const previousToken = this.sdk.jwt;
     const token = _.get(this.props, "result._source.token") || this.props.token;
 
@@ -40,13 +41,13 @@ Given(
   },
 );
 
-Given("I save the created API key", function () {
+Given("I save the created API key", function (this: KuzzleWorld) {
   this.props.token = this.props.result._source.token;
 });
 
 Given(
   "I can use the single use token from the result to authenticate once",
-  async function () {
+  async function (this: KuzzleWorld) {
     const token = this.props.result.token;
 
     should(token).not.be.undefined();
@@ -60,7 +61,7 @@ Given(
     // Unique token is not valid anymore
 
     try {
-      await this.sdk.server.now();
+      await this.sdk.server.now({});
 
       throw new Error("Token should not be valid");
     } catch (error) {

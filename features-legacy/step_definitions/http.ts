@@ -6,18 +6,23 @@ import { When, Then } from "@cucumber/cucumber";
 import { httpApi } from "../support/stepUtils";
 import type KWorld from "../support/world";
 
-When("I send the crafted HTTP multipart request", function (done) {
-  const socket = net.createConnection(7512, undefined, () => {
-    const rq = fs.readFileSync("./features-legacy/fixtures/bad-multipart.req");
+When(
+  "I send the crafted HTTP multipart request",
+  function (this: KWorld, done) {
+    const socket = net.createConnection(7512, undefined, () => {
+      const rq = fs.readFileSync(
+        "./features-legacy/fixtures/bad-multipart.req",
+      );
 
-    socket.write(rq.toString(), (error) => {
-      socket.end();
-      done(error);
+      socket.write(rq.toString(), (error) => {
+        socket.end();
+        done(error);
+      });
     });
-  });
 
-  socket.on("error", done);
-});
+    socket.on("error", done);
+  },
+);
 
 Then("Kuzzle is still up", async function (this: KWorld) {
   await this.api.serverPublicApi();

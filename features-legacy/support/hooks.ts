@@ -81,10 +81,13 @@ Before({ timeout: 10 * 2000 }, async function (this: World) {
   await this.api.resetSecurity();
 });
 
-Before({ tags: "@resetDatabase", timeout: 10 * 2000 }, async function () {
-  await cleanDatabase();
-  await bootstrapDatabase();
-});
+Before(
+  { tags: "@resetDatabase", timeout: 10 * 2000 },
+  async function (this: World) {
+    await cleanDatabase();
+    await bootstrapDatabase();
+  },
+);
 
 After(async function (this: World) {
   return this.api.disconnect();

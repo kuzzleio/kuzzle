@@ -13,6 +13,7 @@ import Notifier from "../../../lib/core/realtime/notifier";
 import { Room } from "../../../lib/core/realtime/room";
 import { InternalError } from "../../../lib/kerror/errors/internalError";
 import type { RealtimeScope } from "../../../lib/types";
+import type { ChannelScope } from "../../../lib/core/realtime/channel";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 import { present } from "../../helpers/present";
 
@@ -26,14 +27,11 @@ import { present } from "../../helpers/present";
  */
 
 /**
- * `scope: "none"` is a value the subscribe validator accepts
- * (`Channel.SCOPE_ALLOWED_VALUES` is literally `USERS_ALLOWED_VALUES`) and the
- * dispatcher relies on — it is how a channel takes user events and no document
- * event — but `RealtimeScope` is `"in" | "out" | "all"`, so TypeScript refuses
- * it. Four of the six channels below need it. Cast here, once, with the
- * finding filed: type-debt register TD-74.
+ * `scope: "none"` is how a channel takes user events and no document event.
+ * Four of the six channels below use it; it used to need a cast, because the
+ * channel's scope was typed as a notification's (TD-74).
  */
-const scopeNone = "none" as RealtimeScope;
+const scopeNone = "none" satisfies ChannelScope;
 
 const index = "index";
 const collection = "collection";

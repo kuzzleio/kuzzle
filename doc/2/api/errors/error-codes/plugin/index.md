@@ -31,7 +31,6 @@ description: Error codes definitions
 | plugin.assert.invalid_application_name<br/><pre>0x0401000d</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Application name "%s" is invalid. Application names must be in kebab-case. | The application name is invalid. Application names can only contain lowercase letters and dashes. |
 | plugin.assert.duplicated_api_definition<br/><pre>0x0401000e</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot define new controllers in the "api" and the "controllers" objects at the same time | You cannot use the "api" and the "controllers" objects at the same time. Use the "api" object to define controllers. |
 | plugin.assert.plugin_not_found<br/><pre>0x0401000f</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Plugin "%s" not found.%s | The request plugin does not exists or have not been loaded yet. |
-| plugin.assert.invalid_openapi_schema<br/><pre>0x04010010</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Invalid OpenAPI specification: "%s" | OpenAPI specification is invalid |
 
 ---
 
@@ -95,7 +94,6 @@ description: Error codes definitions
 | plugin.controller.unsupported_verb<br/><pre>0x04040007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | %s Only the following http verbs are allowed: "%s". %s | A HTTP route is using an unsupported HTTP verb |
 | plugin.controller.unserializable_response<br/><pre>0x04040008</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unable to serialize response. Are you trying to return the request? | A plugin controller action returned a non-serializable response |
 | plugin.controller.invalid_action_response<br/><pre>0x04040009</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unexpected return value from action "%s:%s": expected a Promise | API actions added by plugins must return a promise |
-| plugin.controller.invalid_openapi_schema<br/><pre>0x0404000a</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Invalid OpenAPI specification in "%s:%s", %s : %s | OpenAPI specification is invalid |
 
 ---
 

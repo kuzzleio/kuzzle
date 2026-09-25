@@ -1630,6 +1630,8 @@ This is the **fourth** instance of one finding — [TD-45](#td-45) (`*.js` never
 
 ### TD-74
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-74--one-channel-name-for-two-configurations)), and the entry's reading of the hash was half wrong.** The real collision was the **users** switch — `"out"` and `"none"` both `"3"` — and it was a live defect: `Room.createChannel` keeps the first channel registered under a name, so the second of two such subscriptions got the first one's configuration. `"out"` is now `"4"`; `"none"` keeps `"3"` so every default channel keeps its name. The **scope** half was not a collision: every other field adds exactly one digit, so a `"none"` scope's two-digit suffix was already unique — it stays as it is, with a comment. The type went into a channel-only `ChannelScope = RealtimeScope | "none"` rather than widening `RealtimeScope`, which also types document notifications; `SCOPE_ALLOWED_VALUES` is its own array. **Not breaking:** channel names are documented as opaque identifiers, returned by `subscribe` and never synchronised across the cluster; only `users: "out"` channels are renamed.
+
 **`RealtimeScope` forbids a value the runtime validates and the dispatcher relies on** · 🟠 medium · `lib/types/realtime/RealtimeScope.ts`, `lib/core/realtime/channel.ts`
 
 Found porting the `notifier` specs ([step 13 L1b2b](steps/13-sprint-10-test-closure.md#what-l1b2b-found)), by TS2322 × 6.
@@ -1693,6 +1695,8 @@ is refused the input the method exists to accept. One type is doing duty for two
 
 ### TD-76
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-76--pluginContextconstructors-declared-as-constructors)).** `Koncorde`, `RequestContext` and `RequestInput` are `typeof` their classes; `Request` is `PluginRequestConstructor` (exported), with `instantiateRequest`'s two call shapes as two construct signatures. Three of the four `as any`s went; the fourth became one named assertion, because `instantiateRequest` is a function called with `new`. `tests/core/plugin/pluginContext.test.ts` dropped all seven `constructorOf()` casts — the uncast calls are the type-level test — and marks its one deliberate misuse with `@ts-expect-error`. `any` ratchet 178 → 175.
+
 **Four of `PluginContext.constructors`' seven entries are declared as the instances they build** · 🟠 medium · `lib/core/plugin/pluginContext.ts`
 
 Found porting the `plugin/context/context` spec ([step 13 L4d3](steps/13-sprint-10-test-closure.md#what-l4d3-found)), by TS2351 × 6.
@@ -1728,6 +1732,8 @@ which is what every plugin writes, and which does not type-check.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched, as [TD-74](#td-74) and [TD-75](#td-75) did. `tests/core/plugin/pluginContext.test.ts` names the cast `constructorOf()` and points at this entry.
 
 ### TD-77
+
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-77--two-error-codes-for-a-validation-nobody-wrote)) — by removing the codes, not by adding the check.** Adding the validation would refuse at startup an application whose `openapi` member is malformed and which starts today: a breaking change, ruled out. Both codes were raised by nothing, so no client can have received either, and the only code able to raise them is Kuzzle's own (`context.kerror` is scoped to `plugin.<pluginName>`). `4-plugin.json` loses both entries — each was its subdomain's last code, so no gap — and `doc/2`'s error-code page is regenerated.
 
 **Both `invalid_openapi_schema` error codes are declared, documented — and raised nowhere** · 🟠 medium · `lib/core/plugin/plugin.ts`, `lib/kerror/codes/4-plugin.json`
 
@@ -1811,6 +1817,8 @@ assert(
 
 ### TD-80
 
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-80--passports-next-and-one-failure-path)).** The middleware gets its `next`, and passport's errors, the strategy callback's and anything thrown go through one `fail()`. An unknown strategy is now answered `Unknown authentication strategy "foobar"` (still `plugin.runtime.unexpected_error`); the spec that pinned `next is not a function` asserts that message and fails against the old code. `casts` ratchet 84 → 83 (the callback's `as Error` went with the duplicated branch).
+
 **`PassportWrapper.authenticate` never passes `next`, so passport's own errors surface as `next is not a function`** · 🟡 low · `lib/core/auth/passportWrapper.ts`
 
 Found porting the `core/auth/passportWrapper` spec ([step 13 L4e6](steps/13-sprint-10-test-closure.md#what-l4e6-found)), by asserting on an unknown strategy — which the Mocha spec could not do, having replaced passport with a stub.
@@ -1838,6 +1846,8 @@ instead of `Unknown authentication strategy "foobar"`.
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/core/auth/passportWrapper.test.ts` pins the current message and points at this entry, so the fix will show up as a failing assertion naming it.
 
 ### TD-81
+
+> **✅ Fixed (2026-09-24, [step 08](steps/08-type-debt-backlog.md#td-81--the-dump-lock-released-on-every-path)).** The arguments are checked before the lock is taken, and the generation runs in a `try/finally` that releases it. The spec that pinned the bug is now two specs of the fix — a rejected suffix and a failed generation, each followed by a dump that must succeed — both verified to fail against the old code, plus one that the lock is held for the whole generation.
 
 **`DumpGenerator.dump()` takes its lock before validating, and releases it only on success — one bad request disables dumps for the process's lifetime** · 🟠 med · `lib/kuzzle/dumpGenerator.ts`
 
