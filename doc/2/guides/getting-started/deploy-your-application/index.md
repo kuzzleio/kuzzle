@@ -175,6 +175,12 @@ $ docker compose -f deployment/docker-compose.yml up -d
 
 Your Kuzzle application is now up and running on port 7512!
 
+## Deploy with Easypanel
+
+[Easypanel](https://easypanel.io) is a self-hosted Docker deployment platform, and it maintains a one-click deployment template for Kuzzle, wiring up Elasticsearch and Redis automatically:
+
+[![Deploy on Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/templates/kuzzle)
+
 <GuidesLinks 
   :prev="{ text: 'Customize API Behavior', url: '/guides/getting-started/customize-api-behavior/' }" 
 />
