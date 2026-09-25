@@ -223,7 +223,12 @@ class Validation {
     request: KuzzleRequest,
     verbose = false,
   ): Promise<KuzzleRequest | { errorMessages: ErrorMessages; valid: boolean }> {
-    const { _id, index, collection } = request.input.resource; // NOSONAR migrating off `resource` is TD-20, and would change behaviour
+    // Read from `input.args`, which is what the deprecated `input.resource`
+    // getters return: same values, typed as those getters declare them.
+    const { args } = request.input;
+    const _id: string | null = args._id;
+    const index: string | null = args.index;
+    const collection: string | null = args.collection;
 
     // `has` rather than a plain lookup: `index` and `collection` come from the
     // request, so an inherited property must not answer for a specification.
