@@ -44,3 +44,9 @@ export function tokenAsInterface(request: KuzzleRequest) {
 
   return members;
 }
+
+// `Token.connectionId` is deprecated (never set), not removed: code that reads
+// it from the interface keeps compiling, at the type it always had.
+export function deprecatedConnectionId(token: Token): string | null {
+  return token.connectionId;
+}
