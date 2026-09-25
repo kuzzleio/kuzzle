@@ -530,3 +530,90 @@ all 32 configurations, the default names pinned, and the validators; the
 first three fail against the old code (the third only on its `users: "out"`
 line, by design). `notifier.test.ts` loses its `"none" as RealtimeScope` cast.
 
+
+### TD-78 — the two handler forms the plugin types refused
+
+`PluginHookDefinition` and `PluginPipeDefinition` admitted handler functions
+only, in promise form for pipes. The runtime takes two more targets:
+**the name of a plugin method** (deprecated, warned about at registration) and
+**a pipe in callback form** — `(request, callback)` — which the pipes guide
+documents side by side with the promise form. A TypeScript plugin writing
+either had to cast.
+
+Both definitions are widened: hooks to `HookEventHandler | PluginMethodName`,
+pipes to `RegisteredPipeHandler | PluginMethodName` (the union
+`EventHandler.ts` already exported for what the emitter stores), each alone or
+in an array. `PluginMethodName` is a new exported alias of `string` whose only
+job is to carry the `@deprecated` tag, so the name form reads as tolerated,
+not as intended.
+
+**Why it is not breaking:** no runtime change, and the types only widen what
+a plugin may *write*. The one reader that could notice is code that indexes
+its own `pipes` / `hooks` through the base type — and that code already had
+to narrow out the array form before calling, so it holds a union either way.
+
+`tests/core/plugin/pluginsManager.test.ts` loses its `byName()` / `asPipe()`
+casts (~20 uses): the assignments themselves are now the type-level test.
+
+### TD-75 — a specification type for what the user writes
+
+`DateTypeOptions` describes a `date` field's options **after**
+`validateFieldSpecification` has converted its range bounds into moments, and
+was also that method's parameter type — so the documented call, with ISO
+strings or epoch numbers as bounds, did not type-check against the method
+whose job is to convert them.
+
+`BaseType<TOptions, TSpecification = TOptions>`: the second parameter names
+the shape a user writes, `validateFieldSpecification(opts: TSpecification):
+TOptions` maps one to the other, and the base implementation (identity) is an
+overload like `validate`'s, so it needs no cast. `DateType` extends
+`BaseType<DateTypeOptions, DateSpecification>`, with `DateSpecification`'s
+bounds typed `DateSpecificationBound = string | number` (`"NOW"` is a string).
+
+The body had to be re-said, not re-done. It mutated the caller's object —
+`range.min = min` — which cannot type-check once the input and output types
+differ. It still does exactly that: `validateRange` builds the converted
+bounds and `Object.assign`s them onto the caller's `range`, and
+`validateFieldSpecification` `Object.assign`s `formats` and that same `range`
+onto the caller's object and returns it. An intersection is assignable to its
+constituents, so the result is a `DateTypeOptions` without an assertion.
+In-place matters: `Validation` stores the returned options, but reads them from
+the raw specification object, which a caller may keep.
+
+**Why it is not breaking:** no runtime change (same object, same `range`
+object, same values, same errors in the same order); the new type parameter is
+defaulted, so every `BaseType<T>` — ours and plugins' — means what it meant.
+
+`tests/core/validation/types/date.test.ts` loses its `specification()` cast;
+its deliberately invalid fixtures are `invalid<DateSpecification>` now, and a
+new test pins the in-place contract (same object, same `range`, `NOW` kept,
+the other bound a moment) so a future "cleaner" version that builds a copy
+fails.
+
+### TD-79 — two messages that now say what they check
+
+Both fixes are to a message; neither check changed.
+
+- **`accessControlAllowOriginUseRegExp`** checked `config.http.…` and printed
+  `config.server.protocols.http.…`, a section that never carries the key, so
+  the message always read `invalid value "undefined"`. It prints what it
+  checks.
+- **`idleTimeout`** promised `integer >= 1000` and enforced `>= 0`. The
+  entry left open which side was wrong; reading the consumer settles it. The
+  floor exists, but it belongs to `httpwsProtocol`, which replaces any value
+  below 1000 — 0 included, the value the websocket protocol page's example
+  shows — with its 60 000 default and a warning, *for backward
+  compatibility* by its own comment. Enforcing it in the checker would
+  refuse at load time configurations that boot today, so the message says
+  `integer >= 0 expected`, like `rateLimit`'s, and a comment points at where
+  the floor lives.
+
+**Why it is not breaking:** the set of accepted configurations is unchanged;
+only two error strings differ. Nothing matches on them — they are
+`assert` messages printed at startup.
+
+`tests/config/index.test.ts` asserted both as they were (`"undefined"`
+verbatim, `idleTimeout: 500` accepted): the first now asserts the offending
+value is printed, the second keeps accepting `500` with a comment saying why.
+The protocol-side fallback is already covered by
+`tests/core/network/protocols/httpwsProtocol.test.ts`.

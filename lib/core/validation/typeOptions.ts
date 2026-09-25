@@ -46,6 +46,22 @@ export interface DateTypeOptions extends TypeOptions {
   };
 }
 
+/**
+ * Bounds of a `date` range as a user writes them, before
+ * `validateFieldSpecification` converts them into {@link DateRangeBound}s: an
+ * ISO 8601 string, an epoch number, or `NOW`.
+ */
+export type DateSpecificationBound = string | number;
+
+/** The `date` type's `typeOptions` as a user writes them. */
+export interface DateSpecification extends TypeOptions {
+  formats?: string[];
+  range?: {
+    min?: DateSpecificationBound;
+    max?: DateSpecificationBound;
+  };
+}
+
 export interface EnumTypeOptions extends TypeOptions {
   values?: string[];
 }

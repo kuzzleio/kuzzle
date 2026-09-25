@@ -1658,6 +1658,8 @@ Two things are wrong and they pull in opposite directions:
 
 ### TD-75
 
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-75--a-specification-type-for-what-the-user-writes)).** `BaseType` takes a second, defaulted type parameter, `TSpecification` (= `TOptions`), and `validateFieldSpecification(opts: TSpecification): TOptions`. The `date` type declares the input it really takes — `DateSpecification`, whose bounds are `DateSpecificationBound = string | number` — and keeps returning `DateTypeOptions`. The body is unchanged in effect: it still normalises the caller's object in place (now said with `Object.assign`, which is also what makes it type-check without a cast). Every other type keeps one shape; a plugin's `BaseType<T>` means what it meant. The spec's `specification()` cast is gone.
+
 **`DateTypeOptions` describes what `validateFieldSpecification` returns, and is also the type of what it takes** · 🟡 low · `lib/core/validation/typeOptions.ts`, `lib/core/validation/types/date.ts`
 
 Found porting the `validation/types/date` spec ([step 13 L4d1](steps/13-sprint-10-test-closure.md#what-l4d1-found)), by TS2322 × 8.
@@ -1757,6 +1759,8 @@ The Mocha suite asserted the opposite, in two tests that had no way to fail: `sh
 
 ### TD-78
 
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-78--the-two-handler-forms-the-plugin-types-refused)).** `PluginHookDefinition` admits `HookEventHandler | PluginMethodName`, and `PluginPipeDefinition` admits `RegisteredPipeHandler | PluginMethodName` — the promise *and* the callback form, both documented by the pipes guide — each alone or in an array. `PluginMethodName` is a new exported alias of `string` carrying `@deprecated`, so the name form is visible and marked rather than silently refused. Types only, no runtime change; the spec's `byName()` / `asPipe()` casts are gone.
+
 **`PluginHookDefinition` and `PluginPipeDefinition` admit neither of the two handler forms the runtime also accepts** · 🟡 low · `lib/types/Plugin.ts`, `lib/types/EventHandler.ts`
 
 Found porting the `plugin/pluginsManager` spec ([step 13 L4d4](steps/13-sprint-10-test-closure.md#what-l4d4-found)), by TS2322 × 18.
@@ -1783,6 +1787,8 @@ So a TypeScript plugin that writes either form — the second of which the pipe 
 - **Not fixed here:** a test-porting slice leaves `lib/` untouched. `tests/core/plugin/pluginsManager.test.ts` names the two casts `byName()` and `asPipe()` once, at the top, and points at this entry.
 
 ### TD-79
+
+> **✅ Fixed (2026-09-25, [step 08](steps/08-type-debt-backlog.md#td-79--two-messages-that-now-say-what-they-check)) — both by correcting the message, neither by changing the check.** `accessControlAllowOriginUseRegExp`'s message prints `config.http.…`, the value it checks. `idleTimeout`'s says `integer >= 0 expected`, which is what it enforces: the 1000 ms floor is real but it is the **protocol's** — `httpwsProtocol` replaces a lower value (0 included) with its 60 000 default and warns — so refusing `500` at load time would stop servers that boot today. The entry's "uWebSockets' contract is 0, or at least 8 seconds" is not what the bundled v20.56.0 typings say (seconds, 0 disables, ~4 s granularity); nothing to act on there.
 
 **Two of the configuration checker's messages describe something other than what they check** · 🟡 low · `lib/config/index.ts`
 

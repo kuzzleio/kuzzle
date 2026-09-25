@@ -347,14 +347,9 @@ describe("#config", () => {
     );
 
     /*
-     * Not covered by the Mocha spec: two of the six `http` asserts.
-     *
-     * ⚠️ And this one reports the wrong object. It *checks*
-     * `config.http.accessControlAllowOriginUseRegExp` and *prints*
-     * `cfg.accessControlAllowOriginUseRegExp`, where `cfg` is
-     * `server.protocols.http` — a section that never carries the key. So the
-     * message says `invalid value "undefined"` whatever was configured, and
-     * the operator is told to look at a value they did not write.
+     * Not covered by the Mocha spec: two of the six `http` asserts. This one
+     * reads `http`, not `server.protocols.http`, and must print what it read
+     * (TD-79: it used to print the other section, so always "undefined").
      */
     it.each([[null], ["foo"], [123], [[]]])(
       'refuses an "accessControlAllowOriginUseRegExp" that is not a boolean: %s',
@@ -362,7 +357,7 @@ describe("#config", () => {
         expect(
           loading({ http: { accessControlAllowOriginUseRegExp: bad } }),
         ).toThrow(
-          '[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "undefined" (boolean expected)',
+          `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${bad}" (boolean expected)`,
         );
       },
     );
@@ -455,18 +450,17 @@ describe("#config", () => {
       'refuses an "idleTimeout" that is not a positive integer: %s',
       (bad) => {
         expect(loading(protocol({ idleTimeout: bad }))).toThrow(
-          `[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`,
+          `[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 0 expected)`,
         );
       },
     );
 
     /*
-     * ⚠️ The message promises a floor of 1000 and the check is `>= 0`, so
-     * every value between the two is accepted while being told it is not
-     * allowed. Stated rather than asserted as a rejection, because the
-     * subject accepts it — see the slice's finding.
+     * Accepted here on purpose (TD-79): the 1000 ms floor belongs to the
+     * protocol, which replaces a lower value with its default and warns —
+     * refusing it at load time would stop servers that boot today.
      */
-    it("accepts an idleTimeout below the 1000 its message promises", () => {
+    it("accepts an idleTimeout below 1000, which the protocol defaults", () => {
       const result = load(protocol({ idleTimeout: 500 }));
       const server = result.server as JSONObject;
       const protocols = server.protocols as JSONObject;
