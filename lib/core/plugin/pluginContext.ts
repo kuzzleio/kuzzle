@@ -117,11 +117,8 @@ export class PluginContext {
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
     /**
-     * Overloaded on the callback, because the return value depends on it:
-     * without one (or with `null`) the answer is a promise; with one, the
-     * caller gets its answer there and `null` is returned, which is what this
-     * has always done. A single `Promise | null` signature made every
-     * `await execute(request)` of a `strict` plugin a compile error.
+     * Declared as returning a promise, as v2.56.0 declared it — see
+     * {@link PluginExecute}.
      */
     execute: PluginExecute;
 
@@ -421,15 +418,21 @@ export class PluginContext {
 }
 
 /**
- * `context.accessors.execute`'s call shapes. The callback is called as
- * `callback(error, request)`; it is typed as taking `never` so that a
- * callback of any signature is accepted, as v2.56.0's `any` did.
+ * `context.accessors.execute`, as v2.56.0 declared it.
+ *
+ * Without a callback (or with `null`), the answer is a promise of the
+ * request. With a callback — called as `callback(error, request)` — the
+ * answer goes there, and **nothing is returned at runtime** (`null`): the
+ * declared promise does not exist in that form, so do not chain on it. It is
+ * declared all the same because v2.56.0 declared it so, and code compiled
+ * against that (`execute(request, callback).then(...)`) must still compile;
+ * a `Promise | null` return made every `await execute(request)` of a
+ * `strict` plugin a compile error.
  */
-export type PluginExecute = {
-  (request: KuzzleRequest, callback?: null): Promise<KuzzleRequest>;
-  (request: KuzzleRequest, callback: (...args: never[]) => unknown): null;
-  (request: KuzzleRequest, callback?: unknown): Promise<KuzzleRequest> | null;
-};
+export type PluginExecute = (
+  request: KuzzleRequest,
+  callback?: unknown,
+) => Promise<KuzzleRequest>;
 
 /**
  * @param {KuzzleRequest} request
@@ -437,16 +440,12 @@ export type PluginExecute = {
  */
 function execute(
   request: KuzzleRequest,
-  callback?: null,
-): Promise<KuzzleRequest>;
-function execute(
-  request: KuzzleRequest,
-  callback: (...args: never[]) => unknown,
-): null;
-function execute(
-  request: KuzzleRequest,
   callback?: unknown,
-): Promise<KuzzleRequest> | null;
+): Promise<KuzzleRequest>;
+/**
+ * The implementation says what it really returns: `null` in callback mode.
+ * The signature above is the declared one — see {@link PluginExecute}.
+ */
 function execute(
   request: KuzzleRequest,
   callback?: unknown,

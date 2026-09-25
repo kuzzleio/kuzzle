@@ -104,16 +104,21 @@ export class MailerPlugin extends Plugin {
       .then((answered) => answered.result);
     const withNull = await this.context.accessors.execute(request, null);
 
-    // The callback form answers through the callback.
+    // The callback form answers through the callback. It returns nothing at
+    // runtime, but v2.56.0 declared a promise, so chaining compiled then and
+    // must still compile.
     this.context.accessors.execute(request, (error: Error | null) => {
       if (error) {
         this.context.log.error(error.message);
       }
     });
+    const chained: Promise<unknown> = this.context.accessors
+      .execute(request, () => {})
+      .then((answered) => answered.status);
 
     await this.context.accessors.trigger("mailer:now", { status });
 
-    return { result, status: withNull.status };
+    return { chained, result, status: withNull.status };
   }
 
   onNow() {
