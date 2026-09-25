@@ -372,7 +372,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
   describe("#_initSecret", () => {
     it("uses the configured secret, and stores nothing", async () => {
-      global.kuzzle.config.security.jwt.secret = "foobar";
+      global.kuzzle.config.security.jwt!.secret = "foobar";
 
       await handler._initSecret();
 
@@ -388,7 +388,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
      */
     it("prefers authToken.secret over the deprecated jwt.secret", async () => {
       global.kuzzle.config.security.authToken.secret = "from-authToken";
-      global.kuzzle.config.security.jwt.secret = "from-jwt";
+      global.kuzzle.config.security.jwt!.secret = "from-jwt";
 
       await handler._initSecret();
 

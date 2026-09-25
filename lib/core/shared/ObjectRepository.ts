@@ -47,6 +47,24 @@ export interface RepositorySearchResult<TObject> {
 }
 
 /**
+ * What `search` and `scroll` are declared to answer: v2.56.0's shape, kept
+ * for compatibility — what they build is a {@link RepositorySearchResult},
+ * but typed members break code compiled against this one (reading
+ * `aggregations.x` under `strict`, assigning `hits` to its own type). Read
+ * the answer into a `RepositorySearchResult<T>` to get the types back.
+ */
+export type ObjectRepositorySearchAnswer = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  aggregations?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  hits: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  scrollId: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  total: any;
+};
+
+/**
  * One page of a `truncate` walk, handed to the next recursive call.
  */
 interface TruncatePart {
@@ -74,6 +92,11 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
   protected store: any;
   protected cacheDb: cacheDbEnum;
 
+  /**
+   * `store` is declared `unknown`, as v2.56.0's `any` accepted anything; only
+   * its `index` is read here.
+   */
+  constructor(options?: { cache?: cacheDbEnum; store?: unknown });
   constructor({
     cache = cacheDbEnum.INTERNAL,
     store = null,
@@ -146,7 +169,13 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param {object} searchBody
    * @param {object} [options] - optional search arguments (from, size, scroll)
    * @returns {Promise}
+   *
+   * The public signature is v2.56.0's — see {@link ObjectRepositorySearchAnswer}.
    */
+  search(
+    searchBody: unknown,
+    options?: unknown,
+  ): Promise<ObjectRepositorySearchAnswer>;
   async search(
     searchBody: JSONObject,
     options: JSONObject = {},
@@ -162,8 +191,17 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
 
   /**
    * Scroll over a paginated search request
+   *
+   * The public signature is v2.56.0's — see {@link ObjectRepositorySearchAnswer}.
    */
-  async scroll(scrollId: string, ttl?: string | number) {
+  scroll(
+    scrollId: string,
+    ttl?: string | number,
+  ): Promise<ObjectRepositorySearchAnswer>;
+  async scroll(
+    scrollId: string,
+    ttl?: string | number,
+  ): Promise<RepositorySearchResult<TObject>> {
     const response = await this.store.scroll(scrollId, ttl);
 
     return this.formatSearchResults(response);
@@ -392,14 +430,15 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
   /**
    * Serializes the object before being persisted to the database.
    *
-   * The return type is deliberately `JSONObject` and not `Omit<TObject, "_id">`:
-   * subclasses strip more than `_id` (RoleRepository also drops `restrictedTo`),
-   * so the narrower type was a contract none of them honoured. Nothing consumes
-   * the precision — the result only flows into the store calls below.
+   * v2.56.0 declared it `Omit<TObject, "_id">`, which subclasses do not
+   * honour (RoleRepository also drops `restrictedTo`), and which code
+   * compiled against it assigns to or overrides with. Only `any` accepts both
+   * that and the `JSONObject` Kuzzle's own subclasses answer.
    *
    * @param object - The object to serialize
    */
-  serializeToDatabase(object: TObject): JSONObject {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  serializeToDatabase(object: TObject): any {
     const dto = this.toDTO(object);
     delete dto._id;
     return dto;
@@ -455,7 +494,11 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param {object} options - ES options (refresh)
    * @param {object} part
    * @returns {Promise<integer>} total deleted objects
+   *
+   * The public signature is v2.56.0's: untyped options, an `any` answer.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  truncate(options: unknown): Promise<any>;
   async truncate(options: JSONObject): Promise<number> {
     // Allows safe overrides, as _truncate is called recursively
     return this._truncate(options);

@@ -85,7 +85,7 @@ class AbstractManifest {
     this.kuzzleVersion = kuzzleVersion;
 
     if (
-      !semver.satisfies(global.kuzzle.config.version, kuzzleVersion, {
+      !semver.satisfies(global.kuzzle.config.version!, kuzzleVersion, {
         includePrerelease: true,
       })
     ) {

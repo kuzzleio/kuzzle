@@ -259,7 +259,15 @@ const KONCORDE_OPERATORS_TO_ES: Record<string, KoncordeConverter | undefined> =
     }),
   };
 
+/*
+ * The three public methods below keep v2.56.0's declarations — untyped
+ * arguments, an `any` answer — as a public overload in front of the typed
+ * implementation: a `JSONObject` answer breaks code compiled against that
+ * which assigns it to its own query type.
+ */
 export class QueryTranslator {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  translate(filters: unknown): any;
   translate(filters: JSONObject): JSONObject {
     const [entry] = Object.entries(filters);
 
@@ -284,6 +292,8 @@ export class QueryTranslator {
     return this._translateClause(name, value);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  _translateOperator(operator: unknown, operands: unknown): any;
   _translateOperator(operator: string, operands: unknown): JSONObject {
     const converter = KONCORDE_OPERATORS_TO_ES[operator];
 
@@ -304,6 +314,8 @@ export class QueryTranslator {
     return converter(esOperands);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  _translateClause(clause: unknown, content: unknown): any;
   _translateClause(clause: string, content: unknown): JSONObject {
     const converter = KONCORDE_CLAUSES_TO_ES[clause];
 

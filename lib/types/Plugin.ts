@@ -24,7 +24,7 @@ import type { PluginContext } from "../core/plugin/pluginContext";
 import type { ControllerDefinition } from "./controllers/ControllerDefinition";
 import type { PluginManifest } from "./PluginManifest";
 import type { StrategyDefinition } from "./StrategyDefinition";
-import type { HookEventHandler, RegisteredPipeHandler } from "./EventHandler";
+import type { HookEventHandler, PipeEventHandler } from "./EventHandler";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
 import type { ImportConfig } from "./Kuzzle";
@@ -50,31 +50,31 @@ export type PluginMethodName = string;
 
 /**
  * Allows to define hooks on events
+ *
+ * Kuzzle also resolves a {@link PluginMethodName} in place of a handler, but
+ * the type admits only functions, as v2.56.0's did: code compiled against
+ * that reads a value back and calls it, which a `string` in the union breaks.
  */
 export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]:
-    | HookEventHandler
-    | PluginMethodName
-    | Array<HookEventHandler | PluginMethodName>;
+  [event: string]: HookEventHandler | HookEventHandler[];
 };
 
 /**
  * Allows to define pipes on events.
  *
  * A pipe either returns a promise, or takes a trailing `callback(error,
- * request)`: both forms are documented, and the runner accepts both.
+ * request)`: both forms are documented, and the runner accepts both — and a
+ * {@link PluginMethodName}. The type is v2.56.0's, for the reason given on
+ * {@link PluginHookDefinition}.
  */
 export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]:
-    | RegisteredPipeHandler
-    | PluginMethodName
-    | Array<RegisteredPipeHandler | PluginMethodName>;
+  [event: string]: PipeEventHandler | PipeEventHandler[];
 };
 
 /**

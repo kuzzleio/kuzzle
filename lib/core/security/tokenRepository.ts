@@ -34,6 +34,15 @@ import { sha256 } from "../../util/crypto";
 
 const securityError = kerror.wrap("security", "token");
 
+/**
+ * The deprecated `security.jwt` section, which the `authToken` settings fall
+ * back to. The packaged defaults always ship it; the type says optional only
+ * because v2.56.0's did (see SecurityConfiguration.jwt).
+ */
+function legacyJwtConfig(): JSONObject {
+  return global.kuzzle.config.security.jwt!; // NOSONAR: the deprecated section is read on purpose, as the documented fallback
+}
+
 export class TokenRepository extends ObjectRepository<Token> {
   private tokenGracePeriod: number;
   private anonymousToken: Token;
@@ -49,9 +58,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       this.ttl = opts.ttl;
     }
 
-    this.tokenGracePeriod = Math.floor(
-      global.kuzzle.config.security.jwt.gracePeriod,
-    );
+    this.tokenGracePeriod = Math.floor(legacyJwtConfig().gracePeriod);
 
     this.anonymousToken = new Token({ userId: "-1" });
   }
@@ -206,9 +213,9 @@ export class TokenRepository extends ObjectRepository<Token> {
     user: User,
     {
       algorithm = global.kuzzle.config.security.authToken.algorithm ??
-        global.kuzzle.config.security.jwt.algorithm,
+        legacyJwtConfig().algorithm,
       expiresIn = global.kuzzle.config.security.authToken.expiresIn ??
-        global.kuzzle.config.security.jwt.expiresIn,
+        legacyJwtConfig().expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
       singleUse = false,
@@ -230,7 +237,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       type === "apiKey"
         ? global.kuzzle.config.security.apiKey.maxTTL
         : (global.kuzzle.config.security.authToken.maxTTL ??
-          global.kuzzle.config.security.jwt.maxTTL);
+          legacyJwtConfig().maxTTL);
 
     if (
       !bypassMaxTTL &&

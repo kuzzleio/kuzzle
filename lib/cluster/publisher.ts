@@ -481,7 +481,8 @@ class ClusterPublisher {
    * nothing: retransmission is disabled.
    */
   private remember(messageId: Long, topic: string, data: Uint8Array): void {
-    const { bytes, messages } = this.node.config.retransmitBuffer;
+    // Always loaded; optional in the public type (see IKuzzleConfiguration).
+    const { bytes, messages } = this.node.config.retransmitBuffer!;
 
     if (messages <= 0 || bytes <= 0) {
       return;

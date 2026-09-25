@@ -87,7 +87,7 @@ describe("#api/controllers/authController", () => {
     /* The shipped config, deep-cloned: `loadConfig()` answers a shared object
      * and these tests pin `cookieAuthentication` and the jwt secret. */
     config = JSON.parse(JSON.stringify(loadConfig()));
-    config.security.jwt.secret = "test-secret";
+    config.security.jwt!.secret = "test-secret";
     config.http.cookieAuthentication = false;
 
     stubKuzzle({
@@ -571,8 +571,8 @@ describe("#api/controllers/authController", () => {
 
   /** A logout request carrying a signed token, cookie-bound or not. */
   const logoutRequest = (cookieAuth: boolean) => {
-    const signed = jwt.sign({ _id: "admin" }, config.security.jwt.secret, {
-      algorithm: config.security.jwt.algorithm,
+    const signed = jwt.sign({ _id: "admin" }, config.security.jwt!.secret, {
+      algorithm: config.security.jwt!.algorithm,
     });
     const token = new Token(
       invalid({ _id: `foo#${signed}`, jwt: signed, userId: "foo" }),
