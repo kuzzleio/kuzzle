@@ -962,7 +962,13 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("SIGTRAP");
     process.on("SIGTRAP", () => {
       this.log.error("Caught signal SIGTRAP => generating a core dump");
-      this.dump("signal-sigtrap");
+      // Nothing awaits this dump: a failure (another dump running, an
+      // unwritable dump path) is logged rather than left unhandled.
+      this.dump("signal-sigtrap").catch((error: unknown) => {
+        this.log.error(
+          `Unable to dump on SIGTRAP: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
     });
 
     // gracefully exits on normal termination

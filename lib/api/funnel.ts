@@ -602,18 +602,27 @@ class Funnel {
             //
             // `split()[0]` of a string that contains a "\n" is a string; the
             // `includes` guard was the only thing saying so.
-            let errorMessage = err.message.split("\n")[0] ?? err.message;
+            const errorMessage = err.message.split("\n")[0] ?? err.message;
 
-            errorMessage = errorMessage
+            // The dump generator only accepts `^[A-Za-z0-9_-]{0,64}$` (#2665),
+            // so the error type is slugified with the message, and the whole
+            // suffix is capped: an error message is usually longer than that.
+            const suffix = `handled-${errorType}-${errorMessage}`
               .toLowerCase()
-              .replace(/[^a-zA-Z0-9-_]/g, "-")
+              .replace(/[^a-z0-9-_]/g, "-")
               .split("-")
               .filter((value) => value !== "")
-              .join("-");
+              .join("-")
+              .slice(0, 64);
 
-            global.kuzzle.dump(
-              `handled-${errorType.toLocaleLowerCase()}-${errorMessage}`,
-            );
+            // Nothing awaits this dump: a failure has to be handled here, or
+            // it surfaces as an unhandled rejection, which stops Kuzzle in
+            // development mode.
+            global.kuzzle.dump(suffix).catch((error: unknown) => {
+              this.logger.error(
+                `Unable to dump after a handled error: ${causeOf(error).message}`,
+              );
+            });
           }
 
           this.lastDumpedErrors[errorType] = now;

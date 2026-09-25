@@ -37,7 +37,7 @@ describe("#api/funnel.executePluginRequest", () => {
   let pipe: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    dump = vi.fn();
+    dump = vi.fn(async () => "");
     emit = vi.fn();
     pipe = vi.fn(async (_event, payload) => payload);
 

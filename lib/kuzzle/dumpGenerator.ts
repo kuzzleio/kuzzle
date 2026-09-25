@@ -70,8 +70,12 @@ class DumpGenerator {
   private _resolveDumpPath(suffix: string): string {
     const suffixRegex = /^[A-Za-z0-9_-]{0,64}$/;
     if (!suffixRegex.test(suffix)) {
-      throw new BadRequestError(
-        `Invalid suffix '${suffix}'. Suffix must be alphanumeric and can contain '-' and '_'. Max length is 64 characters.`,
+      throw kerror.get(
+        "api",
+        "assert",
+        "invalid_argument",
+        "suffix",
+        "at most 64 alphanumeric characters, '-' or '_'",
       );
     }
     const basePath = path.normalize(global.kuzzle.config.dump.path);
@@ -279,9 +283,12 @@ class DumpGenerator {
       fs.rmSync(dump.path, { recursive: true });
     }
 
-    // `slice` rather than an index loop: a non-positive end yields an empty
-    // list, which is what the old `i < dumps.length - coredump` bound meant.
-    for (const dump of dumps.slice(0, dumps.length - config.history.coredump)) {
+    // The oldest dumps lose their core file, all but the `coredump` newest.
+    // The bound is clamped: `slice` counts a negative end from the end of the
+    // list, which would take core files from the dumps it has to keep.
+    const withoutCore = Math.max(0, dumps.length - config.history.coredump);
+
+    for (const dump of dumps.slice(0, withoutCore)) {
       const corefiles = this._listFilesMatching(
         path.normalize(dump.path),
         "core",

@@ -376,6 +376,30 @@ describe("#kuzzle/Kuzzle", () => {
           .dumpGenerator.dump,
       ).toHaveBeenCalledExactlyOnceWith("a-suffix");
     });
+
+    /* Nothing awaits the SIGTRAP dump: a failure left unhandled is an
+     * `unhandledRejection`, which stops Kuzzle in development mode (step 15,
+     * F-05). */
+    it("should log a SIGTRAP dump that fails", async () => {
+      const on = vi.spyOn(process, "on").mockReturnValue(process);
+      vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+      invalid<{ dumpGenerator: { dump: ReturnType<typeof vi.fn> } }>(
+        kuzzle,
+      ).dumpGenerator.dump.mockRejectedValueOnce(new Error("already dumping"));
+
+      kuzzle.registerSignalHandlers();
+
+      const sigtrap = on.mock.calls.find(([event]) => event === "SIGTRAP");
+
+      present(sigtrap, "the SIGTRAP handler");
+      (sigtrap[1] as () => void)();
+
+      await vi.waitFor(() =>
+        expect(kuzzle.log.error).toHaveBeenCalledWith(
+          "Unable to dump on SIGTRAP: already dumping",
+        ),
+      );
+    });
   });
 
   describe("#shutdown", () => {
