@@ -153,6 +153,24 @@ export function describeESWrapper(
         });
       });
 
+      it.each([
+        [400, "services.storage.unexpected_bad_request"],
+        [409, "services.storage.unexpected_error"],
+      ])(
+        "hands the client's own ResponseError to the %i handler",
+        (statusCode, id) => {
+          const error = new ResponseError({
+            body: { error: { reason: "something unmapped" } },
+            headers: {},
+            meta: {},
+            statusCode,
+            warnings: null,
+          });
+
+          expect(wrapper.formatESError(error)).toMatchObject({ id });
+        },
+      );
+
       it("falls back when a not-found carries no index", () => {
         const error = withMeta("test", { statusCode: 404 });
         error.body = {
