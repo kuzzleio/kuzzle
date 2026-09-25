@@ -80,7 +80,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
         return request;
       },
       insertInResult: ([document], request) => {
-        request.setResult(document, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({
+          result: document,
+          status: request.status,
+        });
         return request;
       },
     },
@@ -95,7 +98,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
         return request;
       },
       insertInResult: (documents, request) => {
-        request.setResult(documents[0], { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({
+          result: documents[0],
+          status: request.status,
+        });
         return request;
       },
     },
@@ -155,7 +161,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
             successes: documents,
           };
 
-          request.setResult(mResult, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+          request.response.configure({
+            result: mResult,
+            status: request.status,
+          });
 
           return request;
         }
@@ -169,7 +178,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
           result.successes.push(document._id);
         }
 
-        request.setResult(result, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({ result: result, status: request.status });
 
         return request;
       },
@@ -225,7 +234,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
           successes: documents,
         };
 
-        request.setResult(result, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({ result: result, status: request.status });
 
         return request;
       },
@@ -270,7 +279,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
         return request;
       },
       insertInResult: (documents, request) => {
-        request.setResult(documents[0], { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({
+          result: documents[0],
+          status: request.status,
+        });
         return request;
       },
     },
@@ -294,7 +306,10 @@ const extractorDefinitions: ExtractorDefinition[] = [
         return request;
       },
       insertInResult: ([document], request) => {
-        request.setResult(document, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
+        request.response.configure({
+          result: document,
+          status: request.status,
+        });
         return request;
       },
     },

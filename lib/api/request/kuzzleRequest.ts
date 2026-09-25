@@ -266,7 +266,7 @@ export class KuzzleRequest {
   /**
    * Sets the request result and status
    *
-   * @deprecated Use request.response.configure instead
+   * @deprecated Use `request.response.configure({ result, status, headers, format })`
    *
    * @param result Request result. Will be converted to JSON unless `raw` option is set to `true`
    * @param options Additional options
@@ -291,16 +291,7 @@ export class KuzzleRequest {
       raw?: boolean;
     } = {},
   ) {
-    if (result instanceof Error) {
-      throw new InternalError("cannot set an error as a request's response");
-    }
-
-    if (
-      this.context.connection.protocol !== "http" &&
-      result instanceof HttpStream
-    ) {
-      throw kerror.get("api", "assert", "forbidden_stream");
-    }
+    this.assertResultAllowed(result);
 
     this.status = options.status || 200;
 
@@ -315,6 +306,34 @@ export class KuzzleRequest {
     }
 
     this[_result] = result;
+  }
+
+  /**
+   * Sets the result and nothing else, after the checks every result goes
+   * through. What `response.configure({ result })` calls; plugins use that.
+   *
+   * @internal
+   */
+  assignResult(result: unknown): void {
+    this.assertResultAllowed(result);
+    this[_result] = result;
+  }
+
+  /**
+   * @throws {InternalError} if the result is an Error
+   * @throws {api.assert.forbidden_stream} for an HttpStream outside HTTP
+   */
+  private assertResultAllowed(result: unknown): void {
+    if (result instanceof Error) {
+      throw new InternalError("cannot set an error as a request's response");
+    }
+
+    if (
+      this.context.connection.protocol !== "http" &&
+      result instanceof HttpStream
+    ) {
+      throw kerror.get("api", "assert", "forbidden_stream");
+    }
   }
 
   /**

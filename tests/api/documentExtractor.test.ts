@@ -1,5 +1,5 @@
 import type { JSONObject } from "kuzzle-sdk";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import DocumentExtractor from "../../lib/api/documentExtractor";
 import type { KuzzleRequest } from "../../lib/api/request/kuzzleRequest";
@@ -7,6 +7,7 @@ import { Request } from "../../lib/api/request/kuzzleRequest";
 import { BadRequestError } from "../../lib/kerror/errors/badRequestError";
 import { InternalError } from "../../lib/kerror/errors/internalError";
 import { invalid } from "../helpers/invalid";
+import { restoreKuzzle, stubKuzzle } from "../mocks/kuzzle";
 
 /*
  * The Mocha spec stated sixteen actions in sixteen `describe` blocks and
@@ -39,6 +40,16 @@ const withResult = (data: JSONObject, result: JSONObject) => {
 };
 
 describe("#api/DocumentExtractor", () => {
+  // Inserting into a result goes through `response.configure`, and building
+  // a response reads the node id off the global.
+  beforeEach(() => {
+    stubKuzzle();
+  });
+
+  afterEach(() => {
+    restoreKuzzle();
+  });
+
   it("should throw if no document extractor is defined", () => {
     const request = new Request({ action: "ohnoes" });
 

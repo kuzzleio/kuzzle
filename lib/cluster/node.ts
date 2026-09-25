@@ -49,7 +49,7 @@ import createDebug from "../util/debug";
 import { fromKoncordeIndex } from "../util/koncordeCompat";
 // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
 // incompatible acquisition/TTL formats and must not contend on the same key —
-// every node takes "clusterHandshake" with `Mutex`. Deferred to TD-20 (#2688).
+// every node takes "clusterHandshake" with `Mutex`. Deferred to #2894.
 import { Mutex } from "../util/mutex"; // NOSONAR
 import ClusterCommand from "./command";
 import { ClusterIdCardHandler } from "./idCardHandler";
@@ -752,7 +752,7 @@ class ClusterNode {
 
     // NOSONAR (S1874): same deferral as the import above — every node takes
     // "clusterHandshake" with `Mutex`, so converting one site to `withLock`
-    // would remove the exclusion it exists for. TD-20 (#2688).
+    // would remove the exclusion it exists for. #2894.
     const lockOptions = { timeout: this.config.joinTimeout };
     const mutex = new Mutex("clusterHandshake", lockOptions); // NOSONAR
 

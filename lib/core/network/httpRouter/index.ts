@@ -73,9 +73,7 @@ class Router {
     attach(
       "/",
       (request, cb) => {
-        // setResult's options signature is deprecated with no usable
-        // replacement yet — tracked as TD-20 / #2688
-        request.setResult({}, { status: 200 }); // NOSONAR
+        request.response.configure({ result: {}, status: 200 });
         cb(request);
       },
       this.routes.HEAD,
@@ -200,9 +198,7 @@ class Router {
 
     if (message.method === "OPTIONS") {
       request.input.headers = message.headers;
-      // setResult's options signature is deprecated with no usable
-      // replacement yet — tracked as TD-20 / #2688
-      request.setResult({}, { status: 200 }); // NOSONAR
+      request.response.configure({ result: {}, status: 200 });
 
       global.kuzzle.pipe(
         "http:options",

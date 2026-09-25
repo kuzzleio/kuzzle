@@ -656,3 +656,65 @@ one aliased.
 one new test for what sets it apart from `getArray` (a single value is a
 one-element array, where `getArray` throws), and `#getArrayLegacy` is reduced
 to a test that it delegates.
+
+### TD-20, second half — `configure` takes a result
+
+[#2688](https://github.com/kuzzleio/kuzzle/issues/2688) was blocked on an API
+shape: `setResult(result, options)` is `@deprecated` in favour of
+`response.configure`, which took no result, and the `response.result =`
+setter calls `setResult(r)` — which forces the status to 200, so it would
+turn `server:healthCheck`'s 503 into a 200 for the probes reading it. Twelve
+core call sites carried a `NOSONAR` instead of a migration. The user took
+option 2-A of the #2785/TD-20 review.
+
+`RequestResponse.configure` accepts `result`. It is applied **first**, so a
+refused result — an `Error`, or an `HttpStream` outside HTTP, the checks
+`setResult` always made — throws before headers, status or format change.
+It is set only when the key is present (`{ result: null }` clears), and it
+does not touch the status: that stays `configure`'s existing rule — an
+explicit `status` wins, otherwise a pending 102 becomes 200 and anything else
+is kept. The checks moved into `KuzzleRequest.assertResultAllowed`, shared by
+`setResult` and a new `@internal` `assignResult`, which is what `configure`
+calls.
+
+**`setResult` itself is untouched, and that was a correction, not the plan.**
+The first version made it delegate to `configure`. That constructs the
+`RequestResponse` on every call, and a response reads `global.kuzzle.id` when
+built — so `setResult` would have started throwing wherever no Kuzzle is
+running, a plugin's own unit tests included. The `documentExtractor` spec,
+which builds requests with no global, is what said so. `setResult` keeps its
+body; only the two checks are shared.
+
+The 12 call sites keep the exact status each passed:
+
+| Site | Before | After |
+|---|---|---|
+| `funnel` (controller result), `pluginContext` (plugin request) | status: 102 → 200, else kept | `configure({ result })` — the same rule, now `configure`'s default |
+| `funnel` (unserializable plugin result), `httpRouter` HEAD `/` and OPTIONS | status 200 | `configure({ result, status: 200 })` |
+| `documentExtractor` × 7 | `{ status: request.status }` | `configure({ result, status: request.status })` |
+
+`documentExtractor` could have dropped its explicit status — it only runs in
+the "after" phase, once the funnel has converted 102 — but a plugin's "after"
+pipe can set any status in between, and passing it keeps the result
+identical in that case too.
+
+**Why it is not breaking:** `configure` gains an optional property;
+`setResult`, the `result` setter and every call site's resulting status are
+unchanged. The one new effect is that those internal sites build the
+request's `RequestResponse` earlier than before — always inside a running
+Kuzzle, where the node id it reads exists.
+
+**Not decided here:** whether `setResult`'s deprecation becomes public. Its
+doc page still presents it as a normal API (with a 302 redirection example);
+the `configure` page now documents `result` with a `SinceBadge`.
+
+The five comments that deferred the `Mutex` → `withLock` migration "to TD-20
+(#2688)" point at [#2894](https://github.com/kuzzleio/kuzzle/issues/2894),
+where it was split out: it had nothing to do with request APIs.
+
+Tests: `requestResponse.test.ts` gains a `configure` → `result` block (the
+102 rule, a kept 503 next to the setter still resetting to 200, all four
+options at once, `null` vs absent, an `Error` refused with nothing else
+changed, a stream refused outside HTTP and accepted over it).
+`documentExtractor.test.ts` now stubs the global, since inserting into a
+result builds the response.

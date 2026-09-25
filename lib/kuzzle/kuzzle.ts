@@ -798,7 +798,7 @@ class Kuzzle extends KuzzleEventEmitter {
         // use incompatible acquisition/TTL formats and must not contend on the
         // same key — every other node still takes this lock with `Mutex`, so
         // swapping one site would remove the exclusion it exists for. Deferred
-        // to TD-20 (#2688), like the remaining call sites.
+        // to #2894, like the remaining call sites.
         const lockOptions = { timeout: 0, ttl: 60000 };
         const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
 

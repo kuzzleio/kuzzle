@@ -465,9 +465,8 @@ function execute(
   global.kuzzle.funnel
     .executePluginRequest(request)
     .then((result) => {
-      request.setResult(result, {
-        status: request.status === 102 ? 200 : request.status,
-      });
+      // No status: a pending 102 becomes 200, any other is kept.
+      request.response.configure({ result });
 
       promback.resolve(request);
     })
