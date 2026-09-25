@@ -114,15 +114,13 @@ let clientPromise: Promise<RedisClient> | undefined;
  * failing for the rest of the process.
  */
 async function getClient(): Promise<RedisClient> {
-  if (!clientPromise) {
-    clientPromise = (async () =>
-      global.kuzzle.ask("core:cache:internal:client:get"))().catch(
-      (err: unknown) => {
-        clientPromise = undefined;
-        throw err;
-      },
-    );
-  }
+  clientPromise ??= (async () =>
+    global.kuzzle.ask("core:cache:internal:client:get"))().catch(
+    (err: unknown) => {
+      clientPromise = undefined;
+      throw err;
+    },
+  );
 
   return clientPromise;
 }
