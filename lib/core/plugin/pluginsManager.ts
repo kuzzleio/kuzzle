@@ -1427,7 +1427,7 @@ class PluginsManager {
 
       // catching plugins returning non-thenable content
       // @todo - with async/await we might consider allowing non-promise results
-      if (!isThenable(ret)) {
+      if (!hasThen(ret)) {
         callback(strategyError.get("invalid_verify_return", prefix, ret));
         return;
       }
@@ -1574,6 +1574,22 @@ function isThenable(value: unknown): value is Promise<unknown> {
     typeof value.then === "function" &&
     "catch" in value &&
     typeof value.catch === "function"
+  );
+}
+
+/**
+ * What `wrapStrategyVerify` has always accepted from a strategy's `verify`:
+ * anything with a callable `then`, which is all `await` needs. Looser than
+ * `isThenable` on purpose — that one also requires `catch`, because
+ * `registerPipe` calls it; reusing it here (#2748) had started rejecting the
+ * `then`-only thenables v2.56.0 awaited.
+ */
+function hasThen(value: unknown): value is PromiseLike<unknown> {
+  return (
+    (typeof value === "object" || typeof value === "function") &&
+    value !== null &&
+    "then" in value &&
+    typeof value.then === "function"
   );
 }
 
