@@ -142,6 +142,34 @@ describe("#kuzzle/event/PipeRunner", () => {
       expect(forwarded.id).toBe("plugin.runtime.unexpected_error");
     });
 
+    /**
+     * A pipe rejecting with a non-Error: the message is the value's own
+     * `message`, as in v2.56.0, and "undefined" when it has none.
+     */
+    it.each([
+      ["an object with a message", { message: "oh noes" }, "oh noes"],
+      ["a string", "oh noes", "undefined"],
+    ])(
+      "should use the message of %s a pipe rejected with",
+      (_name, rejected, placeholder) => {
+        const callback = vi.fn();
+
+        pipeRunner.run(pipe.chain, ["bar"], callback, undefined);
+        pipe.reject(rejected);
+        vi.runAllTimers();
+
+        const [forwarded] = callback.mock.calls[0] as [
+          PluginImplementationError,
+        ];
+
+        expect(forwarded).toBeInstanceOf(PluginImplementationError);
+        expect(forwarded.id).toBe("plugin.runtime.unexpected_error");
+        expect(forwarded.message).toMatch(
+          new RegExp(`^Caught an unexpected plugin error: ${placeholder}\\n`),
+        );
+      },
+    );
+
     it("should bufferize and replay pipes if there are no more slots available", () => {
       const callback = vi.fn();
 

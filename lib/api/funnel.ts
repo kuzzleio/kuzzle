@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import { inspect } from "node:util";
-
 import Bluebird from "bluebird";
 import Deque from "denque";
 import * as Cookie from "cookie";
@@ -36,6 +34,7 @@ import sdkCompatibility from "../config/sdkCompatibility.json";
 import RateLimiter from "./rateLimiter";
 import * as kerror from "../kerror";
 import createDebug from "../util/debug";
+import { causeOf } from "../util/thrown";
 import { has } from "../util/safeObject";
 import { HttpStream } from "../types";
 import type { Logger } from "../kuzzle/Logger";
@@ -67,17 +66,6 @@ const processError = kerror.wrap("api", "process");
 // Actions of the auth controller that does not necessite to verify the token
 // when cookie auth is active
 const SKIP_TOKEN_VERIF_ACTIONS = new Set(["login", "checkToken", "logout"]);
-
-/**
- * Whatever was thrown, as an `Error`.
- *
- * `catch` answers `unknown`, and everything here hands what it caught to
- * `setError`, `_wrapError` or a callback, all of which take an `Error`.
- * `inspect`, not `String`: a thrown object stringifies to `[object Object]`.
- */
-function causeOf(thrown: unknown): Error {
-  return thrown instanceof Error ? thrown : new Error(inspect(thrown));
-}
 
 /**
  * The controller and action a request names.
