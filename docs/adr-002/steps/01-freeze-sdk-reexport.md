@@ -1,6 +1,6 @@
 # Step 01 — freeze the SDK re-export
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-25 · **PR(s):** this one · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
+**Status:** ✅ Done 2026-09-25 (frozen) · **Opened:** 2026-09-25 · **PR(s):** [#2927](https://github.com/kuzzleio/kuzzle/pull/2927) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
 
 ## Goal
 

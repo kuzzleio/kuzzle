@@ -11,6 +11,8 @@
 
 ## 1. Fix before the beta — accidental regressions
 
+> ⚠️ **F-12 reopens this section** (2026-09-25): all of F-01 – F-11 are fixed, F-12 is not.
+
 | # | What breaks | Source IDs | Status |
 | --- | --- | --- | --- |
 | **F-01** | A missing document on `document:get` / `delete` / `deleteFields` answers `services.storage.unexpected_not_found` (code 34) instead of `services.storage.not_found` (code 11). `formatESError` spreads the ES `ResponseError`, whose `body` is a prototype getter, so `body._index` is lost. **Confirmed by hand** with the real ES client class. Unit fixtures build plain objects and hide it. | C-01, B-58 (#2802) | ✅ [#2903](https://github.com/kuzzleio/kuzzle/pull/2903) |
@@ -24,6 +26,7 @@
 | **F-09** | Plugin `BaseType` subclasses using getters or prototype values break (fields now initialised in the constructor); a validation spec with a truthy non-boolean `strict` is no longer strict. | B-17 (#2722), B-63 (#2803) | ✅ [#2905](https://github.com/kuzzleio/kuzzle/pull/2905), [#2908](https://github.com/kuzzleio/kuzzle/pull/2908) |
 | **F-10** | A `KuzzleError` thrown in the WebSocket `afterParsingPayload` pipe reaches the client as-is instead of `network.websocket.unexpected_error` (400); a non-Error thrown by a plugin is `util.inspect`-ed into the client message; a non-Error `{message}` pipe rejection prints `undefined`. | R-04, B-70, B-31 | ✅ all three restored — [#2915](https://github.com/kuzzleio/kuzzle/pull/2915) |
 | **F-11** | Small crash-path changes: `ClusterNode.nodeId` throws before the handshake (a shutdown during init skips `dispose`); `Protocol.init("", entryPoint)` now crashes; a `then`-only thenable from a strategy `verify` is rejected. | B-77, B-23(c), B-29 | ✅ [#2911](https://github.com/kuzzleio/kuzzle/pull/2911) |
+| **F-12** | **Found 2026-09-25 after the fixes, on `2-dev` at `812508f6f`** (a docs-only PR's CI): the test cluster never became ready. The joining prod node, still in its handshake, logged `Node out-of-sync: 18446744073709551615 messages lost from node …` — 2⁶⁴−1, i.e. a **duplicate or older id** from an existing peer reported as a loss (the count wraps) — and shut down; node 3 was then evicted for heartbeat timeout ~17 s after joining. Rare (once in some hundreds of functional jobs today) but it breaks cluster formation. Regression or not, and which change: under investigation. **Blocks the beta.** | — (CI log, 2026-09-25) | ⬜ investigating |
 
 ## 2. Typings — breaking under this step's rule
 
