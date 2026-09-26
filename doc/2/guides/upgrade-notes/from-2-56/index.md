@@ -88,3 +88,4 @@ Other observable changes:
 - `Protocol.entryPoint` is read-only for custom protocol plugins.
 - Deep imports from `kuzzle/dist/lib/…` are not a supported API. Four modules changed their CommonJS shape (the `admin`, `auth` and `security` controllers, and `cluster/state`), and two files are gone (`util/wildcard`, and the misspelt `adminControlller.type`).
 - Error reporting: a thrown value's `message` is used as before, never its serialised contents. A thrown `null` gives "…: undefined" instead of crashing.
+- Errors of the `PluginImplementationError` class (the `plugin.*` ids, and a few others) no longer end with "This is probably not a Kuzzle error, but a problem with a plugin implementation.". When your code throws something that is not a Kuzzle error, the `plugin.runtime.unexpected_error` wrapping it reads `Caught an unexpected plugin error: <your message>`, and its stack goes straight on to your own frames. Ids and codes are unchanged.
