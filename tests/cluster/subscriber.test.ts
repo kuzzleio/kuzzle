@@ -273,6 +273,86 @@ describe("ClusterSubscriber", () => {
       });
     });
 
+    /*
+     * Step 15, F-12. A joining node buffers each peer's messages until its
+     * handshake tells it where to resume from, and the waits TD-65 added to
+     * that handshake (#2777, #2781) make it routinely outlast one heartbeat
+     * check. In CI, the check ended the buffering early, and `sync()` then
+     * replayed the proof message — the one the resume point was taken after —
+     * outside the state that drops it: the node evicted itself for
+     * "18446744073709551615 messages lost" while joining.
+     */
+    describe("while joining", () => {
+      let syncRoot: protobuf.Root;
+
+      const heartbeat = (n: number): [string, Buffer] => {
+        const type = syncRoot.lookupType("Heartbeat");
+
+        return [
+          "Heartbeat",
+          Buffer.from(
+            type
+              .encode(
+                type.create({
+                  address: "tcp://remote",
+                  messageId: Long.fromNumber(n, true),
+                }),
+              )
+              .finish(),
+          ),
+        ];
+      };
+
+      beforeEach(async () => {
+        syncRoot = await protobuf.load(
+          `${process.cwd()}/lib/cluster/protobuf/sync.proto`,
+        );
+
+        vi.useFakeTimers();
+
+        // Re-armed on fake time: the heartbeat timer `init()` starts is what
+        // runs the checks here, not a call made by the spec.
+        const listen = subscriber.listen;
+        subscriber.listen = vi.fn();
+        await subscriber.init();
+        subscriber.listen = listen;
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("keeps buffering through a heartbeat check", async () => {
+        subscriber.lastHeartbeat = Date.now();
+
+        await vi.advanceTimersByTimeAsync(subscriber.heartbeatDelay);
+
+        expect(subscriber.state).toBe(stateEnum().BUFFERING);
+      });
+
+      it("evicts nobody for heartbeats it has buffered rather than applied", async () => {
+        await vi.advanceTimersByTimeAsync(subscriber.heartbeatDelay * 3);
+
+        expect(localNode.evictNode).not.toHaveBeenCalled();
+        expect(subscriber.state).toBe(stateEnum().BUFFERING);
+      });
+
+      it("resumes after a check without reading the proof message as a loss", async () => {
+        // Message 7 is the proof the subscription is live, and the full state
+        // is taken after it, so the resume point is 7 as well.
+        subscriber.buffer = [heartbeat(7), heartbeat(8)];
+        subscriber.lastHeartbeat = Date.now();
+
+        await vi.advanceTimersByTimeAsync(subscriber.heartbeatDelay);
+
+        await expect(subscriber.sync(new Long(7, 0, true))).resolves.toBe(true);
+
+        expect(localNode.evictSelf).not.toHaveBeenCalled();
+        expect(subscriber.lastMessageId.toNumber()).toBe(8);
+        expect(subscriber.state).toBe(stateEnum().SANE);
+      });
+    });
+
     describe("#waitForSubscription", () => {
       it("resolves true as soon as a message has been received", async () => {
         // Receiving anything is the only observable proof that the subscription
@@ -416,6 +496,7 @@ describe("ClusterSubscriber", () => {
       });
 
       it("flags a first missed heartbeat without evicting", async () => {
+        subscriber.state = stateEnum().SANE;
         subscriber.heartbeatDelay = 100;
         subscriber.lastHeartbeat = Date.now() - 150;
 
@@ -645,16 +726,34 @@ describe("ClusterSubscriber", () => {
           }
         });
 
-        it("asks for nothing on an id older than the expected one", async () => {
+        /*
+         * Step 15, F-12. An id at or below the last one applied is a message
+         * this node already has: nothing to ask for, and no reason to leave the
+         * cluster. It used to evict this node with "18446744073709551615
+         * messages lost" — the negative difference, printed unsigned.
+         */
+        it.each([
+          ["the last applied id again", 5],
+          ["an older id", 3],
+        ])("drops %s without asking for it or evicting", async (_, id) => {
           subscriber.lastMessageId = new Long(5, 0, true);
-          message.messageId = new Long(3, 0, true);
+          message.messageId = new Long(id, 0, true);
 
           await expect(subscriber.validateMessage(message)).resolves.toBe(
             false,
           );
 
           expect(localNode.command.requestRetransmit).not.toHaveBeenCalled();
-          expect(localNode.evictSelf).toHaveBeenCalledTimes(1);
+          expect(localNode.evictSelf).not.toHaveBeenCalled();
+          expect(localNode.evictNode).not.toHaveBeenCalled();
+          expect(subscriber.state).toBe(stateEnum().SANE);
+          expect(subscriber.lastMessageId.toNumber()).toBe(5);
+
+          // And the stream goes on from where it was.
+          message.messageId = new Long(6, 0, true);
+
+          await expect(subscriber.validateMessage(message)).resolves.toBe(true);
+          expect(subscriber.lastMessageId.toNumber()).toBe(6);
         });
       });
 
