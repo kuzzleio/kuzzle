@@ -227,8 +227,7 @@ describe("#api/funnel.processRequest", () => {
     });
 
     await expect(funnel.processRequest(request)).rejects.toMatchObject({
-      message:
-        "Caught an unexpected plugin error: incompatible sdk\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.",
+      message: "Caught an unexpected plugin error: incompatible sdk",
     });
   });
 
@@ -408,9 +407,7 @@ describe("#api/funnel.processRequest", () => {
 
       expect(error).toMatchObject({
         id: "plugin.runtime.unexpected_error",
-        message: expect.stringMatching(
-          new RegExp(`^Caught an unexpected plugin error: ${placeholder}\\n`),
-        ),
+        message: `Caught an unexpected plugin error: ${placeholder}`,
       });
       expect(JSON.stringify(error)).not.toContain("s3cr3t");
     },

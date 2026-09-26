@@ -99,6 +99,30 @@ describe("#kerror", () => {
     expect(err.props).toEqual([facility]);
   });
 
+  /*
+   * What an application developer sees when their controller or pipe throws:
+   * the id, then their own message, then their own frames — nothing between.
+   */
+  it("wraps a plugin error with its message right above its own stack", () => {
+    const source = new TypeError("boom");
+    const [, firstFrame] = (source.stack ?? "").split("\n");
+
+    const error = kerror.getFrom(
+      source,
+      "plugin",
+      "runtime",
+      "unexpected_error",
+      source.message,
+    );
+
+    expect(error.id).toBe("plugin.runtime.unexpected_error");
+    expect(error.message).toBe("Caught an unexpected plugin error: boom");
+    expect(error.stack?.split("\n").slice(0, 2)).toEqual([
+      "PluginImplementationError: Caught an unexpected plugin error: boom",
+      firstFrame,
+    ]);
+  });
+
   it("returns an InternalError with default name, msg and code", () => {
     const err = kerror.get("api", "assert", "fake_error", '{"status":"error"}');
     expect(err).toBeInstanceOf(InternalError);

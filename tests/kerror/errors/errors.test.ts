@@ -63,9 +63,7 @@ describe("Errors", () => {
   it("constructs PluginImplementationError", () => {
     const error = new PluginImplementationError("message", "id.error", 4242);
 
-    expect(error.message).toEqual(
-      "message\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.",
-    );
+    expect(error.message).toEqual("message");
     expect(error.id).toEqual("id.error");
     expect(error.code).toEqual(4242);
     expect(error.status).toEqual(500);

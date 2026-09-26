@@ -164,8 +164,8 @@ describe("#kuzzle/event/PipeRunner", () => {
 
         expect(forwarded).toBeInstanceOf(PluginImplementationError);
         expect(forwarded.id).toBe("plugin.runtime.unexpected_error");
-        expect(forwarded.message).toMatch(
-          new RegExp(`^Caught an unexpected plugin error: ${placeholder}\\n`),
+        expect(forwarded.message).toBe(
+          `Caught an unexpected plugin error: ${placeholder}`,
         );
       },
     );
