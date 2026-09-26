@@ -248,4 +248,93 @@ describe("#util/Mutex", () => {
       expect(id).not.toBe(theirs.mutexId);
     });
   });
+
+  /*
+   * F-13: a node evicted while starting its plugins exited holding
+   * `Store.init(...)`, and another node timed out waiting on it for the
+   * lock's 30 s ttl.
+   */
+  describe(".releaseAllBeforeExit", () => {
+    /** Settles to "pending" when `promise` has not settled on its own. */
+    const settled = (promise: Promise<unknown>) =>
+      Promise.race([
+        promise.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("pending"), 20)),
+      ]);
+
+    it("frees every lock still held, and only those", async () => {
+      const foo = new Mutex("foo", { timeout: 0 });
+      const bar = new Mutex("bar", { timeout: 0 });
+      const done = new Mutex("done", { timeout: 0 });
+
+      await foo.lock();
+      await bar.lock();
+      await done.lock();
+      await done.unlock();
+      ask.mockClear();
+
+      await Mutex.releaseAllBeforeExit();
+
+      expect(foo.locked).toBe(false);
+      expect(bar.locked).toBe(false);
+      expect(asked("core:cache:internal:script:execute")).toEqual([
+        ["delIfValueEqual", "foo", foo.mutexId],
+        ["delIfValueEqual", "bar", bar.mutexId],
+      ]);
+    });
+
+    it("frees the other locks when one cannot be freed", async () => {
+      const foo = new Mutex("foo", { timeout: 0 });
+      const bar = new Mutex("bar", { timeout: 0 });
+
+      await foo.lock();
+      await bar.lock();
+
+      ask.mockImplementation(async (event: string, ...args: unknown[]) => {
+        if (
+          event === "core:cache:internal:script:execute" &&
+          args[1] === "foo"
+        ) {
+          throw new Error("Redis is gone");
+        }
+      });
+
+      await expect(Mutex.releaseAllBeforeExit()).resolves.toBeUndefined();
+      expect(bar.locked).toBe(false);
+    });
+
+    it("never resolves a lock asked for afterwards, and takes nothing", async () => {
+      await Mutex.releaseAllBeforeExit();
+      ask.mockClear();
+
+      const mutex = new Mutex("foo", { timeout: 0 });
+
+      expect(await settled(mutex.lock())).toBe("pending");
+      expect(asked("core:cache:internal:store")).toEqual([]);
+    });
+
+    it("gives back a lock acquired while it was running", async () => {
+      let answer: (locked: boolean) => void = () => undefined;
+
+      ask.mockImplementation(async (event: string) =>
+        event === "core:cache:internal:store"
+          ? new Promise((resolve) => {
+              answer = resolve;
+            })
+          : undefined,
+      );
+
+      const mutex = new Mutex("foo", { timeout: 0 });
+      const locking = mutex.lock();
+
+      await Mutex.releaseAllBeforeExit();
+      answer(true);
+
+      expect(await settled(locking)).toBe("pending");
+      expect(mutex.locked).toBe(false);
+      expect(asked("core:cache:internal:script:execute")).toEqual([
+        ["delIfValueEqual", "foo", mutex.mutexId],
+      ]);
+    });
+  });
 });

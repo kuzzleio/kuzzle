@@ -11,7 +11,7 @@
 
 ## 1. Fix before the beta — accidental regressions
 
-> ⚠️ **F-12 reopens this section** (2026-09-25): all of F-01 – F-11 are fixed, F-12 is not.
+> ⚠️ **F-12 reopened this section** (2026-09-25). F-12 is fixed, and F-13 is its cascade. F-13 is not a regression, but it is fixed before the beta because it turned F-12 into a cluster outage.
 
 | # | What breaks | Source IDs | Status |
 | --- | --- | --- | --- |
@@ -26,7 +26,8 @@
 | **F-09** | Plugin `BaseType` subclasses using getters or prototype values break (fields now initialised in the constructor); a validation spec with a truthy non-boolean `strict` is no longer strict. | B-17 (#2722), B-63 (#2803) | ✅ [#2905](https://github.com/kuzzleio/kuzzle/pull/2905), [#2908](https://github.com/kuzzleio/kuzzle/pull/2908) |
 | **F-10** | A `KuzzleError` thrown in the WebSocket `afterParsingPayload` pipe reaches the client as-is instead of `network.websocket.unexpected_error` (400); a non-Error thrown by a plugin is `util.inspect`-ed into the client message; a non-Error `{message}` pipe rejection prints `undefined`. | R-04, B-70, B-31 | ✅ all three restored — [#2915](https://github.com/kuzzleio/kuzzle/pull/2915) |
 | **F-11** | Small crash-path changes: `ClusterNode.nodeId` throws before the handshake (a shutdown during init skips `dispose`); `Protocol.init("", entryPoint)` now crashes; a `then`-only thenable from a strategy `verify` is rejected. | B-77, B-23(c), B-29 | ✅ [#2911](https://github.com/kuzzleio/kuzzle/pull/2911) |
-| **F-12** | **Found 2026-09-25 after the fixes, on `2-dev` at `812508f6f`** (a docs-only PR's CI): the test cluster never became ready. The joining prod node, still in its handshake, logged `Node out-of-sync: 18446744073709551615 messages lost from node …` — 2⁶⁴−1, i.e. a **duplicate or older id** from an existing peer reported as a loss (the count wraps) — and shut down; node 3 was then evicted for heartbeat timeout ~17 s after joining. Rare (once in some hundreds of functional jobs today) but it breaks cluster formation. Regression or not, and which change: under investigation. **Blocks the beta.** | — (CI log, 2026-09-25) | ⬜ investigating |
+| **F-12** | **Found 2026-09-25 after the fixes, on `2-dev` at `812508f6f`** (a docs-only PR's CI): the test cluster never became ready. The joining prod node, still in its handshake, logged `Node out-of-sync: 18446744073709551615 messages lost from node …` (2⁶⁴−1: `received − expected` for a message it already had) and shut down. Cause: `checkHeartbeat()` ended the joiner's `BUFFERING` phase before `sync()`, which then replayed the proof message as a loss. The defect has been latent since v2.56.0, where buffering lasted a few ms. **#2913 (F-03) made it reachable**: long handshakes now reach `sync()` and routinely cross the 3 s check period. Rare (twice in some hundreds of jobs), but it breaks cluster formation. | — (CI log, 2026-09-25) | ✅ [#2932](https://github.com/kuzzleio/kuzzle/pull/2932): no heartbeat verdict while buffering; an already-applied id is dropped in every state, and the loss count cannot wrap |
+| **F-13** | F-12's cascade: the self-evicted node kept starting its plugins until `process.exit`, took the `Store.init(<index>)` mutex (ttl 30 s) and exited holding it. node 3 waited on it until its 10 s plugin init timeout, stopped, and was evicted for heartbeat timeout. Same on v2.56.0, but it turns any node's early exit into a cluster outage. | — (CI log, 2026-09-25) | ✅ [#2933](https://github.com/kuzzleio/kuzzle/pull/2933): `Kuzzle.shutdown()` frees every lock the node holds before exiting |
 
 ## 2. Typings — breaking under this step's rule
 
@@ -80,12 +81,14 @@ Nothing to fix, everything to write down. The beta's release notes are built fro
 - `statistics.ts` wraps `services.stats` instead of `services.statistics`: with statistics disabled, `server:getStats` answers `core.fatal.unexpected_error`. (A4)
 - `.kuzzlerc.sample.jsonc` and the defaults disagree in places (one new gap: the `fingerprint` mapping). (A5)
 
-- `checkHeartbeat()` overwrites a subscriber's `BUFFERING` state during a slow handshake (found while fixing F-04). Same on v2.56.0.
+- `checkHeartbeat()` overwrites a subscriber's `BUFFERING` state during a slow handshake (found while fixing F-04). Same on v2.56.0. It became F-12 once F-03 made handshakes long, and is closed by [#2932](https://github.com/kuzzleio/kuzzle/pull/2932).
 - Before F-05, a failed dump (lock held, unwritable path) already surfaced as an unhandled rejection on v2.56.0; #2665 made it happen on almost every handled-error dump. Both are closed by [#2909](https://github.com/kuzzleio/kuzzle/pull/2909).
 
 ### A recurring CI instability
 
 The functional scenario _"Create first admin then reset anonymous and default roles"_ failed its `After` hook with `Unauthorized` on `admin:loadSecurities`, on the **same cell** (`http`, Node 22, ES 8), on two unrelated PRs ([#2910](https://github.com/kuzzleio/kuzzle/pull/2910), [#2912](https://github.com/kuzzleio/kuzzle/pull/2912)) the same day; a rerun passed. Not caused by either change — but twice in one cell is a pattern, not noise. ⬜ To investigate before the beta: a flaky scenario is a scenario that cannot report a regression.
+
+A related blind spot: a green functional run printed no cluster log, and its scenarios, which go through nginx, cannot see a node leaving the cluster. F-12 was only seen because it broke the cluster's formation. Since [#2934](https://github.com/kuzzleio/kuzzle/pull/2934), a passing functional job dumps the node logs and fails on any eviction or out-of-sync.
 
 ## 6. Not verified yet
 

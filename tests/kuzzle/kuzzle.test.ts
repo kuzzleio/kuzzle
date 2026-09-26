@@ -10,7 +10,7 @@ import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
-import { lastMutex, resetMutexes } from "./kuzzleFixture";
+import { lastMutex, MutexStub, resetMutexes } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -33,11 +33,9 @@ vi.mock("../../lib/kuzzle/vault", async () => {
   return { default: vault };
 });
 
-vi.mock("../../lib/util/mutex", async () => {
-  const { MutexStub } = await import("./kuzzleFixture");
-
-  return { Mutex: MutexStub };
-});
+vi.mock("../../lib/util/mutex", async () => ({
+  Mutex: (await import("./kuzzleFixture")).MutexStub,
+}));
 
 /** The five modules `start()` constructs and initialises, in place. */
 vi.mock("../../lib/core/cache/cacheEngine", async () => {
@@ -467,6 +465,23 @@ describe("#kuzzle/Kuzzle", () => {
       await kuzzle.shutdown(1);
 
       expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
+    /* F-13: a lock taken by a node that exits blocks the others for its ttl. */
+    it("frees its locks once the funnel is empty, and before exiting", async () => {
+      const delay = vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        funnelOf(kuzzle).remainingRequests = 0;
+
+        return Bluebird.resolve() as unknown as Bluebird<void>;
+      });
+      funnelOf(kuzzle).remainingRequests = 1;
+
+      await kuzzle.shutdown(1);
+
+      const [release] = MutexStub.releaseAllBeforeExit.mock.invocationCallOrder;
+
+      expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
+      expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
     });
   });
 
