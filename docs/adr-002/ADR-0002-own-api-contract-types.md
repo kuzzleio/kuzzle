@@ -70,6 +70,8 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 - **2026-09-25** — **Names for the server models:** `KuzzleUser`, `KuzzleToken` (`User` and `Token` are taken — the first by the SDK's client class, the second by the existing interface).
 - **2026-09-25** — **The two `Token`s stay two (TD-07).** The runtime token never carries the exported interface's `connectionId: string | null`, and no non-breaking change can remove or loosen it; `KuzzleToken` names the real one, the interface is documented as not being it ([step 02](steps/02-kuzzle-owns-its-types.md#local-decisions)).
 
+- **2026-09-25** — **TD-07: the two `Token`s stay apart; `Token.connectionId` is `@deprecated`.** No runtime token has ever carried `connectionId` (the token manager keeps the connection links), so declaring it on the model would be false and removing it from the interface would break strict consumers. It is deprecated, with a pointer to `request.context.connection.id`, and goes in step 04.
+
 ---
 
 ## Open points

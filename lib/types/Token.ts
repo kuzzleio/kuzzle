@@ -55,6 +55,10 @@ export interface Token extends JSONObject {
    * Never set on the tokens Kuzzle builds: a token can serve several
    * connections, and the token manager keeps those links, not the token. The
    * connection of a request is `request.context.connection.id`.
+   *
+   * @deprecated Never set, on v2.56.0 or since; kept so that code reading it
+   * still compiles. Use `request.context.connection.id` for a request's
+   * connection. To be removed in the next major (ADR-0002 step 04).
    */
   connectionId: string | null;
 
