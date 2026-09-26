@@ -1,6 +1,6 @@
 # Step 15 — consolidation: non-regression, breaking-change audit, then beta
 
-**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done; beta next · **PR(s):** phase C measurement [#2901](https://github.com/kuzzleio/kuzzle/pull/2901) (draft, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done, final re-run and mixed-cluster check passed 2026-09-26; **ready for the beta** (phase D, the maintainer's call) · **PR(s):** phase C measurements [#2901](https://github.com/kuzzleio/kuzzle/pull/2901), [#2924](https://github.com/kuzzleio/kuzzle/pull/2924), [#2935](https://github.com/kuzzleio/kuzzle/pull/2935) (drafts, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -55,7 +55,7 @@ Once A–C are resolved: merge `2-dev` into `beta`, which publishes an npm prere
 
 - [x] Every Phase A diff read, and each difference listed in Phase B's inventory.
 - [x] Every accidental breaking change fixed on `2-dev` (inventory §1, §2); every intended one documented ([release notes draft](../step-15-release-notes.md)).
-- [x] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change. _Passed on `0855cd70f` ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)) and again on `26c6b96a7`, with every fix in ([#2924](https://github.com/kuzzleio/kuzzle/pull/2924)): all 30 functional jobs, the 6 monkey jobs, build-and-run. Re-run it if `lib/` changes before the beta is cut._
+- [x] `v2.56.0`'s functional suites pass against `2-dev`, or each failure is an inventoried intended change. _Passed on `0855cd70f` ([#2901](https://github.com/kuzzleio/kuzzle/pull/2901)) and again on `26c6b96a7`, with every fix in ([#2924](https://github.com/kuzzleio/kuzzle/pull/2924)): all 30 functional jobs, the 6 monkey jobs, build-and-run. Final run on `5b03586f3`, after F-12 / F-13 ([#2935](https://github.com/kuzzleio/kuzzle/pull/2935)): same result, and every functional job also checked that no node was evicted. Re-run it if `lib/` changes before the beta is cut._
 - [ ] Beta published, and the side-by-side comparison in real projects done.
 - [ ] Nothing left open in the inventory — only then does the beta become a release.
 
@@ -74,6 +74,16 @@ Run on two frozen, built trees: `v2.56.0` and `2-dev` at `0855cd70f`. Phase A wa
 Every inventory item in §1 (eleven accidental regressions), §2 (the typings) and §3 (D-3, D-4) is fixed and merged, in 19 PRs: [#2903](https://github.com/kuzzleio/kuzzle/pull/2903)–[#2919](https://github.com/kuzzleio/kuzzle/pull/2919), [#2921](https://github.com/kuzzleio/kuzzle/pull/2921), [#2922](https://github.com/kuzzleio/kuzzle/pull/2922), plus the docs in [#2902](https://github.com/kuzzleio/kuzzle/pull/2902) and [#2920](https://github.com/kuzzleio/kuzzle/pull/2920). Each behaviour fix ships a spec verified to fail without it; F-01 and the dump suffix also got a functional scenario. F-03 and F-04, found by static analysis, were measured before being fixed (1–3 % of cluster joins failed at the default heartbeat; a retransmit slower than ~4 s evicted a healthy peer). D-2 and D-5 are documented, not changed, by the maintainer's decision.
 
 Two things this pass added that outlive it: **the typings gate** (`tests/typings/`, run by `npm run typecheck:typings` in the `build` job) — the check whose absence let step 12 break every TypeScript consumer without a single red job; and **the functional scenarios that pin error ids**, the blind spot phase C exposed.
+
+### F-12, F-13 and the final checks — 2026-09-25 / 26
+
+- **F-12** appeared on `2-dev` after the fixes, in a docs-only PR's CI: the test cluster never formed. A joining node evicted itself for a message it already had, because the heartbeat check had ended its buffering phase before the handshake finished. The defect is latent since v2.56.0. F-03 (#2913) made it reachable by letting long handshakes complete. Fixed by [#2932](https://github.com/kuzzleio/kuzzle/pull/2932).
+- **F-13**, its cascade: the evicted node exited holding a startup lock, and another node timed out waiting for it. Same on v2.56.0. Fixed by [#2933](https://github.com/kuzzleio/kuzzle/pull/2933): a node frees its locks before it exits.
+- **A green run is now a statement about the cluster too** ([#2934](https://github.com/kuzzleio/kuzzle/pull/2934)): every functional job dumps the node logs and fails on an eviction or an out-of-sync. F-12 had only been seen because it broke formation.
+- **Final phase C** on `5b03586f3` ([#2935](https://github.com/kuzzleio/kuzzle/pull/2935)): green, with the new check.
+- **Mixed v2.56.0 / 2-dev cluster** (inventory §6, ES 8, run by hand in Docker): formation in both orders over 20 joins, state sync both ways (index, document, realtime notification, security and its cache), a rolling upgrade of 3 nodes under write load with no error outside the node being stopped, and clean SIGTERM handling both ways. Retransmission works between 2-dev nodes. Against a v2.56.0 sender, a 2-dev receiver falls back to leaving, as the release notes say. A v2.56.0 receiver still behaves as it always did (it stays up out of sync, TD-67): a lost message is handled cleanly only once every node runs the new version.
+
+The user-facing upgrade page is [`doc/2/guides/upgrade-notes/from-2-56/`](../../../doc/2/guides/upgrade-notes/from-2-56/index.md), built from the [release notes draft](../step-15-release-notes.md), now frozen.
 
 ### What the phases found about the method
 
