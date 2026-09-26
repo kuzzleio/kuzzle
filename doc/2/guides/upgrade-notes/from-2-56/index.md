@@ -46,6 +46,8 @@ The version is first published as a **beta** (npm `beta` tag). Please report any
   **Action:** if your deployment passes options to this command (the Docker image's default command does not), check that they still do what you meant.
 - **Dumps** (`dump.enabled`, off by default). A dump's suffix is validated: `admin:dump` answers `api.assert.invalid_argument` for anything outside `[A-Za-z0-9_-]{0,64}`. Automatic dumps after a handled error name themselves within that limit, and a dump failure is logged instead of raised.
 - **Node.js** support is unchanged (`>=20 <25`). As for v2.56.0, the real minimum is **20.19**, which the `uuid` dependency requires.
+- **Installing needs no compiler any more** on `linux-x64` and `linux-arm64` (glibc 2.31+, i.e. every Debian image from bullseye on) and on macOS. The native modules Kuzzle maintains (`dumpme`, and `boost-geospatial-index` and `kuzzle-espresso-logic-minimizer` through `koncorde`) now ship prebuilt binaries, so `npm install` no longer compiles them nor downloads Node headers. Nothing to change in a Dockerfile: a build stage that has a compiler keeps working, and a slim image without one now works too. On Alpine (musl) or another architecture, they are still compiled at install time as before.
+  The geospatial index is also built with a fixed C++ standard. Before, the standard came from the Node version that compiled it, and on arm64 a Node 24 build could order or return geospatial results differently from a Node 20/22 one. All builds now behave like the Node 20/22 one.
 
 ## API clients
 

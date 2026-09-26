@@ -20,6 +20,11 @@
 # anything else, and each containerised attempt gets a fresh `--rm` container,
 # so neither a rolled-back install nor a poisoned header cache survives into
 # the retry. See docs/adr-001/type-debt-register.md, TD-83.
+#
+# Since #2839, dumpme, boost-geospatial-index and kuzzle-espresso-logic-minimizer
+# ship prebuilt binaries and no longer compile (check-prebuilt-addons.sh keeps
+# it that way). The retry stays: re2 still downloads its binary from GitHub at
+# install time and falls back to node-gyp when that download fails.
 
 set -uo pipefail
 
