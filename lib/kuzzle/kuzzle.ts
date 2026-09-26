@@ -399,6 +399,10 @@ class Kuzzle extends KuzzleEventEmitter {
       await Bluebird.delay(1000);
     }
 
+    // The other nodes may be waiting on a lock this one holds: a node leaving
+    // mid-startup is often in the middle of one (F-13).
+    await Mutex.releaseAllBeforeExit();
+
     this.log.info("Halted.");
 
     // flush both application and Kuzzle core loggers before leaving (Could happen even if some core/application components are not initialized)

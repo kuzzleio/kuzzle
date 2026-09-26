@@ -35,6 +35,8 @@ const mutexes: MutexStub[] = [];
  * taken, with what TTL, and when relative to the reads it guards.
  */
 export class MutexStub {
+  static releaseAllBeforeExit = vi.fn(async () => undefined);
+
   public lock = vi.fn(async () => true);
   public unlock = vi.fn(async () => undefined);
   public ttl: number;
@@ -66,4 +68,5 @@ export function reset(): void {
   }
 
   resetMutexes();
+  MutexStub.releaseAllBeforeExit.mockClear();
 }

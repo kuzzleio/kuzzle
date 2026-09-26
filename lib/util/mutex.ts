@@ -46,6 +46,11 @@ end
 // to keep track of whether the script was already registered or not
 let delScriptRegistered = false;
 
+// Every lock this process holds, so that it can give them back before it
+// exits (see `Mutex.releaseAllBeforeExit`).
+const held = new Set<Mutex>();
+let exiting = false;
+
 /**
  * Mutex class options
  */
@@ -134,6 +139,10 @@ export class Mutex {
       );
     }
 
+    if (exiting) {
+      return new Promise(() => {});
+    }
+
     let duration = 0;
 
     do {
@@ -157,6 +166,14 @@ export class Mutex {
     if (!this._locked) {
       debug("Failed to lock %s (mutex id: %s)", this.resource, this.mutexId);
       return false;
+    }
+
+    held.add(this);
+
+    // Acquired while `releaseAllBeforeExit` was running: give it back at once.
+    if (exiting) {
+      await this.unlock();
+      return new Promise(() => {});
     }
 
     debug("Resource %s locked (mutex id: %s)", this.resource, this.mutexId);
@@ -195,6 +212,7 @@ export class Mutex {
     );
 
     this._locked = false;
+    held.delete(this);
 
     debug("Resource %s freed (mutex id: %s)", this.resource, this.mutexId);
   }
@@ -235,6 +253,26 @@ export class Mutex {
     } while (isLocked && (timeout === -1 || duration <= timeout));
 
     return !isLocked;
+  }
+
+  /**
+   * Frees every lock this process holds, and stops it from taking new ones.
+   * Only meant to be called right before `process.exit`.
+   *
+   * A process that exits holding a lock leaves it in Redis until its ttl
+   * expires, and every node waiting on it waits that long. That is how a
+   * node evicted while starting its plugins made another node time out
+   * starting its own, and leave the cluster too (step 15, F-13).
+   *
+   * From then on, `lock()` never resolves: the process is about to exit, and
+   * answering `false` would send its caller down a path meant for a lock
+   * held by another node.
+   */
+  static async releaseAllBeforeExit(): Promise<void> {
+    exiting = true;
+
+    // Best effort: a lock that cannot be freed still expires with its ttl.
+    await Promise.allSettled([...held].map((mutex) => mutex.unlock()));
   }
 
   get locked() {
