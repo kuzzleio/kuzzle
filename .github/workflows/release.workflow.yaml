@@ -22,9 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -57,9 +54,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -89,9 +83,6 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -127,9 +118,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

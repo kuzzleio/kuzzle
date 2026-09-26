@@ -1,8 +1,0 @@
-name: Install Packages
-description: Install necessary packages inside the CI
-
-runs:
-  using: "composite"
-  steps:
-    - run: sudo apt update && sudo apt install libunwind-dev libunwind8 -y
-      shell: bash
