@@ -48,7 +48,7 @@ let delScriptRegistered = false;
 
 // Every lock this process holds, so that it can give them back before it
 // exits (see `Mutex.releaseAllBeforeExit`).
-const held = new Set<Mutex>();
+const held = new Set<Mutex>(); // NOSONAR: deprecated for callers, not for itself
 let exiting = false;
 
 /**

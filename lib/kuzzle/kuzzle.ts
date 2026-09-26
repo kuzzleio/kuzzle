@@ -401,7 +401,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
     // mid-startup is often in the middle of one (F-13).
-    await Mutex.releaseAllBeforeExit();
+    await Mutex.releaseAllBeforeExit(); // NOSONAR: frees locks taken through the deprecated API
 
     this.log.info("Halted.");
 
