@@ -21,10 +21,16 @@
 
 import { KuzzleError } from "./kuzzleError";
 
+/**
+ * An error in plugin or application code, as opposed to Kuzzle's own.
+ *
+ * Its message used to end with "This is probably not a Kuzzle error, but a
+ * problem with a plugin implementation." on every one of the ~80 ids of this
+ * class: it said nothing the id (`plugin.*`) does not, and it came between the
+ * message and the stack of the error that actually happened.
+ */
 export class PluginImplementationError extends KuzzleError {
   constructor(message: unknown = "", id?: unknown, code?: unknown) {
     super(message, 500, id, code);
-    this.message +=
-      "\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.";
   }
 }

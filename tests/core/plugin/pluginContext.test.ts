@@ -633,7 +633,7 @@ describe("#core/plugin/pluginContext", () => {
         expect.objectContaining({
           constructor: PluginImplementationError,
           message:
-            '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.',
+            '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).',
         }),
       );
     });
