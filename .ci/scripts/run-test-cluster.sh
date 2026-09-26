@@ -60,3 +60,8 @@ KUZZLE_PORT=7512 "${WAIT_KUZZLE[@]}"
 npm run $KUZZLE_FUNCTIONAL_TESTS
 
 trap - err
+
+# Dumped on success too: the only record of what the cluster did during a green
+# run, and what `check_cluster_logs` failed on when it fails.
+dump_cluster_logs
+check_cluster_logs
