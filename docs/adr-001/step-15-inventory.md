@@ -86,10 +86,12 @@ Nothing to fix, everything to write down. The beta's release notes are built fro
 
 ### A recurring CI instability
 
-The functional scenario _"Create first admin then reset anonymous and default roles"_ failed its `After` hook with `Unauthorized` on `admin:loadSecurities`, on the **same cell** (`http`, Node 22, ES 8), on two unrelated PRs ([#2910](https://github.com/kuzzleio/kuzzle/pull/2910), [#2912](https://github.com/kuzzleio/kuzzle/pull/2912)) the same day; a rerun passed. Not caused by either change — but twice in one cell is a pattern, not noise. ⬜ To investigate before the beta: a flaky scenario is a scenario that cannot report a regression.
+The functional scenario _"Create first admin then reset anonymous and default roles"_ failed its `After` hook with `Unauthorized` on `admin:loadSecurities`, on the **same cell** (`http`, Node 22, ES 8), on two unrelated PRs ([#2910](https://github.com/kuzzleio/kuzzle/pull/2910), [#2912](https://github.com/kuzzleio/kuzzle/pull/2912)) the same day; a rerun passed. Not caused by either change — but twice in one cell is a pattern, not noise. ✅ [#2921](https://github.com/kuzzleio/kuzzle/pull/2921): the hook's anonymous `admin:loadSecurities` could land on a node the `resetSecurity` had not reached yet (test harness only; the cross-node propagation delay is the same as on v2.56.0).
 
 A related blind spot: a green functional run printed no cluster log, and its scenarios, which go through nginx, cannot see a node leaving the cluster. F-12 was only seen because it broke the cluster's formation. Since [#2934](https://github.com/kuzzleio/kuzzle/pull/2934), a passing functional job dumps the node logs and fails on any eviction or out-of-sync.
 
 ## 6. Not verified yet
 
-Runtime checks the static audit could not make: F-03 and F-04 (a real cluster, including a mixed v2.56.0 / 2-dev one), D-2's headers in a real access log, D-5 on a real index, and the typings on TypeScript versions other than 5.4.5.
+Runtime checks the static audit could not make: D-2's headers in a real access log, D-5 on a real index, and the typings on TypeScript versions other than 5.4.5. These are left to the beta's comparison in real projects.
+
+✅ **Checked since**: F-03 and F-04 on a real cluster (measured before their fixes), and a **mixed v2.56.0 / 2-dev cluster** on 2026-09-26 (ES 8, `2-dev` at `5b03586f3`). It covered formation in both orders, cross-version sync (data, realtime, security), a rolling upgrade under load and SIGTERM both ways; all passed. See [step 15](steps/15-consolidation-non-regression.md#f-12-f-13-and-the-final-checks--2026-09-25--26). Not covered: ES 7, MQTT, SIGKILL.
