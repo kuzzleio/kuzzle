@@ -30,10 +30,19 @@ fi
 docker compose -f $YML_FILE down -v
 
 echo "Installing dependencies..."
-# Retried: node-gyp's header download is the install's one network dependency
-# and it does not retry itself. See .ci/scripts/with-retry.sh (TD-83).
+# NPM_CACHE_DIR (CI sets it to the runner's ~/.npm, which setup-node restores
+# from the lockfile-keyed cache) is mounted as the container's npm cache, so
+# the install reads tarballs from disk instead of the registry.
+NPM_CACHE_MOUNT=()
+if [ -n "${NPM_CACHE_DIR:-}" ]; then
+  mkdir -p "$NPM_CACHE_DIR"
+  NPM_CACHE_MOUNT=(-v "$NPM_CACHE_DIR:/var/npm")
+fi
+
+# Retried: the install still has network dependencies (re2 downloads its
+# binary at install time). See .ci/scripts/with-retry.sh (TD-83).
 "$WITH_RETRY" \
-  docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
+  docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 

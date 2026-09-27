@@ -20,9 +20,16 @@ fi
 docker compose -f $YML_FILE down -v
 
 echo "Installing dependencies..."
+# Same npm cache mount as run-test-cluster.sh (NPM_CACHE_DIR, set by CI).
+NPM_CACHE_MOUNT=()
+if [ -n "${NPM_CACHE_DIR:-}" ]; then
+  mkdir -p "$NPM_CACHE_DIR"
+  NPM_CACHE_MOUNT=(-v "$NPM_CACHE_DIR:/var/npm")
+fi
+
 # Retried, same reason as run-test-cluster.sh: .ci/scripts/with-retry.sh (TD-83).
 "$WITH_RETRY" \
-  docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
+  docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
 
 if [ "$REBUILD" == "true" ]; then
     docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm rebuild

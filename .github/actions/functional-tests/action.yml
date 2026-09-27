@@ -17,7 +17,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: ./.ci/scripts/run-test-cluster.sh
+    # NPM_CACHE_DIR: the runner's ~/.npm, which setup-node (cache: "npm")
+    # restores, mounted as the npm cache of the containerised install.
+    - run: NPM_CACHE_DIR="$HOME/.npm" ./.ci/scripts/run-test-cluster.sh
       env:
         KUZZLE_FUNCTIONAL_TESTS: ${{ inputs.test-set }}
         NODE_VERSION: ${{ inputs.node-version }}
