@@ -282,7 +282,10 @@ jobs:
     # Not `needs: [sonarqube]`: nothing in the functional suite consumes the
     # Sonar scan, and depending on a fork-gated job skipped this whole matrix
     # on every pull request from a fork (TD-38).
-    needs: [build, unit-tests]
+    # Not `needs: [unit-tests]` either: the unit tests sat on the critical path
+    # (~2.5 min) for a gate the functional jobs do not use. A unit failure now
+    # no longer spares the 30 functional jobs, which is the price of the time.
+    needs: [build]
     strategy:
       # One flaky variant must not cancel the 29 others: a re-run is otherwise
       # the only way to learn whether anything else was broken.
