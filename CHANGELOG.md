@@ -1,3 +1,13 @@
+## [2.57.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.1...v2.57.0-beta.2) (2026-09-27)
+
+### Features
+
+* native addons from prebuilt binaries, no compiler at install time ([4643d45](https://github.com/kuzzleio/kuzzle/commit/4643d45a6ef255d539c18a4ca05e4d3419a40d0f)), closes [#2839](https://github.com/kuzzleio/kuzzle/issues/2839)
+
+### Bug Fixes
+
+* realtime matching no longer throws after geospatial unsubscriptions ([eca6292](https://github.com/kuzzleio/kuzzle/commit/eca62920c3a71960294d0f94a983d1b06b953001)), closes [kuzzleio/boost-geospatial-index#29](https://github.com/kuzzleio/boost-geospatial-index/issues/29) [kuzzleio/koncorde#84](https://github.com/kuzzleio/koncorde/issues/84) [Koncorde#test](https://github.com/kuzzleio/Koncorde/issues/test)
+
 ## [2.57.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.56.0...v2.57.0-beta.1) (2026-09-26)
 
 ### Features
