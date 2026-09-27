@@ -1,6 +1,6 @@
 # Step 15 — consolidation: non-regression, breaking-change audit, then beta
 
-**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done, final re-run and mixed-cluster check passed 2026-09-26; **ready for the beta** (phase D, the maintainer's call) · **PR(s):** phase C measurements [#2901](https://github.com/kuzzleio/kuzzle/pull/2901), [#2924](https://github.com/kuzzleio/kuzzle/pull/2924), [#2935](https://github.com/kuzzleio/kuzzle/pull/2935) (drafts, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done, final re-run and mixed-cluster check passed 2026-09-26; **beta published** 2026-09-26 (`2.57.0-beta.1`); `2.57.0-beta.2` cut 2026-09-27 with the native addons prebuilt and koncorde's geospatial-removal crash fixed ([#2839](https://github.com/kuzzleio/kuzzle/issues/2839), [#2938](https://github.com/kuzzleio/kuzzle/pull/2938)); the real-project comparison (phase D) runs on it · **PR(s):** phase C measurements [#2901](https://github.com/kuzzleio/kuzzle/pull/2901), [#2924](https://github.com/kuzzleio/kuzzle/pull/2924), [#2935](https://github.com/kuzzleio/kuzzle/pull/2935) (drafts, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
