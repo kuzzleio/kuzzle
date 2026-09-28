@@ -166,12 +166,101 @@ describe("#model/storage/ApiKey", () => {
       expect(result).toBe(apiKey);
     });
 
+    it("finds the key where the fingerprint is not indexed", async () => {
+      /*
+       * An install upgraded from v2.56.0 keeps its `api-keys` mapping, which
+       * has no `fingerprint`: the term query finds nothing, while the stored
+       * `_source` does carry the fingerprint.
+       */
+      const internalIndex = {
+        mExecute: vi.fn(async (_collection, _query, callback) => [
+          await callback([
+            {
+              _id: "api-key-id",
+              _source: { fingerprint: "the-fingerprint", userId: "mylehuong" },
+            },
+          ]),
+        ]),
+        get: vi.fn(async () => ({
+          _id: "api-key-id",
+          _source: { fingerprint: "the-fingerprint", userId: "mylehuong" },
+        })),
+        search: vi.fn(async () => ({ hits: [] })),
+      };
+      stubKuzzle({ ask, internalIndex });
+
+      const found = await ApiKey.loadByFingerprint(
+        "mylehuong",
+        "the-fingerprint",
+      );
+
+      expect(found._id).toBe("api-key-id");
+      expect(internalIndex.get).toHaveBeenCalledWith("api-keys", "api-key-id");
+      expect(internalIndex.mExecute).toHaveBeenCalledWith(
+        "api-keys",
+        { term: { userId: "mylehuong" } },
+        expect.any(Function),
+      );
+    });
+
     it("refuses a fingerprint nothing matches", async () => {
       vi.spyOn(ApiKey, "search").mockResolvedValue([]);
+      const scan = vi
+        .spyOn(ApiKey, "scanByFingerprint")
+        .mockResolvedValue(null);
 
       await expect(
         ApiKey.loadByFingerprint("mylehuong", "unknown-print"),
       ).rejects.toMatchObject({ id: "services.storage.not_found" });
+      expect(scan).toHaveBeenCalledWith("mylehuong", "unknown-print");
+    });
+  });
+
+  describe("ApiKey.scanByFingerprint", () => {
+    /** Feeds the given batches of stored documents to the batch callback. */
+    const batches = (...pages: { _id: string; _source: object }[][]) =>
+      vi
+        .spyOn(ApiKey, "batchExecute")
+        .mockImplementation(async (_query, callback) => {
+          for (const page of pages) {
+            await callback(page);
+          }
+        });
+
+    it("scans the user's keys and loads the one whose fingerprint matches", async () => {
+      const apiKey = new ApiKey({ userId: "mylehuong" }, "api-key-id");
+      const load = vi.spyOn(ApiKey, "load").mockResolvedValue(apiKey);
+      const batchExecute = batches(
+        [{ _id: "other", _source: { fingerprint: "other-print" } }],
+        [
+          {
+            _id: "api-key-id",
+            _source: { fingerprint: "the-fingerprint", userId: "mylehuong" },
+          },
+        ],
+      );
+
+      const found = await ApiKey.scanByFingerprint(
+        "mylehuong",
+        "the-fingerprint",
+      );
+
+      expect(batchExecute).toHaveBeenCalledWith(
+        { term: { userId: "mylehuong" } },
+        expect.any(Function),
+      );
+      expect(load).toHaveBeenCalledWith("mylehuong", "api-key-id");
+      expect(found).toBe(apiKey);
+    });
+
+    it("answers null when no stored fingerprint matches", async () => {
+      const load = vi.spyOn(ApiKey, "load");
+      batches([{ _id: "other", _source: { fingerprint: "other-print" } }]);
+
+      await expect(
+        ApiKey.scanByFingerprint("mylehuong", "the-fingerprint"),
+      ).resolves.toBeNull();
+      expect(load).not.toHaveBeenCalled();
     });
   });
 
