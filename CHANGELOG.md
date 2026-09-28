@@ -1,3 +1,9 @@
+## [2.57.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.3...v2.57.0-beta.4) (2026-09-28)
+
+### Bug Fixes
+
+* **deps:** depend on the stable releases of koncorde and dumpme ([52cc8cc](https://github.com/kuzzleio/kuzzle/commit/52cc8cc8765c6878eef8f1481a6c0b1d6702b504))
+
 ## [2.57.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.2...v2.57.0-beta.3) (2026-09-28)
 
 ### Bug Fixes
