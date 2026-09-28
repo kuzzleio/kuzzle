@@ -30,8 +30,8 @@ A semver range such as `>=2.52.0 <3.0.0` never matches a prerelease, so plugins 
 
 - **Multipart uploads are now size-limited.** `limits.maxFormFileSize` (default 1 MB) was never enforced; now it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised.
   **Action:** if you accept larger uploads, raise `limits.maxFormFileSize` too.
-- **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads, and the `connection` object of the access logs. In the `logstash` access-log format, the request headers — `authorization` and `cookie` included — were already logged (under `extra.headers`); they now appear there three times (`connection.headers`, `extra.headers`, `extra.connection.headers`), which makes each line longer.
-  **Action:** if your `connection:*` hooks forward their payload somewhere `Authorization` or cookie values must not go, filter them there. Access-log filtering you already had still applies, but must now cover the `connection.headers` fields too.
+- **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads, and the `combined` access-log format fills its referer and user-agent fields (they were always `-`). The `logstash` access-log format keeps the v2.56.0 shape: the request headers — `authorization` and `cookie` included — are logged once, under `extra.headers`, as in v2.56.0, and the `connection` objects of an entry carry no `headers` field (v2.56.0 logged an empty `{}` there).
+  **Action:** if your `connection:*` hooks forward their payload somewhere `Authorization` or cookie values must not go, filter them there.
 - **Node identity.** Each node now has a name (`knode-…` unless your `Backend` names it). It appears in the Redis client name (`CLIENT LIST`), the cluster ID card, the `node` field of realtime notifications **and of every API response**, and the `X-Kuzzle-Node` HTTP header (which read the literal string `"undefined"`).
 
 ### Cluster
@@ -81,6 +81,7 @@ Other observable changes:
 
 - The exported declarations now come from a `strict` build. A project that compiled against v2.56.0 compiles against this version, with `strict` on or off, and a CI gate keeps it that way.
   Where v2.56.0 declared a type that the runtime did not always honour, the v2.56.0 declaration is kept for compatibility, and the JSDoc says what the runtime does. For example, `getIndex({ required: false })` can return `null`, and `getHeader()` returns `undefined` for a missing header.
+- With `skipLibCheck: false`, v2.56.0's declarations failed to compile (`TS7016` for `bluebird` and `passport`) unless the project installed `@types/bluebird` and `@types/passport` itself. Both are now dependencies of Kuzzle; `@types/passport` brings the Express type packages with it (declarations only, no runtime code).
 - **Kuzzle's own contract types.** `JSONObject` is now declared by Kuzzle. It is identical to the SDK's, and the two assign to each other both ways.
   The new type exports **`KuzzleUser`** and **`KuzzleToken`** name what `request.context.user` and `request.context.token` are. The exported `User` is the SDK's client-side user, as `app.sdk.security.*` returns it, and the exported `Token` interface is not the runtime token.
 - The SDK is still re-exported under every name it was, but by an explicit list: what the SDK adds from now on is not part of Kuzzle's API. Four client-transport re-exports are **deprecated**: `Kuzzle`, `WebSocket`, `Http` and `KuzzleAbstractProtocol`.

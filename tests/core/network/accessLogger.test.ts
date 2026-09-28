@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { omit } from "lodash";
 import ClientConnection from "../../../lib/core/network/clientConnection";
 import { KuzzleRequest } from "../../../lib/api/request";
 import { InternalError } from "../../../lib/kerror/errors/internalError";
@@ -322,7 +323,7 @@ describe("AccessLoggerWorker", () => {
       expect(worker.logger.info.mock.calls).toEqual([
         [
           {
-            connection,
+            connection: omit(connection, "headers"),
             error,
             extra: null,
             namespace: "kuzzle:accessLogs",
@@ -332,6 +333,33 @@ describe("AccessLoggerWorker", () => {
           },
         ],
       ]);
+    });
+
+    it('logs the request headers once, under extra.headers, in "logstash" format', () => {
+      const headers = { authorization: "Bearer secret", cookie: "a=b" };
+      const connection = new ClientConnection("HTTP/1.1", ["1.2.3.4"], headers);
+      const request = new KuzzleRequest({ foo: "bar" });
+      // what an HTTP entry point passes: its whole message
+      const extra = {
+        connection,
+        headers,
+        method: "GET",
+        url: "/_now",
+      };
+
+      worker.config.logs.accessLogFormat = "logstash";
+      worker.logAccess(connection, request, "42", extra);
+
+      const entry = worker.logger.info.mock.calls[0][0];
+
+      expect(entry.extra.headers).toEqual(headers);
+      expect(entry.connection).not.toHaveProperty("headers");
+      expect(entry.extra.connection).not.toHaveProperty("headers");
+      expect(entry.connection.ips).toEqual(["1.2.3.4"]);
+      expect(entry.extra.connection.ips).toEqual(["1.2.3.4"]);
+      expect(JSON.stringify(entry).split("Bearer secret")).toHaveLength(2);
+      // the connection itself is untouched: the combined format reads it
+      expect(connection.headers).toBe(headers);
     });
 
     it("outputs a combined log line for an http request", () => {
