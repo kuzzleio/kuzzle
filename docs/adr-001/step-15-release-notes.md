@@ -7,7 +7,7 @@ This release is **not breaking**. It is the first built entirely from TypeScript
 ## Operators
 
 - **Multipart uploads are now size-limited.** `limits.maxFormFileSize` (default 1 MB) was never enforced; it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised. **Action:** if you accept larger uploads, raise `limits.maxFormFileSize` too.
-- **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads and the access logs — **including `authorization` and `cookie` in the `logstash` access-log format**. **Action:** if your access logs are shipped somewhere `Authorization` / cookie values must not go, filter them there. (The JWT was already logged through the request input.)
+- **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads and the `connection` object of the access logs. In the `logstash` format the request headers, `authorization` and `cookie` included, were already logged under `extra.headers` (measured on v2.56.0); they now appear three times (`connection.headers`, `extra.headers`, `extra.connection.headers`). **Action:** filter `Authorization` / cookie values out of `connection:*` hook payloads you forward, and extend existing access-log filtering to the `connection.headers` fields.
 - **Node identity.** Each node now has a name (`knode-…` unless your `Backend` names it) and it appears in: the Redis client name (`CLIENT LIST`), the cluster ID card, the `node` field of realtime notifications **and of every API response**, and the `X-Kuzzle-Node` HTTP header (it read the literal string `"undefined"`).
 - **Cluster.**
   - A node that misses a sync message now asks its sender to **retransmit** it instead of leaving the cluster. New setting `cluster.retransmitBuffer` (`{ messages: 1000, bytes: 16 MiB }` by default; `0` in either disables it). Rolling upgrade from v2.56.0 is supported: an older node answers the new request with "unknown", and the newer one falls back to the old behaviour.
@@ -34,7 +34,7 @@ Error **ids** a client may switch on — each was a wrong or generic id for a kn
 Other observable changes:
 
 - `document:export` honours `sort` (array, object or field name).
-- API keys can be deleted by `key` or by `fingerprint` (new `DELETE /users/:userId/api-keys` route; mind that the HTTP form puts the clear-text key in the URL). **Keys created before the upgrade can only be deleted by `_id`**: their `fingerprint` is not indexed.
+- API keys can be deleted by `key` or by `fingerprint` (new `DELETE /users/:userId/api-keys` route; mind that the HTTP form puts the clear-text key in the URL). On an upgraded install the internal `api-keys` mapping has no `fingerprint` field (existing internal collections are never re-mapped), so the lookup falls back to scanning the user's keys.
 - `auth:logout` clears the cookie as `authToken=` (was `authToken=null`); the anonymous user's `auth:getCurrentUser` has `strategies: []` (was `[[]]`).
 - Two realtime subscriptions to the same collection with `users: "out"` and `users: "none"` used to share a channel (and one of them got the other's notifications); each now has its own.
 - The two `plugin.*.invalid_openapi_schema` error codes are removed from the catalogue: nothing raised them.
