@@ -30,6 +30,7 @@ import {
 
 import assert from "node:assert";
 
+import { omit } from "lodash";
 import moment from "moment";
 import * as pino from "pino";
 
@@ -49,6 +50,8 @@ const ALLOWED_TRANSPORTS = new Set([
 export interface AccessLogExtra {
   method: string;
   url: string;
+  // An HTTP entry point passes its whole message, connection included.
+  connection?: ClientConnection;
 }
 
 class AccessLogger {
@@ -249,10 +252,14 @@ class AccessLoggerWorker {
   ): void {
     if (this.config.logs.accessLogFormat === "logstash") {
       // custom kuzzle logs to be exported to logstash
+      // The request headers are logged once, under `extra.headers`, where
+      // v2.56.0 already logged them (its connections had no headers): the
+      // same values under `connection` and `extra.connection` only tripled
+      // the size of every entry.
       this.logger.info({
-        connection,
+        connection: omit(connection, "headers"),
         error: request.error,
-        extra,
+        extra: withoutConnectionHeaders(extra),
         namespace: "kuzzle:accessLogs",
         nodeId: global.kuzzle.id,
         request: request.input,
@@ -331,6 +338,14 @@ class AccessLoggerWorker {
     // and an offset past its start is clamped to 0 above.
     return ips[idx] ?? "";
   }
+}
+
+function withoutConnectionHeaders(extra: AccessLogExtra | null) {
+  if (!extra?.connection) {
+    return extra;
+  }
+
+  return { ...extra, connection: omit(extra.connection, "headers") };
 }
 
 /**
