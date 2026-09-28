@@ -1,3 +1,11 @@
+## [2.57.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.2...v2.57.0-beta.3) (2026-09-28)
+
+### Bug Fixes
+
+* API keys can be deleted by key or fingerprint on upgraded installs ([99b87a7](https://github.com/kuzzleio/kuzzle/commit/99b87a7c8e73c3df4c7ab696602513b17e886af3))
+* logstash access logs carry the request headers once ([b8b05c8](https://github.com/kuzzleio/kuzzle/commit/b8b05c86550ffe5de6c348f81d96a61bfef5b806))
+* published typings compile without dev dependencies ([2af8b4c](https://github.com/kuzzleio/kuzzle/commit/2af8b4cd2bd26efae4ce74ae8128fff1d234ea54))
+
 ## [2.57.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.1...v2.57.0-beta.2) (2026-09-27)
 
 ### Features
