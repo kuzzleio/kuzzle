@@ -165,6 +165,13 @@ jobs:
         run: npm run typecheck:typings
         shell: bash
 
+      # The same typings, installed from the packed tarball as a consumer gets
+      # them — production dependencies only — and compiled without
+      # `skipLibCheck`: a type package they need must not be a dev dependency.
+      - name: Check the published typings need no dev dependency
+        run: ./.ci/scripts/check-typings-dependencies.sh
+        shell: bash
+
   sonarqube:
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork == false
