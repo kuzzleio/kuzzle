@@ -254,10 +254,9 @@ class BaseModel {
   }: { refresh?: boolean | string } = {}): Promise<void> {
     return this.deleteByQuery({ match_all: {} }, { refresh });
   }
-  // ? This looks not in use anymore ?
   static batchExecute(
     query: JSONObject,
-    callback: (...args: unknown[]) => unknown,
+    callback: (hits: StorageDocument[]) => unknown,
   ) {
     return global.kuzzle.internalIndex.mExecute(
       this.collection,

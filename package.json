@@ -32,6 +32,8 @@
     "lib": "lib"
   },
   "dependencies": {
+    "@types/bluebird": "3.5.42",
+    "@types/passport": "1.0.17",
     "aedes": "0.51.3",
     "bluebird": "3.7.2",
     "cli-color": "2.0.4",
@@ -83,10 +85,8 @@
   "devDependencies": {
     "@cucumber/cucumber": "12.5.0",
     "@types/async": "^3.2.24",
-    "@types/bluebird": "3.5.42",
     "@types/cookie": "1.0.0",
     "@types/lodash": "4.17.21",
-    "@types/passport": "1.0.17",
     "@types/validator": "^13.15.10",
     "@types/yargs": "17.0.35",
     "@vitest/coverage-v8": "4.0.16",
