@@ -193,6 +193,16 @@ class ApiKey extends BaseModel {
     );
 
     if (!apiKey) {
+      // An install upgraded from a version without the `fingerprint` mapping
+      // keeps its old one (existing internal collections are never
+      // re-mapped), so the term query above finds nothing there — for any key.
+      // Every key stores its fingerprint in `_source`, so scan the user's keys.
+      const scanned = await this.scanByFingerprint(userId, fingerprint);
+
+      if (scanned) {
+        return scanned;
+      }
+
       throw kerror.get("services", "storage", "not_found", fingerprint, {
         message: `ApiKey with fingerprint "${fingerprint}" not found for user "${userId}".`,
       });
@@ -200,6 +210,32 @@ class ApiKey extends BaseModel {
 
     // @ts-expect-error We fetch from the api key collection so this is safe
     return apiKey satisfies ApiKey;
+  }
+
+  /**
+   * Finds a user's API key by comparing the fingerprint stored in each of
+   * their keys, for collections where `fingerprint` is not indexed.
+   *
+   * @param userId - User ID
+   * @param fingerprint - API key fingerprint
+   */
+  static async scanByFingerprint(
+    userId: string,
+    fingerprint: string,
+  ): Promise<ApiKey | null> {
+    let foundId: string | null = null;
+
+    await this.batchExecute({ term: { userId } }, (hits) => {
+      const hit = hits.find(
+        (document) => document._source.fingerprint === fingerprint,
+      );
+
+      if (hit && !foundId) {
+        foundId = hit._id;
+      }
+    });
+
+    return foundId ? this.load(userId, foundId) : null;
   }
 
   /**
