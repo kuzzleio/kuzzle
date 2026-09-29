@@ -324,6 +324,7 @@ export class PluginContext {
     function PluginContextESClient(): any {
       return Elasticsearch.buildClient(
         global.kuzzle.config.services.storageEngine.client,
+        global.kuzzle.config.services.storageEngine.majorVersion,
       );
     }
 
