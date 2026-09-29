@@ -1,6 +1,6 @@
 # Step 00 — Fix: `context.constructors.ESClient` ignores `majorVersion`
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-29 · **PR:** [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done — frozen · **Opened / merged:** 2026-09-29 · **PR:** [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 

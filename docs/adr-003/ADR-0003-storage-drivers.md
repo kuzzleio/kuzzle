@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-09-29):** ADR **accepted**; hub on branch `docs/adr-003-storage-drivers`. Step 00 (`ESClient` fix) is its own PR on `fix/plugin-esclient-major-version`. Steps 01+ start after 2.57 is released as stable.
+**Where we are (2026-09-29):** ADR **accepted**; hub on branch `docs/adr-003-storage-drivers`. Step 00 (`ESClient` fix) is merged ([#2947](https://github.com/kuzzleio/kuzzle/pull/2947)). Steps 01+ start after 2.57 is released as stable.
 
-**Next action:** merge the two PRs; after 2.57 stable, open step 01 (contract + capability list).
+**Next action:** after 2.57 stable, open step 01 (contract + capability list).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -99,7 +99,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | 🟦 In progress | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
+| 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | ✅ Done 2026-09-29 | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
 | 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ⬜ To do | — | — |
 | 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ⬜ To do | — | — |
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ⬜ To do | — | — |
