@@ -1,3 +1,5 @@
+import { Client as ClientES7 } from "sdk-es7";
+import { Client as ClientES8 } from "sdk-es8";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -185,6 +187,21 @@ describe("#core/plugin/pluginContext", () => {
           ES_NODE,
         );
       });
+
+      it.each([
+        ["7" as const, ClientES7],
+        ["8" as const, ClientES8],
+      ])(
+        "builds a client of the configured major version (%s)",
+        (majorVersion, Client) => {
+          global.kuzzle.config.services.storageEngine.majorVersion =
+            majorVersion;
+
+          const storageClient = new context.constructors.ESClient();
+
+          expect(storageClient).toBeInstanceOf(Client);
+        },
+      );
     });
 
     describe("#Request", () => {
