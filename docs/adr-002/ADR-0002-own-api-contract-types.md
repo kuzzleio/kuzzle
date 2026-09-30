@@ -48,7 +48,7 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 **Why it mattered:** steps 01–02 were to land **before the beta** that [ADR-0001 step 15](../adr-001/steps/15-consolidation-non-regression.md) prepares — the maintainer's decision. When they merge: add what a user sees (four `@deprecated` client-transport re-exports; new `KuzzleUser` / `KuzzleToken`; Kuzzle's own `JSONObject`) to [step 15's release notes draft](../adr-001/step-15-release-notes.md), and re-run step 15's phase C if `lib/` changed.
 
-**Next action:** land the `kuzzle` side ([step 03](steps/03-shared-types-package.md#kuzzle-takes-its-contract-types-from-kuzzle-types)); the SDK side is merged ([sdk-javascript#771](https://github.com/kuzzleio/sdk-javascript/pull/771)). Before either goes stable: `kuzzle-types` 1.0.0 and both ranges to `^1.0.0`. Then the duplicates reconciliation and the `ResponsePayload.error.props` fix, in `kuzzle-types`.
+**Next action:** `kuzzle-types` 1.0.0 is out; land [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) (`^1.0.0`), move the SDK to `^1.0.0` on `7-dev`, then the betas (SDK `7-dev` → `beta`, Kuzzle `2-dev` → `beta`) and, once validated, straight to the stable releases (maintainer, 2026-09-30). Then the duplicates reconciliation and the `ResponsePayload.error.props` fix, in `kuzzle-types`.
 
 **Conventions** (same as ADR-0001): base branch `2-dev`; non-breaking only; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands (a stacked PR merges through `gh api -X PUT repos/kuzzleio/kuzzle/pulls/<n>/merge-async -f merge_method=merge`). The typings gate is `npm run typecheck:typings` (`tests/typings/`); `tests/typings/consumer/sdkReexports.ts` pins the 139 re-exported names.
 

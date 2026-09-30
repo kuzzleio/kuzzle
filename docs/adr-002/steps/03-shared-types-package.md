@@ -51,13 +51,13 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 
 ## `kuzzle` takes its contract types from `kuzzle-types`
 
-- `kuzzle-types` `^1.0.0-beta.1` is a dependency (next to `kuzzle-sdk`, unchanged).
+- `kuzzle-types` `^1.0.0` is a dependency (next to `kuzzle-sdk`, unchanged) — first written `^1.0.0-beta.1`, moved to the stable range once `1.0.0` was out, before merging.
 - `index.ts`: the 35 contract names of the SDK re-export list now come from `kuzzle-types`; the 76 others (controller `Args*`, `SearchResult`, events, `ObserverOptions`, `UpdateByQueryResponse`, and `DocumentHit` — it extends the SDK's `Document` class) still from `kuzzle-sdk`.
 - `lib/types/JSONObject.ts` re-exports `kuzzle-types`' `JSONObject` — the same `Record<PropertyKey, any>`, so the server owns the one the SDK now uses.
 - `lib/`: the contract types the SDK-facing code imported from `kuzzle-sdk` (`KDocument`, `KDocumentContent`, `BaseRequest`, `RequestPayload`, `ResponsePayload`, `Notification`) come from `kuzzle-types`. What remains of `kuzzle-sdk` in `dist/**/*.d.ts` is the client runtime `EmbeddedSDK` builds on (`Kuzzle`, `KuzzleEventEmitter`, `RealtimeController`, `ScopeOption`, `UserOption`) and `index.ts`'s re-exports.
 - Checked: `dist/index.d.ts` exports the same 279 names with the same kinds, `dist/index.js` the same 82 runtime values (diffed); no `require("kuzzle-types")` in `dist/`; `check-typings-dependencies.sh` green (the published typings compile with production dependencies only); `kuzzle-plugin-commons` type-checks against this build as against 2.55.0.
 - Gate: `tests/typings/consumer/contractTypes.ts` — each of the 36 names (35 + `JSONObject`) exported by `"kuzzle"` identical to `kuzzle-types`' and to the installed `kuzzle-sdk`'s, in both strict modes. Checked it bites.
-- **Before a stable release** of either package: publish `kuzzle-types` 1.0.0 and move both ranges to `^1.0.0` — no prerelease runtime dependency in a stable release.
+- **`kuzzle-types` 1.0.0** published 2026-09-30 ([types#3](https://github.com/kuzzleio/types/pull/3), `beta` → `master`), by the release workflow through OIDC — the first automatic release, proving the trusted publisher. The maintainer's call: once validated in beta, go straight to the stable versions. The SDK's range still reads `^1.0.0-beta.1` (it accepts `1.0.0`); moved to `^1.0.0` before the SDK's stable release — no prerelease runtime dependency in a stable release.
 
 ## Planned, not started
 
