@@ -1,3 +1,9 @@
+## [2.57.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.4...v2.57.0-beta.5) (2026-09-30)
+
+### Bug Fixes
+
+* **plugin:** context.constructors.ESClient follows the configured major version ([0a6bc72](https://github.com/kuzzleio/kuzzle/commit/0a6bc725c1a83b467c5abc509ad3a9be7efdb2ad))
+
 ## [2.57.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.57.0-beta.3...v2.57.0-beta.4) (2026-09-28)
 
 ### Bug Fixes
