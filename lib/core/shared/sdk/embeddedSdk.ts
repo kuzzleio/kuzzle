@@ -19,14 +19,8 @@
  * limitations under the License.
  */
 
-import type {
-  RealtimeController,
-  Notification,
-  ScopeOption,
-  UserOption,
-  ResponsePayload,
-  BaseRequest,
-} from "kuzzle-sdk";
+import type { RealtimeController, ScopeOption, UserOption } from "kuzzle-sdk";
+import type { BaseRequest, Notification, ResponsePayload } from "kuzzle-types";
 import type { JSONObject } from "../../../types/JSONObject";
 import { Kuzzle } from "kuzzle-sdk";
 

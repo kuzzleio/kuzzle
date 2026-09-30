@@ -23,9 +23,7 @@
  * An object with any key and any value — a JSON document, a request body, a
  * payload.
  *
- * Kuzzle's own definition (ADR-0002 step 02), declared exactly as kuzzle-sdk
- * declares its `JSONObject`, so that a value of one is a value of the other,
- * both ways: a plugin mixing the two imports sees no difference.
+ * Owned by the server (ADR-0002 step 02) and shared with the SDK through
+ * kuzzle-types (step 03): the SDK's `JSONObject` is now this very type.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the SDK's exact type, kept interchangeable
-export type JSONObject = Record<PropertyKey, any>;
+export type { JSONObject } from "kuzzle-types";

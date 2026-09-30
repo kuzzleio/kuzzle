@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { BaseRequest } from "kuzzle-sdk";
+import type { BaseRequest } from "kuzzle-types";
 import type { JSONObject } from "../../../types/JSONObject";
 
 // The controllers barrel ships `export = { ... }`. A NAMED import cannot

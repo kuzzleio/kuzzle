@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.57.0",
+  "version": "2.58.0-beta.1",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
     "build": "rm -Rf ./dist && tsc && node -r ts-node/register/transpile-only ./bin/copy-binaries.ts",
@@ -52,6 +52,7 @@
     "kuzzle-logger": "1.4.0",
     "kuzzle-plugin-auth-passport-local": "6.4.1",
     "kuzzle-sdk": ">=7.17.1 <8.0.0",
+    "kuzzle-types": "^1.0.0",
     "kuzzle-vault": "2.2.0",
     "lodash": "4.17.21",
     "long": "5.3.2",

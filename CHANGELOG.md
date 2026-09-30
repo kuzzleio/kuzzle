@@ -1,3 +1,9 @@
+## [2.58.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.57.0...v2.58.0-beta.1) (2026-09-30)
+
+### Features
+
+* take the API contract types from kuzzle-types ([b7af241](https://github.com/kuzzleio/kuzzle/commit/b7af241d602216b781399abea96ba0df4625e83f))
+
 ## [2.57.0](https://github.com/kuzzleio/kuzzle/compare/v2.56.0...v2.57.0) (2026-09-30)
 
 ### Features
