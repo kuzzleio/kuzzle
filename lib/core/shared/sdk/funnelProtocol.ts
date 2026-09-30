@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import type { RequestPayload } from "kuzzle-sdk";
+import type { RequestPayload } from "kuzzle-types";
 import { KuzzleEventEmitter } from "kuzzle-sdk";
 
 import { Request } from "../../../api/request";

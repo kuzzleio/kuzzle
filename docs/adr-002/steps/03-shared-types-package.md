@@ -42,18 +42,33 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 - **Trusted publisher declared, bootstrap `NPM_TOKEN` removed** ([kuzzleio/types#2](https://github.com/kuzzleio/types/pull/2)). The release run after it proved OIDC (`OIDC token exchange with the npm registry succeeded`) but tried to release `1.0.0-beta.1` again: **a hand-made tag is not a release to semantic-release on a prerelease branch** until it carries the channel note — `refs/notes/semantic-release-v1.0.0-beta.1` with `{"channels":["beta"]}` on the tagged commit, the format `kuzzle`'s own tags have. It had pushed its release commit (`d4d8ec5`, CHANGELOG + version) before failing on `git tag`; nothing reached npm. Fixed by pushing the note (the tag stays on `43d6222`) and creating the GitHub release by hand.
 - Initially planned: declare `kuzzleio/types` / `release.workflow.yaml` as the trusted publisher of `kuzzle-types` on npmjs.com, and merge the removal of the bootstrap `NPM_TOKEN` line (branch `ci/drop-bootstrap-npm-token`, a `ci:` commit — no release).
 
-## Planned, not started
+## `kuzzle-sdk` takes its contract types from `kuzzle-types` — [sdk-javascript#771](https://github.com/kuzzleio/sdk-javascript/pull/771) (merged 2026-09-30, into `7-dev`)
 
-- **`kuzzle-sdk` minor** depending on `kuzzle-types` and re-exporting it (all names but `Document`), old `src/types/*` paths kept as re-export stubs; then **`kuzzle` minor** doing the same for the contract types it takes from the SDK today (list in [step 02](02-kuzzle-owns-its-types.md#what-was-done)).
+- `kuzzle-types` `^1.0.0-beta.1` is a dependency; every file of `src/types/` stays, as a type re-export under the same names (deep imports keep working, the SDK's code is untouched). `Document` and `DocumentHit` stay in the SDK (a class, and the interface extending it).
+- Checked: the 139 exported names and their kinds, and the 27 runtime exports, unchanged (compiler-API listing, diffed); each of the 40 contract types identical to kuzzle-sdk 7.17.1's; `kuzzle-types` absent from the browser bundle; Kuzzle built against the packed SDK green (`tsc`, `typecheck:typings`, `typecheck:tests`); 686 unit tests, full CI matrix green.
+- Gate: `test/types/kuzzle-types.ts` (`npm run test:types`, strict, against the built declarations, in the unit-tests CI action).
+- Not released yet: the SDK's `7-dev` goes out with its next release.
+
+## `kuzzle` takes its contract types from `kuzzle-types`
+
+- `kuzzle-types` `^1.0.0` is a dependency (next to `kuzzle-sdk`, unchanged) — first written `^1.0.0-beta.1`, moved to the stable range once `1.0.0` was out, before merging.
+- `index.ts`: the 35 contract names of the SDK re-export list now come from `kuzzle-types`; the 76 others (controller `Args*`, `SearchResult`, events, `ObserverOptions`, `UpdateByQueryResponse`, and `DocumentHit` — it extends the SDK's `Document` class) still from `kuzzle-sdk`.
+- `lib/types/JSONObject.ts` re-exports `kuzzle-types`' `JSONObject` — the same `Record<PropertyKey, any>`, so the server owns the one the SDK now uses.
+- `lib/`: the contract types the SDK-facing code imported from `kuzzle-sdk` (`KDocument`, `KDocumentContent`, `BaseRequest`, `RequestPayload`, `ResponsePayload`, `Notification`) come from `kuzzle-types`. What remains of `kuzzle-sdk` in `dist/**/*.d.ts` is the client runtime `EmbeddedSDK` builds on (`Kuzzle`, `KuzzleEventEmitter`, `RealtimeController`, `ScopeOption`, `UserOption`) and `index.ts`'s re-exports.
+- Checked: `dist/index.d.ts` exports the same 279 names with the same kinds, `dist/index.js` the same 82 runtime values (diffed); no `require("kuzzle-types")` in `dist/`; `check-typings-dependencies.sh` green (the published typings compile with production dependencies only); `kuzzle-plugin-commons` type-checks against this build as against 2.55.0.
+- Gate: `tests/typings/consumer/contractTypes.ts` — each of the 36 names (35 + `JSONObject`) exported by `"kuzzle"` identical to `kuzzle-types`' and to the installed `kuzzle-sdk`'s, in both strict modes. Checked it bites.
+- **`kuzzle-types` 1.0.0** published 2026-09-30 ([types#3](https://github.com/kuzzleio/types/pull/3), `beta` → `master`), by the release workflow through OIDC — the first automatic release, proving the trusted publisher. The maintainer's call: once validated in beta, go straight to the stable versions. The SDK's range still reads `^1.0.0-beta.1` (it accepts `1.0.0`); moved to `^1.0.0` before the SDK's stable release — no prerelease runtime dependency in a stable release.
+
+## Planned, not started
 
 - **Reconcile the duplicates** listed in [step 02](02-kuzzle-owns-its-types.md#for-step-03--kuzzle-types-that-duplicate-an-sdk-contract-type), non-breaking only: same shape → one type plus an alias under the other name (`RoleDefinition` / `RoleRightsDefinition`); diverged (`ProfilePolicy.restrictedTo` tuple, `KuzzleInfo.author` nullable) → both kept, the gap documented.
 - **Additive fix found while opening**: the SDK's `ResponsePayload.error` lacks `props`, which `KuzzleError.toJSON()` sends (`lib/kerror/errors/kuzzleError.ts`) — add it as optional.
 - **Gates**: type tests inside `kuzzleio/types`; `tests/typings/` here (the re-exported names, `sdkReexports.ts`, must still compile); canary builds of `kuzzle-plugin-commons` and `kuzzle-device-manager` against the beta — the first imports 14 names from `"kuzzle"`, 3 of them SDK re-exports (`JSONObject`, `EmbeddedSDK`, `Document`).
 
-## Risks to check
+## Risks checked
 
-- **Module augmentation**: a project doing `declare module "kuzzle-sdk" { interface KDocumentContent … }` may stop merging once the interface is a re-export from another module — a silent breaking change. Search client projects for it and pin it in the typings gate before the swap.
-- **Deep imports** of `kuzzle-sdk/out/src/types/*`: keep re-export stubs at the old paths.
+- **Module augmentation** (`declare module "kuzzle-sdk" { interface KDocumentContent … }`): still merges into the original interface through an `export type { … } from` re-export and through `export *` — tested with TypeScript 5.4.5, `node10` and `node16` resolution (a control without the augmentation fails as expected). Not searched for in client projects.
+- **Deep imports** of `kuzzle-sdk/out/src/types/*`: every file kept, as a re-export stub (#771).
 
 ## Out of scope
 
