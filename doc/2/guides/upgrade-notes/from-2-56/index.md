@@ -91,6 +91,8 @@ Other observable changes:
 
 - New exports: `withLock`, a distributed and reentrant Redis lock, and `MutexLockLostError`. `withLock` replaces the deprecated `Mutex`; do not use both on the same key.
 - `request.response.configure({ result })` sets a result without resetting the status; `request.setResult` stays, deprecated. `request.getArrayOrCsv()` names what `getArrayLegacy()` did; `getArrayLegacy()` is still available, deprecated.
+- **`context.constructors.ESClient` follows `services.storageEngine.majorVersion`.** It always built an Elasticsearch 7 client, even on an Elasticsearch 8 deployment; it now builds a client of the configured major, like `app.storage.StorageClient` already did. Nothing changes on Elasticsearch 7.
+  **Action:** on Elasticsearch 8, if a plugin uses this client, check its calls against the 8.x client (for instance, responses are no longer wrapped in `body`).
 - `Protocol.entryPoint` is read-only for custom protocol plugins.
 - Deep imports from `kuzzle/dist/lib/…` are not a supported API. Four modules changed their CommonJS shape (the `admin`, `auth` and `security` controllers, and `cluster/state`), and two files are gone (`util/wildcard`, and the misspelt `adminControlller.type`).
 - Error reporting: a thrown value's `message` is used as before, never its serialised contents. A thrown `null` gives "…: undefined" instead of crashing.
