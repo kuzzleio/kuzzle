@@ -18,12 +18,6 @@ This page lists what you **can** observe after the upgrade (fixes of long-standi
 
 The changelog is generated from the commits and says what was done. This page says what you may have to check.
 
-::: info
-The version is first published as a **beta** (npm `beta` tag). Please report any difference with v2.56.0 that this page does not list.
-
-A semver range such as `>=2.52.0 <3.0.0` never matches a prerelease, so plugins that declare Kuzzle as a peer dependency make npm install a second, older Kuzzle next to the beta. Install the beta with `npm install --legacy-peer-deps`, and check with `npm ls kuzzle` that only one version is left. The stable release is not affected.
-:::
-
 ## Operators
 
 ### Configuration and HTTP

@@ -42,11 +42,13 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 ## Cold start
 
-**Where we are (2026-09-25):** steps 01 ([#2927](https://github.com/kuzzleio/kuzzle/pull/2927)) and 02 ([#2928](https://github.com/kuzzleio/kuzzle/pull/2928)) are merged into `2-dev`. Kuzzle re-exports the SDK by an explicit list, owns its `JSONObject`, and exports `KuzzleUser` / `KuzzleToken`. The two `Token`s stay apart: the exported interface declares a `connectionId` no runtime token has ever carried (TD-07) — the proposed `@deprecated` on it awaits the maintainer.
+**Where we are (2026-09-30):** step 03 is open ([detail](steps/03-shared-types-package.md)): the contract types go to `kuzzle-types`, a types-only package in its own public repository `kuzzleio/types`, re-exported by `kuzzle` and `kuzzle-sdk` under their current names.
+
+**Before (2026-09-25):** steps 01 ([#2927](https://github.com/kuzzleio/kuzzle/pull/2927)) and 02 ([#2928](https://github.com/kuzzleio/kuzzle/pull/2928)) are merged into `2-dev`. Kuzzle re-exports the SDK by an explicit list, owns its `JSONObject`, and exports `KuzzleUser` / `KuzzleToken`. The two `Token`s stay apart: the exported interface declares a `connectionId` no runtime token has ever carried (TD-07) — the proposed `@deprecated` on it awaits the maintainer.
 
 **Why it mattered:** steps 01–02 were to land **before the beta** that [ADR-0001 step 15](../adr-001/steps/15-consolidation-non-regression.md) prepares — the maintainer's decision. When they merge: add what a user sees (four `@deprecated` client-transport re-exports; new `KuzzleUser` / `KuzzleToken`; Kuzzle's own `JSONObject`) to [step 15's release notes draft](../adr-001/step-15-release-notes.md), and re-run step 15's phase C if `lib/` changed.
 
-**Next action:** the maintainer's answer on `Token.connectionId`; then plan step 03 (package name and home, a `kuzzle-sdk` release — see open points; its scope list is in [step 02](steps/02-kuzzle-owns-its-types.md)).
+**Next action:** `kuzzle-types` 1.0.0 is out; land [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) (`^1.0.0`), move the SDK to `^1.0.0` on `7-dev`, then the betas (SDK `7-dev` → `beta`, Kuzzle `2-dev` → `beta`) and, once validated, straight to the stable releases (maintainer, 2026-09-30). Then the duplicates reconciliation and the `ResponsePayload.error.props` fix, in `kuzzle-types`.
 
 **Conventions** (same as ADR-0001): base branch `2-dev`; non-breaking only; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands (a stacked PR merges through `gh api -X PUT repos/kuzzleio/kuzzle/pulls/<n>/merge-async -f merge_method=merge`). The typings gate is `npm run typecheck:typings` (`tests/typings/`); `tests/typings/consumer/sdkReexports.ts` pins the 139 re-exported names.
 
@@ -58,7 +60,7 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 | --- | --- | --- | --- | --- |
 | 01 | Freeze the SDK re-export: explicit list, client transport `@deprecated` | ✅ Done 2026-09-25 | [#2927](https://github.com/kuzzleio/kuzzle/pull/2927) | [detail](steps/01-freeze-sdk-reexport.md) |
 | 02 | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token` | ✅ Done 2026-09-25 — the two `Token`s left apart (TD-07, see open points) | [#2928](https://github.com/kuzzleio/kuzzle/pull/2928) | [detail](steps/02-kuzzle-owns-its-types.md) |
-| 03 | Shared types-only contract package, consumed by `kuzzle` and `kuzzle-sdk` | ⬜ To do | — | — |
+| 03 | Shared types-only contract package `kuzzle-types`, consumed by `kuzzle` and `kuzzle-sdk` | 🟦 In progress | [#2953](https://github.com/kuzzleio/kuzzle/pull/2953), [types#1](https://github.com/kuzzleio/types/pull/1), [sdk#771](https://github.com/kuzzleio/sdk-javascript/pull/771), [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) | [detail](steps/03-shared-types-package.md) |
 | 04 | Next major: drop the client-runtime re-exports | ⬜ To do (next major) | — | — |
 
 ---
@@ -71,12 +73,12 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 - **2026-09-25** — **The two `Token`s stay two (TD-07).** The runtime token never carries the exported interface's `connectionId: string | null`, and no non-breaking change can remove or loosen it; `KuzzleToken` names the real one, the interface is documented as not being it ([step 02](steps/02-kuzzle-owns-its-types.md#local-decisions)).
 
 - **2026-09-25** — **TD-07: the two `Token`s stay apart; `Token.connectionId` is `@deprecated`.** No runtime token has ever carried `connectionId` (the token manager keeps the connection links), so declaring it on the model would be false and removing it from the interface would break strict consumers. It is deprecated, with a pointer to `request.context.connection.id`, and goes in step 04.
+- **2026-09-30** — **Step 03: `kuzzle-types` (unscoped: `@kuzzleio` is for private packages), own public repository `kuzzleio/types`, types only.** Zero runtime and zero dependencies (enums and classes stay in the SDK — the lesson of the archived `kuzzle-common-objects`); a regular `dependency` of both packages; seeded with `sdk-javascript/src/types` as is; `kuzzle-plugin-commons` is a consumer to keep green, not a home ([step 03](steps/03-shared-types-package.md#decisions-taken-when-opening)).
 
 ---
 
 ## Open points
 
-- Step 3's package name and home (`@kuzzleio/types`? its own repo, or a workspace in `sdk-javascript`?). (Step 02 already folded the ES storage types' local `JSONObject`s into Kuzzle's own.)
 - Whether to mark the `Token` interface's `connectionId` `@deprecated` — it describes nothing Kuzzle produces ([step 02](steps/02-kuzzle-owns-its-types.md#local-decisions)).
 - Whether `JSONObject` should stay `any`-valued in step 2 (identical, non-breaking) or gain a stricter sibling type for new code.
 
