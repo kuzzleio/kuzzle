@@ -60,7 +60,7 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 | --- | --- | --- | --- | --- |
 | 01 | Freeze the SDK re-export: explicit list, client transport `@deprecated` | ✅ Done 2026-09-25 | [#2927](https://github.com/kuzzleio/kuzzle/pull/2927) | [detail](steps/01-freeze-sdk-reexport.md) |
 | 02 | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token` | ✅ Done 2026-09-25 — the two `Token`s left apart (TD-07, see open points) | [#2928](https://github.com/kuzzleio/kuzzle/pull/2928) | [detail](steps/02-kuzzle-owns-its-types.md) |
-| 03 | Shared types-only contract package `kuzzle-types`, consumed by `kuzzle` and `kuzzle-sdk` | 🟦 In progress | [#2953](https://github.com/kuzzleio/kuzzle/pull/2953), [types#1](https://github.com/kuzzleio/types/pull/1) | [detail](steps/03-shared-types-package.md) |
+| 03 | Shared types-only contract package `kuzzle-types`, consumed by `kuzzle` and `kuzzle-sdk` | 🟦 In progress | [#2953](https://github.com/kuzzleio/kuzzle/pull/2953), [types#1](https://github.com/kuzzleio/types/pull/1), [sdk#771](https://github.com/kuzzleio/sdk-javascript/pull/771), [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) | [detail](steps/03-shared-types-package.md) |
 | 04 | Next major: drop the client-runtime re-exports | ⬜ To do (next major) | — | — |
 
 ---
