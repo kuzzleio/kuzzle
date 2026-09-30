@@ -48,7 +48,7 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 **Why it mattered:** steps 01–02 were to land **before the beta** that [ADR-0001 step 15](../adr-001/steps/15-consolidation-non-regression.md) prepares — the maintainer's decision. When they merge: add what a user sees (four `@deprecated` client-transport re-exports; new `KuzzleUser` / `KuzzleToken`; Kuzzle's own `JSONObject`) to [step 15's release notes draft](../adr-001/step-15-release-notes.md), and re-run step 15's phase C if `lib/` changed.
 
-**Next action:** install the Kuzzle bot app on `kuzzleio/types`, check the org `NPM_TOKEN` can create a package, then merge [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) and publish `1.0.0-beta.1` ([step 03](steps/03-shared-types-package.md#before-the-first-release)); then the `kuzzle-sdk` minor.
+**Next action:** check the org `NPM_TOKEN` can create a package, then merge [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) and publish `1.0.0-beta.1` ([step 03](steps/03-shared-types-package.md#before-the-first-release)); then the `kuzzle-sdk` minor.
 
 **Conventions** (same as ADR-0001): base branch `2-dev`; non-breaking only; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands (a stacked PR merges through `gh api -X PUT repos/kuzzleio/kuzzle/pulls/<n>/merge-async -f merge_method=merge`). The typings gate is `npm run typecheck:typings` (`tests/typings/`); `tests/typings/consumer/sdkReexports.ts` pins the 139 re-exported names.
 

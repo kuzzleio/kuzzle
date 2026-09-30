@@ -32,7 +32,7 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 
 ## Before the first release
 
-- Secrets: nothing to add — `KUZZLE_BOT_PRIVATE_KEY`, `SEMANTIC_RELEASE_SLACK_WEBHOOK` and `NPM_TOKEN` are org secrets visible to all repositories, `KUZZLE_BOT_APP_ID` an org variable. The Kuzzle bot app must be installed on `kuzzleio/types` (it pushes the release commit and tag).
+- Secrets: nothing to add — `KUZZLE_BOT_PRIVATE_KEY`, `SEMANTIC_RELEASE_SLACK_WEBHOOK` and `NPM_TOKEN` are org secrets visible to all repositories, `KUZZLE_BOT_APP_ID` an org variable. The `kuzzlebot` app (`KUZZLE_BOT_APP_ID`) is installed on all the org's repositories, this one included.
 - Trusted publishing is configured per existing package: the first release goes out with the bootstrap `NPM_TOKEN` (which must still be valid and allowed to create packages); then declare `kuzzleio/types` / `release.workflow.yaml` as the trusted publisher of `kuzzle-types` and remove the `NPM_TOKEN` line.
 
 ## Planned, not started
