@@ -1,11 +1,23 @@
 import { When, Then } from "@cucumber/cucumber";
 import async from "async";
+import {
+  apiErrorStatus,
+  asError,
+  type AsyncCallback,
+  type RetryFailure,
+} from "../support/stepUtils";
+import type { JSONObject } from "kuzzle-sdk";
 
-When(/^I get the role mapping$/, function (callback) {
+/** The three security objects the "able to find a ..." steps are written for. */
+type SecurityObjectType = "profile" | "role" | "user";
+
+import type KWorld from "../support/world";
+
+When(/^I get the role mapping$/, function (this: KWorld, callback) {
   this.api
     .getRoleMapping()
     .then(
-      function (response) {
+      function (this: KWorld, response: JSONObject) {
         if (response.error) {
           return callback(new Error(response.error.message));
         }
@@ -27,7 +39,7 @@ When(/^I get the role mapping$/, function (callback) {
     });
 });
 
-Then(/^I change the role mapping$/, function (callback) {
+Then(/^I change the role mapping$/, function (this: KWorld, callback) {
   this.api
     .updateRoleMapping()
     .then((body) => {
@@ -45,7 +57,7 @@ Then(/^I change the role mapping$/, function (callback) {
 
 When(
   /^I create a new role "([^"]*)" with id "([^"]*)"$/,
-  function (role, id, callback) {
+  function (this: KWorld, role, id, callback) {
     if (!this.roles[role]) {
       return callback("Fixture for role " + role + " does not exist");
     }
@@ -69,25 +81,48 @@ When(
 
 Then(
   /^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]*)"(?: equivalent to (role|profile|user) "([^"]*)")?$/,
-  function (not, _default, objectType, id, objectType2, object, callback) {
+  function (
+    this: KWorld,
+    not,
+    _default,
+    objectType: SecurityObjectType,
+    id,
+    objectType2,
+    object,
+    callback,
+  ) {
     const objectTypeCapitalized =
       objectType.charAt(0).toUpperCase() + objectType.slice(1);
+
+    // The regex offers three alternatives and the step used to turn each one
+    // into a property name — `this[`${objectType}s`]`, `get${Capitalized}` —
+    // which is three names the type system cannot check against a world and an
+    // API that have hundreds.
+    const fixtures: Record<SecurityObjectType, JSONObject> = {
+      profile: this.profiles,
+      role: this.roles,
+      user: this.users,
+    };
+    const getById: Record<
+      SecurityObjectType,
+      (objectId: string) => Promise<JSONObject>
+    > = {
+      profile: (objectId) => this.api.getProfile(objectId),
+      role: (objectId) => this.api.getRole(objectId),
+      user: (objectId) => this.api.getUser(objectId),
+    };
 
     if (!_default) {
       id = this.idPrefix + id;
     }
 
-    if (object && !this[`${objectType}s`][object]) {
+    if (object && !fixtures[objectType][object]) {
       return callback(`Fixture for ${objectType} ${object} not exists`);
     }
 
-    const main = function (callbackAsync) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
       setTimeout(() => {
-        const method = `get${objectTypeCapitalized}`;
-
-        // eslint-disable-next-line no-useless-call
-        this.api[method]
-          .apply(this.api, [id])
+        getById[objectType](id)
           .then((body) => {
             if (body.error) {
               return callbackAsync(body.error.message);
@@ -109,7 +144,7 @@ Then(
 
             if (object) {
               const controller = Object.keys(
-                this[`${objectType}s`][object].controllers,
+                fixtures[objectType][object].controllers,
               )[0];
               if (!body.result._source.controllers[controller]) {
                 return callbackAsync(`Could not find ${objectType} ${id}`);
@@ -128,10 +163,10 @@ Then(
       }, 20); // end setTimeout
     };
 
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        callback(new Error(err));
-        return false;
+    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
       callback();
@@ -141,7 +176,7 @@ Then(
 
 When(
   /^I update the role "([^"]*)" with the test content "([^"]*)"$/,
-  function (id, role, callback) {
+  function (this: KWorld, id, role, callback) {
     if (!this.roles[role]) {
       return callback("Fixture for role " + role + " not exists");
     }
@@ -165,7 +200,7 @@ When(
 
 Then(
   /^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with maximum "([^"]*)" results starting from "([^"]*)")?$/,
-  function (count, controller, size, from, callback) {
+  function (this: KWorld, count, controller, size, from, callback) {
     const body = {
         controllers: controller.split(","),
       },
@@ -174,7 +209,7 @@ Then(
         size: size || 999,
       };
 
-    const main = function (callbackAsync) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
       setTimeout(() => {
         this.api
           .searchRoles(body, args)
@@ -202,10 +237,10 @@ Then(
       }, 100); // end setTimeout
     };
 
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        callback(new Error(err));
-        return false;
+    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
       callback();
@@ -213,32 +248,35 @@ Then(
   },
 );
 
-When(/^I delete the role (?:with id )?"([^"]*)"$/, function (id, callback) {
-  id = this.idPrefix + id;
+When(
+  /^I delete the role (?:with id )?"([^"]*)"$/,
+  function (this: KWorld, id, callback) {
+    id = this.idPrefix + id;
 
-  this.api
-    .deleteRole(id)
-    .then((body) => {
-      if (body.error) {
-        callback(new Error(body.error.message));
-        return false;
-      }
+    this.api
+      .deleteRole(id)
+      .then((body) => {
+        if (body.error) {
+          callback(new Error(body.error.message));
+          return false;
+        }
 
-      callback();
-    })
-    .catch(function (error) {
-      callback(error);
-    });
-});
+        callback();
+      })
+      .catch(function (error) {
+        callback(error);
+      });
+  },
+);
 
 Then(
   /^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/,
-  function (roles, count, callback) {
+  function (this: KWorld, roles, count, callback) {
     const body = {
-      ids: roles.split(",").map((roleId) => this.idPrefix + roleId),
+      ids: roles.split(",").map((roleId: string) => this.idPrefix + roleId),
     };
 
-    const main = function (callbackAsync) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
       setTimeout(() => {
         this.api
           .mGetRoles(body)
@@ -268,10 +306,10 @@ Then(
       }, 100); // end setTimeout
     };
 
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        callback(new Error(err));
-        return false;
+    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
       callback();
@@ -281,14 +319,14 @@ Then(
 
 Then(
   /^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/,
-  async function (not, index, collection) {
+  async function (this: KWorld, not, index, collection) {
     const document = this.documentGrace;
     let body;
 
     try {
       body = await this.api.create(document, index, collection);
     } catch (error) {
-      if (not && error.statusCode === 403) {
+      if (not && apiErrorStatus(error) === 403) {
         return;
       }
       throw error;
@@ -312,7 +350,7 @@ Then(
 
 Then(
   /^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/,
-  function (not, index, collection, callback) {
+  function (this: KWorld, not, index, collection, callback) {
     this.api
       .search({}, index, collection)
       .then((body) => {
@@ -339,7 +377,7 @@ Then(
         );
       })
       .catch((error) => {
-        if (not && error.statusCode === 403) {
+        if (not && apiErrorStatus(error) === 403) {
           callback();
           return true;
         }
@@ -350,7 +388,7 @@ Then(
 
 Then(
   /^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection "([^"]*)"$/,
-  function (not, index, collection, callback) {
+  function (this: KWorld, not, index, collection, callback) {
     this.api
       .count({}, index, collection)
       .then((body) => {
@@ -377,7 +415,7 @@ Then(
         );
       })
       .catch((error) => {
-        if (not && error.statusCode === 403) {
+        if (not && apiErrorStatus(error) === 403) {
           callback();
           return true;
         }

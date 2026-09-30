@@ -1,4 +1,4 @@
-import { ErrorDefinition } from "./ErrorDefinition";
+import type { ErrorDefinition } from "./ErrorDefinition";
 
 /**
  * Represents the domains, subDomains and error names with associated definitions

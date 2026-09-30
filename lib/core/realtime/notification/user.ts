@@ -1,0 +1,110 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import type { JSONObject } from "../../../types/JSONObject";
+
+import type { KuzzleRequest } from "../../../api/request";
+import type { RealtimeUsers } from "../../../types";
+import "../../../types/Global";
+
+/**
+ * Constructor payload. Filled either by `fromRequest` below or by
+ * `cluster/subscriber` from a decoded protobuf message.
+ */
+interface UserNotificationOptions {
+  status: number;
+  user: RealtimeUsers;
+  result: JSONObject;
+  node: string;
+  timestamp: number;
+  /**
+   * Nullable, like the other four below: they come straight off the request,
+   * where each is nullable, and a notification built from a request without one
+   * has always been emitted — and received — with `null` in that field.
+   */
+  volatile: JSONObject | null;
+  index: string;
+  collection: string;
+  controller: string | null;
+  action: string | null;
+  protocol: string | null;
+}
+
+/**
+ * User notification document
+ */
+class UserNotification {
+  public type = "user";
+  public status: number;
+  public user: RealtimeUsers;
+  public result: JSONObject;
+  public node: string;
+  public timestamp: number;
+  public volatile: JSONObject | null;
+  public index: string;
+  public collection: string;
+  public controller: string | null;
+  public action: string | null;
+  public protocol: string | null;
+
+  constructor(opts: UserNotificationOptions) {
+    this.status = opts.status;
+    this.user = opts.user;
+    this.result = opts.result;
+    this.node = opts.node;
+    this.timestamp = opts.timestamp;
+    this.volatile = opts.volatile;
+    this.index = opts.index;
+    this.collection = opts.collection;
+    this.controller = opts.controller;
+    this.action = opts.action;
+    this.protocol = opts.protocol;
+  }
+
+  /**
+   * Instantiates a UserNotification object from a KuzzleRequest
+   *
+   * @param request - the request object from which the notification is issued
+   * @param user - Whether the user is entering or leaving the room
+   * @param result - Notification content
+   */
+  static fromRequest(
+    request: KuzzleRequest,
+    user: RealtimeUsers,
+    result: JSONObject,
+  ): UserNotification {
+    return new UserNotification({
+      action: request.input.action,
+      collection: request.input.args.collection,
+      controller: request.input.controller,
+      index: request.input.args.index,
+      node: global.kuzzle.id,
+      protocol: request.context.connection.protocol,
+      result,
+      status: 200,
+      timestamp: request.timestamp,
+      user,
+      volatile: request.input.volatile,
+    });
+  }
+}
+
+export = UserNotification;

@@ -24,11 +24,15 @@
  */
 
 import { uniq } from "lodash";
-import { JSONObject } from "kuzzle-sdk";
-import { Koncorde } from "koncorde";
+import type { JSONObject } from "../types/JSONObject";
+import type { Koncorde } from "koncorde";
+
+import * as kerror from "../kerror";
 
 // No collision possible: "/" is forbidden in index (or collection) names
 const SEPARATOR = "/";
+
+const fatal = kerror.wrap("core", "fatal");
 
 /**
  * Builds a Koncorde v4 index name from the old fashioned index+collection
@@ -53,6 +57,15 @@ export function fromKoncordeIndex(index: string): {
   index: string;
 } {
   const [kindex, kcollection] = index.split(SEPARATOR);
+
+  // `split` always yields a first element, but a second one exists only if the
+  // name really is a v4 pair. Two of the three callers read it off a cluster
+  // message payload — remote input — so a name without the separator is
+  // reachable, and answering it with `collection: undefined` would hand the
+  // question to every caller instead of to the node that sent a bad name.
+  if (kindex === undefined || kcollection === undefined) {
+    throw fatal.get("assertion_failed", `"${index}" is not a Koncorde index`);
+  }
 
   return {
     collection: kcollection,

@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import { Profile } from "../../model/security/profile";
-import { Role } from "../../model/security/role";
-import { User } from "../../model/security/user";
+import type { Profile } from "../../model/security/profile";
+import type { Role } from "../../model/security/role";
+import type { User } from "../../model/security/user";
 
 import type { Serialized } from "../../types/core/auth/formatProcessing.type";
 

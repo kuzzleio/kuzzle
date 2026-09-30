@@ -1,5 +1,5 @@
+import type { DataTable, IWorldOptions } from "@cucumber/cucumber";
 import {
-  IWorldOptions,
   setDefaultTimeout,
   setWorldConstructor,
   World,
@@ -17,6 +17,11 @@ export default class KuzzleWorld extends World {
   private _protocol: string;
   public readonly kuzzleConfig: ReturnType<typeof loadConfig>;
   public readonly props: Record<string, any>;
+  /**
+   * One SDK per cluster node, connected by the `@cluster` hook; `I target
+   * {string}` makes one of them the scenario's `sdk`.
+   */
+  public nodes: Record<string, Kuzzle> = {};
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -37,6 +42,10 @@ export default class KuzzleWorld extends World {
     return this._sdk;
   }
 
+  set sdk(sdk: Kuzzle) {
+    this._sdk = sdk;
+  }
+
   get host() {
     return this._host;
   }
@@ -49,32 +58,40 @@ export default class KuzzleWorld extends World {
     return this._protocol;
   }
 
-  parseObject(dataTable) {
+  parseObject(dataTable: DataTable): Record<string, unknown> {
     if (typeof dataTable.rowsHash !== "function") {
       throw new Error("Argument is not a dataTable");
     }
 
+    // `rowsHash()` answers strings; every one of them is then evaluated, so the
+    // result is a different type from its source and needs its own object —
+    // writing the evaluated value back into `content` is what made this `any`.
     const content = dataTable.rowsHash();
+    const parsed: Record<string, unknown> = {};
 
     for (const key of Object.keys(content)) {
       // eslint-disable-next-line no-eval
-      content[key] = eval(`const o = ${content[key]}; o`);
+      parsed[key] = eval(`const o = ${content[key]}; o`);
     }
 
-    return content;
+    return parsed;
   }
 
-  parseObjectArray(dataTable) {
+  parseObjectArray(dataTable: DataTable): Array<Record<string, unknown>> {
     if (typeof dataTable.rowsHash !== "function") {
       throw new Error("Argument is not a dataTable");
     }
 
-    const objectArray = [];
-    const keys = dataTable.rawTable[0];
+    const objectArray: Array<Record<string, unknown>> = [];
+    // `raw()`, not `rawTable`: the latter is private, and reaching a private
+    // binding means the caller was written against an implementation detail —
+    // step 13's L6 rule. `raw()` is the public reader for the same rows.
+    const rawTable = dataTable.raw();
+    const keys = rawTable[0];
 
-    for (let i = 1; i < dataTable.rawTable.length; i++) {
-      const object = {};
-      const rawObject = dataTable.rawTable[i];
+    for (let i = 1; i < rawTable.length; i++) {
+      const object: Record<string, unknown> = {};
+      const rawObject = rawTable[i];
 
       for (let j = 0; j < keys.length; j++) {
         if (rawObject[j] !== "-") {
@@ -92,17 +109,21 @@ export default class KuzzleWorld extends World {
   /**
    * Intantiate a SDK
    *
+   * @param options.host
    * @param options.port Used to connect the SDK to a specific node of the cluster
    */
-  getSDK({ port } = { port: this.port }) {
+  getSDK({
+    host = this.host,
+    port = this.port,
+  }: { host?: string; port?: string | number } = {}) {
     let protocol: any;
 
     switch (this.protocol) {
       case "http":
-        protocol = new Http(this.host, { port: Number(port) });
+        protocol = new Http(host, { port: Number(port) });
         break;
       case "websocket":
-        protocol = new WebSocket(this.host, { port: Number(port) });
+        protocol = new WebSocket(host, { port: Number(port) });
         break;
       default:
         throw new Error(`Unknown protocol "${this.protocol}".`);
@@ -120,7 +141,11 @@ export default class KuzzleWorld extends World {
    * @param  {string} [message] optional custom error message
    * @throws If expectations are not met
    */
-  async tryAction(promise, failureExpected, message) {
+  async tryAction(
+    promise: Promise<unknown>,
+    failureExpected: boolean,
+    message?: string,
+  ): Promise<void> {
     this.props.error = null;
 
     try {
@@ -150,7 +175,10 @@ export default class KuzzleWorld extends World {
    * @param options.retries Max number of retries (`100`)
    * @param options.interval Interval between retries in ms (`50`)
    */
-  async retry(predicate, { retries = 100, interval = 50 } = {}) {
+  async retry(
+    predicate: () => unknown,
+    { retries = 100, interval = 50 } = {},
+  ): Promise<void> {
     let count = 0;
     let failure = true;
 

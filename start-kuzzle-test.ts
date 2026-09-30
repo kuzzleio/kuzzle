@@ -16,7 +16,7 @@ import { HttpMessage } from "./lib/types/HttpMessage";
 import { EventGenericDocumentInjectMetadata } from "./lib/types/events/EventGenericDocument";
 
 class FunctionalTestsController extends Controller {
-  constructor(app) {
+  constructor(app: Backend) {
     super(app);
 
     this.definition = {
@@ -70,8 +70,10 @@ async function loadAdditionalPlugins() {
       // do nothing
     }
 
+    // `undefined`, not `null`: `plugin.use`'s options parameter is optional, and
+    // an optional parameter admits the absence of a value, not a null one.
     const options =
-      manifest !== null ? { manifest, name: manifest.name } : null;
+      manifest !== null ? { manifest, name: manifest.name } : undefined;
 
     app.plugin.use(new Plugin(), options);
   }
@@ -211,7 +213,11 @@ app.hook.register("custom:event", async (name) => {
 });
 
 let syncedHello = "World";
-let dynamicPipeId;
+// `pipe.register` answers `string | void` — a pipe id when the application is
+// already started (which is the only way this one is registered, hence
+// `{ dynamic: true }`), and nothing when it is queued before start. The handlers
+// below read it back, so the absent case is real and is checked there.
+let dynamicPipeId: string | void;
 
 app.openApi.definition.components = {};
 app.openApi.definition.components.LogisticObjects = {
@@ -331,6 +337,16 @@ app.controller.register("tests", {
       handler: async () => {
         throw app.errors.get("app", "api", "custom", "Tbilisi");
       },
+    },
+
+    // A plain Error, not a KuzzleError: the funnel wraps it into a 500 whose
+    // payload carries a stack trace, which is what the protocols are supposed
+    // to strip on their way out. See features/StackTrace.feature (TD-48).
+    unexpectedError: {
+      handler: async () => {
+        throw new Error("Deliberate failure, for the stack-trace scenarios");
+      },
+      http: [{ path: "/tests/unexpected-error", verb: "get" }],
     },
 
     getSyncedHello: {
@@ -456,6 +472,10 @@ app.controller.register("tests", {
 
     "unregister-pipe": {
       handler: async () => {
+        if (typeof dynamicPipeId !== "string") {
+          throw new Error("unregister-pipe called before register-pipe");
+        }
+
         app.pipe.unregister(dynamicPipeId);
       },
     },
@@ -472,6 +492,15 @@ if (process.env.SECRETS_FILE_PREFIX) {
 }
 app.vault.file = vaultfile;
 app.vault.key = "secret-password";
+
+// A function in the Redis options, as an app sets it from code: startup must
+// hand it to ioredis rather than fail to copy the configuration. This is
+// ioredis' own default strategy, so the cluster reconnects as before.
+const { internalCache } = app.config.content.services;
+internalCache.options = {
+  ...internalCache.options,
+  retryStrategy: (times: number) => Math.min(times * 50, 2000),
+};
 
 // Ensure imports before startup are working
 app.import.mappings(functionalFixtures.mappings);

@@ -59,8 +59,12 @@ export class Inflector {
 
   /**
    * Converts a string to camelCase
+   *
+   * Declared `unknown`, as v2.56.0's `any` accepted anything: lodash
+   * stringifies it.
    */
-  static camelCase(string) {
+  static camelCase(string: unknown): string;
+  static camelCase(string: string) {
     return _.camelCase(string);
   }
 

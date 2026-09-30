@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Second half of `npm run build`: `tsc` emits the compiled JavaScript, this
+ * copies into `dist/` what the compiler does not — the cluster's `.proto`
+ * definitions — and gives the compiled server entrypoint the extensionless,
+ * executable name the container and the published package promise.
+ *
+ * `bin/start-kuzzle-server` used to be JavaScript, copied here verbatim
+ * ([step 03](../docs/adr-001/steps/03-sprint-2-bin.md)). It is TypeScript now,
+ * so `tsc` emits `dist/bin/start-kuzzle-server.js` and the copy below is what
+ * keeps `dist/bin/start-kuzzle-server` — `docker/images/kuzzle/Dockerfile`'s
+ * `CMD`, and an entry in `package.json`'s `files` — existing and executable.
+ *
+ * Run from the source tree, not from `dist/`, so the paths below stay relative
+ * to the repository root (`__dirname/..`); from `dist/bin/` they would resolve
+ * to `dist/`, and the script would read its sources from `dist/lib/`.
+ *
+ * Executed through `ts-node/register/transpile-only` rather than `tsx`: `tsx`
+ * pulls in esbuild's platform-specific native binary, and this script sits on
+ * the release path (`prepublishOnly` → `build`), whose failure mode is a
+ * published package silently missing its `.proto` files. `ts-node` is pure
+ * JavaScript and cannot fail that way — same idiom as the `doc-error-codes`
+ * script.
+ */
+
+import * as fs from "fs/promises";
+import * as path from "path";
+
+async function main(): Promise<void> {
+  const projectRoot = path.join(__dirname, "..");
+  const protobufSourceDir = path.join(
+    projectRoot,
+    "lib",
+    "cluster",
+    "protobuf",
+  );
+  const protobufTargetDir = path.join(
+    projectRoot,
+    "dist",
+    "lib",
+    "cluster",
+    "protobuf",
+  );
+  const binTargetDir = path.join(projectRoot, "dist", "bin");
+  const binSourceFile = path.join(binTargetDir, "start-kuzzle-server.js");
+  const binTargetFile = path.join(binTargetDir, "start-kuzzle-server");
+
+  await fs.mkdir(protobufTargetDir, { recursive: true });
+  await fs.cp(protobufSourceDir, protobufTargetDir, { recursive: true });
+
+  await fs.mkdir(binTargetDir, { recursive: true });
+  await fs.copyFile(binSourceFile, binTargetFile);
+  await fs.chmod(binTargetFile, 0o755);
+}
+
+main().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error("Failed to copy the build's non-compiled payload:", error);
+  process.exit(1);
+});

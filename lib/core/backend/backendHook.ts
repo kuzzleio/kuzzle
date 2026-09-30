@@ -20,7 +20,7 @@
  */
 
 import * as kerror from "../../kerror";
-import { HookEventHandler, EventDefinition } from "../../types";
+import type { HookEventHandler, EventDefinition } from "../../types";
 import { ApplicationManager } from "./index";
 
 const assertionError = kerror.wrap("plugin", "assert");

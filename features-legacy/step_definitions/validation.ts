@@ -1,5 +1,11 @@
 import { When, Then } from "@cucumber/cucumber";
 import async from "async";
+import {
+  asError,
+  type AsyncCallback,
+  type RetryFailure,
+} from "../support/stepUtils";
+import type KWorld from "../support/world";
 
 const validSpecifications = {
     fields: {
@@ -31,7 +37,7 @@ const validSpecifications = {
 When(
   /^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/,
   {},
-  function (no, some, index, collection, callback) {
+  function (this: KWorld, no, some, index, collection, callback) {
     const idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection;
 
@@ -57,7 +63,7 @@ When(
 Then(
   /^I put a (not )?valid ?specification for index "([^"]*)" and collection "([^"]*)"$/,
   {},
-  function (not, index, collection, callback) {
+  function (this: KWorld, not, index, collection, callback) {
     const idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection,
       specifications = not ? notValidSpecifications : validSpecifications,
@@ -85,7 +91,7 @@ Then(
 Then(
   /^There is (an)?(no)? error message( in the response body)?$/,
   {},
-  function (noError, withError, inBody, callback) {
+  function (this: KWorld, noError, withError, inBody, callback) {
     if (this.statusCode !== 200) {
       if (noError) {
         if (inBody) {
@@ -128,56 +134,64 @@ Then(
   },
 );
 
-When(/^I post a(n in)? ?valid ?specification$/, {}, function (not, callback) {
-  const index = this.fakeIndex,
-    collection = this.fakeCollection,
-    specifications = not ? notValidSpecifications : validSpecifications,
-    body = specifications;
+When(
+  /^I post a(n in)? ?valid ?specification$/,
+  {},
+  function (this: KWorld, not, callback) {
+    const index = this.fakeIndex,
+      collection = this.fakeCollection,
+      specifications = not ? notValidSpecifications : validSpecifications,
+      body = specifications;
 
-  this.api
-    .validateSpecifications(index, collection, body)
-    .then((_body) => {
-      this.statusCode = _body.status;
-      this.body = _body;
+    this.api
+      .validateSpecifications(index, collection, body)
+      .then((_body) => {
+        this.statusCode = _body.status;
+        this.body = _body;
 
-      // an invalid specification is not a bad request, the request may go well despite of an invalid spec
-      // according to this, we should always have a 200 status if no other internal nor access error occure
+        // an invalid specification is not a bad request, the request may go well despite of an invalid spec
+        // according to this, we should always have a 200 status if no other internal nor access error occure
 
-      return callback();
-    })
-    .catch((error) => {
-      this.statusCode = error.statusCode;
-      return callback(error);
-    });
-});
-
-When(/^I post a(n in)? ?valid document/, {}, function (not, callback) {
-  const index = this.fakeIndex,
-    collection = this.fakeCollection,
-    document = not ? notValidDocument : validDocument;
-
-  this.api
-    .postDocument(index, collection, document)
-    .then((body) => {
-      this.statusCode = body.status;
-      if (not) {
-        return callback(new Error(JSON.stringify(body)));
-      }
-      return callback();
-    })
-    .catch((error) => {
-      this.statusCode = error.statusCode;
-      if (not) {
         return callback();
-      }
-      callback(error);
-    });
-});
+      })
+      .catch((error) => {
+        this.statusCode = error.statusCode;
+        return callback(error);
+      });
+  },
+);
+
+When(
+  /^I post a(n in)? ?valid document/,
+  {},
+  function (this: KWorld, not, callback) {
+    const index = this.fakeIndex,
+      collection = this.fakeCollection,
+      document = not ? notValidDocument : validDocument;
+
+    this.api
+      .postDocument(index, collection, document)
+      .then((body) => {
+        this.statusCode = body.status;
+        if (not) {
+          return callback(new Error(JSON.stringify(body)));
+        }
+        return callback();
+      })
+      .catch((error) => {
+        this.statusCode = error.statusCode;
+        if (not) {
+          return callback();
+        }
+        callback(error);
+      });
+  },
+);
 
 When(
   /^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/,
   {},
-  function (again, index, collection, callback) {
+  function (this: KWorld, again, index, collection, callback) {
     const idx = index ? index : this.fakeIndex,
       coll = collection ? collection : this.fakeCollection;
 
@@ -200,12 +214,12 @@ When(
 
 Then(
   /^I find (\d+) specifications(?: with scroll "([^"]+)")?/,
-  function (hits, scroll, callback) {
+  function (this: KWorld, hits, scroll, callback) {
     this.scrollId = null;
 
     hits = Number.parseInt(hits);
 
-    const search = function (callbackAsync) {
+    const search = function (this: KWorld, callbackAsync: AsyncCallback) {
       setTimeout(() => {
         this.api
           .searchSpecifications({}, scroll && { scroll })
@@ -245,9 +259,10 @@ Then(
       }, 200);
     };
 
-    async.retry(20, search.bind(this), function (err) {
-      if (err) {
-        return callback(new Error(err));
+    async.retry<void, RetryFailure>(20, search.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
       callback();
@@ -255,22 +270,25 @@ Then(
   },
 );
 
-Then(/^I am able to perform a scrollSpecifications request$/, function () {
-  if (!this.scrollId) {
-    throw new Error("No previous scrollId found");
-  }
-
-  return this.api.scrollSpecifications(this.scrollId).then((response) => {
-    if (response.error) {
-      throw new Error(response.error.message);
+Then(
+  /^I am able to perform a scrollSpecifications request$/,
+  function (this: KWorld) {
+    if (!this.scrollId) {
+      throw new Error("No previous scrollId found");
     }
 
-    if (
-      ["hits", "scrollId", "total"].some(
-        (prop) => response.result[prop] === undefined,
-      )
-    ) {
-      throw new Error("Incomplete scroll results");
-    }
-  });
-});
+    return this.api.scrollSpecifications(this.scrollId).then((response) => {
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (
+        ["hits", "scrollId", "total"].some(
+          (prop) => response.result[prop] === undefined,
+        )
+      ) {
+        throw new Error("Incomplete scroll results");
+      }
+    });
+  },
+);

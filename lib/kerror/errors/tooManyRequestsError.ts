@@ -22,7 +22,7 @@
 import { KuzzleError } from "./kuzzleError";
 
 export class TooManyRequestsError extends KuzzleError {
-  constructor(message, id?, code?) {
+  constructor(message: unknown = "", id?: unknown, code?: unknown) {
     super(message, 429, id, code);
   }
 }

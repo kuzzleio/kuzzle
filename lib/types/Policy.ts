@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   PolicyRestrictions,
   OptimizedPolicyRestrictions,
 } from "./PolicyRestrictions";

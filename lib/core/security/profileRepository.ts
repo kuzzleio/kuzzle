@@ -22,18 +22,37 @@
 import Bluebird from "bluebird";
 import { omit } from "lodash";
 
-import { JSONObject } from "kuzzle-sdk";
-import { OptimizedPolicy, Policy } from "../../../index";
+import type { JSONObject } from "../../types/JSONObject";
+import type { OptimizedPolicy, Policy } from "../../../index";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";
 import { ObjectRepository } from "../shared/ObjectRepository";
+
+/** @internal */
+/**
+ * The two sibling repositories this one reaches through, the same shape
+ * `UserRepository` declares for its own side of the module.
+ */
+interface SecurityModule {
+  role: { loadRoles(ids: string[]): Promise<unknown[]> };
+  user: {
+    scroll(scrollId: string, ttl?: string): Promise<JSONObject>;
+    search(query: JSONObject, options?: JSONObject): Promise<JSONObject>;
+    update(
+      id: string | null,
+      profileIds: string[],
+      content: JSONObject,
+      options: JSONObject,
+    ): Promise<unknown>;
+  };
+}
 
 /** @internal */
 type CreateOrReplaceOptions = {
   method?: string;
   refresh?: string;
   strict?: boolean;
-  userId?: string;
+  userId?: string | null;
 };
 
 /** @internal */
@@ -57,12 +76,12 @@ type UpdateOptions = {
  * @extends ObjectRepository
  */
 export class ProfileRepository extends ObjectRepository<Profile> {
-  private module: any;
+  private readonly module: SecurityModule;
 
   /**
    * @constructor
    */
-  constructor(securityModule) {
+  constructor(securityModule: SecurityModule) {
     super({ store: global.kuzzle.internalIndex });
 
     this.module = securityModule;
@@ -252,9 +271,17 @@ export class ProfileRepository extends ObjectRepository<Profile> {
    */
   async loadOneFromDatabase(id: string): Promise<Profile> {
     try {
-      return await super.loadOneFromDatabase(id);
+      const profile = await super.loadOneFromDatabase(id);
+
+      // The base resolves `null` for a document with no `_id`; for a profile
+      // that is the same "not found" as a 404.
+      if (profile === null) {
+        throw kerror.get("security", "profile", "not_found", id);
+      }
+
+      return profile;
     } catch (err) {
-      if (err.status === 404) {
+      if (err instanceof Error && "status" in err && err.status === 404) {
         throw kerror.get("security", "profile", "not_found", id);
       }
       throw err;
@@ -385,7 +412,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     profile: Profile,
     { refresh = "false", onAssignedUsers = "fail", userId = "-1" } = {},
   ) {
-    if (["admin", "default", "anonymous"].includes(profile._id)) {
+    if (["admin", "default", "anonymous"].includes(this.idOf(profile))) {
       throw kerror.get("security", "profile", "cannot_delete");
     }
 
@@ -407,7 +434,9 @@ export class ProfileRepository extends ObjectRepository<Profile> {
         batch.length = 0;
 
         for (const user of userPage.hits) {
-          user.profileIds = user.profileIds.filter((e) => e !== profile._id);
+          user.profileIds = user.profileIds.filter(
+            (e: string) => e !== profile._id,
+          );
 
           if (user.profileIds.length === 0) {
             user.profileIds.push("anonymous");
@@ -440,9 +469,11 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       }
     }
 
-    await this.deleteFromDatabase(profile._id, { refresh });
+    const profileId = this.idOf(profile);
 
-    await this.deleteFromCache(profile._id);
+    await this.deleteFromDatabase(profileId, { refresh });
+
+    await this.deleteFromCache(profileId);
   }
 
   /**
@@ -493,14 +524,16 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       throw kerror.get("security", "profile", "missing_anonymous_role");
     }
 
-    profile.optimizedPolicies = undefined; // Remove optimized policies
+    // Remove optimized policies. `undefined!`: declared as always present,
+    // see Profile.optimizedPolicies.
+    profile.optimizedPolicies = undefined!;
     await super.persistToDatabase(profile, {
       method,
       refresh,
       retryOnConflict,
     });
 
-    const updatedProfile = await this.loadOneFromDatabase(profile._id);
+    const updatedProfile = await this.loadOneFromDatabase(this.idOf(profile));
     await this.persistToCache(updatedProfile);
 
     // Recompute optimized policies based on new policies
@@ -522,15 +555,20 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       profile.policies = [{ roleId: "default" }];
     }
 
-    if ((profile.constructor as any)._hash("") === false) {
-      (profile.constructor as any)._hash = (obj) => global.kuzzle.hash(obj);
+    // `Profile._hash` ships as a stub returning `false`; that return value is
+    // the probe for "not patched yet". Typed through `typeof Profile` rather
+    // than `any`, which is what the overload declared on the stub is for.
+    const profileClass = profile.constructor as typeof Profile;
+
+    if (profileClass._hash("") === false) {
+      profileClass._hash = (obj: unknown) => global.kuzzle.hash(obj);
     }
 
     const policiesRoles = profile.policies.map((p) => p.roleId);
     const roles = await this.module.role.loadRoles(policiesRoles);
 
     // Fail if not all roles are found
-    if (roles.some((r) => r === null)) {
+    if (roles.some((role) => !role)) {
       throw kerror.get("security", "profile", "cannot_hydrate");
     }
 

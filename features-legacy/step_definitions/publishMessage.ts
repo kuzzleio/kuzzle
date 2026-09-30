@@ -1,6 +1,7 @@
 import { When, Then } from "@cucumber/cucumber";
+import type KWorld from "../support/world";
 
-When(/^I publish a message$/, function (callback) {
+When(/^I publish a message$/, function (this: KWorld, callback) {
   this.api
     .publish(this.documentGrace)
     .then((body) => {
@@ -22,7 +23,7 @@ When(/^I publish a message$/, function (callback) {
     });
 });
 
-Then(/^I should receive a request id$/, function (callback) {
+Then(/^I should receive a request id$/, function (this: KWorld, callback) {
   if (this.result && this.result.requestId) {
     callback();
     return false;

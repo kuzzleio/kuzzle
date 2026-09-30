@@ -20,9 +20,13 @@
  */
 
 import assert from "assert";
+import { inspect } from "node:util";
+
+import type { JSONObject } from "../types/JSONObject";
 
 import rc from "rc";
 import defaultConfig from "./default.config";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import packageJson from "../../package.json";
 import { wrap } from "../kerror";
 import { isPlainObject } from "../util/safeObject";
@@ -31,16 +35,35 @@ import bytes from "../util/bytes";
 const wrapped = wrap("core", "configuration");
 
 /**
- * Loads, interprets and checks configuration files
- * @returns {object}
+ * Loads, interprets and checks configuration files.
+ *
+ * The return type is the **merged** shape, not the partial one a user writes:
+ * `rc()` applies `.kuzzlerc` and the environment over the packaged defaults,
+ * and the two sections the defaults do not carry — `version` and `internal` —
+ * are assigned below. That is what makes every section present, and it is the
+ * claim `global.kuzzle.config` is read against everywhere else (ADR-0001,
+ * TD-53). Anything added to {@link IKuzzleConfiguration} has to be produced
+ * here or in `default.config.ts`, or the two files stop agreeing.
  */
-export function loadConfig() {
+/**
+ * The configuration as `rc` hands it over: every section is present because
+ * `default.config.ts` provides it, but every *value* may have arrived from a
+ * file or the environment as a string — which is what `unstringify()` below
+ * exists for. The checks and preprocessors run against that, not against
+ * {@link IKuzzleConfiguration}, which is what they produce.
+ */
+type RawConfig = JSONObject;
+
+export function loadConfig(): IKuzzleConfiguration {
   let config: any;
 
   try {
     config = rc("kuzzle", defaultConfig);
   } catch (e) {
-    throw wrapped.get("cannot_parse", e.message);
+    throw wrapped.get(
+      "cannot_parse",
+      e instanceof Error ? e.message : inspect(e),
+    );
   }
 
   config = unstringify(config);
@@ -77,7 +100,7 @@ export function loadConfig() {
  * @param {object} cfg - configuration loaded using RC
  * @returns {object} correctly typed configuration
  */
-function unstringify(cfg) {
+function unstringify(cfg: RawConfig): RawConfig {
   Object.keys(cfg)
     .filter(
       (k) =>
@@ -93,7 +116,7 @@ function unstringify(cfg) {
         } else if (cfg[k].startsWith("*json:")) {
           try {
             cfg[k] = JSON.parse(cfg[k].replace(/^\*json:/, ""));
-          } catch (e) {
+          } catch {
             throw wrapped.get(
               "cannot_parse",
               `the key "${k}" does not contain a valid stringified JSON (${cfg[k]})`,
@@ -119,7 +142,7 @@ function unstringify(cfg) {
  *
  * @param {object} cfg
  */
-function checkLimitsConfig(cfg) {
+function checkLimitsConfig(cfg: RawConfig): void {
   const limits = [
     "concurrentRequests",
     "documentsFetchCount",
@@ -138,25 +161,35 @@ function checkLimitsConfig(cfg) {
     "subscriptionDocumentTTL",
   ];
 
-  if (!isPlainObject(cfg.limits)) {
+  const configured = cfg.limits;
+
+  if (!isPlainObject(configured)) {
     throw wrapped.get("invalid_type", "limits", "object");
   }
 
-  for (const opt of limits) {
-    if (typeof cfg.limits[opt] !== "number") {
+  // One read per limit, validated where it is read: `isPlainObject` narrows
+  // to a record of `unknown`, which is the honest type for a configuration
+  // file, and the three comparisons below each re-read two of these.
+  const limit = (opt: string): number => {
+    const value = configured[opt];
+
+    if (typeof value !== "number") {
       throw wrapped.get("invalid_type", `limits.${opt}`, "number");
     }
 
-    if (
-      cfg.limits[opt] < 0 ||
-      (cfg.limits[opt] === 0 && !canBeZero.includes(opt))
-    ) {
+    return value;
+  };
+
+  for (const opt of limits) {
+    const value = limit(opt);
+
+    if (value < 0 || (value === 0 && !canBeZero.includes(opt))) {
       const allowed = `>= ${canBeZero.includes(opt) ? "0" : "1"}`;
       throw wrapped.get("out_of_range", `limits.${opt}`, allowed);
     }
   }
 
-  if (cfg.limits.concurrentRequests >= cfg.limits.requestsBufferSize) {
+  if (limit("concurrentRequests") >= limit("requestsBufferSize")) {
     throw wrapped.get(
       "out_of_range",
       "limits.concurrentRequests",
@@ -165,8 +198,8 @@ function checkLimitsConfig(cfg) {
   }
 
   if (
-    cfg.limits.requestsBufferWarningThreshold < cfg.limits.concurrentRequests ||
-    cfg.limits.requestsBufferWarningThreshold > cfg.limits.requestsBufferSize
+    limit("requestsBufferWarningThreshold") < limit("concurrentRequests") ||
+    limit("requestsBufferWarningThreshold") > limit("requestsBufferSize")
   ) {
     throw wrapped.get(
       "out_of_range",
@@ -176,7 +209,7 @@ function checkLimitsConfig(cfg) {
   }
 }
 
-function checkWebSocketOptions(config) {
+function checkWebSocketOptions(config: RawConfig): void {
   const cfg = config.server.protocols.websocket;
 
   if (cfg === undefined) {
@@ -187,9 +220,11 @@ function checkWebSocketOptions(config) {
     typeof cfg.enabled === "boolean",
     `[websocket] "enabled" parameter: invalid value "${cfg.enabled}" (boolean expected)`,
   );
+  // The 1000 ms floor is the protocol's, not this check's: `httpwsProtocol`
+  // replaces a lower value (0 included) with its default, and warns.
   assert(
     Number.isInteger(cfg.idleTimeout) && cfg.idleTimeout >= 0,
-    `[websocket] "idleTimeout" parameter: invalid value "${cfg.idleTimeout}" (integer >= 1000 expected)`,
+    `[websocket] "idleTimeout" parameter: invalid value "${cfg.idleTimeout}" (integer >= 0 expected)`,
   );
   assert(
     Number.isInteger(cfg.rateLimit) && cfg.rateLimit >= 0,
@@ -209,7 +244,7 @@ function checkWebSocketOptions(config) {
   );
 }
 
-function checkHttpOptions(config) {
+function checkHttpOptions(config: RawConfig): void {
   const cfg = config.server.protocols.http;
 
   if (cfg === undefined) {
@@ -223,7 +258,7 @@ function checkHttpOptions(config) {
   );
   assert(
     typeof config.http.accessControlAllowOriginUseRegExp === "boolean",
-    `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${cfg.accessControlAllowOriginUseRegExp}" (boolean expected)`,
+    `[http] "accessControlAllowOriginUseRegExp" parameter: invalid value "${config.http.accessControlAllowOriginUseRegExp}" (boolean expected)`,
   );
   assert(
     typeof cfg.enabled === "boolean",
@@ -240,7 +275,9 @@ function checkHttpOptions(config) {
 
   const maxFormFileSize = bytes(cfg.maxFormFileSize);
   assert(
-    Number.isInteger(maxFormFileSize) && maxFormFileSize >= 0,
+    maxFormFileSize !== null &&
+      Number.isInteger(maxFormFileSize) &&
+      maxFormFileSize >= 0,
     `[http] "maxFormFileSize" parameter: cannot parse "${cfg.maxFormFileSize}"`,
   );
   cfg.maxFormFileSize = maxFormFileSize;
@@ -251,12 +288,12 @@ function checkHttpOptions(config) {
   );
   assert(
     Array.isArray(cfg.additionalContentTypes) &&
-      cfg.additionalContentTypes.every((ct) => typeof ct === "string"),
+      cfg.additionalContentTypes.every((ct: unknown) => typeof ct === "string"),
     `[http] "additionalContentTypes" parameter: invalid value "${cfg.additionalContentTypes}" (array of strings expected)`,
   );
 }
 
-function checkClusterOptions(config) {
+function checkClusterOptions(config: RawConfig): void {
   const cfg = config.cluster;
 
   for (const prop of [
@@ -284,6 +321,14 @@ function checkClusterOptions(config) {
     );
   }
 
+  for (const prop of ["messages", "bytes"]) {
+    assert(
+      Number.isInteger(cfg.retransmitBuffer?.[prop]) &&
+        cfg.retransmitBuffer[prop] >= 0,
+      `[CONFIG] kuzzlerc.cluster.retransmitBuffer.${prop}: integer >= 0 expected`,
+    );
+  }
+
   assert(
     typeof cfg.ipv6 === "boolean",
     "[CONFIG] kuzzlerc.cluster.ipv6: boolean expected",
@@ -304,7 +349,7 @@ function checkClusterOptions(config) {
   );
 }
 
-function preprocessHttpOptions(config) {
+function preprocessHttpOptions(config: RawConfig): void {
   const httpConfig = config.http;
 
   if (httpConfig === undefined) {
@@ -314,7 +359,7 @@ function preprocessHttpOptions(config) {
   if (typeof httpConfig.accessControlAllowOrigin === "string") {
     httpConfig.accessControlAllowOrigin = httpConfig.accessControlAllowOrigin
       .split(",")
-      .map((value) => value.trim());
+      .map((value: string) => value.trim());
   }
 
   // Stored to avoid doing includes multiple times later
@@ -324,11 +369,13 @@ function preprocessHttpOptions(config) {
   // If Regular Expression is enabled for accessControlAllowOrigin header we convert every string to a RegExp
   if (httpConfig.accessControlAllowOriginUseRegExp) {
     httpConfig.accessControlAllowOrigin =
-      httpConfig.accessControlAllowOrigin.map((pattern) => new RegExp(pattern));
+      httpConfig.accessControlAllowOrigin.map(
+        (pattern: string) => new RegExp(pattern),
+      );
   }
 }
 
-function preprocessProtocolsOptions(config) {
+function preprocessProtocolsOptions(config: RawConfig): void {
   const protocols: any = config.server.protocols;
 
   config.internal.notifiableProtocols = [];
@@ -343,7 +390,7 @@ function preprocessProtocolsOptions(config) {
   }
 }
 
-function preprocessRedisOptions(redisConfig) {
+function preprocessRedisOptions(redisConfig: RawConfig): void {
   // @deprecated Remove those lines for Kuzzle v3 then
   // remove also 'database' from .kuzzlerc.sample.jsonc and default.config
   if (redisConfig.database) {

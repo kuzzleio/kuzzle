@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Channel } from "./channel";
+import type { Channel } from "./channel";
 
 /**
  * A room represents a subscription scope made on a combination of:

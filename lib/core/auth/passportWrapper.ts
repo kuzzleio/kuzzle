@@ -20,11 +20,12 @@
  */
 
 import Bluebird from "bluebird";
-import passport, {
+import type {
   AuthenticateCallback,
   AuthenticateOptions,
   Strategy,
 } from "passport";
+import passport from "passport";
 
 import { KuzzleError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
@@ -56,21 +57,31 @@ export default class PassportWrapper {
       // (Proof: HTTP redirection unit test)
       response.addEndListener(() => resolve(response));
 
+      // A strategy is plugin code and can fail with anything; so can passport,
+      // which reports what it decides itself (an unknown strategy name, first
+      // of all) through the middleware's `next`. All three paths end here.
+      const fail = (e: unknown) => {
+        if (e instanceof KuzzleError) {
+          reject(e);
+          return;
+        }
+
+        const error = e instanceof Error ? e : new Error(String(e));
+
+        reject(
+          kerror.getFrom(
+            error,
+            "plugin",
+            "runtime",
+            "unexpected_error",
+            error.message,
+          ),
+        );
+      };
+
       const authCB: AuthenticateCallback = (err, user, info: any) => {
         if (err !== null) {
-          if (err instanceof KuzzleError) {
-            reject(err);
-          } else {
-            reject(
-              kerror.getFrom(
-                err,
-                "plugin",
-                "runtime",
-                "unexpected_error",
-                (err as Error).message,
-              ),
-            );
-          }
+          fail(err);
         } else if (!user) {
           reject(
             kerror.get("plugin", "strategy", "missing_user", info.message),
@@ -85,21 +96,9 @@ export default class PassportWrapper {
           strategyName,
           this.options[strategyName] || {},
           authCB,
-        )(request, response);
+        )(request, response, fail);
       } catch (e) {
-        if (e instanceof KuzzleError) {
-          reject(e);
-        } else {
-          reject(
-            kerror.getFrom(
-              e,
-              "plugin",
-              "runtime",
-              "unexpected_error",
-              (e as Error).message,
-            ),
-          );
-        }
+        fail(e);
       }
     });
   }

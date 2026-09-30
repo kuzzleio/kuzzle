@@ -19,11 +19,12 @@
  * limitations under the License.
  */
 
-import { KuzzleError } from "../../kerror/errors";
+import type { KuzzleError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
-import { ApplicationManager, Backend } from "./index";
+import type { Backend } from "./index";
+import { ApplicationManager } from "./index";
 import type { Domains } from "../../kerror/codes";
-import { CustomErrorDefinition } from "../../types";
+import type { CustomErrorDefinition } from "../../types";
 
 export class BackendErrors extends ApplicationManager {
   private domains: Domains = {};
@@ -91,7 +92,7 @@ export class BackendErrors extends ApplicationManager {
     domain: string,
     subDomain: string,
     name: string,
-    ...placeholders
+    ...placeholders: unknown[]
   ): KuzzleError {
     return kerror.rawGet(
       this.domains,
@@ -118,7 +119,7 @@ export class BackendErrors extends ApplicationManager {
     domain: string,
     subDomain: string,
     name: string,
-    ...placeholders
+    ...placeholders: unknown[]
   ): KuzzleError {
     return kerror.rawGetFrom(
       this.domains,
@@ -135,8 +136,27 @@ export class BackendErrors extends ApplicationManager {
    *
    * @param domain Domain name
    * @param subDomain Subdomain to wrap to
+   *
+   * The error name is declared `unknown`, as v2.56.0's `any` accepted
+   * anything; one that is not a registered name gives
+   * `core.fatal.unexpected_error`, as it always has. Methods rather than
+   * function-typed properties, so that `kerror`'s `string`-typed ones fit.
    */
-  wrap(domain: string, subDomain: string) {
+  wrap(
+    domain: string,
+    subDomain: string,
+  ): {
+    get(error: unknown, ...placeholders: unknown[]): KuzzleError;
+    getFrom(
+      source: unknown,
+      error: unknown,
+      ...placeholders: unknown[]
+    ): KuzzleError;
+    reject(
+      error: unknown,
+      ...placeholders: unknown[]
+    ): ReturnType<typeof kerror.reject>;
+  } {
     return kerror.rawWrap(this.domains, domain, subDomain);
   }
 }

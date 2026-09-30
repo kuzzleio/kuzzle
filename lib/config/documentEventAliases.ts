@@ -22,7 +22,7 @@
 import DocumentController from "../api/controllers/documentController";
 
 export interface EventAliases {
-  list: Record<string, unknown>;
+  list: Record<string, string[]>;
   namespace: string;
   notBefore: string[];
 }

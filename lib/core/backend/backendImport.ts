@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import * as kerror from "../../kerror";
 import { ApplicationManager } from "./index";
@@ -173,12 +173,10 @@ export class BackendImport extends ApplicationManager {
     } else if (!isPlainObject(users)) {
       throw assertionError.get("invalid_type", "users", "object");
     } else if (options.onExistingUsers) {
-      if (
-        !(
-          options.onExistingUsers === "overwrite" ||
-          options.onExistingUsers === "skip"
-        )
-      ) {
+      if (!(
+        options.onExistingUsers === "overwrite" ||
+        options.onExistingUsers === "skip"
+      )) {
         throw assertionError.get("invalid_type", "onExistingUsers", [
           "overwrite",
           "skip",

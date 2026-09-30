@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
-import { PluginContext } from "../core/plugin/pluginContext";
-import { ControllerDefinition } from "./controllers/ControllerDefinition";
-import { PluginManifest } from "./PluginManifest";
-import { StrategyDefinition } from "./StrategyDefinition";
-import { PipeEventHandler, HookEventHandler } from "./EventHandler";
+import type { JSONObject } from "./JSONObject";
+import type { PluginContext } from "../core/plugin/pluginContext";
+import type { ControllerDefinition } from "./controllers/ControllerDefinition";
+import type { PluginManifest } from "./PluginManifest";
+import type { StrategyDefinition } from "./StrategyDefinition";
+import type { HookEventHandler, PipeEventHandler } from "./EventHandler";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
-import { ImportConfig } from "./Kuzzle";
+import type { ImportConfig } from "./Kuzzle";
 
 /**
  * Allows to define plugins controllers and actions
@@ -40,7 +40,20 @@ export type PluginApiDefinition = {
 };
 
 /**
+ * A hook or pipe target given as the **name** of one of the plugin's methods
+ * instead of the function itself.
+ *
+ * @deprecated Pass the function. Kuzzle still resolves the name, and prints a
+ * deprecation warning when it registers the handler.
+ */
+export type PluginMethodName = string;
+
+/**
  * Allows to define hooks on events
+ *
+ * Kuzzle also resolves a {@link PluginMethodName} in place of a handler, but
+ * the type admits only functions, as v2.56.0's did: code compiled against
+ * that reads a value back and calls it, which a `string` in the union breaks.
  */
 export type PluginHookDefinition = {
   /**
@@ -50,7 +63,12 @@ export type PluginHookDefinition = {
 };
 
 /**
- * Allows to define pipes on events
+ * Allows to define pipes on events.
+ *
+ * A pipe either returns a promise, or takes a trailing `callback(error,
+ * request)`: both forms are documented, and the runner accepts both — and a
+ * {@link PluginMethodName}. The type is v2.56.0's, for the reason given on
+ * {@link PluginHookDefinition}.
  */
 export type PluginPipeDefinition = {
   /**
@@ -67,13 +85,21 @@ export abstract class Plugin {
 
   /**
    * Plugin context.
+   *
+   * Kuzzle hands it to `init(config, context)` and never assigns it here:
+   * storing it is the documented convention plugin authors follow. It is
+   * declared as always present (`!`) because that is what every method but
+   * `init` can rely on, and what v2.56.0 declared — an optional field made
+   * every `this.context.*` of a `strict` plugin a compile error.
    */
-  public context: PluginContext;
+  public context!: PluginContext;
 
   /**
    * Plugin config.
+   *
+   * Declared as always present for the same reason as {@link context}.
    */
-  public config: JSONObject;
+  public config!: JSONObject;
 
   /**
    * Define new API controllers.

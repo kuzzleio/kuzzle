@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import vault from "../../kuzzle/vault";
 import * as kerror from "../../kerror";
@@ -29,7 +29,9 @@ const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendVault extends ApplicationManager {
   private decrypted = false;
-  private _secrets: JSONObject;
+  // Empty until `secrets` loads the vault. It is never read before that: the
+  // only `return this._secrets` is below the load.
+  private _secrets: JSONObject = {};
 
   /**
    * Secret key to decrypt encrypted secrets.
@@ -63,8 +65,13 @@ export class BackendVault extends ApplicationManager {
       const kuzzleVault = vault.load(
         this._application._vaultKey,
         this._application._secretsFile,
+        this._application.config.content.vault.newAlgorithm,
       );
       this._secrets = kuzzleVault.secrets;
+      // `decrypted` was written once, at declaration, and never set — so this
+      // block re-decrypted the vault on every read before start, which is
+      // exactly what the flag exists to prevent.
+      this.decrypted = true;
     }
 
     if (this._application.started) {

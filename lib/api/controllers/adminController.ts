@@ -23,13 +23,14 @@ import Bluebird from "bluebird";
 import * as kerror from "../../kerror";
 import { NativeController } from "./baseController";
 import { Mutex } from "../../util/mutex";
-import { KuzzleRequest } from "../request";
-import { ResetSecurityResult } from "../../types/controllers/adminControlller.type";
+import type { KuzzleRequest } from "../request";
+import type { User } from "../../model/security/user";
+import type { ResetSecurityResult } from "../../types/controllers/adminController.type";
 
 /**
  * @class AdminController
  */
-export default class AdminController extends NativeController {
+class AdminController extends NativeController {
   protected shuttingDown: boolean;
   protected logger: any;
 
@@ -198,7 +199,7 @@ export default class AdminController extends NativeController {
 
   async loadSecurities(request: KuzzleRequest) {
     const permissions = request.getBody();
-    const user = request.getUser();
+    const user: User | null = request.getUser();
     const onExistingUsers = request.input.args.onExistingUsers;
     const force = request.getBoolean("force");
     const waitForRefresh = request.getRefresh("wait_for");
@@ -230,3 +231,5 @@ export default class AdminController extends NativeController {
     return promise.then(() => result);
   }
 }
+
+export = AdminController;

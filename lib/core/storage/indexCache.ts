@@ -55,9 +55,8 @@ export class IndexCache {
    */
   addCollection(index: string, collection: string): void {
     this.addIndex(index);
-    const collections = this.indexes.get(index);
 
-    collections.add(collection);
+    this.getCollections(index).add(collection);
   }
 
   /**
@@ -93,9 +92,7 @@ export class IndexCache {
    * @throws If the provided index does not exist
    */
   listCollections(index: string): string[] {
-    this.assertIndexExists(index);
-
-    return Array.from(this.indexes.get(index));
+    return Array.from(this.getCollections(index));
   }
 
   /**
@@ -122,18 +119,31 @@ export class IndexCache {
    * @throws If the index does not exist
    */
   assertIndexExists(index: string) {
-    if (!this.indexes.has(index)) {
+    this.getCollections(index);
+  }
+
+  /**
+   * Answers an index's collections, or throws if the index is not cached.
+   *
+   * One lookup for both questions: `has()` followed by `get()` left every
+   * caller holding an invariant the Map had already been asked about, one line
+   * away from the answer.
+   */
+  private getCollections(index: string): Set<string> {
+    const collections = this.indexes.get(index);
+
+    if (collections === undefined) {
       throw storageError.get("unknown_index", index);
     }
+
+    return collections;
   }
 
   /**
    * Assert that the provided index and collection exist
    */
   assertCollectionExists(index: string, collection: string) {
-    this.assertIndexExists(index);
-
-    if (!this.indexes.get(index).has(collection)) {
+    if (!this.getCollections(index).has(collection)) {
       throw storageError.get("unknown_collection", index, collection);
     }
   }

@@ -1,0 +1,1220 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import type { JSONObject } from "../../types/JSONObject";
+
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { IndexCache } from "./indexCache";
+import { isPlainObject } from "../../util/safeObject";
+import * as kerror from "../../kerror";
+import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
+import type { storeScopeEnum } from "./storeScopeEnum";
+import "../../types/Global";
+
+const servicesError = kerror.wrap("services", "storage");
+
+/** Where `createIndex` / `createCollection` / `loadMappings` write, and whether
+ * the change is broadcast to the rest of the cluster. */
+interface WriteScopeOptions {
+  indexCacheOnly?: boolean;
+  propagate?: boolean;
+}
+
+interface LoadMappingsOptions extends WriteScopeOptions {
+  rawMappings?: boolean;
+  refresh?: boolean;
+}
+
+/** `{ index: { collection: payload } }`, as the fixtures and mappings
+ * import payloads are shaped. */
+type ImportPayload = Record<string, Record<string, JSONObject>>;
+
+/** Hoisted out of the signature: an object literal as a default parameter is
+ * re-allocated on every call, and this one is only ever read. */
+const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
+  indexCacheOnly: false,
+  propagate: true,
+  rawMappings: false,
+  refresh: false,
+});
+
+/**
+ * Storage client adapter to perform validation on index/collection existence
+ * and to maintain the index/collection cache.
+ */
+class ClientAdapter {
+  public es: Elasticsearch;
+  /**
+   * The version-specific ES service (ES7 or ES8). Its type is whatever
+   * `Elasticsearch` exposes — which is `any` today, and is tracked there as
+   * TD-13; referencing it rather than re-writing `any` keeps that one hole
+   * counted once, at its source.
+   */
+  public client: Elasticsearch["client"];
+  public scope: storeScopeEnum;
+  public cache: IndexCache;
+
+  constructor(scope: storeScopeEnum) {
+    this.es = new Elasticsearch(
+      global.kuzzle.config.services.storageEngine,
+      scope,
+    );
+    this.client = this.es.client;
+    this.scope = scope;
+    this.cache = new IndexCache();
+  }
+
+  async init() {
+    await this.es.init();
+    await this.populateCache();
+
+    this.registerCollectionEvents();
+    this.registerIndexEvents();
+    this.registerDocumentEvents();
+    this.registerMappingEvents();
+    this.registerCacheEvents();
+
+    // Global store events registration
+
+    /**
+     * Manually refresh the index cache (e.g. after alias creation)
+     */
+    global.kuzzle.onAsk(`core:storage:${this.scope}:cache:refresh`, () =>
+      this.populateCache(),
+    );
+
+    /**
+     * Return information about the instantiated ES service
+     * @returns {Promise.<Object>}
+     */
+    global.kuzzle.onAsk(`core:storage:${this.scope}:info:get`, () =>
+      this.client.info(),
+    );
+
+    /**
+     * Translate Koncorde filters to Elasticsearch query
+     *
+     * @param {Object} koncordeFilters - Set of valid Koncorde filters
+     * @returns {Object} Equivalent Elasticsearch query
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:translate`,
+      (filters: JSONObject) => this.client.translateKoncordeFilters(filters),
+    );
+  }
+
+  async createIndex(
+    index: string,
+    { indexCacheOnly = false, propagate = true }: WriteScopeOptions = {},
+  ) {
+    if (this.cache.hasIndex(index)) {
+      throw servicesError.get("index_already_exists", this.scope, index);
+    }
+
+    if (!indexCacheOnly) {
+      await this.client.createIndex(index);
+    }
+
+    this.cache.addIndex(index);
+
+    if (propagate) {
+      global.kuzzle.emit("core:storage:index:create:after", {
+        index,
+        scope: this.scope,
+      });
+    }
+  }
+
+  async createCollection(
+    index: string,
+    collection: string,
+    opts: JSONObject,
+    { indexCacheOnly = false, propagate = true }: WriteScopeOptions = {},
+  ) {
+    if (!indexCacheOnly) {
+      await this.client.createCollection(index, collection, opts);
+    }
+
+    this.cache.addCollection(index, collection);
+
+    if (propagate) {
+      global.kuzzle.emit("core:storage:collection:create:after", {
+        collection,
+        index,
+        scope: this.scope,
+      });
+    }
+  }
+
+  async deleteIndex(index: string) {
+    this.cache.assertIndexExists(index);
+
+    await this.client.deleteIndex(index);
+
+    this.cache.removeIndex(index);
+
+    global.kuzzle.emit("core:storage:index:delete:after", {
+      index,
+      scope: this.scope,
+    });
+  }
+
+  async deleteIndexes(indexes: string[]): Promise<string[]> {
+    for (const index of indexes) {
+      this.cache.assertIndexExists(index);
+    }
+
+    const deleted = await this.client.deleteIndexes(indexes);
+
+    if (deleted.length > 0) {
+      for (const index of deleted) {
+        this.cache.removeIndex(index);
+      }
+
+      global.kuzzle.emit("core:storage:index:mDelete:after", {
+        indexes: deleted,
+        scope: this.scope,
+      });
+    }
+
+    return deleted;
+  }
+
+  async deleteCollection(index: string, collection: string) {
+    this.cache.assertCollectionExists(index, collection);
+
+    await this.client.deleteCollection(index, collection);
+
+    this.cache.removeCollection(index, collection);
+
+    global.kuzzle.emit("core:storage:collection:delete:after", {
+      collection,
+      index,
+      scope: this.scope,
+    });
+  }
+
+  /**
+   * Populates the index cache with existing index/collection.
+   * Also checks for duplicated index names.
+   */
+  async populateCache() {
+    if (global.kuzzle.config.services.storageEngine.generateMissingAliases) {
+      await this.client.generateMissingAliases();
+    }
+
+    // `client` is untyped (see the field's comment), so the schema shape is
+    // stated here: index name -> its collection names.
+    const schema: Record<string, string[]> = await this.client.getSchema();
+
+    for (const [index, collections] of Object.entries(schema)) {
+      this.cache.addIndex(index);
+
+      for (const collection of collections) {
+        this.cache.addCollection(index, collection);
+      }
+    }
+  }
+
+  registerCollectionEvents() {
+    /**
+     * Create a new collection in a given index, and optionally configure it
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object.<settings: {}, mappings: {}} [opts]
+     * @param {Object} creationOptions
+     * @return {Promise}
+     * @throws
+     */
+
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:create`,
+      (
+        index: string,
+        collection: string,
+        opts: JSONObject,
+        creationOptions: JSONObject,
+      ) => this.createCollection(index, collection, opts, creationOptions),
+    );
+
+    /**
+     * Delete a collection
+     * @param {string} index
+     * @param {string} collection
+     * @return {Promise}
+     * @throws If the index or the collection does not exist
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:delete`,
+      (index: string, collection: string) =>
+        this.deleteCollection(index, collection),
+    );
+
+    /**
+     * Get settings of a collection
+     * @param {string} index
+     * @param {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:settings:get`,
+      (index: string, collection: string) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.getSettings(index, collection);
+      },
+    );
+
+    /**
+     * Check a collection existence
+     * @param {string} index
+     * @param {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:exist`,
+      (index: string, collection: string) =>
+        this.cache.hasCollection(index, collection),
+    );
+
+    /**
+     * Return a list of an index' collections within this adapter's scope
+     * @param {string} index
+     * @returns {Promise.<string[]>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:list`,
+      (index: string) => this.cache.listCollections(index),
+    );
+
+    /**
+     * Refresh a collection
+     * @param {string} index
+     * @param {string} collection
+     * @returns {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:refresh`,
+      (index: string, collection: string) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.refreshCollection(index, collection);
+      },
+    );
+
+    /**
+     * Remove all documents from an existing collection
+     * @param {string} index
+     * @param {string} collection
+     * @returns {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:truncate`,
+      (index: string, collection: string) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.truncateCollection(index, collection);
+      },
+    );
+
+    /**
+     * Update a collection settings and mappings
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} changes
+     * @returns {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:update`,
+      (index: string, collection: string, changes: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.updateCollection(index, collection, changes);
+      },
+    );
+  }
+
+  registerIndexEvents() {
+    /**
+     * Create a new index within this adapter scope
+     * @param  {string} index
+     * @param  {Object} options
+     * @returns {Promise}
+     * @throws
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:create`,
+      (index: string, options: JSONObject) => this.createIndex(index, options),
+    );
+
+    /**
+     * Delete an index
+     * @param {string} index
+     * @return {Promise}
+     * @throws If the index does not exist
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:delete`,
+      (index: string) => this.deleteIndex(index),
+    );
+
+    /**
+     * Check an index existence
+     * @param {string} index
+     * @return {Promise.<boolean>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:exist`,
+      (index: string) => this.cache.hasIndex(index),
+    );
+
+    /**
+     * Return a list of all indexes within this adapter's scope
+     * @returns {string[]}
+     */
+    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, () =>
+      this.cache.listIndexes(),
+    );
+
+    /**
+     * Delete multiple indexes
+     * @param {string[]} indexes
+     * @return {Promise}
+     * @throws If at least one index does not exist
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:mDelete`,
+      (indexes: string[]) => this.deleteIndexes(indexes),
+    );
+
+    /**
+     * Return detailed storage stats within this adapter's scope
+     * @returns {Promise.<Object>}
+     */
+    global.kuzzle.onAsk(`core:storage:${this.scope}:index:stats`, () =>
+      this.client.stats(),
+    );
+  }
+
+  registerDocumentEvents() {
+    /**
+     * Execute actions on documents in bulk
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} bulk data, in ES format
+     * @param {Object} [opts] -- see Elasticsearch "import" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:bulk`,
+      (
+        index: string,
+        collection: string,
+        bulk: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.import(index, collection, bulk, opts);
+      },
+    );
+
+    /**
+     * Count how many documents match the provided query
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} query -- search query
+     * @return {Promise.<Number>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:count`,
+      (index: string, collection: string, query: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.count(index, collection, query);
+      },
+    );
+
+    /**
+     * Create a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} content
+     * @param {Object} [opts] -- see Elasticsearch "create" options
+     * @returns {Promise.<{ _id, _version, _source }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:create`,
+      (
+        index: string,
+        collection: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.create(index, collection, content, opts);
+      },
+    );
+
+    /**
+     * Create or replace a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @param {Object} content
+     * @param {Object} [opts] -- see Elasticsearch "createOrReplace" options
+     * @returns {Promise.<{ _id, _version, _source, created }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:createOrReplace`,
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.createOrReplace(
+          index,
+          collection,
+          id,
+          content,
+          opts,
+        );
+      },
+    );
+
+    /**
+     * Delete a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id
+     * @param {Object} [opts] -- see Elasticsearch "delete" options
+     * @returns {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:delete`,
+      (index: string, collection: string, id: string, opts: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.delete(index, collection, id, opts);
+      },
+    );
+
+    /**
+     * Delete all documents matching the provided search query
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} query
+     * @param {Object} [opts] -- see Elasticsearch "deleteByQuery" options
+     * @returns {Promise.<{ documents, total, deleted, failures: [ id, reason ] }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:deleteByQuery`,
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.deleteByQuery(index, collection, query, opts);
+      },
+    );
+
+    /**
+     * Delete fields of a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id
+     * @param {Array}  fields -- fields to delete
+     * @param {Object} [opts] -- see Elasticsearch "deleteFields" options
+     * @returns {Promise.<{ _id, _version, _source }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:deleteFields`,
+      (
+        index: string,
+        collection: string,
+        id: string,
+        fields: string[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.deleteFields(index, collection, id, fields, opts);
+      },
+    );
+
+    /**
+     * Check if a document exists
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @returns {Promise.<boolean>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:exist`,
+      (index: string, collection: string, id: string) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.exists(index, collection, id);
+      },
+    );
+
+    /**
+     * Check if a document multiple document Exists
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @returns {Promise.<boolean>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mExists`,
+      (index: string, collection: string, ids: string[]) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mExists(index, collection, ids);
+      },
+    );
+
+    /**
+     * Get a document using its unique id
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @returns {Promise.<{ _id, _version, _source }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:get`,
+      (index: string, collection: string, id: string) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.get(index, collection, id);
+      },
+    );
+
+    /**
+     * Import documents as fixtures
+     * @param  {Objects} fixtures
+     * @return {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:import`,
+      (fixtures: ImportPayload, options: JSONObject) =>
+        this.loadFixtures(fixtures, options),
+    );
+
+    /**
+     * Create multiple documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} documents
+     * @param {Object} [opts] -- see Elasticsearch "mCreate" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mCreate`,
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mCreate(index, collection, documents, opts);
+      },
+    );
+
+    /**
+     * Create or replace multiple documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} documents
+     * @param {Object} [opts] -- see Elasticsearch "mCreateOrReplace" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mCreateOrReplace`,
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mCreateOrReplace(index, collection, documents, opts);
+      },
+    );
+
+    /**
+     * Delete multiple documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string[]} ids
+     * @param {Object} [opts] -- see Elasticsearch "mDelete" options
+     * @returns {Promise.<{ documents, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mDelete`,
+      (index: string, collection: string, ids: string[], opts: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mDelete(index, collection, ids, opts);
+      },
+    );
+
+    /**
+     * Replace multiple documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} documents
+     * @param {Object} [opts] -- see Elasticsearch "mReplace" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mReplace`,
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mReplace(index, collection, documents, opts);
+      },
+    );
+
+    /**
+     * Update multiple documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} documents
+     * @param {Object} [opts] -- see Elasticsearch "mUpdate" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mUpdate`,
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mUpdate(index, collection, documents, opts);
+      },
+    );
+
+    /**
+     * Applies a partial update to documents provided in the body.
+     * If some of the documents don't already exist, they will be created.
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object[]} documents
+     * @param {Object} [opts] -- see Elasticsearch "mUpsert" options
+     * @returns {Promise.<{ items, errors }>
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mUpsert`,
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mUpsert(index, collection, documents, opts);
+      },
+    );
+
+    /**
+     * Apply the provided callback to all documents matching a search query
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} query -- search query (ES format)
+     * @param {Function} callback -- callback applied to matched documents
+     * @param {Object} [opts] -- see Elasticsearch "mExecute" options
+     * @returns {Promise.<any[]>} Array of results returned by the callback
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mExecute`,
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        callback: (...args: unknown[]) => unknown,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mExecute(index, collection, query, callback, opts);
+      },
+    );
+
+    /**
+     * Get multiple documents using their ids
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string[]} ids
+     * @returns {Promise.<{ items: [ _id, _source, _version ], errors }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:mGet`,
+      (index: string, collection: string, ids: string[]) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.mGet(index, collection, ids);
+      },
+    );
+
+    /**
+     * Replace the content of a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id
+     * @param {Object} content -- new document content
+     * @param {Object} [opts] -- see Elasticsearch "replace" options
+     * @returns {Promise.<{ _id, _version, _source }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:replace`,
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.replace(index, collection, id, content, opts);
+      },
+    );
+
+    /**
+     * Fetch the next page of results of a search query
+     *
+     * @param {string} scrollId
+     * @param {Object} [opts] -- see Elasticsearch "scroll" options
+     * @returns {Promise.<{ scrollId, hits, aggregations, total }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:scroll`,
+      (scrollId: string, opts: JSONObject) =>
+        this.client.scroll(scrollId, opts),
+    );
+
+    /**
+     * Search for documents
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} searchBody -- search query, in ES format
+     * @param {Object} [opts] -- see Elasticsearch "search" options
+     * @returns {Promise.<{ scrollId, hits, aggregations, total }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:search`,
+      (
+        index: string,
+        collection: string,
+        searchBody: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.search({ collection, index, searchBody }, opts);
+      },
+    );
+
+    /**
+     * Search for multiples documents
+     *
+     * @param {Object[]} targets
+     * @param {Object} searchBody -- search query, in ES format
+     * @param {Object} [opts] -- see Elasticsearch "search" options
+     * @returns {Promise.<{ scrollId, hits, aggregations, total }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:multiSearch`,
+      (targets: JSONObject[], searchBody: JSONObject, opts: JSONObject) => {
+        for (const target of targets) {
+          for (const collection of target.collections) {
+            this.cache.assertCollectionExists(target.index, collection);
+          }
+        }
+
+        return this.client.search({ searchBody, targets }, opts);
+      },
+    );
+
+    /**
+     * Update a document
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @param {Object} content -- partial content to update
+     * @param {Object} [opts] -- see Elasticsearch "update" options
+     * @returns {Promise.<{ _id, _version }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:update`,
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.update(index, collection, id, content, opts);
+      },
+    );
+
+    /**
+     * Update all documents matching the search query, by applying the same
+     * changes to all of them.
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} query -- search query, in ES format
+     * @param {Object} changes -- partial changes to apply to matched documents
+     * @param {Object} [opts] -- see Elasticsearch "updateByQuery" options
+     * @returns {Promise.<{ successes: [_id, _source, _status], errors: [ document, status, reason ] }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:updateByQuery`,
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        changes: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.updateByQuery(
+          index,
+          collection,
+          query,
+          changes,
+          opts,
+        );
+      },
+    );
+
+    /**
+     * Directly Update all documents matching the search query (without regards
+     * to max documents write limit), by applying the same changes to all of them.
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} query -- search query, in ES format
+     * @param {Object} changes -- partial changes to apply to matched documents
+     * @param {Object} [opts] -- see Elasticsearch "updateByQuery" options
+     * @returns {Promise.<{ successes: [_id, _source, _status], errors: [ document, status, reason ] }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:bulk:updateByQuery`,
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        changes: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.bulkUpdateByQuery(
+          index,
+          collection,
+          query,
+          changes,
+          opts,
+        );
+      },
+    );
+
+    /**
+     * Applies a partial update to an existing document.
+     * If the document doesn't already exist, a new document is created.
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} id -- document unique identifier
+     * @param {Object} content -- partial content to update
+     * @param {Object} [opts] -- see Elasticsearch "upsert" options
+     * @returns {Promise.<{ _id, _version }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:document:upsert`,
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.upsert(index, collection, id, content, opts);
+      },
+    );
+  }
+
+  registerMappingEvents() {
+    /**
+     * Return a collection's mapping
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} [opts] -- see Elasticsearch "getMapping" options
+     *
+     * @returns {Promise.<{ dynamic, _meta, properties }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:mappings:get`,
+      (index: string, collection: string, opts: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.getMapping(index, collection, opts);
+      },
+    );
+
+    /**
+     * Import mappings as fixtures. Create non-existing indexes and collections
+     * in the process.
+     *
+     * @param  {Object} fixtures
+     * @param  {Object} options
+     * @return {Promise}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:mappings:import`,
+      (fixtures: ImportPayload, options: JSONObject) =>
+        this.loadMappings(fixtures, options),
+    );
+
+    /**
+     * Update a collection mappings
+     *
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} mappings
+     * @returns {Promise.<{ dynamic, _meta, properties }>}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:mappings:update`,
+      (index: string, collection: string, mappings: JSONObject) => {
+        this.cache.assertCollectionExists(index, collection);
+        return this.client.updateMapping(index, collection, mappings);
+      },
+    );
+  }
+
+  /**
+   * Cache update operations. These events trigger neither any actual change
+   * in the storage layer, nor kuzzle events.
+   */
+  registerCacheEvents() {
+    /**
+     * Adds a new index to the cache
+     * @param  {string} index
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:addIndex`,
+      (index: string) => this.cache.addIndex(index),
+    );
+
+    /**
+     * Adds a new collection to the cache
+     * @param  {string} index
+     * @param  {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:addCollection`,
+      (index: string, collection: string) =>
+        this.cache.addCollection(index, collection),
+    );
+
+    /**
+     * Removes indexes from the cache
+     * @param  {Array.<string>} indexes
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:removeIndexes`,
+      (indexes: string[]) => {
+        for (const index of indexes) {
+          this.cache.removeIndex(index);
+        }
+      },
+    );
+
+    /**
+     * Removes a collection from the cache
+     * @param  {string} index
+     * @param  {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:removeCollection`,
+      (index: string, collection: string) =>
+        this.cache.removeCollection(index, collection),
+    );
+  }
+
+  /**
+   * Load database fixtures into Kuzzle
+   *
+   * @param {String} fixturesId
+   * @returns {Promise}
+   */
+  async loadFixtures(
+    fixtures: ImportPayload = {},
+    { refresh = "wait_for" }: { refresh?: string } = {},
+  ) {
+    if (!isPlainObject(fixtures)) {
+      throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
+    }
+
+    // `Object.entries`, not `keys` + three indexed reads: the value comes back
+    // with the key and there is nothing left for `noUncheckedIndexedAccess` to
+    // object to.
+    for (const [index, collections] of Object.entries(fixtures)) {
+      if (!isPlainObject(collections)) {
+        throw kerror.get(
+          "api",
+          "assert",
+          "invalid_argument",
+          collections,
+          "object",
+        );
+      }
+
+      for (const [collection, payload] of Object.entries(collections)) {
+        this.cache.assertCollectionExists(index, collection);
+
+        const { errors } = await this.client.import(
+          index,
+          collection,
+          payload,
+          { refresh },
+        );
+
+        if (errors.length > 0) {
+          throw servicesError.get("import_failed", errors);
+        }
+      }
+    }
+  }
+
+  /**
+   * Load database mappings into Kuzzle
+   *
+   * @param {String} mappings
+   * @param {String} options rawMappings (false)
+   * - propagate (true): notify the other nodes of the cluster
+   * - indexCacheOnly (false): only update the cache, don't update the database
+   * @returns {Promise}
+   */
+  async loadMappings(
+    fixtures: ImportPayload = {},
+    options: LoadMappingsOptions = DEFAULT_LOAD_MAPPINGS_OPTIONS,
+  ) {
+    if (!isPlainObject(fixtures)) {
+      throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
+    }
+
+    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
+    // incompatible acquisition/TTL formats and must not contend on the same
+    // key — swapping it is a behaviour change, deferred to #2894.
+    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 }); // NOSONAR
+
+    await mutex.lock();
+
+    try {
+      for (const [index, collections] of Object.entries(fixtures)) {
+        if (!isPlainObject(collections)) {
+          throw kerror.get(
+            "api",
+            "assert",
+            "invalid_argument",
+            collections,
+            "object",
+          );
+        }
+
+        for (const [collection, mappings] of Object.entries(collections)) {
+          await this._loadCollectionMappings(
+            index,
+            collection,
+            mappings,
+            options,
+          );
+        }
+      }
+    } finally {
+      await mutex.unlock();
+    }
+  }
+
+  /**
+   * Creates one index/collection pair from an import payload. Extracted from
+   * `loadMappings` verbatim.
+   */
+  private async _loadCollectionMappings(
+    index: string,
+    collection: string,
+    mappings: JSONObject,
+    options: LoadMappingsOptions,
+  ): Promise<void> {
+    try {
+      await this.createIndex(index, {
+        indexCacheOnly: options.indexCacheOnly,
+        propagate: options.propagate,
+      });
+    } catch (error) {
+      // @cluster: ignore if the index already exists to prevent race
+      // conditions with index cache propagation
+      if (
+        (error as { id?: string }).id !==
+        "services.storage.index_already_exists"
+      ) {
+        throw error;
+      }
+    }
+
+    await this.createCollection(
+      index,
+      collection,
+      options.rawMappings ? { mappings } : mappings,
+      {
+        indexCacheOnly: options.indexCacheOnly,
+        propagate: options.propagate,
+      },
+    );
+
+    if (options.refresh && !options.indexCacheOnly) {
+      await this.client.refreshCollection(index, collection);
+    }
+  }
+}
+
+export = ClientAdapter;

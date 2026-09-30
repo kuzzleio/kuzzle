@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 /**
  * Represents a realtime subscription of a connection to a room.
@@ -40,17 +40,20 @@ export class Subscription {
 
   public index: string;
   public collection: string;
-  public filters: JSONObject;
+  public filters: JSONObject | undefined;
 
-  public kuid: string;
+  /** Null for an anonymous subscription — `user._id` is what fills it. */
+  public kuid: string | null;
 
   constructor(
     index: string,
     collection: string,
-    filters: JSONObject,
+    /** Absent for an unsubscribe, which reports the room it left, not a filter. */
+    filters: JSONObject | undefined,
     roomId: string,
     connectionId: string,
-    user: { _id: string },
+    /** Absent or null when the connection carried no user — `kuid` is then null. */
+    user?: { _id: string | null } | null,
   ) {
     this.connectionId = connectionId;
     this.roomId = roomId;

@@ -22,9 +22,10 @@
 import Bluebird from "bluebird";
 import _ from "lodash";
 import { Koncorde } from "../shared/KoncordeWrapper";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
-import { KuzzleRequest, RequestContext, RequestInput } from "../../../index";
+import { KuzzleRequest, RequestContext, RequestInput } from "../../api/request";
+import BaseValidationType from "../validation/baseType";
 
 import * as kerror from "../../kerror";
 import {
@@ -47,12 +48,13 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
-import { BackendCluster } from "../backend";
+import { BackendCluster } from "../backend/backendCluster";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import { Store } from "../shared/store";
 import { storeScopeEnum } from "../storage/storeScopeEnum";
 import PluginRepository from "./pluginRepository";
-import { KuzzleLogger } from "kuzzle-logger/dist";
+import type { KuzzleLogger } from "kuzzle-logger/dist";
+import type { Kuzzle } from "../../kuzzle";
 
 const contextError = kerror.wrap("plugin", "context");
 
@@ -114,7 +116,11 @@ export class PluginContext {
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>;
+    /**
+     * Declared as returning a promise, as v2.56.0 declared it — see
+     * {@link PluginExecute}.
+     */
+    execute: PluginExecute;
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -165,6 +171,14 @@ export class PluginContext {
      * Current Kuzzle node unique identifier
      */
     nodeId: string;
+
+    /**
+     * The Kuzzle instance itself.
+     *
+     * Only present for plugins declared `privileged` in their manifest:
+     * `PrivilegedPluginContext` is what sets it.
+     */
+    kuzzle?: Kuzzle;
   };
 
   public config: JSONObject;
@@ -177,7 +191,7 @@ export class PluginContext {
     /**
      * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
      */
-    Koncorde: Koncorde;
+    Koncorde: typeof Koncorde;
     /**
      * Mutex class
      */
@@ -187,17 +201,17 @@ export class PluginContext {
      */
     Repository: new (collection: string, objectConstructor: any) => Repository;
     /**
-     * Instantiate a new Request from the original one.
+     * Instantiate a new Request from the original one, or from raw data.
      */
-    Request: KuzzleRequest;
+    Request: PluginRequestConstructor;
     /**
      * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
      */
-    RequestContext: RequestContext;
+    RequestContext: typeof RequestContext;
     /**
      * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
      */
-    RequestInput: RequestInput;
+    RequestInput: typeof RequestInput;
 
     /**
      * Constructor for Elasticsearch SDK Client
@@ -242,7 +256,7 @@ export class PluginContext {
     warn: (message: any) => void;
   };
 
-  constructor(pluginName) {
+  constructor(pluginName: string) {
     this.config = JSON.parse(JSON.stringify(global.kuzzle.config));
 
     Object.freeze(this.config);
@@ -310,21 +324,24 @@ export class PluginContext {
     function PluginContextESClient(): any {
       return Elasticsearch.buildClient(
         global.kuzzle.config.services.storageEngine.client,
+        global.kuzzle.config.services.storageEngine.majorVersion,
       );
     }
 
     this.constructors = {
-      BaseValidationType: require("../validation/baseType"),
+      BaseValidationType,
       ESClient: PluginContextESClient as any,
-      Koncorde: Koncorde as any,
+      Koncorde,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (
         collection: string,
         objectConstructor: any,
       ) => Repository,
-      Request: instantiateRequest as any,
-      RequestContext: RequestContext as any,
-      RequestInput: RequestInput as any,
+      // A plain function called with `new`: it returns an object, so `new`
+      // yields that object — which is what plugins have always relied on.
+      Request: instantiateRequest as unknown as PluginRequestConstructor,
+      RequestContext,
+      RequestInput,
     };
 
     Object.freeze(this.constructors);
@@ -348,7 +365,7 @@ export class PluginContext {
 
     this.accessors = {
       cluster: new BackendCluster(),
-      execute: (request, callback) => execute(request, callback),
+      execute,
       nodeId: global.nodeId,
       sdk: new EmbeddedSDK(),
       storage: {
@@ -402,28 +419,71 @@ export class PluginContext {
 }
 
 /**
+ * `context.accessors.execute`, as v2.56.0 declared it.
+ *
+ * Without a callback (or with `null`), the answer is a promise of the
+ * request. With a callback — called as `callback(error, request)` — the
+ * answer goes there, and **nothing is returned at runtime** (`null`): the
+ * declared promise does not exist in that form, so do not chain on it. It is
+ * declared all the same because v2.56.0 declared it so, and code compiled
+ * against that (`execute(request, callback).then(...)`) must still compile;
+ * a `Promise | null` return made every `await execute(request)` of a
+ * `strict` plugin a compile error.
+ */
+export type PluginExecute = (
+  request: KuzzleRequest,
+  callback?: unknown,
+) => Promise<KuzzleRequest>;
+
+/**
  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
-function execute(request: KuzzleRequest, callback) {
-  if (callback && typeof callback !== "function") {
+function execute(
+  request: KuzzleRequest,
+  callback?: unknown,
+): Promise<KuzzleRequest>;
+/**
+ * The implementation says what it really returns: `null` in callback mode.
+ * The signature above is the declared one — see {@link PluginExecute}.
+ */
+function execute(
+  request: KuzzleRequest,
+  callback?: unknown,
+): Promise<KuzzleRequest> | null {
+  // `null` means "no callback", as `undefined` does: plugins pass it to ask
+  // for a promise explicitly.
+  if (
+    callback !== undefined &&
+    callback !== null &&
+    !isPrombackCallback(callback)
+  ) {
     const error = contextError.get("invalid_callback", typeof callback);
     global.kuzzle.log.error(error);
     return Bluebird.reject(error);
   }
 
-  const promback = new Promback(callback);
+  const promback = new Promback<KuzzleRequest>(
+    isPrombackCallback(callback) ? callback : null,
+  );
 
   if (!request || _.isEmpty(request)) {
-    return promback.reject(contextError.get("missing_request"));
+    return asRequestPromise(
+      promback.reject(contextError.get("missing_request")),
+      request,
+    );
   }
 
   if (
     request.input.controller === "realtime" &&
+    request.input.action !== null &&
     ["subscribe", "unsubscribe"].includes(request.input.action)
   ) {
-    return promback.reject(
-      contextError.get("unavailable_realtime", request.input.action),
+    return asRequestPromise(
+      promback.reject(
+        contextError.get("unavailable_realtime", request.input.action),
+      ),
+      request,
     );
   }
 
@@ -433,9 +493,8 @@ function execute(request: KuzzleRequest, callback) {
   global.kuzzle.funnel
     .executePluginRequest(request)
     .then((result) => {
-      request.setResult(result, {
-        status: request.status === 102 ? 200 : request.status,
-      });
+      // No status: a pending 102 becomes 200, any other is kept.
+      request.response.configure({ result });
 
       promback.resolve(request);
     })
@@ -443,7 +502,50 @@ function execute(request: KuzzleRequest, callback) {
       promback.reject(err);
     });
 
-  return promback.deferred;
+  return asRequestPromise(promback.deferred, request);
+}
+
+/** Whether a plugin handed `accessors.execute` something callable. */
+function isPrombackCallback(
+  value: unknown,
+): value is (error: unknown, result?: KuzzleRequest) => void {
+  return typeof value === "function";
+}
+
+/**
+ * What `execute` answers, from a `Promback`'s deferred.
+ *
+ * `deferred` is null in callback mode — the caller gets its answer that way,
+ * and the JavaScript returned that null — and otherwise settles on
+ * `KuzzleRequest | undefined`, because `Promback.resolve()` may be called
+ * with nothing. This one is always settled with the request it was handed,
+ * so mapping through it is what turns the union into the contract.
+ */
+function asRequestPromise(
+  deferred: Bluebird<KuzzleRequest | undefined> | null,
+  request: KuzzleRequest,
+): Bluebird<KuzzleRequest> | null {
+  return deferred === null ? null : deferred.then(() => request);
+}
+
+/**
+ * Copies the three routing fields a plugin's request inherits from the one it
+ * was built from.
+ *
+ * Through `input.args`, which is what `input.resource`'s own deprecation
+ * notice points at and what those accessors read and write anyway — the loop
+ * this replaces asked `RequestResource` for an index signature it does not
+ * have.
+ */
+function inheritResource(target: KuzzleRequest, source: KuzzleRequest): void {
+  const to = target.input.args;
+  const from = source.input.args;
+
+  for (const field of ["_id", "index", "collection"]) {
+    if (!to[field] && from[field]) {
+      to[field] = from[field];
+    }
+  }
 }
 
 /**
@@ -456,57 +558,87 @@ function execute(request: KuzzleRequest, callback) {
  * @param {Object} [options]
  * @returns {Request}
  */
-function instantiateRequest(request, data, options = {}) {
-  let _request = request,
-    _data = data,
-    _options = options;
+/**
+ * `context.constructors.Request`'s two call shapes: from an original request,
+ * whose context and input the new one inherits, or from raw request data.
+ */
+export type PluginRequestConstructor = {
+  new (
+    request: KuzzleRequest,
+    data?: JSONObject,
+    options?: JSONObject,
+  ): KuzzleRequest;
+  new (data: JSONObject, options?: JSONObject): KuzzleRequest;
+};
 
-  if (!_request) {
+function instantiateRequest(
+  request: KuzzleRequest | JSONObject | null,
+  data?: JSONObject,
+  options: JSONObject = {},
+) {
+  if (!request) {
     throw contextError.get("missing_request_data");
   }
 
-  if (!(_request instanceof KuzzleRequest)) {
-    if (_data) {
-      _options = _data;
-    }
+  // Two call shapes: `(request, data, options)` and `(data, options)`. The
+  // first argument is what tells them apart, and reassigning it — which is
+  // what the JavaScript did — throws away the narrowing that `instanceof`
+  // had just established.
+  let _request: KuzzleRequest | null;
+  let _data: JSONObject | undefined;
+  let _options: JSONObject;
 
-    _data = _request;
-    _request = null;
-  } else {
+  if (request instanceof KuzzleRequest) {
+    _request = request;
+    _data = data;
+    _options = options;
+
     Object.assign(_options, _request.context.toJSON());
+  } else {
+    _request = null;
+    _data = request;
+    _options = data ?? options;
   }
 
   const target = new KuzzleRequest(_data, _options);
 
   // forward informations if a request object was supplied
-  if (_request) {
-    for (const resource of ["_id", "index", "collection"]) {
-      if (!target.input.resource[resource]) {
-        target.input.resource[resource] = _request.input.resource[resource];
-      }
-    }
-
-    for (const arg of Object.keys(_request.input.args)) {
-      if (target.input.args[arg] === undefined) {
-        target.input.args[arg] = _request.input.args[arg];
-      }
-    }
-
-    if (!_data || _data.jwt === undefined) {
-      target.input.jwt = _request.input.jwt;
-    }
-
-    if (_data) {
-      target.input.volatile = {
-        ..._request.input.volatile,
-        ..._data.volatile,
-      };
-    } else {
-      target.input.volatile = _request.input.volatile;
-    }
+  if (_request !== null) {
+    inheritInput(target, _request, _data);
   }
 
   return target;
+}
+
+/**
+ * Copies onto `target` what it did not receive of its own: the routing
+ * fields, the arguments, the token and the volatile data.
+ */
+function inheritInput(
+  target: KuzzleRequest,
+  source: KuzzleRequest,
+  data?: JSONObject,
+): void {
+  inheritResource(target, source);
+
+  for (const arg of Object.keys(source.input.args)) {
+    if (target.input.args[arg] === undefined) {
+      target.input.args[arg] = source.input.args[arg];
+    }
+  }
+
+  if (data?.jwt === undefined && source.input.jwt !== null) {
+    target.input.jwt = source.input.jwt;
+  }
+
+  if (data) {
+    target.input.volatile = {
+      ...source.input.volatile,
+      ...data.volatile,
+    };
+  } else if (source.input.volatile !== null) {
+    target.input.volatile = source.input.volatile;
+  }
 }
 
 /**
@@ -517,8 +649,8 @@ function instantiateRequest(request, data, options = {}) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryAddStrategy(pluginName) {
-  return async function addStrategy(name, strategy) {
+function curryAddStrategy(pluginName: string) {
+  return async function addStrategy(name: string, strategy: unknown) {
     // strategy constructors cannot be used directly to dynamically
     // add new strategies, because they cannot
     // be serialized and propagated to other cluster nodes
@@ -559,10 +691,10 @@ function curryAddStrategy(pluginName) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryRemoveStrategy(pluginName) {
+function curryRemoveStrategy(pluginName: string) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
-  return async function removeStrategy(name) {
+  return async function removeStrategy(name: string) {
     const mutex = new Mutex("auth:strategies:remove", { ttl: 30000 });
 
     await mutex.lock();

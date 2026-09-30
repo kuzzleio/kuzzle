@@ -20,6 +20,7 @@
  */
 
 import path from "path";
+import { inspect } from "node:util";
 
 import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
@@ -44,11 +45,11 @@ import Statistics from "../core/statistics/statistics";
 import StorageEngine from "../core/storage/storageEngine";
 import Validation from "../core/validation/validation";
 import * as kerror from "../kerror";
-import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { Mutex } from "../util/mutex";
-import {
+import type {
   ImportConfig,
   InstallationConfig,
   StartOptions,
@@ -60,8 +61,9 @@ import InternalIndexHandler from "./internalIndexHandler";
 import kuzzleStateEnum from "./kuzzleStateEnum";
 import { Logger } from "./Logger";
 import vault from "./vault";
+import { NameGenerator } from "../util/name-generator";
 
-let _kuzzle = null;
+let _kuzzle: Kuzzle | null = null;
 
 Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
@@ -98,10 +100,11 @@ type ImportStatus = {
 };
 
 class Kuzzle extends KuzzleEventEmitter {
-  public config: KuzzleConfiguration;
-  private _state: number = kuzzleStateEnum.STARTING;
+  public config: IKuzzleConfiguration;
+  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
   public log: Logger;
-  private rootPath: string;
+  /** Read by `PluginsManager` to locate the plugins directories. */
+  public rootPath: string;
   /**
    * Internal index bootstrapper and accessor
    */
@@ -124,7 +127,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Statistics core component
    */
-  private statistics: Statistics;
+  public statistics: Statistics;
 
   /**
    * Network entry point
@@ -161,7 +164,12 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   private version: string;
 
-  private openApiManager: OpenApiManager;
+  /**
+   * Built by `start()`, from the application's own OpenAPI declaration.
+   * Nothing reads it before then — `server:openapi` answers off it, and the
+   * API is not serving yet.
+   */
+  private openApiManager: OpenApiManager | undefined;
 
   /**
    * List of differents imports types and their associated method
@@ -176,15 +184,19 @@ class Kuzzle extends KuzzleEventEmitter {
     ) => Promise<void>;
   };
 
-  public koncorde: Koncorde;
-  public secret: string;
+  /**
+   * The realtime engine, and the secret read out of the internal index.
+   * Both are set by `start()`, before anything that uses them is wired up.
+   */
+  public koncorde!: Koncorde;
+  public secret!: string;
 
   /**
    * Node unique ID amongst other cluster nodes
    */
   public id: string;
 
-  constructor(config: KuzzleConfiguration) {
+  constructor(config: IKuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize,
@@ -214,6 +226,17 @@ class Kuzzle extends KuzzleEventEmitter {
     this.asyncStore = new AsyncStore();
     this.debugger = new KuzzleDebugger();
     this.version = version;
+
+    // `global.nodeId` when a `Backend` named this process, and a name of the
+    // same shape otherwise — the draw `ClusterIdCardHandler` makes for the
+    // same reason. This field was declared `string` and assigned nowhere, so
+    // every reader of `kuzzle.id` — the redis `SETNAME`, the ID card, the
+    // `node` field of every realtime notification — has been reading
+    // `undefined`. `accessLogger` sends `global.nodeId` to its worker and
+    // reads it back as `kuzzle.id`, which is what says the two are the same
+    // value.
+    this.id =
+      global.nodeId ?? NameGenerator.generateRandomName({ prefix: "knode" });
 
     this.importTypes = {
       fixtures: this.importFixtures.bind(this),
@@ -255,7 +278,11 @@ class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       await this.initKuzzleNode();
 
-      this.vault = vault.load(options.vaultKey, options.secretsFile);
+      this.vault = vault.load(
+        options.vaultKey,
+        options.secretsFile,
+        this.config.vault?.newAlgorithm,
+      );
 
       this.validation.init();
 
@@ -290,9 +317,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.install(options.installations);
 
-      this.log.info(
-        `[✔] Start "${this.pluginsManager.application.name}" application`,
-      );
+      // `application` is the very wrapper handed to the plugins manager six
+      // lines up, so reading the name back off the manager was a round trip
+      // through a getter that can answer `undefined`.
+      this.log.info(`[✔] Start "${application.name}" application`);
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
@@ -318,7 +346,9 @@ class Kuzzle extends KuzzleEventEmitter {
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
       this.log.error(
-        `[X] Cannot start Kuzzle ${this.version}: ${error.message}`,
+        `[X] Cannot start Kuzzle ${this.version}: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
       );
 
       throw error;
@@ -343,15 +373,19 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Gracefully exits after processing remaining requests
    *
+   * @param exitCode - the process exit code: 0 for a requested shutdown, and
+   *   non-zero when the node leaves because of a failure (e.g. a cluster
+   *   eviction), so that an `on-failure` restart policy brings it back
+   *
    * @returns {Promise}
    */
-  async shutdown(): Promise<void> {
+  async shutdown(exitCode = 0): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info("Initiating shutdown...");
 
     // Ask the network layer to stop accepting new request
-    this.entryPoint.dispatch("shutdown");
+    this.entryPoint.dispatch("shutdown", {});
 
     await this.pipe("kuzzle:shutdown");
 
@@ -365,13 +399,23 @@ class Kuzzle extends KuzzleEventEmitter {
       await Bluebird.delay(1000);
     }
 
+    // The other nodes may be waiting on a lock this one holds: a node leaving
+    // mid-startup is often in the middle of one (F-13).
+    await Mutex.releaseAllBeforeExit(); // NOSONAR: frees locks taken through the deprecated API
+
     this.log.info("Halted.");
 
     // flush both application and Kuzzle core loggers before leaving (Could happen even if some core/application components are not initialized)
     await this?.log?.flush?.();
-    await this?.pluginsManager?.application?.log?.flush?.();
 
-    process.exit(0);
+    // `log` lives on the application *instance* (`Backend`), while
+    // `pluginsManager.application` is the `Plugin` wrapper around it, which
+    // nothing ever assigns a `log` to — so the previous
+    // `pluginsManager?.application?.log?.flush?.()` was a silent no-op and the
+    // application's buffered logs were dropped on shutdown (TD-51).
+    await this?.pluginsManager?.application?.instance?.log?.flush?.();
+
+    process.exit(exitCode);
   }
 
   /**
@@ -381,7 +425,9 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install(installations: InstallationConfig[]): Promise<void> {
+  async install(installations?: InstallationConfig[]): Promise<void> {
+    // Optional, which is what `options.installations` is and what the
+    // `?.length` below already read it as.
     if (!installations?.length) {
       return;
     }
@@ -613,7 +659,10 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  private isConfigsEmpty(importConfig, supportConfig) {
+  private isConfigsEmpty(
+    importConfig: ImportConfig,
+    supportConfig: SupportConfig,
+  ) {
     if (
       _.isEmpty(importConfig.mappings) &&
       _.isEmpty(importConfig.profiles) &&
@@ -634,19 +683,28 @@ class Kuzzle extends KuzzleEventEmitter {
     existingESHash,
     importPayloadHash,
     type,
+  }: {
+    existingRedisHash: string | null;
+    existingESHash: string | null;
+    importPayloadHash: string;
+    type: string;
   }) {
     if (!existingRedisHash && !existingESHash) {
       // If the import is not initialized in the redis cache and in the ES, we initialize it
       this.log.info(`${type} import is not initialized, initializing...`);
 
+      // `createOrReplace`, not `create`: this document has a fixed id, so a
+      // conflict on it means another node initialized the same import — an
+      // outcome to converge on, not an error to die on. `create` made that
+      // conflict fatal to startup (TD-69, #2782).
       await this.ask(
-        "core:storage:private:document:create",
+        "core:storage:private:document:createOrReplace",
         "kuzzle",
         "imports",
+        `backend:init:import:${type}`,
         {
           hash: importPayloadHash,
         },
-        { id: `backend:init:import:${type}` },
       );
       await this.ask(
         "core:cache:internal:store",
@@ -665,14 +723,15 @@ class Kuzzle extends KuzzleEventEmitter {
         `backend:init:import:${type}`,
       );
 
+      // Same reasoning as above: a fixed id, so a conflict is convergence.
       await this.ask(
-        "core:storage:private:document:create",
+        "core:storage:private:document:createOrReplace",
         "kuzzle",
         "imports",
+        `backend:init:import:${type}`,
         {
           hash: redisCache,
         },
-        { id: `backend:init:import:${type}` },
       );
     } else if (!existingRedisHash && existingESHash) {
       // If the import is initialized in the ES but not in the redis cache
@@ -734,9 +793,30 @@ class Kuzzle extends KuzzleEventEmitter {
             break;
         }
 
-        const importPayloadHash = sha256(stringify(importPayload));
-        const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
+        // `?? ""`: `json-stable-stringify` answers undefined for a value it
+        // cannot serialise, and the payload is built right above.
+        const importPayloadHash = sha256(stringify(importPayload) ?? "");
+        // `timeout: 0` means a single acquisition attempt: exactly one node
+        // runs the import and the others carry on with `locked: false`.
+        // The TTL has to outlive the import itself, because this lock is held
+        // until the `finally` below — across every import type and the wait
+        // that follows. It is still an upper bound rather than a guarantee,
+        // which is why the bookkeeping write below is idempotent (TD-69).
+        // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two
+        // use incompatible acquisition/TTL formats and must not contend on the
+        // same key — every other node still takes this lock with `Mutex`, so
+        // swapping one site would remove the exclusion it exists for. Deferred
+        // to #2894, like the remaining call sites.
+        const lockOptions = { timeout: 0, ttl: 60000 };
+        const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
 
+        const locked = await mutex.lock();
+
+        // Read the bookkeeping *after* the lock, never before: a read taken
+        // before acquiring it is not protected by it, and the holder that
+        // acted on a stale "not initialized" used to create a document the
+        // previous holder had just written — killing its own startup with
+        // `Document already exists`. See TD-69 (#2782).
         const existingRedisHash = await this.ask(
           "core:cache:internal:get",
           `backend:init:import:${type}`,
@@ -764,8 +844,6 @@ class Kuzzle extends KuzzleEventEmitter {
           );
           initialized = esDocument._source.hash === importPayloadHash;
         }
-
-        const locked = await mutex.lock();
 
         await importMethod(
           { toImport, toSupport },
@@ -796,7 +874,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  dump(suffix) {
+  dump(suffix: string) {
     return this.dumpGenerator.dump(suffix);
   }
 
@@ -814,7 +892,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     return murmur.v3(
-      Buffer.from(inString),
+      Buffer.from(String(inString)),
       this.config.internal.hash.seed as number,
     );
   }
@@ -888,7 +966,13 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("SIGTRAP");
     process.on("SIGTRAP", () => {
       this.log.error("Caught signal SIGTRAP => generating a core dump");
-      this.dump("signal-sigtrap");
+      // Nothing awaits this dump: a failure (another dump running, an
+      // unwritable dump path) is logged rather than left unhandled.
+      this.dump("signal-sigtrap").catch((error: unknown) => {
+        this.log.error(
+          `Unable to dump on SIGTRAP: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
     });
 
     // gracefully exits on normal termination
@@ -901,11 +985,11 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async dumpAndExit(suffix) {
+  async dumpAndExit(suffix: string) {
     if (this.config.dump.enabled) {
       try {
         await this.dump(suffix);
-      } catch (error) {
+      } catch {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

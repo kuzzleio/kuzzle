@@ -19,12 +19,30 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import * as kerror from "../../kerror";
-import { get } from "../../util/safeObject";
-import { KuzzleRequest } from "../request";
+import { get, isPlainObject } from "../../util/safeObject";
+import type { KuzzleRequest } from "../request";
 
 const assertionError = kerror.wrap("api", "assert");
+
+/** What `QueryTranslator` throws for a Koncorde keyword it cannot translate. */
+function isKeywordError(
+  thrown: unknown,
+): thrown is { keyword: { name: string; type: string } } {
+  return (
+    typeof thrown === "object" &&
+    thrown !== null &&
+    "keyword" in thrown &&
+    isPlainObject(thrown.keyword)
+  );
+}
+
+/**
+ * Handler of a controller action. Returns the action result, or a promise of
+ * it — the funnel awaits whatever comes back.
+ */
+export type ControllerAction = (request: KuzzleRequest) => unknown;
 
 /**
  * Base class for all controllers
@@ -40,9 +58,13 @@ export class BaseController {
     return this.__actions;
   }
 
-  _addAction(name, fn) {
+  _addAction(name: string, fn: ControllerAction) {
     this.__actions.add(name);
-    this[name] = fn;
+    // `name` is a runtime-built key, so a plain `this[name] = fn` cannot be
+    // typed without opening the whole class to an index signature — the same
+    // trade-off TD-28 (#2704) settled in `memoryStorageController` with
+    // `Reflect.set`, kept consistent here.
+    Reflect.set(this, name, fn);
   }
 
   /**
@@ -61,7 +83,7 @@ export class NativeController extends BaseController {
   protected ask: (event: string, ...args: any[]) => Promise<any>;
   protected pipe: (event: string, ...args: any[]) => Promise<any>;
 
-  constructor(actions = []) {
+  constructor(actions: string[] = []) {
     super();
 
     this.ask = global.kuzzle.ask.bind(global.kuzzle);
@@ -90,14 +112,20 @@ export class NativeController extends BaseController {
     try {
       return await this.ask("core:storage:public:translate", koncordeFilters);
     } catch (error) {
-      if (!error.keyword) {
+      // `QueryTranslator` raises a `KeywordError`, which carries the keyword
+      // it could not translate. Anything else is not this method's to
+      // reinterpret — duck-typed, as it was, since that class is not
+      // exported.
+      const keyword = isKeywordError(error) ? error.keyword : undefined;
+
+      if (keyword === undefined) {
         throw error;
       }
 
       throw assertionError.get(
         "koncorde_restricted_keyword",
-        error.keyword.type,
-        error.keyword.name,
+        keyword.type,
+        keyword.name,
       );
     }
   }
@@ -142,9 +170,7 @@ export class NativeController extends BaseController {
     targets: Array<{ index: string; collections?: string[] }>,
     { allowEmptyCollections = false } = {},
   ) {
-    for (let i = 0; i < targets.length; i++) {
-      const target = targets[i];
-
+    for (const [i, target] of targets.entries()) {
       if (!target.index) {
         throw kerror.get(
           "api",
@@ -163,16 +189,26 @@ export class NativeController extends BaseController {
         );
       }
 
-      if (!allowEmptyCollections && !target.collections) {
-        throw kerror.get(
-          "api",
-          "assert",
-          "missing_argument",
-          `targets[${i}].collections`,
-        );
+      // Read once, and the two "nothing to check" cases answered where they
+      // are decided: the chain this replaces dereferenced `target.collections`
+      // twice past the guards that had established it, which is what the
+      // `allowEmptyCollections` branch made unprovable.
+      const collections = target.collections;
+
+      if (collections === undefined) {
+        if (!allowEmptyCollections) {
+          throw kerror.get(
+            "api",
+            "assert",
+            "missing_argument",
+            `targets[${i}].collections`,
+          );
+        }
+
+        continue;
       }
 
-      if (target.collections && !Array.isArray(target.collections)) {
+      if (!Array.isArray(collections)) {
         throw kerror.get(
           "api",
           "assert",
@@ -182,25 +218,20 @@ export class NativeController extends BaseController {
         );
       }
 
-      if (!allowEmptyCollections && target.collections.length === 0) {
-        throw kerror.get(
-          "api",
-          "assert",
-          "empty_argument",
-          `targets[${i}].collections`,
-        );
-      }
+      if (collections.length === 0) {
+        if (!allowEmptyCollections) {
+          throw kerror.get(
+            "api",
+            "assert",
+            "empty_argument",
+            `targets[${i}].collections`,
+          );
+        }
 
-      if (
-        allowEmptyCollections &&
-        (!target.collections || target.collections.length === 0)
-      ) {
         continue;
       }
 
-      for (let j = 0; j < target.collections.length; j++) {
-        const collection = target.collections[j];
-
+      for (const [j, collection] of collections.entries()) {
         if (typeof collection !== "string") {
           throw kerror.get(
             "api",

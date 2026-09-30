@@ -20,7 +20,8 @@ configure(
   options: {
     headers?: JSONObject,
     status?: number,
-    format?: 'standard' | 'raw'
+    format?: 'standard' | 'raw',
+    result?: any
   }): void;
 ```
 
@@ -33,6 +34,7 @@ The `options` object may contain the following properties:
 | `headers` | <pre>JSONObject</pre>(`null`) | Additional response protocol headers |
 | `status` | <pre>integer</pre>(`200`) | KuzzleRequest status code, following the HTTP standard |
 | `format` | <pre>string</pre>(`null`) | The response format, as a `standard` Kuzzle response or in a unwrapped `raw` format instead |
+| `result` | <pre>any</pre> | <SinceBadge version="auto" /> The response result. Set only when the property is present (`result: null` clears it). Unlike [setResult](/core/2/framework/classes/kuzzle-request/set-result), it does not reset the status: without a `status` option, a pending `102` becomes `200` and any other status is kept |
 
 ### Example
 
@@ -44,4 +46,7 @@ request.response.configure({
   status: 302,
   format: 'raw',
 });
+
+// Set a result without touching the status already set on the request
+request.response.configure({ result: { acknowledged: true } });
 ```

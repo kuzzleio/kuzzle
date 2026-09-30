@@ -89,7 +89,7 @@ Feature: Bulk Controller
       | "document-2" |
       | "document-3" |
       | "document-4" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-2" | { "name": "Tirion Fordring" }                               |
@@ -107,14 +107,14 @@ Feature: Bulk Controller
       | collection | "fruits"                                                                                                                                              |
       | refresh    | "wait_for"                                                                                                                                            |
       | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" } } }, { "_id": "new-document", "body": { "value": "raspberry", "field": { "path": "sometimes" } } } ] } |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id             | _source                                                         |
       | "test-document" | { "value": "blueberry", "field": { "path": "never" } }          |
       | "new-document"  | { "value": "raspberry", "field": { "path": "sometimes" } }      |
     And I should receive a empty "errors" array
     When I "mGet" the following document ids:
       | "test-document" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id             | _source                                                |
       | "test-document" | { "value": "blueberry", "field": { "path": "never" } } |
 
@@ -130,7 +130,7 @@ Feature: Bulk Controller
       | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" } } } ] } |
     And I "mGet" the following document ids:
       | "test-document" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id             | _source                                                                           |
       | "test-document" | { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": "_UNDEFINED_" } |
 
@@ -146,6 +146,6 @@ Feature: Bulk Controller
       | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": { "author": "custom-author" } } } ] } |
     And I "mGet" the following document ids:
       | "test-document" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id             | _source                                                                                                       |
       | "test-document" | { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": { "author": "custom-author" } } |

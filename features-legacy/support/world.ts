@@ -17,6 +17,14 @@ type LegacyWorldParameters = {
   [key: string]: any;
 };
 
+/**
+ * An API payload as the step definitions read it. The suite indexes into it by
+ * a field name a feature file supplied — `this.result[field]` — so the shape
+ * cannot be pinned without inventing one; `support/api/apiBase.ts` says the
+ * same thing about what it returns.
+ */
+type ApiPayload = Record<string, any>;
+
 let initialized = false;
 
 export default class KWorld extends World {
@@ -42,6 +50,19 @@ export default class KWorld extends World {
   users: any;
   credentials: any;
   memoryStorageResult: any;
+
+  // Scenario scratch state: what one step writes for the next one to assert
+  // on. The class used to declare only the fixtures it constructs, so every
+  // one of these was an undeclared property that `strict` could not see —
+  // which is how `this.index` and `this.collection`, read by bulk.ts and
+  // written by nothing, stayed invisible.
+  result: ApiPayload;
+  apiResult: ApiPayload;
+  updatedResult: ApiPayload;
+  body: ApiPayload;
+  currentToken: { jwt: string; tokenValidity?: ApiPayload } | null;
+  scrollId: string | null;
+  statusCode?: number;
 
   constructor(config: any) {
     super(config);
@@ -514,6 +535,33 @@ export default class KWorld extends World {
     };
 
     this.memoryStorageResult = null;
+
+    // Empty rather than absent: a step that reads what no earlier step wrote
+    // then asserts on `undefined` and fails on its own assertion, which is
+    // where the missing step shows up. The alternative is a `TypeError` in the
+    // reader, which is where it used to show up.
+    this.result = {};
+    this.apiResult = {};
+    this.updatedResult = {};
+    this.body = {};
+
+    this.currentToken = null;
+    this.scrollId = null;
+  }
+
+  /**
+   * A document fixture by the name a feature file gives it, falling back to
+   * Grace Hopper's the way `this[documentName] || this.documentGrace` used to.
+   * Indexing the world by a capture group reached every one of its properties;
+   * only two of them are documents.
+   */
+  document(name?: string): ApiPayload {
+    const documents: Record<string, ApiPayload> = {
+      documentAda: this.documentAda,
+      documentGrace: this.documentGrace,
+    };
+
+    return (name && documents[name]) || this.documentGrace;
   }
 }
 

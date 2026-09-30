@@ -20,11 +20,13 @@
  */
 
 import { NameGenerator } from "../util/name-generator";
-import { ChildProcess as ChildProcess, fork } from "child_process";
+import { fork } from "node:child_process";
+import { extname } from "node:path";
+import type { ChildProcess } from "node:child_process";
 import Bluebird from "bluebird";
 
 import "../types";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
@@ -44,17 +46,19 @@ export class IdCard {
    *
    * knode-pensive-einstein-844221
    */
-  private id: string;
+  /** Read by `node.ts` (consistency checks, status, logs): the class never
+   * reassigns it after construction, and nothing outside writes it. */
+  public readonly id: string;
 
   /**
    * Node IP address
    */
-  private ip: string;
+  public readonly ip: string;
 
   /**
    * Node creation timestamp
    */
-  private birthdate: number;
+  public readonly birthdate: number;
 
   /**
    * Node known topology composed of node IDs
@@ -96,7 +100,7 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID Card
    */
-  public idCard: IdCard = null;
+  public idCard: IdCard | null = null;
 
   /**
    * Local node IP address
@@ -118,7 +122,7 @@ export class ClusterIdCardHandler {
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
    */
-  private refreshWorker: ChildProcess = null;
+  private refreshWorker: ChildProcess | null = null;
 
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
@@ -128,12 +132,13 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID
    */
-  private nodeId: string = null;
+  /** Read by `node.ts` once `createIdCard()` has reserved it. */
+  public nodeId: string | null = null;
 
   /**
    * Local node Redis key
    */
-  private nodeIdKey: string = null;
+  private nodeIdKey: string | null = null;
 
   /**
    * Flag to prevent updating the id card if it has been disposed.
@@ -154,12 +159,27 @@ export class ClusterIdCardHandler {
   /**
    * Generates and reserves a unique ID for this node instance.
    * Makes sure that the ID is not already taken by another node instance.
+   *
+   * The first candidate is `global.nodeId` — the id the rest of the process
+   * logs under. It used to draw its own from the same generator with the same
+   * `knode` prefix, so every node carried two indistinguishable identities and
+   * no cluster log line could be matched to a process (TD-59, #2764).
+   *
+   * The loop stays: `global.nodeId` is itself a random draw, but a stale IdCard
+   * left in Redis by a crashed incarnation can still hold the key, and Kuzzle
+   * can run without a `Backend`, in which case there is no `global.nodeId` at
+   * all. Either way the next turn draws a fresh name, exactly as before.
    */
   async createIdCard(): Promise<void> {
-    let reserved = false;
+    let reserved;
+    // `undefined` after the first turn, which is what makes the `??` below
+    // fall through to a fresh draw — so the declaration has to admit it.
+    let candidate: string | undefined = global.nodeId;
 
     do {
-      this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
+      this.nodeId =
+        candidate ?? NameGenerator.generateRandomName({ prefix: "knode" });
+      candidate = undefined;
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),
@@ -173,17 +193,28 @@ export class ClusterIdCardHandler {
 
     await this.addIdCardToIndex();
 
-    this.refreshWorker = this.constructWorker(
-      `${__dirname}/workers/IDCardRenewer.js`,
+    // Same extension as this module, not a hard-coded `.js`: the functional
+    // cluster starts Kuzzle from source with `-r ts-node/register`, where this
+    // file is `lib/cluster/idCardHandler.ts` and its neighbour is a `.ts` too;
+    // a built Kuzzle runs the same code from `dist/` with both as `.js`.
+    // `fork()` inherits `process.execArgv`, so a child spawned from a `.ts`
+    // parent gets the same loader and can require a `.ts`.
+    // Held in a local as well as on `this`: the field is nullable (it has no
+    // worker before this line) and the compiler drops that narrowing across the
+    // callbacks registered below.
+    const refreshWorker = this.constructWorker(
+      `${__dirname}/workers/IDCardRenewer${extname(__filename)}`,
     );
 
-    this.refreshWorker.on("message", async (message: JSONObject) => {
+    this.refreshWorker = refreshWorker;
+
+    refreshWorker.on("message", async (message: JSONObject) => {
       if (message.error) {
         await this.node.evictSelf(message.error);
       }
     });
 
-    this.refreshWorker.on("close", async () => {
+    refreshWorker.on("close", async () => {
       if (!this.disposed) {
         this.disposed = true;
         await this.node.evictSelf("ID Card renewer worker closed unexpectedly");
@@ -191,7 +222,7 @@ export class ClusterIdCardHandler {
     });
 
     // Transfer informations to the worker
-    this.refreshWorker.send({
+    refreshWorker.send({
       action: "start", // start the worker
       kuzzle: {
         config: global.kuzzle.config,
@@ -207,7 +238,7 @@ export class ClusterIdCardHandler {
       refreshMultiplier: this.refreshMultiplier,
     });
 
-    this.startTemporaryRefresh();
+    this.startTemporaryRefresh(refreshWorker);
   }
 
   /**
@@ -220,7 +251,7 @@ export class ClusterIdCardHandler {
       if (!childProcess.killed || childProcess.connected) {
         try {
           childProcess.disconnect();
-        } catch (e) {
+        } catch {
           // It could happens that the worker has been killed before the dispose causing disconnect to fail
         }
       }
@@ -238,7 +269,7 @@ export class ClusterIdCardHandler {
    *
    * Once the worker starts, this timer will be stopped.
    */
-  private startTemporaryRefresh() {
+  private startTemporaryRefresh(refreshWorker: ChildProcess) {
     this.refreshTimer = setInterval(async () => {
       try {
         await this.save();
@@ -249,7 +280,10 @@ export class ClusterIdCardHandler {
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on(
+    // Handed the worker rather than reading `this.refreshWorker`, for the
+    // reason already stated where that field is assigned: it is nullable, and
+    // this method runs on the line after it is filled.
+    refreshWorker.on(
       "message",
       ({ initialized }: { initialized: JSONObject }) => {
         if (initialized) {
@@ -275,7 +309,7 @@ export class ClusterIdCardHandler {
     ) {
       try {
         this.refreshWorker.send({ action: "dispose" });
-      } catch (e) {
+      } catch {
         // It could happens that the worker has been killed before the dispose causing send to fail
       }
     }
@@ -319,13 +353,17 @@ export class ClusterIdCardHandler {
     );
     const expiredIdCards: string[] = [];
 
-    for (let i = 0; i < keys.length; i++) {
+    // `entries()` over the keys: `rawIdCards` is the answer to a mget over
+    // exactly these keys, so the pair is what the loop is really walking.
+    for (const [i, key] of keys.entries()) {
       // filter keys that might have expired between the key search and their
       // values retrieval
-      if (rawIdCards[i] !== null) {
-        idCards.push(IdCard.unserialize(JSON.parse(rawIdCards[i])));
+      const raw = rawIdCards[i];
+
+      if (raw !== null && raw !== undefined) {
+        idCards.push(IdCard.unserialize(JSON.parse(raw)));
       } else {
-        expiredIdCards.push(keys[i]);
+        expiredIdCards.push(key);
       }
     }
 
@@ -346,7 +384,7 @@ export class ClusterIdCardHandler {
    * Adds a remote node IdCard to the node known topology
    */
   async addNode(id: string): Promise<void> {
-    if (this.disposed || this.idCard.topology.has(id)) {
+    if (this.disposed || this.idCard === null || this.idCard.topology.has(id)) {
       return;
     }
 
@@ -359,7 +397,7 @@ export class ClusterIdCardHandler {
    * Removes a remote node IdCard from the node known topology
    */
   async removeNode(id: string): Promise<void> {
-    if (!this.disposed && this.idCard.topology.delete(id)) {
+    if (!this.disposed && this.idCard?.topology.delete(id)) {
       await this.save();
     }
   }

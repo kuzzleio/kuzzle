@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
   private _client: any = null;
-  private _Client: new (clientConfig?: any) => any = null;
+  private _Client: (new (clientConfig?: any) => any) | null = null;
 
   /**
    * Storage client constructor.

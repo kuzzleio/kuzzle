@@ -23,21 +23,27 @@ import _ from "lodash";
 
 import Rights from "./rights";
 import * as kerror from "../../kerror";
-import { Profile } from "./profile";
-import { KuzzleRequest } from "../../../index";
-import { Target } from "../../types";
+import type { Profile } from "./profile";
+import type { KuzzleRequest } from "../../../index";
+import type { Target } from "../../types";
 
 /**
  * @class User
  */
 export class User {
+  /**
+   * `null` until the user is stored — see ADR-0001, TD-62. Declared `string`
+   * all the same, as v2.56.0 declared it: `request.context.user._id` read as
+   * a `string` is everywhere in plugins and applications, and a
+   * `string | null` broke every one of them under `strict`.
+   */
   public _id: string;
   public profileIds: string[];
   // TODO modify this type to reflect the real type
   public strategies: any;
 
   constructor() {
-    this._id = null;
+    this._id = null!;
     this.profileIds = [];
   }
 
@@ -110,17 +116,21 @@ export class User {
 
     // Every target must be allowed by at least one profile
     for (const target of targets) {
+      // Held in locals: the closures below lose the narrowing this guard gives
+      // the properties.
+      const { index, collections } = target;
+
       // Skip targets with no Index or Collection
-      if (!target.index || !target.collections) {
+      if (!index || !collections) {
         continue;
       }
 
       // TODO: Support Wildcard
-      if (target.index.includes("*")) {
+      if (index.includes("*")) {
         return false;
       }
 
-      for (const collection of target.collections) {
+      for (const collection of collections) {
         // TODO: Support Wildcard
         if (collection.includes("*")) {
           return false;
@@ -129,7 +139,7 @@ export class User {
         const isTargetAllowed = profilesPolicies.some((policies) =>
           policies.some((policy) =>
             policy.role.checkRestrictions(
-              target.index,
+              index,
               collection,
               policy.restrictedTo,
             ),

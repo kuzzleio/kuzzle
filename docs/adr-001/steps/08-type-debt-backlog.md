@@ -1,0 +1,811 @@
+# Step 08 — Type-debt backlog, worked in parallel with the sprints
+
+**Status:** 🟦 In progress — 22 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-43 · TD-44 · TD-45 · TD-46 · TD-47 · TD-48 · TD-49), TD-33 open
+**Date:** 2026-09-09 → …
+**PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
+**Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
+
+## Goal
+
+The [register](../type-debt-register.md) accumulates findings faster than the sprints can absorb them, and step 06 made the rule explicit: *a review finding ends as a ratchet, an adopted-list entry or a GitHub issue — never as prose alone.* An issue that nobody schedules is prose with extra steps, so the register's tracked findings are burned down as a **parallel track**: small, single-purpose PRs that do not sit in a sprint's critical path.
+
+This step is the execution log of that track. It stays open for as long as the register has open findings.
+
+## What was done
+
+### TD-26 — the five `await`s of a non-Promise ([#2699](https://github.com/kuzzleio/kuzzle/pull/2699), `914341a31`)
+
+Five `await`s on values that are not thenable (`typescript:S4123`), each deliberately preserved across its conversion PR because dropping an `await` shifts the enclosing async function's resolution by a microtask — a behaviour change a conversion must not make. Done in one pass, outside any conversion: `funnel.processRequest` → `_checkSdkVersion()`, `roleRepository.load` / `validateAndSaveRole` → `Map.set()`, `security/index.init` → `role.init()` / `profile.init()`.
+
+Two specs had **encoded the bug**: they stubbed a synchronous method with a rejected promise, which now resolves nowhere. Both re-baselined to throw, which is what the real signature does. That is the tell worth keeping: *when a spec can only pass because of a pointless `await`, the spec is asserting the defect.*
+
+### TD-21 — `_wrapError`'s dead guard ([#2700](https://github.com/kuzzleio/kuzzle/pull/2700), `65a9e0987`)
+
+`Funnel._wrapError` called `isNativeController(request)` where the method expects a controller **name**, so the guard was always false and every non-`KuzzleError` was reported as `plugin.runtime.unexpected_error` — native controllers included. Latent since the JavaScript version; the sprint-4 conversion only turned the argument mismatch into a type error (papered over with `as unknown as string` at the time, which is why the written-`any` count could then drop 208 → 207).
+
+Fixed by guarding on `request.input.controller`. ⚠️ **The 2026-09-10 review found this fix reaches wider than intended** — see below.
+
+### TD-23 — the first CPD exclusion removed ([#2701](https://github.com/kuzzleio/kuzzle/pull/2701), `a1053736f`)
+
+`sonar.cpd.exclusions` is the one list in this migration that may only **shrink**: every entry added to get a conversion PR through the new-code gate disables duplication detection on that file forever. `documentController.ts` is the first entry to go.
+
+`mExists`/`mGet` differed only in the storage event, and `createOrReplace`/`replace` only in the event, the notification action and what that notification carries. They now delegate to `_mFetch(request, methodName)` and `_writeDocument(request, methodName, action)`, modelled on the `_mChanges` helper the file already had. **Equivalence note:** both helpers reproduce their originals' statement order exactly (argument extraction → `getIndexAndCollection` → `getBoolean("strict")` → `assertNotExceedMaxFetch` → `ask` → guard → return); the two quirks the duplication was hiding are preserved and *commented* rather than copied — `mGet`'s `@todo` about empty successes, and `replace` notifying the request's own payload where `createOrReplace` notifies the storage response.
+
+4 exclusions remain: `httpRoutes.ts` and the two `esWrapper.ts` are declared irreducible by nature, so the real remaining target is `memoryStorageController.ts`.
+
+### TD-22 — `memoryStorageController` typed ([#2702](https://github.com/kuzzleio/kuzzle/pull/2702), `c4d93aa54` + `08983c1cf` + `f396617f7`)
+
+The largest inferred-`any` pocket of the converted set: 0 written `any` and 54 implicit ones, cascading into 37 `TS2339` because the Redis-command table was an untyped `let`. The table now has names (`CommandArgumentPath`, `CommandArgumentSpec`, `CommandArguments`, `RedisCommandMapping`, plus `GeoPoint`/`FieldEntry`/`KeyEntry` for the three shapes the closures assert at runtime). **implicit-any 518 → 464**, the file's own diagnostics 91 → 0, its strict errors 122 → 54, written `any` unchanged.
+
+Three things worth keeping:
+
+- **`mapping` deliberately stays a `let`** assigned by `initMapping()`: the Mocha spec's `__set__({ mapping })` writes to that binding on the compiled CJS, which a `const` would make throw. Emitted JavaScript unchanged.
+- **The coverage gate scored the typing pass at 62.4%** — every annotated line counts as new, and the Mocha spec swaps the real command table for a 6-command fixture, so none of the table's own `map` closures had ever run. Fixed by driving the **real** table from vitest (17 tests through the public actions, argument lists asserted, rejection paths included): 86.9%. *Typing a file re-scores it; a spec that mocks the thing being typed cannot pay for it.*
+- **`scalarToString`** replaced `String(value)` in `assertFloat`/`assertInt` to stop stringifying an `unknown` (S6551). Parity holds for everything JSON can carry; it is **not** exact for an object with a numeric `toString()`/`valueOf()` or a bigint, which used to parse and are now rejected. Unreachable from a parsed request body, recorded here rather than left implied by the commit's "exactly as `Number.parse*` did".
+
+## Post-sprint review — 2026-09-10
+
+The five PRs merged into `2-dev` ([#2698](https://github.com/kuzzleio/kuzzle/pull/2698) plus the four above) were re-read against the ADR. State verified locally: `tsc --noEmit` clean, the four ratchets at equality (js 50 · mocha 151 · any 207 · implicit-any 464), `test:strict` 101/101 with `--candidates` empty, CI green on `2-dev`.
+
+The conversions and the dedup hold up — the helpers are equivalent statement for statement, the `await` removals are all genuinely non-thenable, and TD-22's five type assertions are each preceded by a runtime `assertBodyAttributeType`. Five findings, all filed:
+
+| Finding | Sev. | Issue |
+|---|---|---|
+| TD-21's fix is scoped to the wrong place: `_wrapError` is the shared funnel for controller errors *and* two plugin-pipe paths, so plugin pipes changed too; and an unwrapped error loses its `id`/`code` in `setError` | 🟠 med | [#2703](https://github.com/kuzzleio/kuzzle/issues/2703) |
+| `memoryStorageController`'s class-wide `[command: string]: unknown` index signature makes the whole controller surface untyped — and no ratchet charges for it | 🟠 med | [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) |
+| The DoD claims all 4 remaining `bin/` `.js` are plugin fixtures; `bin/copy-binaries.js` is build tooling, so the `js` floor is 3 | 🟡 low | [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) |
+| TD-23's helpers take `methodName: string` / `action: number`, and `_writeDocument` branches on `action` rather than the method, so the two arguments can disagree | 🟡 low | [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) |
+| Nothing charges for `@ts-ignore`: 4 in `lib/`, 2 without a reason or a ticket, against a standard that forbids exactly that | 🟡 low | [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) |
+
+### The lesson behind #2703, worth generalising
+
+A guard placed on a **shared funnel** cannot express a fact about a **single source**. `_wrapError` receives errors from the controller, from the `<controller>:error<Action>` pipe and from `request:onError`; "was this thrown by native code?" is only answerable where the error is raised. The correction is to decide at the source (wrap the `doAction` call) and let the funnel keep its one honest rule. The same shape will recur wherever a conversion inherits a predicate applied too late.
+
+The second half of that finding matters more than the mislabelling it fixes: an error that traverses `_wrapError` unwrapped ends in `KuzzleRequest.setError` → `new InternalError(error)`, i.e. **`id: undefined`, `code: undefined`** on a 500 sent to a client, while Kuzzle's whole error contract is built on documented id/code pairs. Keeping the change a `fix` rather than a breaking one therefore means routing native-controller crashes to the already-documented `core.fatal.unexpected_error` instead of letting them through raw.
+
+### Process findings
+
+- **`Closes #NNN` does not fire on `2-dev`.** GitHub only resolves closing keywords on the default branch (`master`), so #2687, #2690 and #2697 stayed open after their PRs merged while the register already marked them ✅. Closed by hand on 2026-09-10; **closing the issues is now part of the `wrapup` ritual**, not a side effect of merging.
+- **The hub drifted from the counters** it publishes (any 208 vs 207, implicit-any 518 vs 464) as soon as PRs landed outside a sprint step. The parallel track moves the ratchets too, which is the other reason it needs this step file rather than register lines alone.
+
+## Validation
+
+- Every PR merged green: `tsc --noEmit`, lint, prettier, the four ratchets, the full Mocha suite and the vitest suite, plus the SonarCloud gate on each.
+- Repo state after the first four PRs (2026-09-10 on `2-dev`): js 50 · mocha 151 · any 207 · implicit-any 464, strict adopted 101.
+- Repo state after all ten plus the post-merge fix pass: **js 49 · mocha 151 · any 205 · implicit-any 462**, strict adopted **102** (`--candidates` empty). Mocha **3 030** passing, vitest **183** passing (13 files).
+- Only TD-30 adopted a new file into strict (`bin/copy-binaries.ts`, 101 → 102); `funnel`, `documentController` and `memoryStorageController` all still fail strict (the last one at 54 errors, down from 122).
+
+## What was done (the review's follow-ups, 2026-09-10)
+
+All five findings became single-purpose PRs off `2-dev`, none stacked. [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) was first triaged as "a decision, not a patch", but the decision was taken in the same pass and shipped with [#2713](https://github.com/kuzzleio/kuzzle/pull/2713), so it is closed like the rest.
+
+### TD-27 — the guard moves to the error's source ([#2709](https://github.com/kuzzleio/kuzzle/pull/2709))
+
+`processRequest` wraps only the `doAction` call, through `_wrapControllerError`; `_wrapError` returns to its pre-TD-21 rule and **loses its guard entirely**. The constraint that shaped the fix was Ricky's: *this must stay a `fix`, never a breaking change.* It does — pipes and plugin controllers keep `plugin.runtime.unexpected_error` verbatim, status stays 500, `getFrom` keeps the source stack, and the only client-visible delta is the `id` of a crash inside a native controller (`plugin.runtime.unexpected_error` → the documented `core.fatal.unexpected_error`, where TD-21 had left `id` and `code` `undefined`).
+
+The generalisable part: **a predicate about one caller cannot be expressed where several callers converge.** `_wrapError` is downstream of the controller *and* of three pipes; "was this thrown by native code?" is only answerable where the error is raised.
+
+### TD-28 — the ratchet chose the fix ([#2710](https://github.com/kuzzleio/kuzzle/pull/2710))
+
+The issue recommended replacing the class-wide index signature with a localised `this as unknown as Record<string, CommandAction>`. That was written first, and **the `any` ratchet rejected it at 208 > 207** — it counts `as unknown as`. The cast-free `Reflect.set(this, command, buildCommandFn(command))` came out of that refusal, and it is strictly better: no cast, class surface closed, and the same idiom `impersonatedSdk` already uses for a runtime-built key. A ratchet earning its keep by making a proposed solution too expensive is worth recording as much as one catching a regression.
+
+### TD-31 — the disagreement removed, not documented ([#2711](https://github.com/kuzzleio/kuzzle/pull/2711))
+
+`_writeDocument` **derives** the notification action from the method instead of taking both, so the two can no longer contradict each other; the method names become unions. `_mChanges` keeps `action` (it varies over five methods) but takes the `as const` enum's value type.
+
+### TD-29 — `ban-ts-comment`, and two suppressions deleted ([#2712](https://github.com/kuzzleio/kuzzle/pull/2712))
+
+The rule is an error on `.ts`; `@ts-expect-error` is allowed only with a description, and is preferred over `@ts-ignore` because it fails once the error it hides disappears.
+
+Two of the three undocumented sites did not need a suppression at all — `embeddedSdk` writes `propagate` with `Reflect.set` (its own idiom, two lines below), and `Profile._hash` is declared as the patchable static it is. **The suppression was hiding a mis-declaration:** `static _hash() { return false; }` never described the real contract, since `profileRepository` replaces it with `global.kuzzle.hash` at startup and uses the `false` return as its "not patched yet" probe. A bare `@ts-ignore` is often a wrong declaration wearing a hat.
+
+### TD-30 — converted, and a wrong risk assessment corrected ([#2713](https://github.com/kuzzleio/kuzzle/pull/2713))
+
+The DoD wording and the ratchet floor (3, not 4) are corrected, and the file is **converted rather than exempted** — decision taken with Ricky after the options were laid out. It is run through `tsx` **from the source tree** (`npx tsx ./bin/copy-binaries.ts`), which is already how CI runs `.ci/scripts/prepare-coverage.ts`; because the script stays in `bin/`, `path.join(__dirname, "..")` still resolves to the repository root and **not one path needed changing**. js 50 → 49, `bin/` at its floor of 3 fixtures, file adopted into strict (102).
+
+Running the compiled `dist/bin/copy-binaries.js` was the alternative, and was rejected for a concrete reason: from `dist/bin/`, `__dirname/..` is `dist/`, so the script would read its sources from `dist/lib/` and write into `dist/dist/` — source and target roots would have had to be split apart, on release tooling whose failure mode is a **published package silently missing its `.proto` files**. Identical outcome on the ratchet, strictly more risk. The build's payload was checked rather than assumed: `.proto` files present, `start-kuzzle-server` at mode 755, `dist/bin/copy-binaries.js` still emitted so `package.json`'s `files` entry stays valid.
+
+> **Correction worth recording.** The review's first pass claimed the emit path was at risk because `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`. It is not: `rootDir` sits **outside** `compilerOptions`, so tsc ignores the key entirely — `dist/` already mirrors the repository root and `dist/bin/copy-binaries.js` was already emitted from the `.js` source under `allowJs`. A risk asserted from a config line read too fast, and it nearly picked the worse option. The dead key is now [TD-32](../type-debt-register.md#td-32) / [#2714](https://github.com/kuzzleio/kuzzle/issues/2714): it cannot simply move into `compilerOptions`, since `index.ts`, `bin/`, `features/`, `test/` and `tests/` all sit outside `lib/` and would each raise `TS6059`.
+
+No spec ships with it: `sonar.sources` is `./lib`, so `bin/` is outside both the analysed and the coverage-measured scope, and the ADR's *"a file with no spec ships one"* rule targets product code. ⚠️ **That reasoning was right about specs and wrong about checks** — see TD-35 below.
+
+## Second review — the seven merged PRs, 2026-09-10
+
+The seven PRs above were merged into `2-dev` and re-read as landed code, this time with the suites actually executed rather than trusted from CI: `tsc --noEmit` clean, lint 0 error, the four ratchets at equality, `test:strict` 102/102, **Mocha 3 030 passing**, **vitest 183 passing**, `dist/` layout unchanged and its payload verified file by file.
+
+**The direction holds and no API contract broke.** The single client-visible delta is the intended one: a crash *inside a native controller* now answers `core.fatal.unexpected_error` instead of `plugin.runtime.unexpected_error`, still 500, source stack preserved by `getFrom`. Plugin controllers and all three pipe paths are byte-identical to the released behaviour. Everything else is behaviour-preserving, and each equivalence was checked rather than assumed: `Reflect.set` ≡ assignment, `String(_hash(…))` ≡ the computed key's implicit coercion, `_writeDocument`'s derived action matches its two former call sites exactly (and the existing `#replace` / `#createOrReplace` specs already pin the notification action and payload, which is why TD-31 needed no new spec).
+
+**Four defects the seven PRs introduced**, all fixed in one follow-up pass:
+
+| Defect | From | Filed |
+|---|---|---|
+| `npm run build` dies wherever esbuild's binary does not match the platform, leaving `dist/` without its `.proto` files and entrypoint | TD-30 | [TD-35](../type-debt-register.md#td-35) |
+| Nothing asserts the build's payload — the failure mode TD-30 named is the one it left ungated | TD-30 | [TD-35](../type-debt-register.md#td-35) |
+| `Profile._hash`'s new overload declares `string \| false`; the installed patch returns a `number` | TD-29 | [TD-34](../type-debt-register.md#td-34) |
+| `profileRepository` still casts the `_hash` site to `any`, which is what hid the wrong overload | TD-29 | [TD-34](../type-debt-register.md#td-34) |
+
+Plus two cosmetic/consistency fixes taken in the same pass: a JSDoc block duplicated verbatim over `Profile._hash` (TD-29), and `baseController._addAction`'s `this[name] = fn` — the exact write TD-28 replaced with `Reflect.set` one file away — brought in line (implicit-any 464 → 462 together with TD-34).
+
+### The two lessons
+
+- **A declaration is only load-bearing once every caller is typed against it.** TD-29 correctly diagnosed a bare `@ts-ignore` as *"a wrong declaration wearing a hat"*, replaced the declaration, and left the `as any` at the only call site — so the new declaration was decoration, and it was itself wrong. The check after replacing a suppression is not "does it compile" but "**is there still a cast between this declaration and its callers**".
+- **A risk you name in a decision record is a risk you should gate in CI.** TD-30 named the failure mode exactly — *"a published package silently missing its `.proto` files"* — weighed two options against it, and shipped no check for it. `.ci/scripts/check-build-payload.sh` now runs after `npm run build` in both the PR and the release workflow, and was verified negatively (skip the copy step, it fails on the three missing paths).
+
+### Process finding
+
+**Two functional scenarios can never pass under `docker-test.sh functional`.** `features/Network.feature:33` hardcodes `http://localhost:17510` and `features/Websocket.feature:5` hardcodes `ws://localhost:7512` — both are **host** port mappings (`17510:7512` on `kuzzle_node_1`, `7512:7512` on nginx), while the wrapper runs cucumber *inside* a container on the compose network, where `localhost` is the cucumber container itself. `ECONNREFUSED` both times: deterministic, environment-only, and unrelated to [TD-33](../type-debt-register.md#td-33)'s flake — CI is unaffected because there cucumber runs on the runner's host network.
+
+Measured on `2-dev` + this pass: **155 scenarios, 153 passed**, the 2 failures being exactly those two. Until the wrapper reaches nodes by service name (or joins the host network), a local functional run is only conclusive read as *153/155 with those two known*.
+
+## Third review — the follow-up pass itself, 2026-09-10
+
+The four fixes above were re-read as landed code, on the same rule that produced them: *a risk you name is a risk you gate*. Two of them did not hold.
+
+| Defect | From | Filed |
+|---|---|---|
+| The payload gate runs one build too early: `npm publish` re-runs `prepublishOnly` → `build`, which `rm -Rf ./dist` before packing the tarball | TD-35 | [TD-36](../type-debt-register.md#td-36) |
+| The gate checked 6 hand-written paths while claiming to cover `files` — the error-code catalogue and `index.d.ts` were not among them | TD-35 | [TD-37](../type-debt-register.md#td-37) |
+| `core/shared/store.ts`'s `this[method] = …` loop — the third instance of the write TD-28 replaced, after `memoryStorageController` and `baseController` | TD-28 | folded into [TD-28](../type-debt-register.md#td-28) |
+
+Plus the `catch` in `copy-binaries.ts`, which reported *"Failed to copy protobuf definitions"* for a failure that is just as likely to be the entrypoint copy or its `chmod`.
+
+`prepublishOnly` now carries the check, so the gate sits on the artifact that is packed rather than on a directory that is deleted first; and the check derives its expectations from `package.json`'s `files` list instead of restating it. implicit-any 462 → **461**.
+
+**Validated on this pass:** `tsc --noEmit` clean, lint 0 error, four ratchets at equality, `test:strict` 102/102, **Mocha 3 030 passing**, **vitest 183 passing**, build payload green and failing correctly on all three sabotages.
+
+### Process finding — the platform break was reproducible here all along
+
+[TD-35](../type-debt-register.md#td-35) was argued from esbuild's error message. It is stronger than that: **this working tree's `node_modules` is Linux-installed**, so `npm run test:unit:mocha` dies in `re2.node` (*"slice is not valid mach-o file"*) and `vitest` dies in `rollup`'s native module — while `tsc` and `ts-node` run fine, which is exactly the property the fix relies on. The consequence for validation: **local unit runs are not available on this tree**, and both suites must go through `.ci/scripts/docker-test.sh unit <mocha|vitest>` (the `docker-tests` skill). A green "3 030 passing" in this log is a container's, not the host's.
+
+**CI on [#2718](https://github.com/kuzzleio/kuzzle/pull/2718):** 51 checks green (lint ×3, error codes, ratchets & strict, unit ×6, build & run ES 7/8, SonarCloud gate pass) — **after one re-run**. The first round lost `Functional tests (http, 24, 7)` to a fourth [TD-33](../type-debt-register.md#td-33) occurrence, and with it the 29 variants `fail-fast` cancelled. New symptom, recorded there: `resetDatabase` + `refresh: "wait_for"` returned before the index deletion was visible to the next scenario's node.
+
+
+---
+
+## Fourth review — the sprint-6 conversions and the CI, 2026-09-11
+
+The fifteen PRs merged into `2-dev` between [#2708](https://github.com/kuzzleio/kuzzle/pull/2708) and [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) were re-read end to end: sprint 6's three conversions (H1/H2/H3), this track's ten, and the CI work of #2718/#2719/#2720.
+
+The conversions hold up. H2's four latent bugs are real and correctly fixed — including the removal of `removeStacktrace` from the router, which was checked against `lib/util/stackTrace.ts`'s two branches, against `_res` being a `KuzzleRequest` that matches neither, and against the eight protocol call sites that do the real sanitising. H3's decision to write two specs rather than four assertions is this register's own rule working exactly as designed.
+
+Eleven findings, [TD-38](../type-debt-register.md#td-38) → [TD-48](../type-debt-register.md#td-48), filed as [#2725](https://github.com/kuzzleio/kuzzle/issues/2725)–[#2735](https://github.com/kuzzleio/kuzzle/issues/2735). The register holds the detail; the three shapes they fall into are worth stating here.
+
+**The gates are aggregates, and an aggregate hides its worst member.** H3 landed *under* the coverage threshold and the arithmetic pointed straight at the two files that were not really tested. H2 landed comfortably *above* it and three files went in with no spec at all — `context.ts`, which received a bug fix in that same PR, `protocol.ts`, which received a logic change, and `protocolManifest.ts`. Four latent bugs were found and fixed in H2 and **not one shipped a regression test**, because the aggregate was comfortable and the rule never fired. The same shape recurs across the tooling: the `any` ratchet counts the hatches it was told about while the debt moved to `as T`; the `js` ratchet counts `*.js` and had never seen two Node executables in `bin/`; `strict-check.sh` derived a verdict from a log and read an empty one as success. Every one of those was blind **in the direction of passing**.
+
+**Twice, the standard was honoured and its purpose defeated.** [TD-40](../type-debt-register.md#td-40) and [TD-41](../type-debt-register.md#td-41) both refuse a cast the conversion standard forbids, and both arrive at the outcome the standard exists to prevent by a quieter route — a return type that does not describe what the function returns, and a parameter union the body cannot serve. A cast is counted by a ratchet and visible to a reader. A wrong type is cheaper than a cast at review time and more expensive everywhere after it.
+
+**The CI gates what maintainers push, not what arrives.** [TD-38](../type-debt-register.md#td-38): three iterations went into making the build-payload gate real, and it lives in the one fork-gated job — along with, by way of `needs:`, 30 functional jobs and 6 monkey jobs.
+
+### A finding corrected during verification
+
+The first version of [#2725](https://github.com/kuzzleio/kuzzle/issues/2725) claimed a fork PR is never type-checked, on the grounds that `npm run build` appears only in the fork-gated `sonarqube` job. Reading `.github/actions/` rather than the workflow showed that `unit-tests` and `build-and-run-kuzzle` both run `npm run build` and neither is fork-gated, so `tsc` runs eight times on a fork PR. Corrected before any work started on it. *The workflow file is not the whole workflow; a composite action is where half of this repository's CI actually lives.*
+
+## What was done (TD-38 · TD-39 · TD-44 · TD-45 · TD-47)
+
+Five of the eleven in one PR, chosen on the same criterion every time: **tooling only, no runtime change**. Nothing under `lib/` is touched.
+
+### TD-39 — `tests/` enters the linters, and Prettier becomes a gate
+
+Both globs widened to `./lib ./test ./tests ./bin ./features ./features-legacy`, a new `prettier:check` script, and that script run in the `lint` job — `npm run prettier` had only ever *written*.
+
+Its first run found **7 ESLint errors**, all `@typescript-eslint/no-shadow` and all the same pattern: a `vi.hoisted` factory whose inner `const` shadows the destructured binding it is returned as. Fixed by naming the inner one for what it is and aliasing on the way out (`const initCalls` … `return { calls: initCalls }`), across 4 spec files. One unformatted `features-legacy` fixture besides. 478 warnings remain, overwhelmingly `sort-keys`, which is `warn` project-wide and just as noisy on `test/`; they do not gate, and quieting them is not this PR's business.
+
+### TD-44 — the strict check fails closed
+
+The first attempt was wrong and is worth recording: it treated `exit > 1` as "tsc did not run", which broke on the first real run, because **tsc returns 2 both for "I found errors in your code" and for "I could not read your config"**. The status cannot separate the cases. The discriminator is the output's shape — a `^error TS` line with no `path(line,col)` prefix is a config- or CLI-level diagnostic (TS5xxx/TS6xxx/TS18003) and means the project asked for was never read.
+
+Verified negatively three ways, and the first two were instructive:
+
+| Injected failure | Result |
+|---|---|
+| `tsconfig.strict.json` with a broken `extends` | `❌ … could not read tsconfig.strict.json`, exit 2. **Needed the first guard:** with no usable config, tsc cheerfully fell back to compiling `dist/` and filled the log with genuine diagnostics about the wrong files — the second guard alone would have passed it. |
+| `mv node_modules/typescript` away | `❌ … exited 1 without reporting a single file diagnostic`, exit 2. `npx` had silently downloaded the unrelated **`tsc@2.0.4`** package from npm, which prints a banner and exits 1. The old script read that as 125 passing files. |
+| unmodified | `✅ strict: all 125 adopted file(s) pass.`, exit 0 |
+
+Plus a guard on an empty `$ADOPTED`, which used to print `✅ all 0 adopted file(s) pass`.
+
+### TD-45 — the `js` ratchet sees what Node executes
+
+The predicate now matches the shebang as well as the extension. **The baseline goes up, 20 → 22.** That is the one direction this ratchet exists to forbid, and it is right here and only here: the metric did not regress, the instrument was wrong, and freezing a known-false floor to preserve a monotonic number would be the worse trade. `bin/start-kuzzle-server` and `bin/wait-kuzzle` are now in scope; the ADR's floor is corrected from 3 to 5.
+
+### TD-38 + TD-47 — the workflow
+
+A `build` job (`npm ci` → `npm run build` → `check-build-payload.sh`) with no fork condition, and `functional-tests: needs: [build, unit-tests]`. `sonarqube` keeps a build step of its own — its Mocha coverage run executes against `dist/`, and artifacts are not shared between jobs here — and keeps its `if:`, which is legitimate: a fork cannot reach `SONAR_TOKEN`.
+
+Alongside it: a workflow-level `concurrency` group with `cancel-in-progress`, `permissions: contents: read`, `lint` off its 3-version Node matrix (ESLint's verdict does not depend on the Node major, and `lint` gates three other jobs), and `NODE_LTS_ACTIVE_VERSION` — referenced four times, **defined nowhere**, so two jobs had been running on whatever Node the runner image shipped — replaced by a declared `NODE_VERSION`.
+
+Deliberately **not** done: pinning third-party actions to a commit SHA. Worth doing, a separate diff.
+
+## Validation (2026-09-11, this PR's branch)
+
+- `npm run ratchet` — five green (js **22**, mocha 150, any 205, implicit-any 457, cpd-exclusions 4)
+- `npm run test:strict` — `✅ all 125 adopted file(s) pass`, and the three injected-failure cases above all exit 2
+- `npm run test:lint` — exit 0, 479 warnings, **0 errors** (was 7 before the shadow fixes)
+- `npm run prettier:check` — *All matched files use Prettier code style!*
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+- `.ci/scripts/docker-test.sh unit vitest` — **189 passing**, unchanged
+
+
+## What was done (TD-40 · TD-41 — the two wrong signatures)
+
+The fourth review's two 🟠 findings, both of the same shape: the conversion honoured the "no double cast" standard and reached the outcome the standard exists to prevent by a quieter route. Both are fixed where the defect is, in the base class, and both base classes now have a file in strict that could not be adopted before.
+
+### TD-40 — the nullable load was the base class's all along ([#2727](https://github.com/kuzzleio/kuzzle/issues/2727))
+
+`PluginRepository.load()` declared `Promise<PluginDocument>` and resolved `null`, and the file was held out of strict so that nothing would notice. #2724 recorded the reason honestly — the base's `Promise<TObject>` cannot express it without a double cast — and the reading was right about the base class and wrong about what to do.
+
+Reading `ObjectRepository` settled it in one look: **`load`, `loadFromCache` and `loadOneFromDatabase` all have a `return null` path**. The declaration was wrong about the base class itself, and the subclass was only the place it became visible. All three now say `Promise<TObject | null>`.
+
+**It costs nothing today.** `strictNullChecks` is off in `tsconfig.json`, so `T | null` collapses to `T` and `tsc --noEmit` is unchanged — no call site had to move. The entire value is at step 12, where this would otherwise have surfaced as a hard error in a file nobody had looked at since sprint 6, with the root cause two classes away.
+
+Adopting `pluginRepository.ts` then turned up two more, both in the base's constructor options:
+
+- `constructor({ cache = cacheDbEnum.INTERNAL, store = null } = {})` has no type annotation, so `store` **infers from its default** as `null`. Every subclass passing a real store was, under strict, passing "something not assignable to `null`". Named as `ObjectRepositoryOptions`, with `store?: { index: string } | null` — the constructor reads `.index` and nothing else.
+- `delete result._id` on a `PluginDocument`, where `_id` is required (`TS2790`). The local is a `JSONObject`: dropping `_id` is the whole point of `serializeToDatabase`.
+
+**strict 125 → 126, implicit-any 457 → 456.**
+
+### TD-41 — the overloads the union was standing in for ([#2728](https://github.com/kuzzleio/kuzzle/issues/2728))
+
+`Protocol.init`'s first parameter had been widened to `string | null | NetworkEntryPoint` so that `protocol.init(entryPoint)` would type-check; the body still read the entry point from the **second** parameter, so that call type-checked and threw. Two real overloads and a normalising body. `protocol.ts` passes strict, is adopted (**126 → 127**), and ships **its first spec** — 9 vitest cases, the first being exactly the call that used to compile and crash.
+
+**Writing the spec is what found the rest of it.** The deprecated `(name, entryPoint)` form is not discouraged, it is *dead*:
+
+```js
+assert(
+  this.name && !name,
+  "A name has been given in the constructor and init method. …",
+);
+```
+
+`this.name` must be **truthy**. So passing a name to `init` throws — including when the constructor was given none, which is the one case the deprecation was meant to still allow. That assert arrived with [#1645](https://github.com/kuzzleio/kuzzle/pull/1645) on **2020-06-16**; the parameter has been unusable for five years, and the first TypeScript conversion widened the type to `string | null` to accommodate it. The legacy overload is therefore typed `init(name: null, entryPoint)` — the only second shape this method can accept — and the assert is left exactly as it is. Re-opening a path closed for five years is a decision about the plugin API, not about a method's type. Recorded in the register rather than filed as an issue: nothing calls it.
+
+*A dead parameter is worse than a removed one: it survives a conversion as a type.*
+
+**One behaviour change**, stated plainly: a missing entry point now fails an `assert` with `'Invalid "entryPoint" parameter value'` rather than a `TypeError` on `entryPoint.config` three lines later. Both call shapes already died there, and `httpwsProtocol.js` is still JavaScript, so the overloads do not constrain it — the message is worth having.
+
+Also here, from the same finding: `MqttProtocol.disconnect`'s `message` parameter, left unused by #2723's correct removal of `client.close(undefined, message)`, is documented and suppressed rather than left reading as a live argument.
+
+### TD-42 — the coverage rule is per file now, not per block ([#2729](https://github.com/kuzzleio/kuzzle/issues/2729))
+
+The conversion standard says *"a file with no spec ships one"*, and the thing enforcing it was SonarCloud's 80% `new_coverage` — **an aggregate over the whole PR**. [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) shows the rule working (76.1%, under the gate, the arithmetic naming the two thinnest files); [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) shows it failing (88.3%, and three files in with no spec at all — `context.ts`, `protocol.ts`, `protocolManifest.ts`). Two of those three had just received bug fixes, and one of them is [TD-41](../type-debt-register.md#td-41).
+
+The gate is now per file, as a **third pass** in `.ci/scripts/prepare-coverage.ts` — the script that already owns and normalises both lcov reports, so it is the one place that knows what was measured and by whom:
+
+> every `lib/**.js` renamed to `.ts` in this PR must appear in one of the two reports **with at least one line hit**.
+
+Three details decide whether such a gate is real or decorative:
+
+- **A conversion reaches git in two shapes.** `--find-renames` records the light ones as `R`; a heavy rewrite arrives as a `D` plus an `A` — `lib/core/network/context.js` → `context.ts` in #2723 is exactly that, and it is one of the three files the gate exists for. Reading only the rename side would let the *most* rewritten conversions through, which is backwards. Both shapes are read.
+- **The base commit comes from `COVERAGE_BASE_SHA`**, set in the workflow from `github.event.pull_request.base.sha`. Unset, the pass says so and does nothing: outside a PR there is no set of "files this change converted", and a gate that invents one would fail on `2-dev` forever.
+- **The exemption is a sentence, not a silence.** `.migration/coverage-exempt.txt` takes one path per line with the reason on the same line, printed back on every run. The only admissible reason is that the file has no executable line to hit — a conversion whose output is type-only. *"The spec is coming in a follow-up"* is not one; that is the case the gate exists for. The file ships **empty**.
+
+**Verified against the PR it was written for.** Pointed at #2723's own base commit with an lcov crediting `protocol.ts` alone, the pass prints `✔ lib/core/network/protocols/protocol.ts: converted, 50.0% of 2 lines`, then names the other 14 conversions and exits 1. Pointed at this branch, which converts nothing: `✔ no .js → .ts conversion in this PR, nothing to gate`, exit 0.
+
+**The gate has a spec** — 13 vitest cases in `tests/ci/prepareCoverage.test.ts`, the first repo spec for a file under `.ci/`. That is TD-46's lesson applied before it is fixed: *a review finding is a rule, not an anecdote*, and a check that nothing exercises is the very shape this finding is about. Importing the script from a spec also puts it inside `tsconfig.json`'s program for the first time, so `tsc --noEmit` now type-checks it; the passes moved into a `main()` behind a direct-invocation guard so that importing it does not run them.
+
+**Not done here:** `.ci/` is still outside the `prettier`/`eslint` scopes that [TD-39](../type-debt-register.md#td-39) extended to `tests/` — this file was formatted by hand. Worth a follow-up, but it is a different diff.
+
+### TD-46 — the spec that mocked its own subject, and what that mock was really reporting ([#2733](https://github.com/kuzzleio/kuzzle/issues/2733))
+
+The finding is exact: [#2724](https://github.com/kuzzleio/kuzzle/pull/2724)'s vitest spec `vi.mock`s `PluginContext`, and `PrivilegedPluginContext` **is** `PluginContext` plus one assignment — so the spec asserted an assignment to a field on a stub it had declared itself, and would have passed with `PluginContext` deleted.
+
+The expected fix was to drop the mock and give the real constructor a `global.kuzzle`, as the sibling `pluginManifest.test.ts` does. **It does not run:**
+
+```
+Error: Cannot find module '../../util/extractFields'
+❯ lib/api/controllers/documentController.ts:33:24
+    33| import extractFields = require("../../util/extractFields");
+```
+
+`pluginContext.ts` -> `index.ts` -> `funnel.ts` -> `controllers/` crosses TypeScript's CommonJS import form, whose `require(...)` call vite's SSR transform leaves for **Node's** resolver — which cannot resolve a `.ts` path. Changing that one line moves the error to the next of the **25** such imports in `lib/`. Filed as [TD-49](../type-debt-register.md#td-49) ([#2739](https://github.com/kuzzleio/kuzzle/issues/2739)): *the vitest tree cannot load most of `lib/core`*, and that — not a testing preference — is why the mock was there.
+
+So the resolution is the honest one rather than the expected one:
+
+- **the vitest spec is removed.** `test/core/plugin/context/privilegedContext.test.js` already exercises the real class through `KuzzleMock`; keeping a second, weaker witness beside it is what the finding objects to. A note in the Mocha spec records that the port waits on TD-49 — the frozen suite keeps this one for now, which is the opposite of the migration's direction and is exactly TD-49's cost.
+- **the sibling's two defects are fixed:** the `mkdtempSync` fixture directories (five per run, never removed) go in an `afterAll`, and `globalThis.kuzzle` comes from a new `tests/mocks/kuzzle.ts` with a `restoreKuzzle()` — so the spec no longer relies on vitest's per-file isolation without saying so.
+- **`tests/mocks/kuzzle.ts` is deliberately not `test/mocks/kuzzle.mock.js`.** That mock is a ~600-line stub of the whole application; a spec resting on all of it cannot say which part its subject needs. The new fixture is what a subject touches at construction time and nothing else, with overrides merged on top.
+
+*A spec that stubs its subject's collaborator is sometimes reporting that the collaborator cannot be loaded — a fact about the build, not about the test.*
+
+### TD-48 — the invariant that was guarded by a comment ([#2735](https://github.com/kuzzleio/kuzzle/issues/2735))
+
+`removeStacktrace`'s docstring says it "must be invoked by all protocols": an obligation stated in prose, spread over eight call sites in four files, two of them still JavaScript and exactly what sprint 6's H6 is about to rewrite. Nothing asserted the outcome, so a conversion that dropped one of the eight would have failed nothing.
+
+`features/StackTrace.feature`, four scenarios — and the interesting part is what it took to make them able to fail.
+
+**The suite had no node that could express the property.** A stack is only stripped when `NODE_ENV` is not `development`, and all three functional-cluster nodes run in development, where the stack is deliberately kept and highlighted. `.ci/test-cluster-{7,8}.yml` now runs a **fourth node in production mode** on port 17513, outside nginx's rotation so that nothing lands on it by accident, and **without the cluster plugin**: nothing in the suite reads state from it, and a fourth cluster member would add synchronisation traffic to all thirty functional jobs for no benefit. The scenarios address it directly, the way `Network.feature` already addresses node 1 by 17510, and both runners wait on it — nothing else would.
+
+**The first WebSocket assertion was wrong in an instructive way.** Written against the SDK's error object, it failed on a stack full of `kuzzle-sdk/src/protocols/…` frames: *the SDK rebuilds the error client-side*, so `error.stack` there is the caller's own and says nothing about what crossed the wire. The step now opens a raw socket (`ws`, promoted to a direct devDependency) and reads the JSON frame. HTTP and WebSocket are separate scenarios because `httpwsProtocol` serves both and sanitises them in different places (`:455` and `:990`).
+
+**Two of the four scenarios are controls**, one per transport, asserting that the development node *does* carry a stack. Without them the other two would pass just as happily against a response that never had a stack — a renamed action, a wrong route, an error raised before the handler ever ran. That is [TD-42](../type-debt-register.md#td-42)'s lesson moved into the functional suite.
+
+**Verified negatively:** with `removeStacktrace`'s non-development branch disabled, the HTTP scenario fails with the real 500 payload, stack and all.
+
+## Validation (2026-09-11, TD-40/41 branch — stacked on [#2736](https://github.com/kuzzleio/kuzzle/pull/2736))
+
+- `npx tsc --noEmit` — clean, and **unchanged by the widening**, which is the point
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any **456**, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **198 passing** (189 + 9)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+
+
+## Validation (2026-09-14, TD-42 branch)
+
+- `npx tsc --noEmit` — clean (and now covering `.ci/scripts/prepare-coverage.ts`, pulled into the program by its spec)
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **211 passing** (198 + 13)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+- the new pass, both ways: exit 1 naming 14 unexecuted conversions against #2723's base, exit 0 on this branch
+
+
+## Validation (2026-09-14, TD-46 branch)
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **210 passing** (211 minus the single case of the removed spec)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+
+
+## Validation (2026-09-14, TD-48 branch — stacked on [#2740](https://github.com/kuzzleio/kuzzle/pull/2740))
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green · `npm run test:strict` — **127**, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **210 passing** · `unit mocha` — **3027 passing**
+- `.ci/scripts/docker-test.sh functional http -- --tags "@stacktrace"` — **4 scenarios, 11 steps, all passing**
+- the same, with `removeStacktrace`'s non-development branch disabled — **fails**, which is the point
+- `.ci/scripts/docker-test.sh functional http` (whole suite) — 175 of 176 scenarios; the one failure is `Network.feature`'s `on port 17510`, which cannot resolve a *published* port from inside the compose network and fails the same way without this branch. It passes in CI, where the suite runs on the runner host. The new scenarios take their host and port from the environment for exactly that reason, so they run green both ways.
+
+
+### TD-49 — the walls behind the import form ([#2739](https://github.com/kuzzleio/kuzzle/issues/2739), [#2742](https://github.com/kuzzleio/kuzzle/pull/2742))
+
+The entry described one thing to fix: 25 `import x = require("…")` whose `require(…)` call vite leaves for Node's resolver, which cannot resolve a `.ts` path. Rewriting them to ESM default imports is mechanical — the targets all `export =`, `esModuleInterop` makes the default import type-check — and it took ten minutes. Twenty-four changed; `lib/util/didYouMean.ts` keeps the form, now with a comment saying why: its Mocha spec calls `__set__("didYouMean", …)`, which addresses the **compiled variable by name**, and a default import compiles to `didyoumean_1.default`, so the stub would silently miss.
+
+**Then the spec still would not run**, and the next four failures are the actual content of this step. Each was found by re-running it and reading one line of a Node require stack — not by reading the code, which type-checks in every state:
+
+1. `Cannot find module '../util/debug'` from `lib/cluster/node.js`. Nothing in the subject's graph imports `lib/cluster`; `lib/types/Global.ts` did, by importing `Backend` **as a value** to declare `var app: Backend`. Every module that touches the global type — which is nearly all of them — therefore pulled the backend barrel → `kuzzle` → `lib/cluster/*.js` at runtime.
+2. Same error, different route: `pluginContext` imported `KuzzleRequest`/`RequestContext`/`RequestInput` from **the package's own `index.ts`**, which re-exports `pluginContext` itself, and `BackendCluster` from the backend barrel for one `new BackendCluster()`. Both now import the module that defines what they use.
+3. `Cannot find module '../validation/baseType'` — a **lazy `require()` in the constructor body**, a third spelling of the same class that no grep for `import … = require` finds. It is a static import now: `baseType` has no runtime import of its own, so there was no cycle to break. `backend.ts`'s lazy `require("../plugin/plugin")` stays until H5 converts that file.
+4. `Cannot read properties of undefined` — the module finally loaded, and the failure moved into the constructor. That is the point at which the fixture, not the resolver, is what the spec is about.
+
+Wall (1) is [TD-43](../type-debt-register.md#td-43)'s type-only-import half, and it is why the first three looked like whack-a-mole: the shortest path to `lib/cluster` changed every time one was cut, because *every* file had one. The systematic fix is the one TD-43 already prescribed — `@typescript-eslint/consistent-type-imports` as an **error**, autofixed over the lint scope (135 files, no change to the emitted JavaScript). `disallowTypeAnnotations` is left off: an `import()` in a type position has none of this problem. **TD-43's `casts` ratchet half is untouched and still open.**
+
+**The witness is a test.** `tests/core/plugin/privilegedContext.test.ts` is back with **no mock of any kind** — the shape [TD-46](../type-debt-register.md#td-46) wanted and could not have — and it **replaces** `test/core/plugin/context/privilegedContext.test.js` rather than sitting beside it: **mocha 150 → 149**. This matters more than the usual "a conversion ships a spec": nothing else in the repo fails if wall (1) comes back. `tsc` elides these imports by construction, so the type system cannot see the regression; only a runner that actually executes the import graph can.
+
+**Two things this changes about how the register reads:**
+
+- TD-43 was filed as an *enforcement gap* — "nothing charges for this". Half of it was a defect in the module graph, and only a test runner could see it. The severity of a lint rule is not knowable from the rule.
+- TD-49 was filed as "25 sites, one class". It was one class with **four spellings**, three of which the filing grep could not match. *A finding that counts its own instances has already chosen a predicate — and the predicate is the claim, not the number.* The same lesson as [TD-45](../type-debt-register.md#td-45), arrived at from the opposite direction.
+
+
+## Validation (2026-09-14, TD-49 branch)
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js 22, **mocha 149**, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **212 passing** (210 + 2)
+- `.ci/scripts/docker-test.sh unit mocha` — **3026 passing** (3027 minus the replaced spec's single case)
+- `npm run build` + `.ci/scripts/check-build-payload.sh` — clean
+
+
+## TD-43, second half — the `casts` ratchet (2026-09-15, [#2743](https://github.com/kuzzleio/kuzzle/pull/2743))
+
+The register said this baseline lands **between** sprints, not across H4–H6, and sprint 6's conversions are done — so this is the window. It closes the fourth review's last enforcement finding; TD-33 is all that remains of it.
+
+**The work was not writing the ratchet; it was discovering the finding's own predicate was unusable.** TD-43 specified `as [A-Z]` and counted 16. That regex matches **84** times across `lib/**/*.ts`, and the matches are dominated by things that are not assertions at all:
+
+- `import * as Cookie from "cookie"`, `import * as URL from "url"` — the namespace-import syntax;
+- English prose in comments — *"tracked as TD-43"*, *"we try to parse it as JSON"*, *"Kuzzle ships as CommonJS while `lib/` is ESM"*, *"behaves the same as Node"*, *"Browser Cookie as Authentication"*.
+
+The real figure, counted off the AST, is **87**. So the filed number was wrong in both directions at once — it under-counted the assertions and over-counted the matches — and neither error would have been visible without building the thing.
+
+That matters past arithmetic. A ratchet is a message to a future contributor: *this number may not go up*. If its predicate fires on a comment, the cheapest way past it is to reword the comment, and the gate has taught exactly the wrong lesson. So `casts` is **the first ratchet that parses**: `scripts/count-casts.ts` runs `ts.createSourceFile` over every `lib/**/*.ts` and counts `AsExpression` and `TypeAssertionExpression` nodes. It is also the first that counts **nodes rather than matching lines** — the `any` ratchet lets a second `any` on an already-counted line through free, and there was no reason to inherit that.
+
+**The exclusions are the design, and each one is a claim:**
+
+| Form | Counted | Why |
+| --- | --- | --- |
+| `x as T`, `<T>x` | ✅ | The hatch. A wrong one asserts a *specific* wrong type, silently. |
+| `x as const` | ❌ | Narrows to what is already written; it cannot be wrong. |
+| `x as any`, `x as unknown` | ❌ | The `any` ratchet's. Charging twice means one fix moves two baselines. |
+| `x as unknown as T`, `x as any as T` | ❌ | Same — both halves. The second form is `lib/kerror/index.ts`. |
+| `x satisfies T` | ❌ | Checked against the annotation rather than asserted over it: the fix, not the hatch. |
+| `x!` | ❌ | A different hatch with a different cost; TD-43 never covered it. |
+
+**Verified negatively**, the way TD-44 established: four probes appended to `lib/util/safeObject.ts` — `{} as Date`, `{ a: 1 } as const`, `{} as any`, `{} as unknown as Date` — move the count by exactly **+1**, and the ratchet reports `❌ 88 > baseline 87`.
+
+**Baseline 87**, `.migration/casts-baseline.txt`. It is the largest of the spendable counters after `implicit-any`, and it is *new debt* in the sense that matters: 87 places where a conversion told the compiler something instead of proving it.
+
+## Validation (2026-09-15, TD-43 `casts` branch)
+
+- `npm run ratchet` — **six** green (js 22, mocha 149, any 205, implicit-any 456, **casts 87**, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass
+- `npm run test:lint` / `npm run prettier:check` — clean
+
+### TD-81 — the dump lock, released on every path
+
+`DumpGenerator.dump()` took its lock, *then* validated the suffix and the path,
+and released the lock on the success path only. Now `dump()` checks the lock,
+resolves and validates the path (`_resolveDumpPath`, no lock held), takes the
+lock, and runs the generation (`_generate`, the former body, unchanged) in a
+`try/finally`. The early `action_locked` check stays first, so a call made
+while a dump runs is still answered "locked" whatever its suffix.
+
+`tests/kuzzle/dumpGenerator.test.ts` pinned the bug by name; that test became
+two tests of the fix (a rejected suffix, a failed `mkdir`, each followed by a
+dump that must succeed) — **both fail against the old code** — and a third
+that the lock is held while the generation is still awaiting, which passes on
+both and exists so the fix cannot be "release it earlier".
+
+### TD-76 — `PluginContext.constructors` declared as constructors
+
+Four of the seven entries were typed as the instances they build, so
+`new context.constructors.Request(request, {})` — the documented, most-used
+call of the public plugin API — did not type-check. `Koncorde`,
+`RequestContext` and `RequestInput` are now `typeof` their classes and assigned
+without a cast. `Request` is `PluginRequestConstructor`, exported from
+`pluginContext.ts`, with **two construct signatures** — from an original
+request, or from raw data — because `instantiateRequest` accepts both and the
+spec exercises both; its assignment keeps one assertion, since it is a plain
+function that plugins call with `new` (it returns an object, so `new` yields
+it).
+
+The spec had named the workaround (`constructorOf()`, seven casts); all seven
+are gone, so the calls themselves are the type-level test. Its one deliberate
+misuse — `new Request()` with no data, to assert the throw — is now refused by
+the type and carries a `@ts-expect-error` saying so. **`any` ratchet 178 → 175.**
+
+### TD-80 — passport's `next`, and one failure path
+
+`PassportWrapper.authenticate` invoked passport's middleware with
+`(request, response)`, and passport reports what it decides itself — an unknown
+strategy name first — through `next(error)`. The `TypeError` that produced was
+wrapped as `Caught an unexpected plugin error: next is not a function`.
+
+The wrapper had also grown two copies of the same "wrap unless it is already a
+`KuzzleError`" branch (callback error, thrown error), one with an `as Error`
+the other had already replaced by a narrowing. Both are now one `fail()`,
+which is also the `next`; the error code is unchanged, the message is
+passport's. The pinned spec now asserts `Unknown authentication strategy
+"foobar"` and fails against the old code. **`casts` ratchet 84 → 83.**
+
+### TD-77 — two error codes for a validation nobody wrote
+
+`plugin.assert.invalid_openapi_schema` and
+`plugin.controller.invalid_openapi_schema` were declared, published in the
+error-code documentation, "tested" by two dead Mocha assertions — and raised by
+nothing. The entry offered two fixes; **writing the validation is a breaking
+change** (a route whose `openapi` member is malformed loads today and would be
+refused at startup), so the codes went instead. That is safe to do because
+nothing could have observed them: no code path raised them, and plugins cannot
+reach another subdomain's codes (`context.kerror` wraps `plugin.<pluginName>`).
+Each was the last code of its subdomain, so the numbering keeps no hole; the
+documentation page is regenerated by `npm run doc-error-codes`, and
+`check-error-codes-documentation.sh` passes.
+
+The two specs that state what `_initApi` does with an `openapi` member — carry
+it as declared — stay; their comment now says why the validation was not added.
+If it is wanted, it belongs in a major, with a warning in the minor before it.
+
+### TD-74 — one channel name for two configurations
+
+`Channel.hash` concatenates one digit per field. Its `users` switch mapped
+both `"out"` and `"none"` to `"3"`, and `Room.createChannel` keeps the first
+channel it sees under a name — so `users: "out"` and `users: "none"` on the
+same room shared one channel, and whichever subscribed second got the first
+one's configuration: missing the "user left" notifications it asked for, or
+receiving ones it did not. The API documents a channel as a subscription
+configuration's *unique* identifier.
+
+`"out"` now hashes to `"4"`. `"none"` keeps `"3"` because it is the default:
+changing it would rename almost every channel in production for no gain. The
+register's second concern — no `scope: "none"` case — turned out not to be a
+collision (every other field contributes exactly one digit, so the two-digit
+suffix is unique) and is left alone with a comment rather than renaming those
+channels too.
+
+The type: `ChannelScope = RealtimeScope | "none"`, local to `channel.ts`.
+Widening `RealtimeScope` instead would have let a document *notification*
+claim `scope: "none"`, which it never has; the cluster's TD-68 guard keeps
+checking notifications against the narrow type. `SCOPE_ALLOWED_VALUES` is its
+own array instead of an alias of the users' one.
+
+**Why it is not breaking:** channel names are opaque (`"<unique channel
+identifier>"` in the API docs), returned by `realtime:subscribe` and used
+back by the same client; the cluster never synchronises them — each node
+names its own subscribers' channels — so a mixed-version cluster during a
+rolling upgrade is consistent node by node. Only `users: "out"` channels
+change name.
+
+`tests/core/realtime/channel.test.ts` is new: the collision, uniqueness over
+all 32 configurations, the default names pinned, and the validators; the
+first three fail against the old code (the third only on its `users: "out"`
+line, by design). `notifier.test.ts` loses its `"none" as RealtimeScope` cast.
+
+
+### TD-78 — the two handler forms the plugin types refused
+
+`PluginHookDefinition` and `PluginPipeDefinition` admitted handler functions
+only, in promise form for pipes. The runtime takes two more targets:
+**the name of a plugin method** (deprecated, warned about at registration) and
+**a pipe in callback form** — `(request, callback)` — which the pipes guide
+documents side by side with the promise form. A TypeScript plugin writing
+either had to cast.
+
+Both definitions are widened: hooks to `HookEventHandler | PluginMethodName`,
+pipes to `RegisteredPipeHandler | PluginMethodName` (the union
+`EventHandler.ts` already exported for what the emitter stores), each alone or
+in an array. `PluginMethodName` is a new exported alias of `string` whose only
+job is to carry the `@deprecated` tag, so the name form reads as tolerated,
+not as intended.
+
+**Why it is not breaking:** no runtime change, and the types only widen what
+a plugin may *write*. The one reader that could notice is code that indexes
+its own `pipes` / `hooks` through the base type — and that code already had
+to narrow out the array form before calling, so it holds a union either way.
+
+`tests/core/plugin/pluginsManager.test.ts` loses its `byName()` / `asPipe()`
+casts (~20 uses): the assignments themselves are now the type-level test.
+
+### TD-75 — a specification type for what the user writes
+
+`DateTypeOptions` describes a `date` field's options **after**
+`validateFieldSpecification` has converted its range bounds into moments, and
+was also that method's parameter type — so the documented call, with ISO
+strings or epoch numbers as bounds, did not type-check against the method
+whose job is to convert them.
+
+`BaseType<TOptions, TSpecification = TOptions>`: the second parameter names
+the shape a user writes, `validateFieldSpecification(opts: TSpecification):
+TOptions` maps one to the other, and the base implementation (identity) is an
+overload like `validate`'s, so it needs no cast. `DateType` extends
+`BaseType<DateTypeOptions, DateSpecification>`, with `DateSpecification`'s
+bounds typed `DateSpecificationBound = string | number` (`"NOW"` is a string).
+
+The body had to be re-said, not re-done. It mutated the caller's object —
+`range.min = min` — which cannot type-check once the input and output types
+differ. It still does exactly that: `validateRange` builds the converted
+bounds and `Object.assign`s them onto the caller's `range`, and
+`validateFieldSpecification` `Object.assign`s `formats` and that same `range`
+onto the caller's object and returns it. An intersection is assignable to its
+constituents, so the result is a `DateTypeOptions` without an assertion.
+In-place matters: `Validation` stores the returned options, but reads them from
+the raw specification object, which a caller may keep.
+
+**Why it is not breaking:** no runtime change (same object, same `range`
+object, same values, same errors in the same order); the new type parameter is
+defaulted, so every `BaseType<T>` — ours and plugins' — means what it meant.
+
+`tests/core/validation/types/date.test.ts` loses its `specification()` cast;
+its deliberately invalid fixtures are `invalid<DateSpecification>` now, and a
+new test pins the in-place contract (same object, same `range`, `NOW` kept,
+the other bound a moment) so a future "cleaner" version that builds a copy
+fails.
+
+### TD-79 — two messages that now say what they check
+
+Both fixes are to a message; neither check changed.
+
+- **`accessControlAllowOriginUseRegExp`** checked `config.http.…` and printed
+  `config.server.protocols.http.…`, a section that never carries the key, so
+  the message always read `invalid value "undefined"`. It prints what it
+  checks.
+- **`idleTimeout`** promised `integer >= 1000` and enforced `>= 0`. The
+  entry left open which side was wrong; reading the consumer settles it. The
+  floor exists, but it belongs to `httpwsProtocol`, which replaces any value
+  below 1000 — 0 included, the value the websocket protocol page's example
+  shows — with its 60 000 default and a warning, *for backward
+  compatibility* by its own comment. Enforcing it in the checker would
+  refuse at load time configurations that boot today, so the message says
+  `integer >= 0 expected`, like `rateLimit`'s, and a comment points at where
+  the floor lives.
+
+**Why it is not breaking:** the set of accepted configurations is unchanged;
+only two error strings differ. Nothing matches on them — they are
+`assert` messages printed at startup.
+
+`tests/config/index.test.ts` asserted both as they were (`"undefined"`
+verbatim, `idleTimeout: 500` accepted): the first now asserts the offending
+value is printed, the second keeps accepting `500` with a comment saying why.
+The protocol-side fallback is already covered by
+`tests/core/network/protocols/httpwsProtocol.test.ts`.
+
+### TD-20, first half — the CSV form is the API, not a legacy
+
+[#2721](https://github.com/kuzzleio/kuzzle/issues/2721) planned to migrate
+`getArrayLegacy` to `getArray` in the next major, behind a deprecation cycle.
+Reading the routes first changed the decision (taken by the user, option 3-B
+of the #2785/TD-20 review):
+
+- the issue's route table was wrong on two of three rows. The call sites
+  serve `document:mGet` / `document:mExists` (through the generic-event
+  document extractor, which runs before the controller and rewrites `ids` to
+  an array — the controller's own `getArray` would refuse `"a,b"`),
+  `security:mGetUsers` and `server:healthCheck`. `document:mDelete` reads
+  `ids` from the body only;
+- `?ids=a,b` is the documented form on the first three, and the comma list is
+  the **only** documented form of `healthCheck`'s `services` — the one
+  load-balancer and k8s probes send;
+- `getArray` is not a correct target for a query string anyway: `?ids=a` is
+  the string `"a"`, not a JSON array, and it throws.
+
+So the behaviour gets a name and a page instead of a removal date:
+`KuzzleRequest.getArrayOrCsv`, byte-for-byte the former body, documented
+under `doc/2/framework/classes/kuzzle-request/get-array-or-csv`.
+`getArrayLegacy` stays as a `@deprecated` alias because `KuzzleRequest` is
+public plugin API. The three call sites use the new name, and the two
+`NOSONAR: … TD-20` markers and three stale "should be replaced with
+getArray" comments go with them.
+
+What it does not close: an element containing a comma is still split when
+sent as a plain string. That is documented on the new page — the JSON form
+over HTTP, or the body, carries it.
+
+**Why it is not breaking:** no behaviour change anywhere; one method added,
+one aliased.
+
+`tests/api/request/request.test.ts`: the block is now `#getArrayOrCsv`, with
+one new test for what sets it apart from `getArray` (a single value is a
+one-element array, where `getArray` throws), and `#getArrayLegacy` is reduced
+to a test that it delegates.
+
+### TD-20, second half — `configure` takes a result
+
+[#2688](https://github.com/kuzzleio/kuzzle/issues/2688) was blocked on an API
+shape: `setResult(result, options)` is `@deprecated` in favour of
+`response.configure`, which took no result, and the `response.result =`
+setter calls `setResult(r)` — which forces the status to 200, so it would
+turn `server:healthCheck`'s 503 into a 200 for the probes reading it. Twelve
+core call sites carried a `NOSONAR` instead of a migration. The user took
+option 2-A of the #2785/TD-20 review.
+
+`RequestResponse.configure` accepts `result`. It is applied **first**, so a
+refused result — an `Error`, or an `HttpStream` outside HTTP, the checks
+`setResult` always made — throws before headers, status or format change.
+It is set only when the key is present (`{ result: null }` clears), and it
+does not touch the status: that stays `configure`'s existing rule — an
+explicit `status` wins, otherwise a pending 102 becomes 200 and anything else
+is kept. The checks moved into `KuzzleRequest.assertResultAllowed`, shared by
+`setResult` and a new `@internal` `assignResult`, which is what `configure`
+calls.
+
+**`setResult` itself is untouched, and that was a correction, not the plan.**
+The first version made it delegate to `configure`. That constructs the
+`RequestResponse` on every call, and a response reads `global.kuzzle.id` when
+built — so `setResult` would have started throwing wherever no Kuzzle is
+running, a plugin's own unit tests included. The `documentExtractor` spec,
+which builds requests with no global, is what said so. `setResult` keeps its
+body; only the two checks are shared.
+
+The 12 call sites keep the exact status each passed:
+
+| Site | Before | After |
+|---|---|---|
+| `funnel` (controller result), `pluginContext` (plugin request) | status: 102 → 200, else kept | `configure({ result })` — the same rule, now `configure`'s default |
+| `funnel` (unserializable plugin result), `httpRouter` HEAD `/` and OPTIONS | status 200 | `configure({ result, status: 200 })` |
+| `documentExtractor` × 7 | `{ status: request.status }` | `configure({ result, status: request.status })` |
+
+`documentExtractor` could have dropped its explicit status — it only runs in
+the "after" phase, once the funnel has converted 102 — but a plugin's "after"
+pipe can set any status in between, and passing it keeps the result
+identical in that case too.
+
+**Why it is not breaking:** `configure` gains an optional property;
+`setResult`, the `result` setter and every call site's resulting status are
+unchanged. The one new effect is that those internal sites build the
+request's `RequestResponse` earlier than before — always inside a running
+Kuzzle, where the node id it reads exists.
+
+**Not decided here:** whether `setResult`'s deprecation becomes public. Its
+doc page still presents it as a normal API (with a 302 redirection example);
+the `configure` page now documents `result` with a `SinceBadge`.
+
+The five comments that deferred the `Mutex` → `withLock` migration "to TD-20
+(#2688)" point at [#2894](https://github.com/kuzzleio/kuzzle/issues/2894),
+where it was split out: it had nothing to do with request APIs.
+
+Tests: `requestResponse.test.ts` gains a `configure` → `result` block (the
+102 rule, a kept 503 next to the setter still resetting to 200, all four
+options at once, `null` vs absent, an `Error` refused with nothing else
+changed, a stream refused outside HTTP and accepted over it).
+`documentExtractor.test.ts` now stubs the global, since inserting into a
+result builds the response.
+
+### #2785 — retransmit what was lost before evicting
+
+[TD-67](../type-debt-register.md#td-67) left one decision open: a node that
+misses a sync message evicts itself — since TD-67, it shuts down — and
+[#2785](https://github.com/kuzzleio/kuzzle/issues/2785) asked whether it
+should resynchronise instead. The review that decided it (option 1-B, taken
+by the user) found the issue's framing out of date and its proposed remedy
+too weak:
+
+- **Out of date.** The issue describes a node that keeps serving behind the
+  load balancer. Since TD-67 it exits — but with code 0, which an
+  `on-failure` restart policy does not restart. The real cost was one lost
+  message = one node down, possibly for good.
+- **Too weak.** A full state (`FullStateResponse`) carries rooms,
+  subscriptions and auth strategies. Of `sync.proto`'s 24 message types,
+  nine only touch local caches (index cache, profile and role
+  invalidations, validators — a lost `InvalidateRole` is stale permissions)
+  and eight are one-off events (notifications, `ClusterWideEvent`, dump,
+  shutdown). A state resync recovers none of those, and would lose the
+  events *silently*, where eviction at least made the loss loud.
+
+So the node recovers the **messages**, not a state derived from them:
+
+- `ClusterPublisher` keeps its last sent messages, encoded, oldest first,
+  with contiguous ids (`history`), bounded by `cluster.retransmitBuffer` —
+  1 000 messages / 16 MiB by default, whichever is hit first, and 0 turns it
+  off. `replay(from, to)` answers all of them or `null`.
+- `ClusterCommand` gains a `RETRANSMIT` topic (`RetransmitRequest` /
+  `RetransmitResponse` in `command.proto`): the server answers from
+  `replay`, or `DISCARDED`; `requestRetransmit` returns the frames only if
+  there are exactly as many as asked, within `cluster.syncTimeout`.
+- `ClusterSubscriber.validateMessage`: on an id **above** the expected one,
+  `recover()` asks the sender for the missing ids and runs each returned
+  frame through `processData` — so each is validated again (that is what
+  checks the sender answered with the right ids) and applied by its normal
+  handler — then accepts the message that revealed the gap. Recovery is
+  awaited where the gap is found, so nothing after the gap is applied
+  before it: `listen()` stops reading meanwhile (ZeroMQ queues), and
+  `sync()`'s replay does too. A gap found *while* applying recovered frames
+  is not recovered from again. An id **below** the expected one still
+  evicts at once: that is not a loss.
+- Fallback, unchanged in substance: no answer, messages no longer kept, a
+  partial answer, or a peer running an older version — which answers
+  `DISCARDED` to a topic it does not know, so a mixed-version cluster during
+  a rolling upgrade behaves exactly as before. `evictSelf` and
+  `handleNodeEviction` now call `kuzzle.shutdown(1)`: an eviction is a
+  failure and should be restarted as one. A requested cluster shutdown
+  still exits 0.
+
+That also closes [TD-65](../type-debt-register.md#td-65)'s residual race.
+A joining node resumes each peer's stream from the counter **the node it
+loaded the full state from** had reached, which is correct — the state
+reflects exactly those messages — and a peer that published past it before
+the new subscription was live leaves a gap. The replay in `sync()` now finds
+that gap and fills it from the peer, instead of shutting the new node down.
+
+**Testing it end to end.** Nothing in the functional suites could lose a
+message on purpose, so a test-only switch was added:
+`KUZZLE_TEST_CLUSTER_DROP_HEARTBEAT_EVERY=N` makes a node record every Nth
+heartbeat as sent without handing it to the socket. `.ci/test-cluster-{7,8}.yml`
+sets it to 5 on `kuzzle_node_2` — a loss every ~10 s — so **every
+functional job now runs with lost messages**: if retransmission regresses, a
+node is evicted and the job fails. Unset, the publisher behaves exactly as
+before.
+
+⚠️ **Heartbeats only, and the first CI run is why.** The switch first dropped
+one message in 50, of any kind. Every loss was recovered — three per job, on
+all three peers, no eviction — and five jobs failed anyway, each on a
+scenario reading another node right after an index or collection change
+(`collection … does not exist`, `index … already exists`). A loss is only
+noticed when the sender's **next** message arrives, which can be a heartbeat
+later (2 s): until then the peers apply nothing newer from that sender, but
+they also do not know they are behind. That latency is a property of the
+design — detection needs a later message — and is the price of a loss that
+used to cost a node; the injection just made it happen on purpose, mid
+scenario. Dropping only heartbeats exercises the same path (request, replay,
+re-validation) without putting a state change behind it.
+
+**Why it is not breaking:** the protocol change is additive and degrades to
+the old behaviour against an older peer; the config key is new, with a
+default; `Kuzzle.shutdown` gains an optional argument. What changes for an
+operator is intended: a node that would have left the cluster stays, and one
+that does leave exits 1.
+
+Unit tests: `publisher.test.ts` (replay in order, the window, both bounds,
+0 disables, the drop switch dropping heartbeats and nothing else), `subscriber.test.ts` (gap filled then accepted,
+wrong ids evict once, no answer evicts, an older id asks for nothing),
+`command.test.ts` (real sockets: frames in order, `null` when no longer
+kept, on a partial answer, and on silence), `config/index.test.ts`,
+`kuzzle.test.ts` (exit code), and the eviction specs pin `shutdown(1)`.

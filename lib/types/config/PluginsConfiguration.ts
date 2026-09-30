@@ -1,6 +1,6 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 
-import { PasswordPolicy } from "../index";
+import type { PasswordPolicy } from "../index";
 
 export type PluginsConfiguration = {
   /**
@@ -185,6 +185,12 @@ export type PluginsConfiguration = {
      */
     passwordPolicies: PasswordPolicy[];
   };
-
+} & {
+  // Any other plugin's configuration, read as v2.56.0 declared it: a
+  // `JSONObject`, so `plugins["my-plugin"].option` compiles under `strict`.
+  // An intersection rather than one object type, because in one the optional
+  // `kuzzle-plugin-logger` above would have to be assignable to the index
+  // signature, which would then have to admit `undefined`. Kuzzle's own reads
+  // through the index still carry `| undefined`: `noUncheckedIndexedAccess`.
   [pluginName: string]: JSONObject;
 };

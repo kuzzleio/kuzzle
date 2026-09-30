@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { InternalError } from "../../kerror/errors/internalError";
 import * as assert from "../../util/assertType";
@@ -138,6 +138,21 @@ export class RequestInput {
    */
   public resource: RequestResource;
 
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They keep the zero-width-space keys rather than
+   * becoming `private` or `#` names, which is what keeps `console.log` output
+   * as it has been for ten years — see the comment on those constants.
+   * Declaring them changes nothing at runtime.
+   */
+  [_jwt]: string | null;
+  [_volatile]: JSONObject | null;
+  [_body]: JSONObject | null;
+  [_headers]: JSONObject | null;
+  [_controller]: string | null;
+  [_action]: string | null;
+  [_triggerEvents]: boolean | undefined;
+
   /**
    * Builds a Kuzzle normalized request input object
    *
@@ -145,8 +160,12 @@ export class RequestInput {
    * format as the one used, for instance, for the Websocket protocol
    *
    * Any undefined option is set to null
+   *
+   * @param data - a non-null object; anything else throws. Declared
+   * `unknown`, as v2.56.0's `any` accepted anything.
    */
-  constructor(data) {
+  constructor(data: unknown);
+  constructor(data: JSONObject) {
     if (!data || typeof data !== "object" || Array.isArray(data)) {
       throw new InternalError("Input request data must be a non-null object");
     }
@@ -156,7 +175,11 @@ export class RequestInput {
     this[_body] = null;
     this[_controller] = null;
     this[_action] = null;
-    this[_triggerEvents] = null;
+    // `undefined`, not `null`: the setter already normalises "not asked for"
+    // to undefined, and the getter has always declared `boolean | undefined`.
+    // The only reader is a truthiness test in funnel.ts, so this is the same
+    // value said honestly.
+    this[_triggerEvents] = undefined;
 
     // default value to null for former "resources" to avoid breaking
     this.args = {};
@@ -207,7 +230,10 @@ export class RequestInput {
     return this[_jwt];
   }
 
-  set jwt(str: string) {
+  // `| null` for the same reason as `body` below: `assertString` answers
+  // `null` for `null` and `undefined` in its first branch, and the getter
+  // above declares it. See docs/adr-001/steps/14-test-program-strict.md (M5).
+  set jwt(str: string | null) {
     this[_jwt] = assert.assertString("jwt", str);
   }
 
@@ -294,7 +320,14 @@ export class RequestInput {
     return this[_body];
   }
 
-  set body(obj: JSONObject | Array<any>) {
+  /**
+   * `null` is accepted, and was already the only way to *clear* a body:
+   * `assertArrayOrObject` answers `null` for both `null` and `undefined`, the
+   * constructor initialises the field to `null`, and the getter above declares
+   * it. The parameter type excluded the one value the implementation handles
+   * first — the same asymmetry `headers` documents just below.
+   */
+  set body(obj: JSONObject | Array<any> | null) {
     this[_body] = assert.assertArrayOrObject("body", obj);
   }
 
@@ -307,7 +340,13 @@ export class RequestInput {
     return this[_headers];
   }
 
-  set headers(obj: JSONObject) {
+  /**
+   * `undefined` is accepted because `KuzzleRequest`'s constructor assigns
+   * `context.connection.misc.headers`, which a connection without headers does
+   * not have. `assertObject` answers null for it, which is what the getter has
+   * always reported.
+   */
+  set headers(obj: JSONObject | undefined) {
     this[_headers] = assert.assertObject("headers", obj);
   }
 
@@ -332,7 +371,8 @@ export class RequestInput {
     return this[_volatile];
   }
 
-  set volatile(obj: JSONObject) {
+  // `| null`, as `assertObject` and the getter above both allow.
+  set volatile(obj: JSONObject | null) {
     this[_volatile] = assert.assertObject("volatile", obj);
   }
 }

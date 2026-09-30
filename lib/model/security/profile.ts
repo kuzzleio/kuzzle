@@ -25,19 +25,24 @@ import Bluebird from "bluebird";
 import Rights from "./rights";
 import * as kerror from "../../kerror";
 import { isPlainObject } from "../../util/safeObject";
-import {
+import type {
   Policy,
   OptimizedPolicy,
   OptimizedPolicyRestrictions,
 } from "../../types/index";
-import { Role } from "./role";
-import { KuzzleRequest } from "../../../index";
+import type { Role } from "./role";
+import type { KuzzleRequest } from "../../../index";
 
 const assertionError = kerror.wrap("api", "assert");
 
 /** @internal */
 type InternalProfilePolicy = {
   role: Role;
+  /**
+   * Carried straight off the optimized policy, which may not have one.
+   * Declared as always present all the same, as v2.56.0 declared it: this
+   * reaches plugins through `getPolicies()`.
+   */
   restrictedTo: OptimizedPolicyRestrictions;
 };
 
@@ -45,13 +50,23 @@ type InternalProfilePolicy = {
  * @class Profile
  */
 export class Profile {
+  /**
+   * `null` until the profile is stored — see ADR-0001, TD-62. Declared
+   * `string` all the same, as v2.56.0 declared it (see `User._id`).
+   */
   public _id: string;
   public policies: Policy[];
+  /**
+   * Unset while the profile is persisted — `persistToDatabase` clears it so the
+   * derived form is never written — and the two readers below test for
+   * `undefined` (ADR-0001, TD-40 / TD-56). Declared as always present all the
+   * same, as v2.56.0 declared it.
+   */
   public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
 
   constructor() {
-    this._id = null;
+    this._id = null!;
     this.policies = [];
     this.optimizedPolicies = [];
     this.rateLimit = 0;
@@ -68,10 +83,10 @@ export class Profile {
     }
 
     return Bluebird.map(
-      this.optimizedPolicies,
+      this.optimizedPolicies ?? [],
       async ({ restrictedTo, roleId }) => {
         const role = await global.kuzzle.ask("core:security:role:get", roleId);
-        return { restrictedTo, role };
+        return { restrictedTo: restrictedTo!, role };
       },
     );
   }
@@ -305,9 +320,12 @@ export class Profile {
                 value: actionRights,
               };
               const rightsObject = {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                [this.constructor._hash(rightsItem)]: rightsItem,
+                // `String()` is what the computed key does implicitly anyway
+                // (`_hash` returns a number, or `false` while un-patched), and
+                // it is what makes that return type legal here — see `_hash`.
+                [String(
+                  (this.constructor as typeof Profile)._hash(rightsItem),
+                )]: rightsItem,
               };
 
               _.assignWith(profileRights, rightsObject, Rights.merge);
@@ -320,7 +338,23 @@ export class Profile {
     return profileRights;
   }
 
-  static _hash() {
+  /**
+   * Hashes a rights item into the key it is stored under.
+   *
+   * Placeholder on purpose: `profileRepository` replaces it with
+   * `global.kuzzle.hash` at startup, and the `false` returned here is exactly
+   * how that patching detects an un-patched class. The overload signature
+   * describes the patched function; the implementation is the stub.
+   *
+   * The patch is `global.kuzzle.hash`, which returns a **number** (`murmur.v3`)
+   * — hence `number | false` in practice. Declared `any`, v2.56.0's public
+   * type being `() => boolean`: code compiled against that reads a `boolean`
+   * back or assigns a `boolean`-returning stub, and no narrower type accepts
+   * both that and the patch.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  static _hash(rightsItem?: unknown): any;
+  static _hash(): number | false {
     return false;
   }
 

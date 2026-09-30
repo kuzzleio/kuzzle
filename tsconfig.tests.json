@@ -1,0 +1,81 @@
+{
+  // THE test program — `tests/`, `features/`, `features-legacy/`, the CI and
+  // migration tooling, and the `start-kuzzle-*` entrypoints. Type-checked by
+  // `npm run typecheck:tests`, and nothing else: it emits nothing.
+  //
+  // There were two of these until step 14's M7. ADR-0001 took the test code to
+  // `strict` one directory at a time, and a directory changed standard by moving
+  // program — out of a non-strict `tsconfig.tests.json`'s `include` and into a
+  // `tsconfig.tests.strict.json`'s. That is the technique step 12's K6 landed on,
+  // because `strict` is a property of a *program*, not of a file. M6 moved the
+  // last directory, which left the non-strict program empty; what survives is the
+  // strict one, under the name both were checked by.
+  //
+  // ⚠️ **The specs do NOT go back into `tsconfig.json`.** M7 measured it rather
+  // than assuming either way — adding `tests/**/*.ts` to that file's `include` and
+  // running `tsc`:
+  //
+  //   * `dist/` goes 770 -> 1 311 emitted files, and grows `dist/tests/` and
+  //     `dist/.ci/`. That is the payload regression step 12's K6 fixed (1 518 ->
+  //     769), arriving from the other direction.
+  //   * 346 errors, because `noUncheckedIndexedAccess` is ON in that program and
+  //     the specs are not clean under it. See below.
+  //
+  // One program to *emit* from and one to *check* is a different question from one
+  // standard for both; the standard is the same either way now, bar the flag below.
+  //
+  // See docs/adr-001/steps/14-test-program-strict.md.
+
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    // ⚠️ The one place this program differs from the production one, on
+    // purpose (step 14's M8). `noUncheckedIndexedAccess` is on in `tsconfig.json`
+    // and right for `lib/`. Here it reports 378 errors (2026-09-24): 344 are specs
+    // reading back a fixture or a mock call they just made, and the 34 in code
+    // that runs (cucumber support, `.ci/`, `start-kuzzle-test.ts`) were read one
+    // by one and hold no defect. Turning it on would mean ~300 `!`, which no
+    // ratchet counts outside `lib/`. Re-measure with
+    // `npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`.
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true
+  },
+  "include": [
+    // Ambient declarations: they are `.d.ts`, so nothing imports them and the
+    // program would not pull them in on its own — dropping them loses
+    // `process.moduleLoadList` in lib/kuzzle/dumpGenerator.ts, and `should`'s
+    // function subpath in the cucumber suites. See
+    // docs/adr-001/steps/10-sprint-7-kuzzle.md.
+    "lib/types/**/*.d.ts",
+    "tests/types/**/*.d.ts",
+    // The slice that moved each of these is named for the record; step 14's
+    // history is in docs/adr-001/steps/14-test-program-strict.md.
+    // M0 — the CI and migration tooling, and the functional-test entrypoints.
+    ".ci/scripts/**/*.ts",
+    // `bin/wait-kuzzle.ts` belongs to the same family: CI tooling, run by
+    // `.ci/scripts/**` through `ts-node`, and deliberately NOT part of the
+    // published build — so it is checked here rather than by `npm run build`.
+    // See docs/adr-001/steps/03-sprint-2-bin.md.
+    "bin/wait-kuzzle.ts",
+    "scripts/**/*.ts",
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts",
+    // M1 — the legacy functional suite's API wrappers. M1a took `apiBase.ts`;
+    // M1b takes the rest of the directory, because `http.ts` reaches `world.ts`
+    // which constructs all three protocols: an `include` can name one file, an
+    // import graph cannot be asked to.
+    // M2 — the rest of the legacy suite: the world, the hooks and the 24 step
+    // definition files, which is why the glob is now the whole directory.
+    "features-legacy/**/*.ts",
+    // M3 — the modern cucumber suite.
+    "features/**/*.ts",
+    // M6 — the last of `tests/`. The non-strict program is empty after this:
+    // `tsconfig.tests.json` is deleted by M7.
+    "tests/**/*.ts",
+    "tests/**/*.json"
+  ],
+  // `tests/typings/` is a consumer of the published typings, not a spec: it
+  // imports `kuzzle` from `dist/`, with a consumer's settings, and has its own
+  // programs (`npm run typecheck:typings`). See tests/typings/tsconfig.json.
+  "exclude": ["dist", "tests/typings"]
+}

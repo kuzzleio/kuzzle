@@ -20,20 +20,26 @@
  */
 
 export * from "./controllers/Controller";
+export * from "./ApiRoute";
 export * from "./controllers/ControllerDefinition";
 export * from "./controllers/ControllerRights";
+export * from "./ClientConnection";
 export * from "./Deprecation";
 export * from "./EventHandler";
 export * from "./Global";
+export * from "./HttpMessage";
 export * from "./HttpStream";
+export * from "./JSONObject";
 export * from "./KuzzleDocument";
 export * from "./OpenApiDefinition";
 export * from "./PasswordPolicy";
 export * from "./Plugin";
+export * from "./PluginManifest";
 export * from "./Policy";
 export * from "./PolicyRestrictions";
 export * from "./ProfileDefinition";
 export * from "./RoleDefinition";
+export * from "./StrategyDefinition";
 export * from "./Target";
 export * from "./Token";
 export * from "./config/DumpConfiguration";
@@ -44,6 +50,7 @@ export * from "./config/PluginsConfiguration";
 export * from "./config/SecurityConfiguration";
 export * from "./config/ServerConfiguration";
 export * from "./config/ServicesConfiguration";
+export * from "./config/cache/BaseCacheRedisConfiguration";
 export * from "./config/internalCache/InternalCacheRedisConfiguration";
 export * from "./config/publicCache/PublicCacheRedisConfiguration";
 export * from "./config/storageEngine/StorageEngineElasticsearchConfiguration";

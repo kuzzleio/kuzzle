@@ -1,11 +1,17 @@
 import { Then } from "@cucumber/cucumber";
 import async from "async";
 import Bluebird from "bluebird";
+import {
+  asError,
+  type AsyncCallback,
+  type RetryFailure,
+} from "../support/stepUtils";
+import type KWorld from "../support/world";
 
 Then(
   /^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/,
-  function (not, index, callback) {
-    const main = function (callbackAsync) {
+  function (this: KWorld, not, index, callback) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
       this.api
         .get(this.result._id, index)
         .then((body) => {
@@ -46,26 +52,27 @@ Then(
         });
     };
 
-    async.retry({ interval: 20, times: 20 }, main.bind(this), function (err) {
-      if (err) {
-        if (err.message) {
-          err = err.message;
+    async.retry<void, RetryFailure>(
+      { interval: 20, times: 20 },
+      main.bind(this),
+      (failure) => {
+        if (failure) {
+          callback(asError(failure));
+          return;
         }
-        callback(new Error(err));
-        return false;
-      }
 
-      callback();
-    });
+        callback();
+      },
+    );
   },
 );
 
 Then(
   /^my document has the value "([^"]*)" in field "([^"]*)"$/,
-  function (value, field, callback) {
-    const main = function (callbackAsync) {
+  function (this: KWorld, value, field, callback) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
       setTimeout(
-        function () {
+        function (this: KWorld) {
           this.api
             .get(this.result._id)
             .then(function (body) {
@@ -101,14 +108,10 @@ Then(
       ); // end setTimeout
     };
 
-    async.retry(20, main.bind(this), function (err) {
-      if (err) {
-        if (err.message) {
-          err = err.message;
-        }
-
-        callback(new Error(err));
-        return false;
+    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
       callback();
@@ -118,7 +121,7 @@ Then(
 
 Then(
   /^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/,
-  function (dont, value, field, index, scroll) {
+  function (this: KWorld, dont, value, field, index, scroll) {
     const query = {
       query: { match: { [field]: value === "true" ? true : value } },
     };
@@ -131,7 +134,7 @@ Then(
     }
 
     return this.api
-      .search(query, index, null, args)
+      .search(query, index, undefined, args)
       .then((body) => {
         if (body.error !== null) {
           if (dont) {
@@ -168,51 +171,54 @@ Then(
   },
 );
 
-Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
-  if (!this.scrollId) {
-    if (not) {
-      return Bluebird.resolve();
+Then(
+  /^I am ?(not)* able to scroll previous search$/,
+  function (this: KWorld, not) {
+    if (!this.scrollId) {
+      if (not) {
+        return Bluebird.resolve();
+      }
+
+      return Bluebird.reject(
+        new Error("No scroll id from previous search available"),
+      );
     }
 
-    return Bluebird.reject(
-      new Error("No scroll id from previous search available"),
-    );
-  }
+    return this.api
+      .scroll(this.scrollId)
+      .then((body) => {
+        if (body.error !== null) {
+          if (not) {
+            return Bluebird.resolve();
+          }
 
-  return this.api
-    .scroll(this.scrollId)
-    .then((body) => {
-      if (body.error !== null) {
-        if (not) {
+          return Bluebird.reject(body.error);
+        }
+
+        if (body.result && body.result.hits && body.result.hits.length > 0) {
+          if (not) {
+            return Bluebird.reject(
+              new Error("A document exists for the scrollId"),
+            );
+          }
           return Bluebird.resolve();
         }
 
-        return Bluebird.reject(body.error);
-      }
-
-      if (body.result && body.result.hits && body.result.hits.length > 0) {
         if (not) {
-          return Bluebird.reject(
-            new Error("A document exists for the scrollId"),
-          );
+          return Bluebird.resolve();
         }
-        return Bluebird.resolve();
-      }
+        return Bluebird.reject(new Error("No result for scrollId search"));
+      })
+      .catch((error) => {
+        if (not) {
+          return Bluebird.resolve();
+        }
+        return Bluebird.reject(error);
+      });
+  },
+);
 
-      if (not) {
-        return Bluebird.resolve();
-      }
-      return Bluebird.reject(new Error("No result for scrollId search"));
-    })
-    .catch((error) => {
-      if (not) {
-        return Bluebird.resolve();
-      }
-      return Bluebird.reject(error);
-    });
-});
-
-Then(/^I should receive a document id$/, function (callback) {
+Then(/^I should receive a document id$/, function (this: KWorld, callback) {
   if (this.result && this.result._id) {
     callback();
     return false;
@@ -223,7 +229,7 @@ Then(/^I should receive a document id$/, function (callback) {
 
 Then(
   /^I get ([\d]+) documents '([^']+)'?$/,
-  function (count, documents, callback) {
+  function (this: KWorld, count, documents, callback) {
     documents = JSON.parse(documents);
 
     this.api
@@ -253,7 +259,7 @@ Then(
 
 Then(
   /^I check that the document "([^"]*)" ?(doesn't)* exists$/,
-  function (id, doesnt, callback) {
+  function (this: KWorld, id, doesnt, callback) {
     this.api
       .exists(id)
       .then((response) => {

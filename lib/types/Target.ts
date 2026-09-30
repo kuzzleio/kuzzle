@@ -34,3 +34,12 @@ export type Target = {
   index?: string;
   collections?: string[];
 };
+
+/**
+ * A target that has been through `BaseController.assertTargetsAreValid`.
+ *
+ * That assertion rejects a target missing `index` or `collections`, so the
+ * storage layer — which is only ever handed validated targets — can read both
+ * without re-checking them.
+ */
+export type ValidatedTarget = Required<Target>;

@@ -1,7 +1,10 @@
 // TODO modify the syntax to be typescript
 
+import type { JSONObject } from "kuzzle-sdk";
+
 import Bluebird from "bluebird";
-import mqtt, { MqttClient } from "mqtt";
+import type { MqttClient } from "mqtt";
+import mqtt from "mqtt";
 import { v4 as uuidv4 } from "uuid";
 
 import ApiBase from "./apiBase";
@@ -16,7 +19,7 @@ type Subscription = {
 export default class MqttApi extends ApiBase {
   private clients: Record<string, MqttClient>;
   private requests: Record<string, (result: any) => void>;
-  protected subscribedRooms: Record<string, Record<string, Subscription>>;
+  subscribedRooms: Record<string, Record<string, Subscription>>;
 
   constructor(world: any) {
     super(world);
@@ -84,7 +87,7 @@ export default class MqttApi extends ApiBase {
     return this._getClient(clientName).then((client) => {
       const promise = new Bluebird((resolve, reject) => {
         this.requests[msg.requestId] = (response) => {
-          const listener = (document) => {
+          const listener = (document: JSONObject) => {
             this.responses = document;
           };
 

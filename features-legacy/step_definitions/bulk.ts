@@ -1,91 +1,96 @@
 import should from "should";
 import { Then, When } from "@cucumber/cucumber";
 import async from "async";
+import {
+  asError,
+  type AsyncCallback,
+  type RetryFailure,
+} from "../support/stepUtils";
+import type KWorld from "../support/world";
 
-Then(/^I can retrieve actions from bulk import$/, function (callback) {
-  const main = function (callbackAsync) {
-    setTimeout(() => {
-      // execute in parallel both tests: test if create/update work well and test if delete works well
-      async.parallelLimit(
-        {
-          testUpdate: (callbackAsyncParallel) => {
-            this.api
-              .get("1")
-              .then((body) => {
-                if (body.error !== null) {
-                  callbackAsyncParallel(body.error.message);
-                  return false;
-                }
+Then(
+  /^I can retrieve actions from bulk import$/,
+  function (this: KWorld, callback) {
+    const main = function (this: KWorld, callbackAsync: AsyncCallback) {
+      setTimeout(() => {
+        // execute in parallel both tests: test if create/update work well and test if delete works well
+        async.parallelLimit<void, RetryFailure>(
+          {
+            testUpdate: (callbackAsyncParallel: AsyncCallback) => {
+              this.api
+                .get("1")
+                .then((body) => {
+                  if (body.error !== null) {
+                    callbackAsyncParallel(body.error.message);
+                    return false;
+                  }
 
-                if (
-                  body.result &&
-                  body.result._source &&
-                  body.result._source.title === "foobar"
-                ) {
+                  if (
+                    body.result &&
+                    body.result._source &&
+                    body.result._source.title === "foobar"
+                  ) {
+                    callbackAsyncParallel();
+                    return false;
+                  }
+
+                  callbackAsyncParallel(
+                    "Document was not updated or created successfully in bulk import",
+                  );
+                })
+                .catch(function (error) {
+                  callbackAsyncParallel(error);
+                });
+            },
+            testDelete: (callbackAsyncParallel: AsyncCallback) => {
+              this.api
+                .get("2")
+                .then((body) => {
+                  if (body.error !== null) {
+                    callbackAsyncParallel();
+                    return false;
+                  }
+
+                  if (body.result && body.result._source) {
+                    callbackAsyncParallel("Document still exists");
+                    return false;
+                  }
+
+                  callback();
+                })
+                .catch(function () {
                   callbackAsyncParallel();
-                  return false;
-                }
-
-                callbackAsyncParallel(
-                  "Document was not updated or created successfully in bulk import",
-                );
-              })
-              .catch(function (error) {
-                callbackAsyncParallel(error);
-              });
+                });
+            },
           },
-          testDelete: (callbackAsyncParallel) => {
-            this.api
-              .get("2")
-              .then((body) => {
-                if (body.error !== null) {
-                  callbackAsyncParallel();
-                  return false;
-                }
+          1,
+          (error) => {
+            // Only when we have response from async.parallelLimit we can stop retry by calling callbackAsync
+            if (error) {
+              callbackAsync(error);
+              return;
+            }
 
-                if (body.result && body.result._source) {
-                  callbackAsyncParallel("Document still exists");
-                  return false;
-                }
-
-                callback();
-              })
-              .catch(function () {
-                callbackAsyncParallel();
-              });
+            callbackAsync();
           },
-        },
-        1,
-        function (error) {
-          // Only when we have response from async.parallelLimit we can stop retry by calling callbackAsync
-          if (error) {
-            callbackAsync(error);
-            return false;
-          }
+        ); // end async.parallel
+      }, 20); // end setTimeout
+    }; // end method main
 
-          callbackAsync();
-        },
-      ); // end async.parallel
-    }, 20); // end setTimeout
-  }; // end method main
-
-  async.retry(20, main.bind(this), function (err) {
-    if (err) {
-      if (err.message) {
-        err = err.message;
+    async.retry<void, RetryFailure>(20, main.bind(this), (failure) => {
+      if (failure) {
+        callback(asError(failure));
+        return;
       }
 
-      callback(new Error(err));
-      return false;
-    }
-
-    callback();
-  });
-});
+      callback();
+    });
+  },
+);
 
 When(
   /^I ?(can't)* do a bulk import(?: from index "([^"]*)")?$/,
-  function (not, index, callback) {
+  function (this: KWorld, not, index, callback) {
     this.api
       .bulkImport(this.bulk, index)
       .then((body) => {
@@ -116,46 +121,30 @@ When(
   },
 );
 
-When(/^I do a global bulk import$/, function (callback) {
-  this.api
-    .globalBulkImport(this.globalBulk)
-    .then((body) => {
-      if (body.error !== null) {
-        callback(new Error(body.error.message));
-        return false;
-      }
-
-      callback();
-    })
-    .catch(function (error) {
-      callback(error);
-    });
-});
-
-When("I use bulk:mWrite action with", function (bodyRaw) {
+When("I use bulk:mWrite action with", function (this: KWorld, bodyRaw) {
   const body = JSON.parse(bodyRaw);
 
-  return this.api.bulkMWrite(this.index, this.collection, body);
+  return this.api.bulkMWrite(this.fakeIndex, this.fakeCollection, body);
 });
 
-When("I use bulk:write action with {string}", function (bodyRaw) {
+When("I use bulk:write action with {string}", function (this: KWorld, bodyRaw) {
   const body = JSON.parse(bodyRaw);
 
-  return this.api.bulkWrite(this.index, this.collection, body);
+  return this.api.bulkWrite(this.fakeIndex, this.fakeCollection, body);
 });
 
 When(
   "I use bulk:write action with id {string} and content {string}",
-  function (id, bodyRaw) {
+  function (this: KWorld, id, bodyRaw) {
     const body = JSON.parse(bodyRaw);
 
-    return this.api.bulkWrite(this.index, this.collection, body, id);
+    return this.api.bulkWrite(this.fakeIndex, this.fakeCollection, body, id);
   },
 );
 
-Then("The documents does not have kuzzle metadata", function () {
+Then("The documents does not have kuzzle metadata", function (this: KWorld) {
   return this.api
-    .search({}, this.index, this.collection, { size: 100 })
+    .search({}, this.fakeIndex, this.fakeCollection, { size: 100 })
     .then(({ result }) => {
       for (const hit of result.hits) {
         should(hit._source._kuzzle_info).be.undefined();
@@ -165,11 +154,11 @@ Then("The documents does not have kuzzle metadata", function () {
 
 Then(
   "The documents have the following kuzzle metadata {string}",
-  function (metadatRaw) {
+  function (this: KWorld, metadatRaw) {
     const metadata = JSON.parse(metadatRaw);
 
     return this.api
-      .search({}, this.index, this.collection, { size: 100 })
+      .search({}, this.fakeIndex, this.fakeCollection, { size: 100 })
       .then(({ result }) => {
         for (const hit of result.hits) {
           should(hit._source._kuzzle_info).match(metadata);
@@ -178,6 +167,6 @@ Then(
   },
 );
 
-Then("I can found a document {string}", function (documentId) {
-  return this.api.get(documentId, this.index, this.collection);
+Then("I can found a document {string}", function (this: KWorld, documentId) {
+  return this.api.get(documentId, this.fakeIndex, this.fakeCollection);
 });

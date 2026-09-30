@@ -190,7 +190,7 @@ Feature: Collection Controller
     And a collection "nyc-open-data":"green-taxi"
     And a collection "nyc-open-data":"green-taxi"
     And I list "stored" collections in index "nyc-open-data"
-    Then I should receive a "collections" array of objects matching:
+    Then I should receive a "collections" array of objects matching in order:
       | name          | type     |
       | "green-taxi"  | "stored" |
       | "yellow-taxi" | "stored" |

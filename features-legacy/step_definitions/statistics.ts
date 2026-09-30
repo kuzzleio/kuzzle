@@ -1,10 +1,13 @@
 import { When, Then } from "@cucumber/cucumber";
+import type { JSONObject } from "kuzzle-sdk";
 
-When(/^I get the last statistics frame$/, function (callback) {
+import type KWorld from "../support/world";
+
+When(/^I get the last statistics frame$/, function (this: KWorld, callback) {
   this.api
     .getLastStats()
     .then(
-      function (response) {
+      function (this: KWorld, response: JSONObject) {
         if (response.error) {
           return callback(new Error(response.error.message));
         }
@@ -22,36 +25,39 @@ When(/^I get the last statistics frame$/, function (callback) {
     });
 });
 
-When(/^I get the statistics frame from a date$/, function (callback) {
-  this.api
-    .getStats({
-      startTime: new Date().getTime() - 1000000,
-      stopTime: undefined,
-    })
-    .then(
-      function (response) {
-        if (response.error) {
-          return callback(new Error(response.error.message));
-        }
+When(
+  /^I get the statistics frame from a date$/,
+  function (this: KWorld, callback) {
+    this.api
+      .getStats({
+        startTime: new Date().getTime() - 1000000,
+        stopTime: undefined,
+      })
+      .then(
+        function (this: KWorld, response: JSONObject) {
+          if (response.error) {
+            return callback(new Error(response.error.message));
+          }
 
-        if (!response.result) {
-          return callback(new Error("No result provided"));
-        }
+          if (!response.result) {
+            return callback(new Error("No result provided"));
+          }
 
-        this.result = response.result;
-        callback();
-      }.bind(this),
-    )
-    .catch(function (error) {
-      callback(error);
-    });
-});
+          this.result = response.result;
+          callback();
+        }.bind(this),
+      )
+      .catch(function (error) {
+        callback(error);
+      });
+  },
+);
 
-When(/^I get all statistics frames$/, function (callback) {
+When(/^I get all statistics frames$/, function (this: KWorld, callback) {
   this.api
     .getAllStats()
     .then(
-      function (response) {
+      function (this: KWorld, response: JSONObject) {
         if (response.error) {
           return callback(new Error(response.error.message));
         }
@@ -69,7 +75,7 @@ When(/^I get all statistics frames$/, function (callback) {
     });
 });
 
-Then(/^I get at least 1 statistic frame$/, function (callback) {
+Then(/^I get at least 1 statistic frame$/, function (this: KWorld, callback) {
   if (!this.result) {
     return callback(
       new Error("Expected a statistics result, got: " + this.result),

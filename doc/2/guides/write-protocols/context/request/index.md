@@ -129,9 +129,11 @@ Otherwise, the provided error is embedded into a [InternalError](/core/2/guides/
 
 ## setResult
 
-
+<DeprecatedBadge version="2.12.0" />
 
 Sets the request result.
+
+Use [request.response.configure](/core/2/framework/classes/request-response/configure) with its `result` option instead. `setResult` still works and will only be removed in a major version.
 
 ### Arguments
 

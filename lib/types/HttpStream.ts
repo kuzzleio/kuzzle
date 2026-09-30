@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Readable } from "stream";
+import type { Readable } from "stream";
 
 export type HttpStreamProperties = {
   totalBytes?: number;
@@ -35,7 +35,9 @@ export class HttpStream {
   private _destroyed = false;
 
   private get readableState() {
-    // @ts-ignore
+    // @ts-expect-error -- `_readableState` is Node's internal bookkeeping and
+    // is not declared by @types/node; it is where a destroyed stream's error
+    // lands, and `errored` is the only field read from it.
     return this.stream._readableState;
   }
 

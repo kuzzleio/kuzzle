@@ -14,9 +14,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
       - name: Extract references from context
         shell: bash
         id: extract-refs
@@ -46,9 +43,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
       - name: Node version 24
         uses: actions/setup-node@v4
         with:
@@ -56,10 +50,18 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
     
       - name: Build
         run: npm run build
+
+      # `tsc` succeeding does not mean the build is complete: the .proto files and
+      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
+      # used to assert ran. A published package missing its .proto files only fails
+      # when a cluster node boots.
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
+        shell: bash
 
       - uses: actions/create-github-app-token@v3
         id: app-token

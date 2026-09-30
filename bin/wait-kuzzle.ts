@@ -1,0 +1,191 @@
+#!/usr/bin/env node
+
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* eslint-disable no-console */
+
+import { Kuzzle, WebSocket } from "kuzzle-sdk";
+
+/**
+ * Waits for a Kuzzle node to be able to *process requests*, not merely to
+ * accept a WebSocket handshake.
+ *
+ * Two things this script deliberately does not delegate to the SDK:
+ *
+ *  1. **Readiness.** A successful handshake only says the transport is
+ *     listening. On a cluster, a node stays in the `NOT_ENOUGH_NODES` state
+ *     until it has discovered its peers, and `funnel.throttle()` rejects every
+ *     request with `api.process.not_enough_nodes` until then. So each attempt
+ *     sends a real request and the node counts as up only once that request is
+ *     no longer rejected for that reason.
+ *
+ *  2. **Retrying.** The SDK's auto-reconnect cannot be relied on here: it is
+ *     driven by `clientNetworkError()`, and `WebSocketProtocol.onclose`
+ *     forwards a close to it only `if (this.wasConnected)`. A socket that is
+ *     accepted and then closed before the *first* successful connection —
+ *     exactly what a published Docker port whose container is still booting
+ *     does — therefore takes a path that neither resolves nor rejects
+ *     `connect()` and schedules no retry. The wait then burns its whole budget
+ *     on a single dead attempt. Each attempt below is instead a fresh client
+ *     with `autoReconnect: false`, bounded by its own timeout.
+ *
+ * It is not shipped: it is CI tooling, so it lives in the test program
+ * (`tsconfig.tests.json`) and is run through `ts-node`, the same way
+ * `.ci/` runs `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
+ */
+
+const NOT_ENOUGH_NODES = "api.process.not_enough_nodes";
+
+const sleep = (seconds: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+};
+
+const kuzzleHost = process.env.KUZZLE_HOST || "localhost";
+const kuzzlePort = Number.parseInt(process.env.KUZZLE_PORT || "7512", 10);
+const maxTries = Number.parseInt(process.env.MAX_TRIES || "60", 10);
+const attemptTimeout = Number.parseInt(process.env.ATTEMPT_TIMEOUT || "5", 10);
+
+/**
+ * The one property this script reads off a rejection. Anything can be thrown,
+ * so the check is a predicate rather than a cast: a `KuzzleError` carries an
+ * `id`, a socket error does not, and both reach the same `catch`.
+ */
+function errorId(error: unknown): string | undefined {
+  return typeof error === "object" && error !== null && "id" in error
+    ? String((error as { id: unknown }).id)
+    : undefined;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Runs one connection + readiness probe, bounded by `timeout` seconds.
+ *
+ * Resolves if the node is ready, rejects otherwise.
+ */
+async function probe(
+  host: string,
+  port: number,
+  timeout: number,
+): Promise<void> {
+  // `autoReconnect` is a *protocol* option, not a Kuzzle one.
+  const kuzzle = new Kuzzle(
+    new WebSocket(host, { autoReconnect: false, port }),
+  );
+
+  let timer: NodeJS.Timeout | undefined;
+  const expire = new Promise<never>((resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`attempt timed out after ${timeout}s`)),
+      timeout * 1000,
+    );
+  });
+
+  const attempt = (async () => {
+    await kuzzle.connect();
+
+    try {
+      // Any request goes through `funnel.throttle()`, which is where a
+      // node that has not reached its quorum rejects. `auth:getCurrentUser`
+      // is cheap and open to anonymous; any answer other than
+      // `not_enough_nodes` — an authorization error included — means the
+      // node is processing requests.
+      await kuzzle.query({
+        action: "getCurrentUser",
+        controller: "auth",
+      });
+    } catch (error) {
+      if (errorId(error) === NOT_ENOUGH_NODES) {
+        throw error;
+      }
+    }
+  })();
+
+  // The race below may be won by `expire`, leaving this rejection unobserved.
+  attempt.catch(() => {});
+
+  try {
+    await Promise.race([attempt, expire]);
+  } finally {
+    clearTimeout(timer);
+
+    try {
+      kuzzle.disconnect();
+    } catch {
+      // the client may already be gone: nothing to clean up
+    }
+  }
+}
+
+async function waitKuzzle(
+  host: string,
+  port: number,
+  timeout: number,
+): Promise<void> {
+  console.log(`[ℹ] Trying to connect to Kuzzle at "${host}:${port}"`);
+
+  const deadline = Date.now() + timeout * 1000;
+  let lastError: unknown;
+
+  for (let attempt = 0; Date.now() < deadline; attempt++) {
+    const remaining = Math.ceil((deadline - Date.now()) / 1000);
+
+    try {
+      await probe(host, port, Math.min(attemptTimeout, remaining));
+
+      console.log(
+        `[✔] Kuzzle at "${host}:${port}" is up and accepting requests`,
+      );
+      return;
+    } catch (error) {
+      lastError = error;
+
+      console.log(
+        `[-] Kuzzle at "${host}:${port}" is not ready yet (attempt ${attempt + 1}, ${remaining}s left): ${errorMessage(error)}`,
+      );
+    }
+
+    await sleep(1);
+  }
+
+  console.log(
+    `Timeout after ${timeout}s: Kuzzle at "${host}:${port}" never became ready — last error: ${errorMessage(lastError)}`,
+  );
+  process.exit(1);
+}
+
+const run = async (): Promise<void> => {
+  try {
+    await waitKuzzle(kuzzleHost, kuzzlePort, maxTries);
+  } catch (error) {
+    console.error(`[x] ${errorMessage(error)}`);
+    process.exit(1);
+  }
+};
+
+if (require.main === module) {
+  run();
+}
+
+export = waitKuzzle;

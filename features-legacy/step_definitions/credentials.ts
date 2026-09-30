@@ -1,10 +1,11 @@
 import { When } from "@cucumber/cucumber";
+import type KWorld from "../support/world";
 
 const defaultUser = "nocredentialuser";
 
 When(
   /^I create ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, user, id) {
+  function (this: KWorld, strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api
@@ -19,7 +20,7 @@ When(
 
 When(
   /^I update ([^ ]+) credentials password to "([^"]+)" for user with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, password, id) {
+  function (this: KWorld, strategy, password, id) {
     id = this.idPrefix + id;
 
     return this.api
@@ -36,7 +37,7 @@ When(
 
 When(
   /^I validate ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, user, id) {
+  function (this: KWorld, strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api
@@ -55,7 +56,7 @@ When(
 
 When(
   /^I delete ([^ ]+) credentials of user with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, id) {
+  function (this: KWorld, strategy, id) {
     id = this.idPrefix + id;
 
     return this.api.deleteCredentials(strategy, id).then((response) => {
@@ -68,7 +69,7 @@ When(
 
 When(
   /^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, user, id) {
+  function (this: KWorld, strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.getCredentials(strategy, id).then((response) => {
@@ -87,7 +88,7 @@ When(
 
 When(
   /^I get ([^ ]+) credentials of user ([a-zA-Z0-9]+) by id ([a-zA-Z0-9-]+)$/,
-  function (strategy, user, id) {
+  function (this: KWorld, strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.getCredentialsById(strategy, id).then((response) => {
@@ -106,7 +107,7 @@ When(
 
 When(
   /^I check if ([^ ]+) credentials exist for user ([a-zA-Z0-9]+) with id ([a-zA-Z0-9-]+)$/,
-  function (strategy, user, id) {
+  function (this: KWorld, strategy, user, id) {
     id = this.idPrefix + id;
 
     return this.api.hasCredentials(strategy, id).then((response) => {
@@ -121,7 +122,7 @@ When(
   },
 );
 
-When(/^I create my ([^ ]+) credentials$/, function (strategy) {
+When(/^I create my ([^ ]+) credentials$/, function (this: KWorld, strategy) {
   return this.api
     .createMyCredentials(strategy, this.credentials[defaultUser])
     .then((response) => {
@@ -133,7 +134,7 @@ When(/^I create my ([^ ]+) credentials$/, function (strategy) {
 
 When(
   /^I update my ([^ ]+) credentials password to "([^"]+)"$/,
-  function (strategy, password) {
+  function (this: KWorld, strategy, password) {
     return this.api
       .updateMyCredentials(strategy, {
         password,
@@ -146,7 +147,7 @@ When(
   },
 );
 
-When(/^I validate my ([^ ]+) credentials$/, function (strategy) {
+When(/^I validate my ([^ ]+) credentials$/, function (this: KWorld, strategy) {
   return this.api
     .validateMyCredentials(strategy, this.credentials[defaultUser])
     .then((response) => {
@@ -156,7 +157,7 @@ When(/^I validate my ([^ ]+) credentials$/, function (strategy) {
     });
 });
 
-When(/^I delete my ([^ ]+) credentials$/, function (strategy) {
+When(/^I delete my ([^ ]+) credentials$/, function (this: KWorld, strategy) {
   return this.api.deleteMyCredentials(strategy).then((response) => {
     if (response.error !== null) {
       throw new Error(response.error.message);
@@ -164,7 +165,7 @@ When(/^I delete my ([^ ]+) credentials$/, function (strategy) {
   });
 });
 
-When(/^I get my ([^ ]+) credentials$/, function (strategy) {
+When(/^I get my ([^ ]+) credentials$/, function (this: KWorld, strategy) {
   return this.api.getMyCredentials(strategy).then((response) => {
     if (response.error !== null) {
       throw new Error(response.error.message);
@@ -180,7 +181,7 @@ When(/^I get my ([^ ]+) credentials$/, function (strategy) {
 
 When(
   /^I check if i have( no)? ([^ ]+) credentials$/,
-  function (noCredentials, strategy) {
+  function (this: KWorld, noCredentials, strategy) {
     return this.api
       .credentialsExist(strategy, this.credentials[defaultUser])
       .then((response) => {

@@ -11,6 +11,11 @@ export type HttpConfiguration = {
    * Sets the default Access-Control-Allow-Origin HTTP
    * header used to send responses to the client.
    *
+   * A comma-separated list, or an array of origins. Kuzzle stores the array
+   * once the configuration is loaded — of `RegExp`s with
+   * `accessControlAllowOriginUseRegExp`. Declared `string` all the same, as
+   * v2.56.0 declared it: code compiled against that reads it as one.
+   *
    * @default "*"
    */
   accessControlAllowOrigin: string;

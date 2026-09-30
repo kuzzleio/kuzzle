@@ -1,0 +1,490 @@
+# Step 09 — Sprint 6: `lib/core` II (validation, plugin, network)
+
+**Status:** ✅ Done — 2026-09-11 → 2026-09-15, frozen
+**Date:** 2026-09-11 → 2026-09-15
+**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) · H3 [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) · H4 [#2746](https://github.com/kuzzleio/kuzzle/pull/2746) · H5 [#2748](https://github.com/kuzzleio/kuzzle/pull/2748) · H6 [#2750](https://github.com/kuzzleio/kuzzle/pull/2750)
+**Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+
+## Goal
+
+Convert the second half of `lib/core`: the **validation** engine, the **plugin** machinery and the **network** layer. 34 `.js` files, 8 195 LOC — the largest and hardest sprint so far, and the one holding the repo's two biggest remaining files (`httpwsProtocol` 1 254 LOC, `pluginsManager` 1 244).
+
+| Area | Files | LOC |
+|------|------:|----:|
+| `validation` — engine + 13 leaf types + `baseType` | 15 | 2 779 |
+| `plugin` — `plugin`, `pluginsManager`, `pluginRepository`, `pluginManifest`, `privilegedContext` | 5 | 1 911 |
+| `network` — entrypoint, router, protocols, HTTP router, access log | 14 | 3 505 |
+
+After this step the only `.js` left under `lib/` is `lib/cluster` (sprint 7) and `lib/kuzzle` (sprint 8).
+
+## Sequencing: measured coverage first — and measured the way the gate measures
+
+[Step 07](07-sprint-5-core-i.md) established the rule the hard way: **a `.js` → `.ts` rename re-scores the whole file as new code**, so `new_lines_to_cover` is the file's entire body and *today's coverage is tomorrow's `new_coverage`*. The SonarCloud gate requires `new_coverage ≥ 80%`.
+
+### ⚠️ The raw c8 report is not the number the gate sees — and here it is optimistic
+
+Step 07 also added `.ci/scripts/prepare-coverage.ts`, which drops blank and comment-only lines from the LCOV before SonarCloud reads it. Planning this sprint off the *raw* `c8` output would have put **three files in the wrong block**, because normalisation removes hit comment lines as well as unhit ones:
+
+| File | Raw | Normalised | |
+|------|----:|-----------:|---|
+| `plugin/pluginManifest.js` | 80.4% | **59.3%** | looked gate-safe, is not |
+| `plugin/privilegedContext.js` | 90.7% | **66.7%** | looked comfortable, is not |
+| `network/router.js` | 81.6% | **79.3%** | looked gate-safe, is just under |
+
+Repo-wide the same pass moves coverage 84.4% → 80.2%, i.e. **normalisation is not a free uplift**. Every figure below is the normalised one. (Measured on `2-dev`, 2026-09-11: `npm run test:unit:mocha:coverage`, then `prepare-coverage.ts`. The raw `LF` happens to equal `wc -l` exactly — c8 instruments every line of a loaded file, which is precisely the inflation the script exists to undo.)
+
+### Per-file
+
+| File | Lines (raw c8) | Raw | Lines (normalised) | **Normalised** | Gate |
+|------|---------------:|----:|-------------------:|---------------:|------|
+| `network/clientConnection.js` | 57 | 100.0% | 23 | **100.0%** | ✅ |
+| `network/context.js` | 80 | 100.0% | 54 | **100.0%** | ✅ |
+| `network/protocolManifest.js` | 34 | 100.0% | 9 | **100.0%** | ✅ |
+| `network/httpRouter/routeHandler.js` | 111 | 100.0% | 53 | **100.0%** | ✅ |
+| `validation/baseType.js` | 80 | 100.0% | 25 | **100.0%** | ✅ |
+| `validation/types/anything.js` | 38 | 100.0% | 11 | **100.0%** | ✅ |
+| `validation/types/boolean.js` | 52 | 100.0% | 18 | **100.0%** | ✅ |
+| `validation/types/date.js` | 284 | 100.0% | 219 | **100.0%** | ✅ |
+| `validation/types/email.js` | 92 | 100.0% | 46 | **100.0%** | ✅ |
+| `validation/types/enum.js` | 100 | 100.0% | 54 | **100.0%** | ✅ |
+| `validation/types/geoPoint.js` | 54 | 100.0% | 19 | **100.0%** | ✅ |
+| `validation/types/integer.js` | 57 | 100.0% | 21 | **100.0%** | ✅ |
+| `validation/types/ipAddress.js` | 83 | 100.0% | 39 | **100.0%** | ✅ |
+| `validation/types/numeric.js` | 108 | 100.0% | 62 | **100.0%** | ✅ |
+| `validation/types/object.js` | 88 | 100.0% | 38 | **100.0%** | ✅ |
+| `validation/types/string.js` | 110 | 100.0% | 63 | **100.0%** | ✅ |
+| `validation/types/url.js` | 83 | 100.0% | 39 | **100.0%** | ✅ |
+| `validation/types/geoShape.js` | 370 | 98.1% | 262 | **97.7%** | ✅ |
+| `network/protocols/httpMessage.js` | 69 | 98.6% | 31 | **96.8%** | ✅ |
+| `network/protocols/internalProtocol.js` | 109 | 96.3% | 48 | **95.8%** | ✅ |
+| `network/httpRouter/routePart.js` | 147 | 96.6% | 67 | **94.0%** | ✅ |
+| `network/httpRouter/index.js` | 316 | 92.1% | 156 | **89.7%** | ✅ |
+| `network/protocols/mqttProtocol.js` | 291 | 89.3% | 194 | **88.1%** | ✅ |
+| `plugin/pluginRepository.js` | 132 | 93.9% | 52 | **86.5%** | ✅ |
+| `network/protocols/protocol.js` | 102 | 88.2% | 51 | **84.3%** | ⚠️ |
+| `network/accessLogger.js` | 322 | 83.5% | 221 | **82.4%** | ⚠️ |
+| `network/router.js` | 255 | 81.6% | 145 | **79.3%** | ❌ |
+| `plugin/privilegedContext.js` | 43 | 90.7% | 9 | **66.7%** | ❌ |
+| `network/protocols/httpwsProtocol.js` | 1254 | 66.8% | 865 | **61.7%** | ❌ |
+| `plugin/pluginManifest.js` | 56 | 80.4% | 27 | **59.3%** | ❌ |
+| `plugin/pluginsManager.js` | 1244 | 66.1% | 841 | **58.1%** | ❌ |
+| `network/entryPoint.js` | 358 | 65.1% | 223 | **55.2%** | ❌ |
+| `plugin/plugin.js` | 436 | 49.3% | 337 | **46.9%** | ❌ |
+| `validation/validation.js` | 1180 | 43.1% | 890 | **36.2%** | ❌ |
+
+Every one of the 34 files already has a spec reaching it — unlike sprint 5, nothing here is unnetted. The gap is **depth, not existence**.
+
+## PR breakdown (planned)
+
+The gate scores a PR's **aggregate**, not each file, so the blocks are formed to clear 80% as a whole. "Covered lines needed" is what each block is short of the threshold *before* any new spec is written.
+
+| PR | Scope |
+|----|-------|
+| **H1** | `validation/types/*` + `baseType` — pure leaves |
+| **H2** | `network` minus `entryPoint`/`httpwsProtocol`: `clientConnection`, `context`, `protocolManifest`, `httpRouter/*`, `protocols/{httpMessage,internalProtocol,mqttProtocol,protocol}`, `accessLogger`, `router` |
+| **H3** | `plugin` leaves: `pluginRepository`, `privilegedContext`, `pluginManifest` |
+| **H4** | `validation/validation.js` — spec effort, then rename |
+| **H5** | `plugin/plugin.js` + `pluginsManager.js` — coupled; spec effort, then rename |
+| **H6** | `network/entryPoint.js` + `protocols/httpwsProtocol.js` — coupled (`entryPoint` owns the protocols); spec effort, then rename |
+
+| PR | Files | Lines | Uncovered | Aggregate | Covered lines needed for 80% |
+|----|------:|------:|----------:|----------:|-----------------------------:|
+| **H1** | 14 | 916 | 6 | 99.3% | — |
+| **H2** | 12 | 1052 | 123 | 88.3% | — |
+| **H3** | 3 | 88 | 21 | 76.1% | +4 |
+| **H4** | 1 | 890 | ~~568~~ **7** | ~~36.2%~~ **99.2%** | ~~+390~~ **—** |
+| **H5** | 2 | 1178 | ~~531~~ **43** | ~~54.9%~~ **96.4%** | ~~+296~~ **—** |
+| **H6** | 2 | 1088 | ~~431~~ **61** | ~~60.4%~~ **94.4%** | ~~+214~~ **—** |
+| **all** | 34 | 5212 | — | — | |
+
+> ⚠️ **The H4/H5/H6 figures in this table were wrong when it was written (2026-09-11); the struck-through numbers are what it said.** They came from a coverage report that loses data for any module loaded more than once in a process — [TD-50](../type-debt-register.md#td-50), [#2744](https://github.com/kuzzleio/kuzzle/issues/2744). Corrected values in bold. **The roughly +900 covered lines this table asked for do not exist**, and the three PRs it classified as spec efforts are plain conversions. See *The H4 that wasn't* below.
+
+Reading that table:
+
+- **H1 and H2 are conversions.** They clear the gate on existing specs with room to spare and can move immediately, in parallel.
+- **H3 is a conversion plus four lines of test.** `router.js` (79.3%) is carried by H2's aggregate; the three plugin leaves are only 88 lines between them, so their block lands at 76.1% and needs a handful of assertions — not a spec effort.
+- ~~**H4, H5 and H6 are spec efforts with a rename at the end**, the shape sprint 5 established for `clientAdapter`. Together they need roughly **+900 covered lines**. `validation.js` alone needs +390 and is the largest single piece of work in the sprint.~~ **False, on a bad measurement** ([TD-50](../type-debt-register.md#td-50)): all five files are above 80% already, so H4, H5 and H6 are **plain conversions** and the sprint has no spec effort left in it.
+
+H1 → H3 are independent of each other and of H4 → H6; the leaves go first so `validation.js` (H4) is converted against already-typed types.
+
+## Known risks, before starting
+
+- **`httpwsProtocol.js` (865 measurable lines, 61.7%)** is the riskiest file of the whole migration: HTTP *and* WebSocket entrypoint, with its uncovered third largely error and back-pressure paths, where a regression is not caught by unit tests. Sprint 5's `Build and Run` job caught exactly that class of bug (a dynamic method call turned into a property read, losing its receiver) — keep that job in mind as the real net here.
+- ~~**`validation.js` at 36.2%** is the lowest-covered file in scope and the most branch-heavy (recursive schema walking). Its three existing specs (`init`, `util`, `validate`) cover the happy paths.~~ **It is at 99.2%** — the three specs cover far more than the happy paths, and the 36.2% was [TD-50](../type-debt-register.md#td-50). The phrase *the most branch-heavy* is the part that should have raised the alarm: the report said 93% of branches next to 36% of lines.
+- **The plugin machinery is the API surface third-party plugins are written against.** The conversion must not change the shape of what `pluginContext` hands out; `lib/core/plugin/pluginContext.ts` is already TS and typed, so most of the risk sits in `plugin.js`'s manifest and loading paths.
+- **`fail-fast: false` is now set on the functional matrix** and the readiness gate is fixed ([TD-33](../type-debt-register.md#td-33)), so a flaky variant no longer hides the other 29 results during this sprint's re-runs.
+
+## Definition of done (per PR)
+
+Unchanged from step 06, restated because this sprint is long:
+
+- `export =` for modules consumed by JS; no new written `any`, no `@ts-ignore`, no `!`.
+- All **six** ratchets green, baselines updated **in the same PR** (`js`, `mocha`, `any`, `implicit-any`, `casts`, `cpd-exclusions`).
+- Strict adoption when the converted file is clean (`npm run test:strict -- --candidates` must come back empty).
+- A vitest spec for any file whose coverage the PR relies on, under `tests/` mirroring the source tree.
+- A gate-driven, behaviour-preserving refactor is **in scope** when the rename's new-code score forces it — with a verbatim-extraction equivalence note in this file.
+
+## What was done (PR H1 — the validation type leaves)
+
+14 files, 916 measurable lines: `baseType` and the 13 leaf types. **js 49 → 35.** The block was measured at 99.3%, so it clears `new_coverage` on the specs that already exist — and every one of the 14 has a dedicated Mocha spec, so the ADR's *"a file with no spec ships one"* rule does not apply here. All 15 files (the 14 plus the new `typeOptions.ts`) were adopted into strict: **102 → 117**, `--candidates` back to empty.
+
+### The generic is what makes `typeOptions` typable at all
+
+The JSDoc had a single `TypeOptions` typedef that never existed as a real declaration. Writing it as one interface does not work: `range` means `{ min?: number; max?: number }` to `numeric` and `{ min?: Moment | "NOW"; max?: … }` to `date`, and a union of the two makes every comparison in `numeric.validate` a type error.
+
+So `BaseType` is **generic over the options shape its subclass accepts** (`BaseType<NumericTypeOptions>`, `BaseType<DateTypeOptions>`, …), with the shapes in a new `lib/core/validation/typeOptions.ts`. Two consequences worth keeping:
+
+- The declared shapes describe the options **after `validateFieldSpecification` has run** — that method is what rejects the invalid ones and fills the defaults in. That is what lets `validate` read `range.min` as a `number` without re-proving anything, and it is the honest reading of the contract: the two methods are a pipeline, not two independent entry points.
+- **Method parameter bivariance is what keeps `this.types[…]` usable.** A `BaseType<NumericTypeOptions>` stays assignable to `BaseType`, so `validation.js`'s heterogeneous type registry needs no `any` when H4 converts it.
+
+### `checkAllowedProperties` is a type guard, and that removed the casts
+
+`checkAllowedProperties(o, ["min", "max"])` already proves `o` is a non-null, non-array object holding none but those keys. Declaring `o is Record<string, unknown>` means the code that follows it — which is always "now read `min` and `max`" — needs no cast. `safeObject.isPlainObject` got the same treatment (type-only, own commit); `date.validate` is its beneficiary.
+
+**The generalisable part:** *a boolean-returning validator that every caller follows with a property read is a type guard that has not been declared yet.* Two of them in one file, both free.
+
+### `{ range: undefined }` must still throw — the specs said so before review did
+
+The first pass rewrote `Object.prototype.hasOwnProperty.call(typeOptions, "range")` as `if (range)`, which reads better and is what TS narrows on. Four Mocha specs failed: `numeric` and `string` both assert that `{ range: undefined }` / `{ range: { min: undefined } }` throw `validation.assert.unexpected_properties` and `…invalid_type`. An own-property test and a truthiness test differ exactly on the specifications that are malformed, which is the only input those methods exist to reject.
+
+The conversion therefore keeps `has()` for presence and uses `!== undefined` only where TS genuinely needs the narrowing (the `max < min` comparisons, where the preceding loop has already thrown on any non-number). **A `hasOwnProperty` in validation code is load-bearing until a test says otherwise** — and here the test said so within one run.
+
+### Three unreachable branches, made explicit rather than latent
+
+Each was a `TypeError` waiting on an input `validateFieldSpecification` already rejects; strict mode is what surfaced them:
+
+| Site | Was | Is |
+|------|-----|----|
+| `date.validate`, unknown format | `formatMap[f](v)` → `undefined is not a function` | skipped, with the reason in a comment |
+| `geoShape`, shape type falling through the switch | `coordinateValidation` unassigned, then called | initialised to `() => true`; the `default:` branch already sets `result = false` |
+| `geoShape`, `geometrycollection` coordinates | `undefined` passed to a validator that ignores it | destructured with a `[]` default |
+
+### Other decisions
+
+- **`@types/validator` is a new dev dependency.** `validator` ships no declarations, so the three `import validator from "validator"` scored `TS7016` — an implicit `any` on a whole third-party surface, which is exactly what the fourth ratchet is for. Hand-writing a local `.d.ts` for three functions was rejected: it is debt with no owner.
+- **Two `as` casts, both at the boundary where the input is genuinely `unknown`** and the library it feeds is the thing that decides: `parse(fieldValue as MomentInput)` and `Koncorde.convertGeopoint(fieldValue as string | JSONObject)`. Neither is `as unknown as`, so neither moves the `any` counter.
+- **`BaseType.validate` is declared as an overload** (`validate(typeOptions?, fieldValue?, errorMessages?): boolean` over an implementation taking none). The base returns `true` and reads nothing; without the overload, either the subclasses stop being assignable or ESLint reports three unused parameters.
+- **Constructors are gone.** Every type's constructor did nothing but assign `typeName` / `allowChildren` / `allowedTypeOptions`; they are class-field initialisers now, which is the shape Sonar's S7757 asked for in sprint 5. With `target: es2020` and `useDefineForClassFields` off, the emitted code is the same assignment in the constructor, so `has(validationType, "allowChildren")` in `Validation.addType` still sees an own property.
+
+### The gate's new-code issues: four S3776, as budgeted
+
+`new_coverage` came out at **97.0%** and duplication at 0.0%, but the gate failed on **4 new Critical** — `S3776` cognitive complexity on `date.validate` (23), `date.validateFieldSpecification` (22), `geoShape.recursiveShapeValidation` (23) and `geoShape.checkStructure` (17). All four are pre-existing and all four were re-scored by the rename: the standing sprint-4 pattern, and the reason the step's DoD says a gate-driven refactor is in scope.
+
+Resolved by verbatim extraction — `parseDate`, `checkRange`, `validateFormats`, `validateRange`, `checkOrientation`, `checkRadius`, `checkCoordinates`, `checkGeometries`, `checkShapeType`, `checkShapeProperties`. **Equivalence note**, the two places where the extraction is not a straight cut-and-paste:
+
+- **`geoShape`'s checks each push their own error message, so none of them may be short-circuited.** `checkStructure` and `recursiveShapeValidation` both accumulated into a `result` flag precisely so that every applicable message lands. The extracted helpers therefore return into locals that are combined *after* the fact (`return typeOk && propertiesOk`), never inline in a `&&` chain. A comment says so at both sites.
+- **`recursiveShapeValidation`'s tail already collapsed to `result && coordinatesOk`.** The original returned `false` early when a non-multi shape had bad coordinates, skipping `result` — but `result` is the only other term, so the early return and the conjunction agree on every input. The conjunction is what the extraction leaves behind.
+- **`checkRadius` keeps an assignment in its `catch`.** The original pushed the error message from inside the block; hoisting that push to a single site at the end would have left an empty `catch`, which is a Sonar issue of its own. The block assigns `valid = false` instead.
+
+## What was done (PR H2 — the network leaves)
+
+12 files: `lib/core/network` minus `entryPoint` and `httpwsProtocol`, which are coupled and land in H6. **js 35 → 23**, implicit-any **461 → 457**, strict **117 → 123**.
+
+### The entry point is typed by a declared contract, not by inference
+
+`entryPoint.js` is still JavaScript, so the obvious move was `import type EntryPoint from "../entryPoint"` and let TS infer it from the JS. It compiled, and it was **wrong**: `entryPoint.execute`'s JSDoc says `@param {Request}`, and in a file that imports no `Request`, that resolves to the **DOM** `Request` — `lib.dom` is in `tsconfig.json`'s `lib`. The protocols were being checked against `fetch`'s Request.
+
+So H2 declares `NetworkEntryPoint`: the five members (`config`, `execute`, `logAccess`, `newConnection`, `removeConnection`) the protocols actually reach. H6 makes `entryPoint` implement it.
+
+**The generalisable part:** *a JSDoc type in an unconverted file is not a type, it is a name lookup in that file's scope.* Inferring from JS is fine for shapes; for anything named, check what the name resolves to before trusting it.
+
+### Four latent bugs, none of them reachable before the rename
+
+| Site | What it did | Why it was invisible |
+|------|-------------|----------------------|
+| `context.{Request,RequestContext,RequestInput}` | were **`undefined`** — destructured from `kerror/errors`, which exports none of them | a plugin's `new context.Request(...)` is the only caller, and nothing in-tree tests it |
+| `router.removeConnection` | logged `JSON.stringify(requestContext.context)` → `"undefined"` | `newConnection`, three lines up, stringifies `requestContext` |
+| `router._executeFromHttp` | `removeStacktrace(_res)` matched neither branch (`_res` is a `KuzzleRequest`, not an `Error` or a serialized response) | the protocols sanitise the serialized response anyway, so nothing leaked |
+| `mqtt.publishCallback` | a plain `function` handed detached to aedes: `this.logger` would have thrown | only reachable when a publish fails |
+
+Plus `request.setResult({}, 200)` at two http-router sites: the second parameter is an options object, and `this.status = options.status || 200` is exactly what made passing `200` look correct.
+
+Each is a one-liner, and each is the same shape: **a value that is never read, or read only on a path no test reaches.** Type-checking a file is what turns those from "nobody noticed" into "does not compile".
+
+### `node:` prefixes and mock-require
+
+The first pass used `node:net` and `node:worker_threads` and **11 unit tests turned red** — `mock-require` keys on the literal specifier, so a spec that registers `"net"` never sees `require("node:net")`. The first fix was to drop the prefixes in the source; SonarCloud then asked for them back (S7772). The resolution is to register **both** names in the two specs, which keeps the source idiomatic and costs two lines of test.
+
+**Rule:** before dropping a `node:` prefix to satisfy a spec, check whether the spec can register both names instead — the mock, not the source, is the thing that is behind.
+
+### Other decisions
+
+- **`Protocol` is generic over its configuration** (`Protocol<MqttConfig>`): `this.config` is `server.protocols.<name>`, a shape only the subclass knows. The lookup itself goes through `Reflect.get` — the key is a runtime protocol name, and indexing the typed config object with a `string` is an implicit `any` the fourth ratchet would have caught.
+- **`Protocol.init`'s first parameter carries two shapes.** Every in-tree caller uses `protocol.init(entryPoint)` while the subclasses call `super.init(null, entryPoint)`; third-party protocols may still use the deprecated `(name, entryPoint)` form. `string | null | NetworkEntryPoint` keeps both rather than breaking either, and method parameter bivariance is what lets the subclasses declare the one-argument form.
+- **Strict adoption is partial: 6 of 12.** The rest of the network layer is nullable-heavy by nature — `parentPort`, the optional `entryPoint`, a route tree read through `noUncheckedIndexedAccess` — and guarding it file by file here would be sprint 9's work done early, in the riskiest layer. `--candidates` is empty, which is what the DoD asks.
+- `clientConnection.ts` became strict-clean **because of H1**: `isPlainObject` is a type guard now, so the two `JSONObject | null` assignments narrow on their own.
+
+### The gate, in two rounds
+
+`new_coverage` cleared on the first analysis (**85.3%**); the violations did not. **27 of them** — 1 Critical (S3776 on `logAccess`, complexity 28), 7 Major, 19 Minor — every one a pre-existing idiom re-scored by the rename. Resolved the same way as H1's: verbatim extraction for the complexity, mechanical rewrites for the rest (`readonly`, class fields, object spread, `startsWith`, optional chains, `??=`, a Set), and `NOSONAR` only where the deprecation has no usable replacement ([TD-20](../type-debt-register.md#td-20) / [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)).
+
+A second round left exactly one: an S6606 on the `(unknown)` fallback the extraction had just created — `user === null ? … : user` where `??` is both what Sonar asks for and the better behaviour, since a token with no `userId` at all used to log the string `"undefined"`.
+
+Two of the six S1874 were **self-inflicted**: a `@deprecated` written for `Protocol.init`'s `name` parameter sat as a block tag, which deprecates the whole method — every `super.init(...)` then scored. *A `@deprecated` line in a JSDoc block is never about one parameter.*
+
+## What was done (PR H3 — the plugin leaves)
+
+3 files, 88 measurable lines: `pluginManifest`, `pluginRepository`, `privilegedContext`. The smallest block of the sprint, and **the last one that is a conversion**; H4, H5 and H6 all write specs before they rename anything.
+
+### Being under the gate was the useful part
+
+At **76.1%** the block was four covered lines short of 80%. Topping it up with four assertions would have cleared the gate and netted nothing, so both gaps were closed properly instead — and the result came back at **92.2%**.
+
+- **`privilegedContext` had no spec at all.** The ADR's *"a file with no spec ships one"* rule, in its plain form.
+- **`pluginManifest`'s Mocha spec was replaced, not duplicated.** It stubbed `AbstractManifest.load()` to a no-op and assigned `name` and `raw` by hand — so it never exercised the base class, and the file's real load path was untested while looking tested. The vitest version drives real `manifest.json` fixtures through the real base. The Mocha spec is deleted in the same commit: **mocha 151 → 150**, the first movement on that counter since the ADR opened.
+
+**The generalisable part:** *a block that lands under the threshold is telling you which file is not really tested.* The gate's arithmetic pointed at the two files whose specs were thinnest, and the fix for both was a spec rather than a number.
+
+### Typing decisions
+
+- **`accessors.kuzzle` is now declared on `PluginContext`**, optional, documented as present only for a plugin declared `privileged`. `PrivilegedPluginContext` has assigned it since it existed and the public type never mentioned it — the third occurrence in this migration of *the type describing less than the class does*.
+- **`PluginRepository`'s public methods take `JSONObject`**, not the id-bearing document. That is what the plugin-facing `Repository` contract passes, and a document being created legitimately has no `_id` yet. `ObjectRepository<TObject>`'s `_id` requirement is asserted at one point — the same point the runtime has always read `object._id`.
+- **`delete()` accepts `string | PluginDocument`.** It overrides a base that takes the object; an override narrowed to the id alone is not a signature the base can satisfy. The union keeps both, and the callers still pass a string.
+- **`pluginRepository.ts` is deliberately left out of strict.** Its `load()` resolves `null` for a missing user — documented behaviour — and that cannot be declared against `ObjectRepository<TObject>`'s `Promise<TObject>` without a double cast, which the conversion standard forbids. The reason sits next to the entry in `.migration/strict-adopted.txt`. **`ObjectRepository`'s type parameter cannot express a nullable load**; whoever revisits the base class should start there.
+
+### The gate
+
+`new_coverage` **92.2%**, and a single Major: S7746, `return Promise.resolve(null)` inside a `.catch()` where `return null` is the same value. Fixed.
+
+## Validation
+
+Run on the H1 branch, 2026-09-11:
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **35**, mocha 151, any 205, implicit-any 461, cpd-exclusions 4)
+- `npm run test:strict` — 117 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
+- `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
+- `eslint` + `prettier` — clean
+- SonarCloud on [#2722](https://github.com/kuzzleio/kuzzle/pull/2722): `new_coverage` **97.3%**, duplication 0.0%, all three ratings A, **0 violations** — green after the rounds above
+
+Run on the H2 branch, 2026-09-11 (rebased on `2-dev` after H1 merged):
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **23**, mocha 151, any 205, implicit-any **457**, cpd-exclusions 4)
+- `npm run test:strict` — 123 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
+- `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
+- `eslint` + `prettier` — clean
+- SonarCloud on [#2723](https://github.com/kuzzleio/kuzzle/pull/2723): `new_coverage` **85.2%**, duplication 0.0%, all three ratings A, **0 violations**
+
+Run on the H3 branch, 2026-09-11 (rebased on `2-dev` after H2 merged):
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **20**, mocha **150**, any 205, implicit-any 457, cpd-exclusions 4)
+- `npm run test:strict` — 125 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing** (3030 − the 3 replaced)
+- `.ci/scripts/docker-test.sh unit vitest` — **189 passing** (183 + 6)
+- `eslint` + `prettier` — clean
+
+
+## The H4 that wasn't (2026-09-15)
+
+H4 opened as the largest single piece of work in the sprint: `validation.js`, 36.2% covered, **+390 covered lines** to write before the rename. The first step was to reproduce that number. It reproduced exactly — `LF:890 LH:322` — and then did not survive being looked at.
+
+**Three facts that cannot all be true of a real measurement:**
+
+1. **Branch coverage was 93.5% against 36.2% of lines.** A branch cannot be exercised on a line that never ran, so branches sit at or below lines. A +57 point gap is not a property a file can have.
+2. **Coverage was not monotonic.** `init.test.js` run alone covered 785 lines; adding `validate.test.js` and `util.test.js` brought the total *down* to 508. Adding tests cannot remove coverage.
+3. **The union of the three specs, each run in its own process, was 835 of 890 measurable lines — 93.8%**, which is where branch coverage had been pointing the whole time.
+
+The cause is [TD-50](../type-debt-register.md#td-50): 43 specs use `mock-require`'s `reRequire`, V8 therefore compiles those modules several times, and c8 merges the resulting `ScriptCoverage` entries at the **V8 range** level, before conversion, which loses coverage. Merging the same raw data as istanbul `FileCoverage` gives 1171 of 1180 statements where c8 gave 508 — *below its own largest single input*.
+
+**What this costs and what it does not.** Nothing shipped on a false pass: the error understates coverage, so it fails closed, blocking work rather than admitting defects. What it cost is plan. Two of this sprint's six PRs were sized, and all three remaining ones classified, against debt that was not there.
+
+**Two wrong turns on the way, both worth recording**, because both are the failure this ADR keeps meeting — *a measurement that answers a slightly different question than the one asked*:
+
+- The first diagnosis was *the source map is misaligned*, from function records landing 90 lines away from their declaration. That was real, but it was a **symptom**: those records belonged to a different instance of the module, not to a shifted map. The check that would have refuted it immediately — do the instances share a `statementMap`? — is the one that eventually did (they do, all 1180 entries).
+- The generalising check after it, *how many files show duplicated function names in the report*, flagged 16% of `.ts` files. That predicate was wrong in exactly the way `as [A-Z]` was wrong for [TD-43](../type-debt-register.md#td-43): a file may legitimately hold two functions of one name, and a class constructor legitimately carries its class's name. The signal that held up is arithmetic on the report itself — **branches above lines** — and it needs no predicate at all.
+
+**Consequence for the sprint.** H4, H5 and H6 are conversions. Each file's definition of done is unchanged except for the coverage clause, which all five already satisfy.
+
+
+## What was done (PR H4 — `validation.js`)
+
+1 file, 890 measurable lines. **js 22 → 21**, strict **127 → 128**, and the converted file measures **99.9%** (993 of 994) on the corrected pipeline. No spec was written: [TD-50](../type-debt-register.md#td-50) is why one looked necessary.
+
+### The specification types were another phantom typedef
+
+`FieldSpecification`, `StructuredFieldSpecification`, `CollectionSpecification` and `DocumentSpecification` were written in JSDoc annotations across `validation.js` *and* `default.config.ts`, and none of them had ever been declared — the same situation H1 found with `TypeOptions`. They now live in `lib/core/validation/specification.ts`.
+
+Writing them made one distinction explicit that the JSDoc could not draw, and it is the reason the file holds four types rather than one: **before and after curation**. What a user submits is a flat map of `/`-separated paths with almost everything optional; what the validator walks is a tree with defaults filled in and `path`/`depth`/`children` added. `curateCollectionSpecification` is the boundary, and the two shapes had shared one name.
+
+`KuzzleConfiguration.validation` was `Record<string, unknown>` next to a `/** @type {DocumentSpecification} */` comment pointing at nothing; it is now `RawSpecification`, and the comment is gone because the type says it.
+
+### Four methods answer "the value, or why it could not be built"
+
+`curateCollectionSpecification`, `structureCollectionValidation`, `curateFieldSpecification` and `validateFormat` each return a curated value **or** a `{ isValid: false, errors }` report, depending on a `verbose` flag. That is not a discriminated union — the success branch is the value itself and carries no tag — so a naive union return type breaks every caller, which is exactly what [TD-41](../type-debt-register.md#td-41) warned about.
+
+Two tools, chosen per case:
+
+- **Overloads** where the caller passes a literal, which is what `validate` and `curateCollectionSpecification` get. Every call site of `validate` passes `false` or `true` written out, so `documentController` and `realtimeController` see `Promise<KuzzleRequest>` and need no narrowing at all.
+- **A type guard** — `isCurationFailure`, `"isValid" in result && result.isValid === false` — where the flag is a runtime boolean. `in` is what makes it a guard rather than an assertion, and with TD-43's `casts` ratchet now live that distinction has a price attached.
+
+### Two defects the types surfaced
+
+- **`realtimeController.publish` wrote `newRequest.input.body._kuzzle_info` on a nullable body.** It was invisible while `validate` came from JavaScript and returned `any`; typing the return made `strict` fail on an *already-adopted* file. Fixed where the defect is, with `newRequest.getBody()` — the same assertion the method already makes on the same object two lines above.
+- **The 13 built-in types were loaded by `require(`./types/${typeFile}`)` over a list of names.** A runtime `require` in a function body is [TD-49](../type-debt-register.md#td-49)'s third spelling, the one no grep for `import … = require` finds. They are static imports now, so the module loads under a runner that resolves the graph itself — which is what H5 will need, since `pluginsManager` reaches this file.
+
+`error.details = { field }` bolted onto a plain `Error` became a `StrictnessError` class. The `error.message !== "strictness"` checks at both catch sites are untouched: `instanceof` would have been a behaviour change, and a conversion does not get to make those.
+
+### What the tests caught
+
+Rewriting the specification lookup to use the typed map dropped a short-circuit — `has(this.specification, index) && get(…)` became `has(indexSpec, collection)` with `indexSpec` possibly `undefined`, and `Object.hasOwn(undefined, …)` throws. Two `validate` specs failed immediately. The guard is back and explicit: `index` and `collection` come from the request, so an inherited property must not answer for a specification.
+
+### Gate-driven refactor, and the equivalence note
+
+SonarCloud failed the first run on **5 new Critical** (S3776 cognitive complexity: `isValidField` 51, `manageErrorMessage` 30, `validate` 25, `curateFieldSpecificationFormat` 20, `getValidationConfiguration` 17), **1 new Major** (S2301, `manageErrorMessage`'s boolean selector) and **11 new Minor**. Every one is pre-existing JavaScript re-scored by the rename — the standing pattern since sprint 4, and what the DoD above anticipates.
+
+Extractions, all verbatim: `resolveValidationBody`, `checkDocumentFields`, `checkValidators` out of `validate`; `resolveFieldValues`, `validateFieldValue`, `validateFieldChildren` out of `isValidField`; `checkMultivaluedSpecification` out of `curateFieldSpecificationFormat`; `collectStoredSpecification` out of `getValidationConfiguration`; and `manageErrorMessage` split into `storeErrorMessage` / `throwErrorMessage`, which answers S2301 and S3776 together.
+
+**Equivalence note** — the five places the extraction is not a straight cut:
+
+1. **`if (collectionSpec)` in `validate` was dead.** `collectionSpec` falls back to `{}` on the line that builds it, so the test could never fail. Dropped rather than carried into the extracted shape.
+2. **The validators branch now reads `check(...) && isValid`** where the original assigned `isValid = false` outright. Equivalent: the original only ever wrote `false` there, and `&&` preserves an earlier `false`.
+3. **`resolveFieldValues` answers `null` where the original did `return false`** from inside `isValidField`. The caller returns `false` immediately on `null`, so the arity failures reach the same exit.
+4. **`manageErrorMessage`'s unreachable branch is now explicit.** `structured` and the holder's shape are one fact — `validate` builds an object exactly when `verbose` holds — so the `Array.isArray(errorHolder)` early return cannot be taken. It exists to narrow the type, and it is the only line in the refactor with no counterpart in the original.
+5. **A field value flowing into `recurseFieldValidation` is typed `JSONObject`, not `unknown`.** `unknown` would have needed `val as JSONObject`, and TD-43's `casts` ratchet is exactly the thing that should make an author stop there. Since `JSONObject` is `Record<PropertyKey, any>`, the parameter is no weaker than the `{*}` the JSDoc declared, and no runtime check was added — the alternative, an `isPlainObject` guard, is provably redundant (only `allowChildren` types recurse, and `ObjectType.validate` has already rejected non-objects) but "provably redundant" is precisely the reasoning this ADR keeps finding to be wrong, so it was not added.
+
+A second gate run left one Critical — `checkMultivaluedSpecification` itself at 16 — because the block it had just received was wrapped in `if (has(fieldSpec, "multivalued"))`, which nests everything inside it. Inverted into a guard clause (`if (!has(…)) return;`), which is the sixth extraction and the only one that changes indentation rather than moving code.
+
+Left deliberately: `_.cloneDeep` ×3 against S4123's `structuredClone` suggestion, and `request.input.resource` against the deprecation warning — both `// NOSONAR` with the reason inline. Swapping clone semantics or migrating off `resource` ([TD-20](../type-debt-register.md#td-20)) are behaviour changes, and a conversion does not get to make those.
+
+
+## What was done (PR H5 — `plugin.js` + `pluginsManager.js`)
+
+2 files, 1 680 lines. **js 21 → 19**, strict **128 → 130**, `any` **205 → 204**, implicit-any **456 → 455**. Like H4, no spec effort: the pair measured 96.4% once [TD-50](../type-debt-register.md#td-50) was fixed.
+
+### A plugin is user data, and the types had to say so
+
+The hard part was not the wrapper, it was that `plugin.instance` is **an object a third party wrote**. The JavaScript indexed it freely — `plugin.instance[strategy.methods.verify]`, `plugin.instance[definition[action]]` — and every one of those became an error the moment the instance had a type.
+
+`lib/types/PluginInstance.ts` answers with an index signature of `unknown` plus the named members Kuzzle reads. That is the honest shape, and it forces the call sites to prove callability, which `bindPluginMethod` now does in one place instead of eight. Three types came out of the same reasoning:
+
+- **`PluginMethod`** — `(...args: unknown[]) => unknown`, what a `typeof … === "function"` check on a plugin member produces.
+- **`StrategyEntry` is `JSONObject`, not `StrategyDefinition[string]`.** `StrategyDefinition` is the *authoring* contract; `registerStrategy` receives something nothing has checked yet, and `validateStrategy` is what turns one into the other. Claiming the validated type at the entry point would have been a lie the runtime check exists to prevent.
+- **`PluginInstance.strategies` is `JSONObject`** for the same reason, while `lib/types/Plugin.ts` keeps `StrategyDefinition` for plugin authors.
+
+### Four declared types that described less than half of what they carried
+
+Each was fixed where the defect is, per the [TD-40](../type-debt-register.md#td-40) precedent:
+
+| declared | reality |
+| --- | --- |
+| `Funnel.getController(): NativeController` | one of the two maps it walks holds **plugin** controllers, which extend `BaseController` |
+| `registerPluginPipe(handler: PipeEventHandler)` | `PluginsManager.registerPipe` hands it the **callback** form, and the runner supports both — now `RegisteredPipeHandler` |
+| `registerPluginHook(fn: HookEventHandler)` | a hook resolved from a plugin member returns `unknown`, not `void \| Promise<void>` |
+| `Kuzzle.rootPath` `private` | read by `PluginsManager` to locate the plugins directories |
+
+### Two dead members the compiler found
+
+- **`Plugin._initCalled`** was set in the constructor and **never read**. What the manager sets — and what the specs assert — is `plugin.initCalled`, created ad hoc on the object. The dead field is gone; the live one is declared.
+- **`kuzzle.pluginsManager.application?.log?.flush?.()`** on shutdown is a **no-op and always has been**: `log` lives on the application *instance*, while `pluginsManager.application` is the `Plugin` wrapper around it, and nothing assigns a `log` there. The optional chain hid it. Left as a finding rather than fixed — routing the flush to the instance is a behaviour change. → [TD-51](../type-debt-register.md#td-51)
+
+### TD-49's last lazy `require` is gone
+
+`backend.ts` held `require("../plugin/plugin")` behind a `Reflect.defineProperty`, with a comment blaming a cyclic dependency. It was waiting on this conversion, and it is now a static import — which also let `PluginObject: any` become `typeof Plugin`, the `any` ratchet's 205 → 204.
+
+### Equivalence note
+
+1. **`hasStrategyMethod` returns a boolean rather than `undefined`** when the strategy is absent. It read `get(this.strategies, name)` and answered `strategy && has(...)`; it now indexes the typed map behind the same `has` own-property guard and answers `strategy !== undefined && has(...)`. Every caller used it as a condition.
+2. **`isConstructor` returns `false` for a non-function before trying `Reflect.construct`.** The original let the `try` throw and returned `false` from the `catch`; same answer, one fewer exception.
+3. **The verify adapter returns early if its trailing argument is not a function.** passport always passes a callback, so the branch cannot be taken; it is what lets the callback be invoked at all. Same shape as the narrowing H4 added to `manageErrorMessage`.
+4. **`doAction` uses `Reflect.apply(Reflect.get(controller, action), controller, [request])`.** `BaseController` deliberately carries no index signature ([TD-28](../type-debt-register.md#td-28)), and `_addAction` already writes through `Reflect.set`. `apply` rather than calling the result of `get` is deliberate: dropping the receiver there is precisely the bug sprint 5's `Build and Run` job caught.
+5. **The two Mocha specs now mock `node:fs` alongside `fs`.** The conversion writes `import fs from "node:fs"`, which compiles to `require("node:fs")`, and `mockrequire("fs", …)` does not intercept that. The source keeps the modern specifier; the specs follow it.
+
+### Gate-driven refactor (H5)
+
+SonarCloud failed the first run on **7 new Critical** (S3776: `_initControllers` 45, `checkControllerDefinition` 33, `_initApi` 22, `_initPipes`/`_initHooks` 21 each, `wrapStrategyVerify` 20, `loadFromDirectory` 16), **4 new Major** and **14 new Minor**. All pre-existing, all re-scored by the two renames.
+
+Extractions, verbatim: `loadPluginErrors`, `checkActionDefinition`, `checkHttpRoute` (plugin.ts); `resolveEventHandler`, `registerApiAction`, `registerLegacyAction`, `checkLegacyRoute`, `resolveVerifiedUser` (pluginsManager.ts).
+
+**`resolveEventHandler` is the one that is not only a split.** `_initPipes` and `_initHooks` carried the same twenty lines with two words changed — the error id and the deprecation message. They now share one method, so the gate asked for a deduplication the files already wanted.
+
+**Equivalence note, H5 — the three places this is not a straight cut:**
+
+1. **`_initPipes` gained a `typeof target !== "string"` guard** before reading `target.name`. A string has no `name`, so the original read `undefined` and skipped the branch; the guard says so instead of relying on it. `_initHooks` already had it.
+2. **`isPluginMethod` replaces three inline `typeof x === "function"` checks.** It is a *predicate*, not an assertion — the same shape `safeObject.isPlainObject` has — and it is what lets a plugin member be invoked without an `as`. The alternative was three casts, which the `casts` ratchet now prices, and pricing them is exactly what should make an author look for the predicate.
+3. **`!a?.b ?? c` became `!(a?.b ?? c)` in `checkControllerDefinition`.** The original parses as `(!a?.b) ?? c`, and `!x` is never nullish, so the fallback was dead. It happens to be equivalent **today only because the packaged default is `false`** — the two would differ the moment that default became `true`. Recorded here because the fix is a parenthesis and the reasoning is not.
+
+Left deliberately: `JSON.parse(JSON.stringify(config))` against S4123's `structuredClone`, `// NOSONAR` with the reason inline — a plugin's configuration is user data and a conversion does not change clone semantics.
+
+
+## What was done (PR H6 — `entryPoint.js` + `httpwsProtocol.js`)
+
+2 files, 1 612 lines, and **the sprint is done**: `lib/core` holds no JavaScript. **js 19 → 17**, strict **130 → 131**. No spec effort — the pair measured 94.4% once [TD-50](../type-debt-register.md#td-50) was fixed.
+
+### The contract declared in advance was the point
+
+`lib/core/network/networkEntryPoint.ts` was written during H2 with a comment saying it existed *because* `entryPoint.js` was still JavaScript, and that H6 would convert it. It stays — protocols need the contract and importing the concrete class would close a cycle — but `EntryPoint` now **`implements`** it, so it is checked against the implementation rather than asserted about it.
+
+### Three reads of properties nothing sets
+
+This file is where the conversion paid, and it is [TD-52](../type-debt-register.md#td-52) ([#2749](https://github.com/kuzzleio/kuzzle/issues/2749)):
+
+1. **`this.maxFormFileSize` is never assigned.** The configured value is parsed and validated and lands in `httpConfig.opts`; nothing copies it to the instance, so `byteLength > undefined` is always false and **the multipart file-size limit is not enforced**. The spec sets the property by hand, which is why it passes.
+2. **`request.headers` does not exist on a uWS `HttpRequest`.** Every HTTP `ClientConnection` has therefore been built with `undefined` headers and fallen back to `{}`, against `ClientConnection`'s own documentation.
+3. **`Protocol.joinChannel` returns an object no override returns.** A vitest spec pins the base's echo, so the declared type is `… | void`.
+
+All three are preserved exactly and declared, so the compiler holds them. Fixing any of them makes something start happening, which is not what a conversion does.
+
+### Equivalence note (H6)
+
+1. **`httpRequestToResponse` uses early returns** instead of reassigning `data` from the response object to a string and then a Buffer. The variable changed type under itself, which is what the conversion could not express. One branch is not a literal copy: where the original did `Buffer.from(data)` with `data` being the JSON form of a Buffer (`{ type: "Buffer", data: [...] }`), it now does `Buffer.from(content.data)`. Verified equivalent in a Node shell — `Buffer.from` builds the same bytes from either — and it is the form that types.
+2. **`httpUncompress` names the parsed list separately** rather than reassigning the `content-encoding` header string to the array parsed out of it.
+3. **`Number(headers["content-length"])`** where the JavaScript relied on `>` coercing the header string. Same comparison, spelled; a non-numeric header gives `NaN > n`, which is false, exactly as `"abc" > n` was.
+4. **`Buffer.from(message ?? new ArrayBuffer(0))`** replaces `Buffer.from(message || "")` in the close handler: the argument is an `ArrayBuffer`, and the empty-string default only ever stood in for "nothing".
+5. **The `kuzzleDebugger` narrows with a predicate** (`isSocketRegistry`) rather than `instanceof`: importing the concrete protocol as a *value* would add a runtime edge to the graph, which is the shape [TD-49](../type-debt-register.md#td-49) spent a PR removing.
+6. **Three specs now mock `node:fs` / `node:zlib`** alongside the bare specifiers, for the same reason as H5.
+
+### Gate-driven refactor (H6)
+
+Same shape as H5, one round later. The two renames re-scored 1 617 lines as new
+code and SonarCloud answered with **1 Critical**, **1 Major** and **15 Minor** —
+every one of them pre-existing.
+
+The Critical was `httpParseContent` at a cognitive complexity of 16. The
+multipart branch carried it: a loop with a size guard and a file/text split
+nested two deep. It is now `httpParseMultipart`, a private method that answers a
+**boolean** and leaves the error to the caller's callback, so `httpParseContent`
+keeps its single `cb` contract.
+
+The rest, all behaviour-preserving:
+
+| file | what the analyser was looking at |
+| --- | --- |
+| `entryPoint.ts` | `_clients` is assigned once → `readonly`; five `client && client.protocol` / `!client \|\| !client.protocol` chains → optional chaining, or plain access where the guard above already narrowed |
+| `httpMessage.ts` | the body union had three spellings → one `HttpMessageContent` alias |
+| `httpwsProtocol.ts` | `HTTP_SKIPPED_HEADERS` → `Set`/`.has()`; the indexed channel loop → `for-of`; the allowed-content-type check → `.includes()`; the body-parse `catch (e)` drops its unused binding and says why the parser message is not propagated |
+
+**`super.init` was the one worth doing rather than silencing.** The call was
+`super.init(null, entrypoint)` — the overload [TD-41](../type-debt-register.md#td-41)
+deprecated. The name comes from the constructor (`super("websocket")`), so the
+current one-argument overload has always been the right call here; the deprecated
+shape was never needed.
+
+**`url.parse` stays**, with the reason on the line. `message.url` is a path with
+no origin, so the WHATWG parser needs a base — and it *throws* where the legacy
+one tolerates a malformed URL. Swapping them changes what a bad request does,
+which is not a decision a conversion gets to make.
+
+### What the first H5 pass got wrong about `// NOSONAR`
+
+Two findings survived H5's gate-driven refactor into a second analysis, and both
+are worth recording because neither is about the code.
+
+1. **`resolveVerifiedUser` was still at 17.** The first extraction lifted it out
+   of `wrapStrategyVerify` whole, which moved the complexity rather than reducing
+   it. The `kuid` branch — a nested type check wrapped around a `try`/`catch`
+   with its own error triage — is now `resolveKuid`.
+2. **A `// NOSONAR` on a leading comment line does nothing.** The marker must sit
+   on the line the analyser flags, and for the plugin-config clone that line is
+   the `JSON.parse(`. Prettier wraps the call across three lines and pushes any
+   trailing comment onto its own line, so the fix was to hoist the looked-up
+   config into a local — which keeps the clone a single expression the marker can
+   ride on. The rationale moved to the lines above, where Prettier leaves it.
+
+The rule that follows: **a gate-driven refactor is not done when the local checks
+pass.** Cognitive complexity is recomputed on the extracted function, and
+`NOSONAR` placement is only observable in an analysis. Both need the real
+SonarCloud run, which is why `wrapup` waits for it.

@@ -20,10 +20,11 @@
  */
 
 import { NormalizedFilter } from "koncorde";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../types/JSONObject";
 
-import { RoomList } from "../types";
-import Long from "long";
+import type { RoomList } from "../types";
+import type { FullStateAuthStrategy } from "./protobuf/commandMessages";
+import type Long from "long";
 
 import * as kerror from "../kerror";
 import "../types/Global";
@@ -245,14 +246,14 @@ export default class State {
    *
    * Map<roomId, RoomState>
    */
-  private realtime = new Map<string, RoomState>();
+  private readonly realtime = new Map<string, RoomState>();
 
   /**
    * State of authentication strategies
    *
    * Map<strategyName, strategyDefinition>
    */
-  private strategies = new Map<string, JSONObject>();
+  private readonly strategies = new Map<string, FullStateAuthStrategy>();
 
   /**
    * Adds a new realtime room to the state
@@ -350,15 +351,13 @@ export default class State {
     const list: RoomList = {};
 
     for (const room of this.realtime.values()) {
-      if (!list[room.index]) {
-        list[room.index] = {};
-      }
+      // Held in locals rather than re-indexed: the compiler cannot see that the
+      // branch above just assigned the entry, so each re-read was a "possibly
+      // undefined". Same lookups, one per level instead of three.
+      const index = (list[room.index] ??= {});
+      const collection = (index[room.collection] ??= {});
 
-      if (!list[room.index][room.collection]) {
-        list[room.index][room.collection] = {};
-      }
-
-      list[room.index][room.collection][room.id] = room.countSubscriptions();
+      collection[room.id] = room.countSubscriptions();
     }
 
     return list;
@@ -405,7 +404,7 @@ export default class State {
    * Adds a new dynamic strategy to the full state
    *
    */
-  addAuthStrategy(strategyObject: JSONObject) {
+  addAuthStrategy(strategyObject: FullStateAuthStrategy) {
     this.strategies.set(strategyObject.strategyName, strategyObject);
   }
 
@@ -430,7 +429,12 @@ export default class State {
    *
    * @param serialized POJO object of a full realtime state
    */
-  loadFullState(serialized: SerializedState) {
+  /**
+   * `Partial`: this reads a full state off the wire, and protobuf leaves an
+   * absent field undefined. Both branches below already guard for it; the
+   * parameter described what `serialize()` produces, not what arrives.
+   */
+  loadFullState(serialized: Partial<SerializedState>) {
     if (serialized.rooms) {
       for (const state of serialized.rooms) {
         for (const node of state.nodes) {
@@ -460,9 +464,7 @@ export default class State {
 }
 
 export type SerializedState = {
-  authStrategies: JSONObject[];
+  authStrategies: FullStateAuthStrategy[];
 
   rooms: SerializedRoomState[];
 };
-
-module.exports = State;

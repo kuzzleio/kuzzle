@@ -19,16 +19,16 @@
  * limitations under the License.
  */
 
-import {
+import type {
   RealtimeController,
   Notification,
-  JSONObject,
   ScopeOption,
   UserOption,
-  Kuzzle,
   ResponsePayload,
   BaseRequest,
 } from "kuzzle-sdk";
+import type { JSONObject } from "../../../types/JSONObject";
+import { Kuzzle } from "kuzzle-sdk";
 
 import _ from "lodash";
 import { FunnelProtocol } from "./funnelProtocol";
@@ -38,7 +38,7 @@ import ImpersonatedSDK from "./impersonatedSdk";
 
 const contextError = kerror.wrap("plugin", "context");
 
-const forbiddenEmbeddedActions = {
+const forbiddenEmbeddedActions: Record<string, Set<string>> = {
   auth: new Set([
     "checkRights",
     "createApiKey",
@@ -119,7 +119,10 @@ interface EmbeddedRealtime extends RealtimeController {
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
 export class EmbeddedSDK extends Kuzzle {
-  realtime: EmbeddedRealtime;
+  // `declare`: the base Kuzzle constructor already assigns this; the
+  // redeclaration only narrows RealtimeController to EmbeddedRealtime, and must
+  // not emit a field of its own.
+  declare realtime: EmbeddedRealtime;
 
   constructor() {
     // FunnelProtocol is not technically a valid SDK protocol
@@ -162,17 +165,21 @@ export class EmbeddedSDK extends Kuzzle {
       request.controller === "realtime" &&
       request.action === "subscribe"
     ) {
-      // @ts-expect-error
-      request.propagate =
+      // `propagate` is not part of BaseRequest: it is a Kuzzle-internal flag
+      // read back by the realtime controller. Written with `Reflect.set`, like
+      // `__kuid__` and `__checkRights__` below, rather than suppressed.
+      Reflect.set(
+        request,
+        "propagate",
         options.propagate === undefined || options.propagate === null
           ? false
-          : options.propagate;
+          : options.propagate,
+      );
     }
 
-    if (
-      forbiddenEmbeddedActions[request.controller] !== undefined &&
-      forbiddenEmbeddedActions[request.controller].has(request.action)
-    ) {
+    const forbiddenActions = forbiddenEmbeddedActions[request.controller];
+
+    if (forbiddenActions?.has(request.action)) {
       throw kerror.get(
         "api",
         "process",

@@ -88,7 +88,7 @@ Feature: Plugin Events
       | _id     | body                   |
       | "bus-1" | { "duration": "6h" }   |
       | "bus-2" | { "duration": "8h30" } |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id            | _source                                       |
       | "confidential" | { "duration": "6h", "type": "sleepingBus" }   |
       | "confidential" | { "duration": "8h30", "type": "sleepingBus" } |
@@ -97,7 +97,7 @@ Feature: Plugin Events
       | _id     | body                   |
       | "bus-3" | { "duration": "6h" }   |
       | "bus-4" | { "duration": "8h30" } |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id            | _source                                       |
       | "confidential" | { "duration": "6h", "type": "sleepingBus" }   |
       | "confidential" | { "duration": "8h30", "type": "sleepingBus" } |
@@ -122,7 +122,7 @@ Feature: Plugin Events
       | _id     | body                  |
       | "bus-1" | { "duration": "12h" } |
       | "bus-2" | { "duration": "17h" } |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id        | _source                                   |
       | "redacted" | { "duration": "12h", "type": "localBus" } |
       | "redacted" | { "duration": "17h", "type": "localBus" } |
@@ -206,7 +206,7 @@ Feature: Plugin Events
       | _id     | body                  |
       | "bus-1" | { "duration": "12h" } |
       | "bus-2" | { "duration": "17h" } |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id            | _source                                                                  |
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
@@ -215,7 +215,7 @@ Feature: Plugin Events
       | _id     | changes                       | default |
       | "bus-3" | { "destination": "Hà Giang" } | -       |
       | "bus-5" | { "destination": "Sa Pa" }    | -       |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id            | _source                                              |
       | "confidential" | { "destination": "Hà Giang", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Sa Pa", "type": "sleepingBus" }    |
@@ -327,7 +327,7 @@ Feature: Plugin Events
     When I "mGet" the following document ids with verb "GET":
       | "bus-1" |
       | "bus-2" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id        | _source                        |
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
@@ -349,7 +349,7 @@ Feature: Plugin Events
     When I "mGet" the following document ids with verb "GET":
       | "bus-1" |
       | "bus-2" |
-    Then I should receive a "successes" array of objects matching:
+    Then I should receive a "successes" array of objects matching in order:
       | _id            | _source                                               |
       | "confidential" | { "destination": "Ninh Binh", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "type": "sleepingBus" }     |

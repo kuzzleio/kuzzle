@@ -1,0 +1,682 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import Bluebird from "bluebird";
+
+import kuzzleStateEnum from "../../kuzzle/kuzzleStateEnum";
+import { Role } from "../../model/security/role";
+import { ObjectRepository } from "../shared/ObjectRepository";
+import * as kerror from "../../kerror";
+import didYouMean from "../../util/didYouMean";
+import { cacheDbEnum } from "../cache/cacheDbEnum";
+import type { JSONObject } from "../../types/JSONObject";
+
+import type { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
+
+// Type-only, same rationale as userRepository: `core/security/index.js` is
+// still JS, so only the member this repository reaches is described.
+import type { ProfileRepository } from "./profileRepository";
+
+interface SecurityModule {
+  profile: ProfileRepository;
+}
+
+/**
+ * Who is performing the write, and how eagerly the change must be visible.
+ */
+interface WriteOptions {
+  force?: boolean;
+  method?: string;
+  refresh?: string;
+  retryOnConflict?: number;
+  userId?: string | null;
+}
+
+const roleRightsError = kerror.wrap("security", "role");
+
+/**
+ * @class RoleRepository
+ * @extends ObjectRepository
+ */
+class RoleRepository extends ObjectRepository<Role> {
+  protected module: SecurityModule;
+  /**
+   * Role cache. It holds an in-flight `Promise<Role>` while a role is being
+   * loaded (see `loadRoles`), which is what de-duplicates concurrent loads —
+   * hence the union rather than plain `Role`.
+   */
+  public roles: Map<string, Role | Promise<Role>>;
+  public logger: Logger;
+
+  /**
+   * @constructor
+   * @param {SecurityModule} securityModule
+   */
+  constructor(securityModule: SecurityModule) {
+    super({
+      cache: cacheDbEnum.INTERNAL,
+      store: global.kuzzle.internalIndex,
+    });
+
+    this.module = securityModule;
+
+    this.collection = "roles";
+    this.ObjectConstructor = Role;
+    this.roles = new Map();
+    this.logger = global.kuzzle.log.child("core:security:roleRepository");
+  }
+
+  init() {
+    /**
+     * Creates a new role
+     * @param  {String} id - role identifier / name
+     * @param  {Object} content
+     * @param  {Object} opts - force, refresh, userId (used for metadata)
+     * @returns {Role}
+     * @throws If already exists or if the content is invalid
+     */
+    global.kuzzle.onAsk("core:security:role:create", (id, content, opts) =>
+      this.create(id, content, opts),
+    );
+
+    /**
+     * Creates a new role, or replaces it if it already exists
+     * @param  {String} id
+     * @param  {Object} content
+     * @param  {Object} opts - force, refresh, userId (used for metadata)
+     * @returns {Role}
+     * @throws If the content is invalid
+     */
+    global.kuzzle.onAsk(
+      "core:security:role:createOrReplace",
+      (id, content, opts) => this.createOrReplace(id, content, opts),
+    );
+
+    /**
+     * Deletes an existing role
+     * @param  {String} id
+     * @param  {Object} opts - refresh
+     * @throws If the role doesn't exist, if it is protected, or if it's
+     *         still in use
+     */
+    global.kuzzle.onAsk("core:security:role:delete", (id, opts) =>
+      this.deleteById(id, opts),
+    );
+
+    /**
+     * Loads and returns an existing role
+     * @param  {String} id - role identifier
+     * @returns {Role}
+     * @throws {NotFoundError} If the role doesn't exist
+     */
+    global.kuzzle.onAsk("core:security:role:get", (id) => this.load(id));
+
+    /**
+     * Invalidates the RAM cache from the given role ID. If none is provided,
+     * the entire cache is emptied.
+     *
+     * @param  {String} [id] - role identifier
+     */
+    global.kuzzle.onAsk("core:security:role:invalidate", (id) =>
+      this.invalidate(id),
+    );
+
+    /**
+     * Gets multiple roles
+     * @param  {Array} ids
+     * @returns {Array.<Role>}
+     * @throws If one or more roles don't exist
+     */
+    global.kuzzle.onAsk("core:security:role:mGet", (ids) =>
+      this.loadRoles(ids),
+    );
+
+    /**
+     * Searches roles associated to a provided list of API controllers
+     * @param  {Array.<String>} controllers
+     * @param  {Number} from
+     * @param  {Number} size
+     * @returns {Object} Search results
+     */
+    global.kuzzle.onAsk("core:security:role:search", (controllers, opts) =>
+      this.searchRole(controllers, opts),
+    );
+
+    /**
+     * Removes all existing roles and invalidates the RAM cache
+     * @param  {Object} opts (refresh)
+     */
+    global.kuzzle.onAsk("core:security:role:truncate", (opts) =>
+      this.truncate(opts),
+    );
+
+    /**
+     * Updates an existing profile using a partial content
+     * @param  {String} id - profile identifier to update
+     * @param  {Object} content - partial content to apply
+     * @param  {Object} opts - force, refresh, retryOnConflict,
+     *                         userId (used for metadata)
+     * @returns {Role} Updated role
+     */
+    global.kuzzle.onAsk("core:security:role:update", (id, content, opts) =>
+      this.update(id, content, opts),
+    );
+
+    /**
+     * Verifies that existing roles are sane
+     */
+    global.kuzzle.onAsk("core:security:verify", () => this.sanityCheck());
+  }
+
+  /**
+   * From a list of role ids, retrieves the matching Role objects.
+   *
+   * @param {Array} ids The role ids to load
+   * @param {Object} options - resetCache (false)
+   * @returns {Promise.<Array.<Role>>}
+   */
+  loadRoles(ids: string[]): Promise<Role[]> {
+    const roles: Array<Role | Promise<Role>> = [];
+
+    for (const id of ids) {
+      let role = this.roles.get(id);
+
+      if (!role) {
+        role = this.loadOneFromDatabase(id).then((r) => {
+          this.roles.set(id, r);
+          return r;
+        });
+
+        this.roles.set(id, role);
+      }
+
+      roles.push(role);
+    }
+
+    return Bluebird.all(roles);
+  }
+
+  /**
+   * Creates a new role, or create/replace a role
+   *
+   * @param {String} id
+   * @param {Object} content
+   * @param {Object} [opts]
+   * @returns {Role}
+   */
+  async _createOrReplace(
+    id: string,
+    content: JSONObject,
+    {
+      force = false,
+      method,
+      refresh = "false",
+      userId = null,
+    }: WriteOptions = {},
+  ) {
+    const dto = {
+      ...content,
+      // Always last, in case content contains these keys
+      _id: id,
+      _kuzzle_info: {
+        author: userId,
+        createdAt: Date.now(),
+        updatedAt: null as number | null,
+        updater: null as string | null,
+      },
+    };
+
+    const role = await this.fromDTO(dto);
+
+    return this.validateAndSaveRole(role, { force, method, refresh });
+  }
+
+  /**
+   * Creates a new role
+   *
+   * @param {String} id
+   * @param {Object} content
+   * @param {Object} [opts]
+   * @returns {Role}
+   */
+  async create(id: string, content: JSONObject, opts?: WriteOptions) {
+    return this._createOrReplace(id, content, {
+      method: "create",
+      ...opts,
+    });
+  }
+
+  /**
+   * Creates or replaces a role
+   *
+   * @param {String} id
+   * @param {Object} content
+   * @param {Object} [opts]
+   * @returns {Role}
+   */
+  async createOrReplace(id: string, content: JSONObject, opts?: WriteOptions) {
+    return this._createOrReplace(id, content, {
+      method: "createOrReplace",
+      ...opts,
+    });
+  }
+
+  /**
+   * Updates a role (replaces the entire content)
+   *
+   * @todo  (breaking change) make this function able to handle partial updates
+   *        instead of replacing the entire role content (hint: _.merge)
+   *
+   * @param  {String} id
+   * @param  {Object} content
+   * @param  {Object} [opts]
+   * @returns {Promise}
+   */
+  async update(
+    id: string,
+    content: JSONObject,
+    { force, refresh, retryOnConflict, userId }: WriteOptions = {},
+  ) {
+    const updated = await this.fromDTO({
+      // /!\ order is important
+      ...content,
+      // Always last, in case content contains these keys
+      _id: id,
+      _kuzzle_info: {
+        updatedAt: Date.now(),
+        updater: userId,
+      },
+    });
+
+    return this.validateAndSaveRole(updated, {
+      force,
+      method: "replace",
+      refresh,
+      retryOnConflict,
+    });
+  }
+
+  /**
+   * Get from database the document that represent the role given in parameter
+   *
+   * @param {string} id
+   * @returns {Promise.<Role>} role
+   * @throws {NotFoundError} If the corresponding role doesn't exist
+   */
+  async load(id: string): Promise<Role> {
+    const cached = this.roles.get(id);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const role = await this.loadOneFromDatabase(id);
+
+    this.roles.set(role._id, role);
+
+    return role;
+  }
+
+  /**
+   * @override
+   */
+  async loadOneFromDatabase(id: string): Promise<Role> {
+    try {
+      const role = await super.loadOneFromDatabase(id);
+
+      // The base resolves `null` for a document with no `_id`; a role always
+      // has one, and its absence is the same "not found" as a 404.
+      if (role === null) {
+        throw kerror.get("security", "role", "not_found", id);
+      }
+
+      return role;
+    } catch (err) {
+      if (err instanceof Error && "status" in err && err.status === 404) {
+        throw kerror.get("security", "role", "not_found", id);
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * @param {Object} body Search body containing either "query" or "controllers"
+   * @param {Object} options
+   */
+  async searchRole(
+    body: JSONObject,
+    { from = 0, size = 9999 }: { from?: number; size?: number } = {},
+  ) {
+    if (!body.controllers) {
+      return this.search(body, { from, size });
+    }
+
+    const searchResults = await this.search(
+      { query: {}, sort: [] },
+      { from: 0, size: 9999 },
+    ); // /!\ NOT the options values
+
+    const result = {
+      hits: searchResults.hits,
+      total: searchResults.total,
+    };
+
+    if (body.controllers.length > 0) {
+      result.hits = searchResults.hits.filter((role) =>
+        Object.keys(role.controllers).some(
+          (key) => key === "*" || body.controllers.includes(key),
+        ),
+      );
+
+      result.total = result.hits.length;
+    }
+
+    result.hits = result.hits.slice(from, from + size);
+
+    return result;
+  }
+
+  /**
+   * Given a Role object, validates its definition and if OK, persist it to the database.
+   *
+   * @param {Role} role
+   * @param {object} [options] The persistence options
+   * @returns Promise
+   */
+  async validateAndSaveRole(role: Role, options: WriteOptions = {}) {
+    await role.validateDefinition();
+
+    if (role._id === "anonymous" && !role.canLogIn()) {
+      throw kerror.get("security", "role", "login_required");
+    }
+
+    this.checkRoleNativeRights(role);
+    this.checkRolePluginsRights(role, options);
+    await this.persistToDatabase(role, options);
+
+    const updatedRole = await this.loadOneFromDatabase(role._id);
+    this.roles.set(role._id, updatedRole);
+
+    return updatedRole;
+  }
+
+  /**
+   * Given a Role object, checks if its controllers and actions exist.
+   *
+   * @param {Role} role
+   */
+  checkRoleNativeRights(role: Role) {
+    Object.keys(role.controllers).forEach((roleController) => {
+      if (
+        roleController !== "*" &&
+        !global.kuzzle.funnel.isNativeController(roleController)
+      ) {
+        return;
+      }
+
+      const roleControllerRights = role.controllers[roleController];
+
+      if (roleControllerRights === undefined) {
+        return;
+      }
+
+      if (roleController === "*") {
+        Object.keys(roleControllerRights.actions ?? {}).forEach((action) => {
+          if (action !== "*") {
+            throw roleRightsError.get("unknown_action", role._id, action, "*");
+          }
+        });
+      } else {
+        const controller = global.kuzzle.funnel.controllers.get(roleController);
+        const actions = Object.keys(roleControllerRights.actions ?? {});
+
+        actions.forEach((action) => {
+          if (
+            action !== "*" &&
+            controller !== undefined &&
+            !controller._isAction(action)
+          ) {
+            throw roleRightsError.get(
+              "unknown_action",
+              role._id,
+              action,
+              roleController,
+              // `_actions` is a Set. didyoumean@1.2.1 walks `list.length`,
+              // which a Set does not have, so this suggestion had always been
+              // empty — the new declaration for the module is what said so.
+              didYouMean(action, Array.from(controller?._actions ?? [])),
+            );
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Given a Role object, checks if its controllers and actions exist in plugins.
+   *
+   * @param {Role} role
+   * @param {Force} force
+   */
+  checkRolePluginsRights(
+    role: Role,
+    {
+      force = false,
+      forceWarn = false,
+    }: { force?: boolean; forceWarn?: boolean } = {},
+  ) {
+    for (const roleController of Object.keys(role.controllers)) {
+      if (
+        roleController === "*" ||
+        global.kuzzle.funnel.isNativeController(roleController)
+      ) {
+        return;
+      }
+
+      if (
+        !this._checkPluginController(role, roleController, { force, forceWarn })
+      ) {
+        return;
+      }
+
+      this._checkPluginActions(role, roleController, { force, forceWarn });
+    }
+  }
+
+  /**
+   * Verifies that a plugin controller referenced by a role exists. Extracted
+   * from `checkRolePluginsRights` verbatim.
+   *
+   * @returns whether the caller should keep inspecting that controller
+   */
+  private _checkPluginController(
+    role: Role,
+    roleController: string,
+    { force, forceWarn }: { force: boolean; forceWarn: boolean },
+  ): boolean {
+    const plugins = global.kuzzle.pluginsManager;
+
+    if (plugins.isController(roleController)) {
+      return true;
+    }
+
+    if (!force) {
+      throw roleRightsError.get(
+        "unknown_controller",
+        role._id,
+        roleController,
+        didYouMean(roleController, plugins.getControllerNames()),
+      );
+    }
+
+    // Do not print any warning if Kuzzle is not started or if warn is not forced.
+    // We need this to load rights without displaying warning at startup
+    // because plugins controllers are loaded after default roles
+    // then we need to display non-existing controllers with the sanity check
+    // made after plugins controllers loading.
+    if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
+      this.logger.warn(
+        `The role "${role._id}" gives access to the non-existing controller "${roleController}".`,
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Verifies every action a role grants on a plugin controller. Extracted from
+   * `checkRolePluginsRights` verbatim.
+   */
+  private _checkPluginActions(
+    role: Role,
+    roleController: string,
+    { force, forceWarn }: { force: boolean; forceWarn: boolean },
+  ): void {
+    const plugins = global.kuzzle.pluginsManager;
+    const roleActions = Object.keys(
+      role.controllers[roleController]?.actions ?? {},
+    );
+
+    for (const action of roleActions) {
+      if (action === "*" || plugins.isAction(roleController, action)) {
+        continue;
+      }
+
+      if (!force) {
+        throw roleRightsError.get(
+          "unknown_action",
+          role._id,
+          action,
+          roleController,
+          didYouMean(action, plugins.getActions(roleController)),
+        );
+      }
+
+      // see the other comment
+      if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
+        this.logger.warn(
+          `The role "${role._id}" gives access to the non-existing action "${action}" for the controller "${roleController}".`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Fetching roles and check for each of them for invalid plugin rights.
+   * If there are some, Kuzzle will log a warning.
+   */
+
+  async sanityCheck() {
+    const roles = await this.search({}, {});
+
+    for (const role of roles.hits) {
+      this.checkRolePluginsRights(role, { force: true, forceWarn: true });
+    }
+  }
+
+  /**
+   * Deletes a role
+   *
+   * @param {String} id
+   * @param {object} [options]
+   * @returns Promise
+   */
+  async deleteById(id: string, options?: JSONObject) {
+    const role = await this.load(id);
+    return this.delete(role, options);
+  }
+
+  /**
+   * @override
+   */
+  async delete(role: Role, { refresh = "false" }: WriteOptions = {}) {
+    if (["admin", "default", "anonymous"].includes(role._id)) {
+      throw kerror.get("security", "role", "cannot_delete");
+    }
+
+    const query = { term: { "policies.roleId": role._id } };
+
+    const response = await this.module.profile.search(
+      { query },
+      {
+        from: 0,
+        size: 1,
+      },
+    );
+
+    if (response.total > 0) {
+      throw kerror.get("security", "role", "in_use", role._id);
+    }
+
+    await this.deleteFromDatabase(role._id, { refresh });
+
+    this.roles.delete(role._id);
+  }
+
+  /**
+   * From a Role object, returns an object ready to be persisted
+   *
+   * @param {Role} role
+   * @returns {object}
+   */
+  serializeToDatabase(role: Role): JSONObject {
+    const serializedRole: JSONObject = {};
+
+    for (const [key, value] of Object.entries(role)) {
+      if (key !== "_id" && key !== "restrictedTo") {
+        serializedRole[key] = value;
+      }
+    }
+
+    return serializedRole;
+  }
+
+  /**
+   * @override
+   */
+  async truncate(opts: JSONObject): Promise<number> {
+    try {
+      // `return await`, not `await` then fall through: the base answers the
+      // number of deleted roles and this override used to drop it, which is
+      // why `admin:resetSecurity` reported `deletedRoles: undefined` next to
+      // two real counts.
+      return await super.truncate(opts);
+    } finally {
+      this.invalidate();
+    }
+  }
+
+  /**
+   * Invalidate the cache entries for the given role. If none is provided,
+   * the entire cache is emptied.
+   * @param {string} [roleId]
+   */
+  invalidate(roleId?: string) {
+    if (!roleId) {
+      this.roles.clear();
+    } else {
+      this.roles.delete(roleId);
+    }
+  }
+}
+
+export = RoleRepository;

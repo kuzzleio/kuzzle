@@ -19,8 +19,9 @@
  * limitations under the License.
  */
 
-import { ApplicationManager, Backend } from "./index";
-import { OpenApiDefinition } from "../../types";
+import type { Backend } from "./index";
+import { ApplicationManager } from "./index";
+import type { OpenApiDefinition } from "../../types";
 
 export class BackendOpenApi extends ApplicationManager {
   /**

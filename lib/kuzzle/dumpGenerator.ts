@@ -1,0 +1,316 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import zlib from "node:zlib";
+
+import Bluebird from "bluebird";
+import dumpme from "dumpme";
+import moment from "moment";
+
+import packageJson from "../../package.json";
+import * as kerror from "../kerror";
+import { BadRequestError } from "../kerror/errors";
+
+class DumpGenerator {
+  private _dump = false;
+  private readonly logger;
+
+  constructor() {
+    this.logger = global.kuzzle.log.child("dump:dumpGenerator");
+  }
+
+  /**
+   * Create a dump
+   */
+  async dump(suffix: string): Promise<string> {
+    if (this._dump) {
+      throw kerror.get("api", "process", "action_locked", "dump");
+    }
+
+    // The arguments are checked before the lock is taken, and every path out
+    // of the generation releases it: a lock held past a failure answers every
+    // later dump with `action_locked` about a dump that is not running
+    // (TD-81).
+    const dumpPath = this._resolveDumpPath(suffix);
+
+    this._dump = true;
+
+    try {
+      return await this._generate(dumpPath);
+    } finally {
+      this._dump = false;
+    }
+  }
+
+  /**
+   * The directory this dump will be written to, or a `BadRequestError` if the
+   * suffix is malformed or would place it outside the configured dump path.
+   */
+  private _resolveDumpPath(suffix: string): string {
+    const suffixRegex = /^[A-Za-z0-9_-]{0,64}$/;
+    if (!suffixRegex.test(suffix)) {
+      throw kerror.get(
+        "api",
+        "assert",
+        "invalid_argument",
+        "suffix",
+        "at most 64 alphanumeric characters, '-' or '_'",
+      );
+    }
+    const basePath = path.normalize(global.kuzzle.config.dump.path);
+    const dumpPath = path.join(
+      basePath,
+      moment()
+        .format(global.kuzzle.config.dump.dateFormat)
+        .concat(`-${suffix}`)
+        .substring(0, 200),
+    );
+    const resolvedPath = path.resolve(dumpPath);
+    if (!resolvedPath.startsWith(path.resolve(basePath) + path.sep)) {
+      throw new BadRequestError(
+        `Dump path '${dumpPath}' is outside of designated dump directory '${basePath}'`,
+      );
+    }
+
+    return dumpPath;
+  }
+
+  private async _generate(dumpPath: string): Promise<string> {
+    this.logger.info("=".repeat(79));
+    this.logger.info(`Generating dump in ${dumpPath}`);
+
+    this._cleanUpHistory();
+    try {
+      fs.mkdirSync(dumpPath, { recursive: true });
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      const message = error.message.startsWith("EEXIST")
+        ? "Dump directory already exists. Skipping.."
+        : `Unable to create dump folder: ${error.message}`;
+
+      this.logger.error(message);
+      throw new Error(message, { cause: e });
+    }
+
+    // dump kuzzle information
+    this.logger.info("> dumping kuzzle configuration");
+    fs.writeFileSync(
+      path.join(dumpPath, "kuzzle.json"),
+      JSON.stringify(
+        {
+          config: global.kuzzle.config,
+          version: packageJson.version,
+        },
+        null,
+        " ",
+      ).concat("\n"),
+    );
+
+    // dump plugins configuration
+    this.logger.info("> dumping plugins configuration");
+    fs.writeFileSync(
+      path.join(dumpPath, "plugins.json"),
+      JSON.stringify(
+        global.kuzzle.pluginsManager.getPluginsDescription(),
+        null,
+        " ",
+      ).concat("\n"),
+    );
+
+    // dump Node.js configuration
+    this.logger.info("> dumping Node.js configuration");
+    fs.writeFileSync(
+      path.join(dumpPath, "nodejs.json"),
+      JSON.stringify(
+        {
+          argv: process.argv,
+          config: process.config,
+          env: process.env,
+          moduleLoadList: process.moduleLoadList,
+          release: process.release,
+          versions: process.versions,
+        },
+        null,
+        " ",
+      ).concat("\n"),
+    );
+
+    // dump os configuration
+    this.logger.info("> dumping os configuration");
+    fs.writeFileSync(
+      path.join(dumpPath, "os.json"),
+      JSON.stringify(
+        {
+          cpus: os.cpus(),
+          loadavg: os.loadavg(),
+          mem: {
+            free: os.freemem(),
+            total: os.totalmem(),
+          },
+          networkInterfaces: os.networkInterfaces(),
+          platform: os.platform(),
+          uptime: os.uptime(),
+        },
+        null,
+        " ",
+      ).concat("\n"),
+    );
+
+    // core-dump
+    this.logger.info("> generating core-dump");
+    dumpme(global.kuzzle.config.dump.gcore || "gcore", `${dumpPath}/core`);
+
+    // Gzip the core
+    try {
+      const corefiles = this._listFilesMatching(dumpPath, "core");
+      // Read once: the same element is used four times below, twice from
+      // inside a callback where the `if` above no longer narrows it.
+      const corefile = corefiles[0];
+
+      if (corefile) {
+        const readStream = fs.createReadStream(corefile);
+        const writeStream = fs.createWriteStream(`${dumpPath}/core.gz`);
+
+        await new Bluebird<void>((resolve) =>
+          readStream
+            .pipe(zlib.createGzip())
+            .pipe(writeStream)
+            .on("finish", () => {
+              // rm the original core file
+              try {
+                fs.unlinkSync(corefile);
+              } catch {
+                // The unlink error is deliberately dropped: the core file is a
+                // best-effort cleanup and its own path is already in the
+                // warning.
+                this.logger.warn(`> unable to clean up core file ${corefile}`);
+              }
+              resolve();
+            }),
+        );
+      } else {
+        this.logger.warn("> could not generate dump");
+      }
+    } catch (error) {
+      this.logger.error(error);
+    }
+
+    // copy node binary
+    this.logger.info("> copy node binary");
+    fs.copyFileSync(process.execPath, path.join(dumpPath, "node"));
+
+    // dumping Kuzzle's stats
+    this.logger.info("> dumping kuzzle's stats");
+    // `getAllStats()` takes no argument and never has: it forwards to
+    // `getStats()` with none. The `Request` the JavaScript built here was
+    // constructed and discarded on every dump.
+    const statistics = await global.kuzzle.statistics.getAllStats();
+
+    fs.writeFileSync(
+      path.join(dumpPath, "statistics.json"),
+      JSON.stringify(statistics.hits, null, " ").concat("\n"),
+    );
+
+    this.logger.info("Done.");
+    this.logger.info(
+      "[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io",
+    );
+    this.logger.info("=".repeat(79));
+
+    return dumpPath;
+  }
+
+  _cleanUpHistory(): void {
+    const config = global.kuzzle.config.dump,
+      dumpPath = path.normalize(global.kuzzle.config.dump.path);
+
+    try {
+      fs.accessSync(
+        dumpPath,
+        fs.constants.R_OK | fs.constants.W_OK | fs.constants.X_OK,
+      );
+    } catch {
+      // Not readable, writable and traversable: there is no history to clean.
+      return;
+    }
+
+    const dumps = fs
+      .readdirSync(dumpPath)
+      .map((file) => {
+        const filepath = `${dumpPath}/${file}`;
+        return { path: filepath, stat: fs.statSync(filepath) };
+      })
+      .filter((prop) => prop.stat.isDirectory())
+      .sort((a, b) => {
+        if (a.stat.birthtime.getTime() === b.stat.birthtime.getTime()) {
+          return 0;
+        }
+
+        return a.stat.birthtime < b.stat.birthtime ? -1 : 1;
+      });
+
+    while (dumps.length >= config.history.reports) {
+      const dump = dumps.shift();
+
+      // `shift()` answers both questions at once. It matters: a configured
+      // `history.reports` of 0 makes the condition above constant-true, and the
+      // old shape then read `.path` off undefined.
+      if (dump === undefined) {
+        break;
+      }
+
+      fs.rmSync(dump.path, { recursive: true });
+    }
+
+    // The oldest dumps lose their core file, all but the `coredump` newest.
+    // The bound is clamped: `slice` counts a negative end from the end of the
+    // list, which would take core files from the dumps it has to keep.
+    const withoutCore = Math.max(0, dumps.length - config.history.coredump);
+
+    for (const dump of dumps.slice(0, withoutCore)) {
+      const corefiles = this._listFilesMatching(
+        path.normalize(dump.path),
+        "core",
+      );
+      const corefile = corefiles[0];
+
+      if (corefile) {
+        fs.unlinkSync(corefile);
+      }
+    }
+  }
+
+  _listFilesMatching(directory: string, start: string): string[] {
+    return fs
+      .readdirSync(directory)
+      .filter(
+        (entry) =>
+          fs.lstatSync(`${directory}/${entry}`).isFile() &&
+          entry.startsWith(start),
+      )
+      .map((file) => path.join(directory, file));
+  }
+}
+
+export = DumpGenerator;

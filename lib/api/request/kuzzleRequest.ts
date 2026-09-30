@@ -24,14 +24,16 @@ import { get, set } from "lodash";
 import moment from "moment";
 import * as uuid from "uuid";
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import { RequestInput } from "./requestInput";
 import { RequestResponse } from "./requestResponse";
 import { RequestContext } from "./requestContext";
 import { KuzzleError, InternalError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
-import { Deprecation, HttpStream } from "../../types";
+import type { Deprecation } from "../../types";
+import type { User } from "../../model/security/user";
+import { HttpStream } from "../../types";
 import * as assert from "../../util/assertType";
 
 const assertionError = kerror.wrap("api", "assert");
@@ -61,6 +63,25 @@ export class KuzzleRequest {
    */
   public id: string;
 
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They are keyed by the zero-width-space constants
+   * above rather than by a `private` name or a `#` field, which is what keeps
+   * `console.log(request)` printing what it has printed for ten years — see
+   * the comment on those constants. Declaring them changes nothing at runtime.
+   */
+  [_internalId]: string;
+  [_status]: number;
+  [_input]: RequestInput;
+  [_context]: RequestContext;
+  [_error]: KuzzleError | null;
+  // `unknown`, not `any`: the accessor below still answers `any` for callers,
+  // but nothing inside this class needs to treat the stored result as one.
+  [_result]: unknown;
+  [_response]: RequestResponse | null;
+  [_deprecations]: Deprecation[] | undefined;
+  [_timestamp]: number;
+
   constructor(data: any, options?: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
@@ -75,9 +96,14 @@ export class KuzzleRequest {
     // property
     this[_input].headers = this[_context].connection.misc.headers;
 
-    this.id = data.requestId
+    // Through a local: `assertString` answers `string | null` and the ternary
+    // is what proves it non-null here, which the declaration of `id` cannot
+    // see. `?? uuid.v4()` keeps the falsy-requestId path exactly as it was.
+    const requestId = data.requestId
       ? assert.assertString("requestId", data.requestId)
-      : uuid.v4();
+      : null;
+
+    this.id = requestId ?? uuid.v4();
 
     this[_timestamp] = data.timestamp || Date.now();
 
@@ -110,11 +136,17 @@ export class KuzzleRequest {
             options.error.status || 500,
           );
 
-          for (const prop of Object.keys(options.error).filter(
-            (key) => key !== "message" && key !== "status",
-          )) {
-            error[prop] = options.error[prop];
-          }
+          // `Object.assign` rather than an indexed write: a KuzzleError has no
+          // index signature, and these are arbitrary extra properties carried
+          // over from a plain object.
+          Object.assign(
+            error,
+            Object.fromEntries(
+              Object.entries(options.error).filter(
+                ([key]) => key !== "message" && key !== "status",
+              ),
+            ),
+          );
 
           this.setError(error);
         }
@@ -140,6 +172,16 @@ export class KuzzleRequest {
    */
   get deprecations(): Deprecation[] | void {
     return this[_deprecations];
+  }
+
+  /**
+   * The setter `RequestResponse.deprecations` has always assigned through to
+   * here, and there was no setter to assign to: in a module — which is strict
+   * mode — writing to an accessor-only property throws a TypeError. Nothing in
+   * the tree exercised it, so the throw was never seen.
+   */
+  set deprecations(deprecations: Deprecation[] | undefined) {
+    this[_deprecations] = deprecations;
   }
 
   /**
@@ -225,7 +267,7 @@ export class KuzzleRequest {
   /**
    * Sets the request result and status
    *
-   * @deprecated Use request.response.configure instead
+   * @deprecated Use `request.response.configure({ result, status, headers, format })`
    *
    * @param result Request result. Will be converted to JSON unless `raw` option is set to `true`
    * @param options Additional options
@@ -250,16 +292,7 @@ export class KuzzleRequest {
       raw?: boolean;
     } = {},
   ) {
-    if (result instanceof Error) {
-      throw new InternalError("cannot set an error as a request's response");
-    }
-
-    if (
-      this.context.connection.protocol !== "http" &&
-      result instanceof HttpStream
-    ) {
-      throw kerror.get("api", "assert", "forbidden_stream");
-    }
+    this.assertResultAllowed(result);
 
     this.status = options.status || 200;
 
@@ -274,6 +307,34 @@ export class KuzzleRequest {
     }
 
     this[_result] = result;
+  }
+
+  /**
+   * Sets the result and nothing else, after the checks every result goes
+   * through. What `response.configure({ result })` calls; plugins use that.
+   *
+   * @internal
+   */
+  assignResult(result: unknown): void {
+    this.assertResultAllowed(result);
+    this[_result] = result;
+  }
+
+  /**
+   * @throws {InternalError} if the result is an Error
+   * @throws {api.assert.forbidden_stream} for an HttpStream outside HTTP
+   */
+  private assertResultAllowed(result: unknown): void {
+    if (result instanceof Error) {
+      throw new InternalError("cannot set an error as a request's response");
+    }
+
+    if (
+      this.context.connection.protocol !== "http" &&
+      result instanceof HttpStream
+    ) {
+      throw kerror.get("api", "assert", "forbidden_stream");
+    }
   }
 
   /**
@@ -338,24 +399,28 @@ export class KuzzleRequest {
    *
    * This can be used to match Koncorde filter rather than the Request object
    * because it has properties defined with invisible unicode characters.
+   *
+   * The `!`s are not claims: each of these may be `null`, as on the request
+   * itself. The copy is typed as v2.56.0 typed it, non-nullable, because
+   * nullable members broke code compiled against that.
    */
   pojo() {
     return {
       context: {
         connection: this.context.connection,
-        token: this.context.token,
-        user: this.context.user,
+        token: this.context.token!,
+        user: this.context.user!,
       },
       deprecations: this.deprecations,
-      error: this.error,
+      error: this.error!,
       id: this.id,
       input: {
-        action: this.input.action,
+        action: this.input.action!,
         args: this.input.args,
-        body: this.input.body,
-        controller: this.input.controller,
-        jwt: this.input.jwt,
-        volatile: this.input.volatile,
+        body: this.input.body!,
+        controller: this.input.controller!,
+        jwt: this.input.jwt!,
+        volatile: this.input.volatile!,
       },
       internalId: this.internalId,
       response: {
@@ -370,16 +435,23 @@ export class KuzzleRequest {
 
   /**
    * Return the requested controller
+   *
+   * `null` on a request built without one. Declared `string` all the same,
+   * as v2.56.0 declared it: a `string | null` return broke code compiled
+   * against it. `input.controller` is the nullable form.
    */
   getController(): string {
-    return this[_input].controller;
+    return this[_input].controller!;
   }
 
   /**
    * Returns the requested controller's action
+   *
+   * `null` and declared `string` as {@link getController} is;
+   * `input.action` is the nullable form.
    */
   getAction(): string {
-    return this[_input].action;
+    return this[_input].action!;
   }
 
   /**
@@ -624,13 +696,15 @@ export class KuzzleRequest {
   }
 
   /**
-   * @deprecated do not use, Use getArray instead
+   * Gets a parameter from a request arguments as an array, also accepting a
+   * **comma-separated string** — the form the API documents for `ids` on
+   * `document:mGet`, `document:mExists` and `security:mGetUsers`, and the only
+   * form it documents for `server:healthCheck`'s `services`.
    *
-   * Gets a parameter from a request arguments and checks that it is an array
-   *
-   * If the request argument is a String instead of an array, it will be JSON parsed
-   * and returned if it is a valid JSON array, otherwise it will return the string splitted on `,`.
-   *
+   * An array is returned as is. A string is, over HTTP only, first parsed as a
+   * JSON array — the one way to pass an element that contains a comma — and
+   * otherwise split on `,`, on every protocol. Unlike `getArray`, a single
+   * query-string value (`?ids=a`) is therefore a one-element array.
    *
    * @param name parameter name
    * @param def default value to return if the parameter is not set
@@ -639,7 +713,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
    */
-  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+  getArrayOrCsv(name: string, def: [] | undefined = undefined): unknown[] {
     const value = get(this.input.args, name, def);
 
     if (value === undefined) {
@@ -663,12 +737,21 @@ export class KuzzleRequest {
         if (Array.isArray(parsedValue)) {
           return parsedValue;
         }
-      } catch (e) {
+      } catch {
         // Do nothing, let the code continue
       }
     }
 
     return value.split(",");
+  }
+
+  /**
+   * @deprecated Use {@link getArrayOrCsv}, which it is an alias of: same
+   * behaviour, named after what it does. Kept because `KuzzleRequest` is part
+   * of the public plugin API.
+   */
+  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+    return this.getArrayOrCsv(name, def);
   }
 
   /**
@@ -734,24 +817,32 @@ export class KuzzleRequest {
 
   /**
    * Returns the index specified in the request
+   *
+   * With `{ required: false }` and no index, this returns `null`. It is
+   * declared `string` all the same: that is what v2.56.0 declared, and a
+   * `string | null` overload broke code compiled against it — so Kuzzle's own
+   * callers of the optional form annotate the result `string | null`.
    */
-  getIndex({ required = true } = {}): string {
+  getIndex({ required = true }: { required?: boolean } = {}): string {
     const index = this.input.args.index;
 
     this.checkRequired(index, "index", required);
 
-    return index ? String(index) : null;
+    return index ? String(index) : null!;
   }
 
   /**
    * Returns the collection specified in the request
+   *
+   * `null` under the same conditions as {@link getIndex}, and declared
+   * `string` for the same reason.
    */
-  getCollection({ required = true } = {}): string {
+  getCollection({ required = true }: { required?: boolean } = {}): string {
     const collection = this.input.args.collection;
 
     this.checkRequired(collection, "collection", required);
 
-    return collection ? String(collection) : null;
+    return collection ? String(collection) : null!;
   }
 
   /**
@@ -799,6 +890,8 @@ export class KuzzleRequest {
    *    - `ifMissing`: method behavior if the ID is missing (default: 'error')
    *    - `generator`: function used to generate an ID (default: 'uuid.v4')
    *
+   * With `ifMissing: 'ignore'` and no ID, this returns `null`. It is declared
+   * `string` all the same, for the reason given on {@link getIndex}.
    */
   getId(
     options: {
@@ -816,7 +909,7 @@ export class KuzzleRequest {
       }
 
       if (options.ifMissing === "ignore") {
-        return null;
+        return null!;
       }
 
       throw assertionError.get("missing_argument", "_id");
@@ -842,13 +935,16 @@ export class KuzzleRequest {
 
   /**
    * Returns the current user
+   *
+   * `null` when the request carries none. Declared `User`, as v2.56.0
+   * declared it; `context.user` is the nullable form.
    */
-  getUser() {
+  getUser(): User {
     if (this.context?.user) {
       return this.context.user;
     }
 
-    return null;
+    return null!;
   }
 
   /**
@@ -964,7 +1060,7 @@ export class KuzzleRequest {
    * Returns true if the current user have `admin` profile
    */
   userIsAdmin(): boolean {
-    const user = this.getUser();
+    const user: User | null = this.getUser();
 
     if (!user) {
       return false;
@@ -1130,7 +1226,7 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        } catch (e) {
+        } catch {
           // Do nothing, let the error be thrown below
         }
       }
@@ -1179,7 +1275,7 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        } catch (e) {
+        } catch {
           // Do nothing, let the error be thrown below
         }
       }

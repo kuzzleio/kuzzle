@@ -1,6 +1,6 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../JSONObject";
 
-import { RoleDefinition, ProfileDefinition } from "../index";
+import type { RoleDefinition, ProfileDefinition } from "../index";
 
 export type SecurityConfiguration = {
   /**
@@ -24,6 +24,10 @@ export type SecurityConfiguration = {
 
   /**
    * @deprecated Use `security.authToken` instead.
+   *
+   * `default.config.ts` always ships it, and `authToken`'s readers fall back
+   * to it — `authToken.algorithm ?? jwt.algorithm`. Optional all the same, as
+   * v2.56.0 declared it: a required member breaks code that builds this type.
    */
   jwt?: JSONObject;
 

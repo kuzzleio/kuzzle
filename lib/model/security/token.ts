@@ -39,6 +39,14 @@ export interface TokenContent {
  * Represents a token that identify an user.
  */
 export class Token implements TokenContent {
+  /**
+   * The constructor writes `null` for any of these five its `TokenContent`
+   * did not carry, and a `Token` is routinely built empty —
+   * `Token.Anonymous()` and the repository's cache miss both do it (ADR-0001,
+   * TD-62). They are declared non-nullable all the same, as v2.56.0 declared
+   * them: plugins read `request.context.token.userId` as a `string`, and
+   * `| null` broke that under `strict`.
+   */
   _id: string;
   expiresAt: number;
   ttl: number;
@@ -48,11 +56,11 @@ export class Token implements TokenContent {
   singleUse: boolean;
 
   constructor(data: TokenContent = {}) {
-    this._id = data._id || null;
-    this.expiresAt = data.expiresAt || null;
-    this.ttl = data.ttl || null;
-    this.userId = data.userId || null;
-    this.jwt = data.jwt || null;
+    this._id = data._id || null!;
+    this.expiresAt = data.expiresAt || null!;
+    this.ttl = data.ttl || null!;
+    this.userId = data.userId || null!;
+    this.jwt = data.jwt || null!;
     this.refreshed = Boolean(data.refreshed);
     this.singleUse = Boolean(data.singleUse);
   }

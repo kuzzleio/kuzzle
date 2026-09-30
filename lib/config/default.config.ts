@@ -1,5 +1,5 @@
-import httpRoutes from "../api/httpRoutes.js";
-import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import httpRoutes from "../api/httpRoutes";
+import type { PackagedKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 
 /* eslint-disable sort-keys */
 
@@ -14,7 +14,7 @@ import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
  * @class KuzzleConfiguration
  */
 
-const defaultConfig: KuzzleConfiguration = {
+const defaultConfig: PackagedKuzzleConfiguration = {
   // @deprecated
   realtime: {
     pcreSupport: false,
@@ -399,6 +399,7 @@ const defaultConfig: KuzzleConfiguration = {
               properties: {
                 userId: { type: "keyword" },
                 hash: { type: "keyword" },
+                fingerprint: { type: "keyword" },
                 description: { type: "text" },
                 expiresAt: { type: "long" },
                 ttl: { type: "keyword" },
@@ -462,15 +463,22 @@ const defaultConfig: KuzzleConfiguration = {
       command: 7510,
       sync: 7511,
     },
+    retransmitBuffer: {
+      bytes: 16777216,
+      messages: 1000,
+    },
     syncTimeout: 5000,
   },
-  /** @type {DocumentSpecification} */
   validation: {},
 
   controllers: {
     definition: {
       allowAdditionalActionProperties: false,
     },
+  },
+
+  vault: {
+    newAlgorithm: false,
   },
 };
 

@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import { Request, RequestContext } from "../../api/request";
+import type { Request, RequestContext } from "../../api/request";
 import * as kerror from "../../kerror";
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 
 const errorApiAssert = kerror.wrap("api", "assert");
 const errorStats = kerror.wrap("services", "stats");
@@ -307,7 +307,7 @@ export default class Statistics {
       frames.sort(),
     );
 
-    values.forEach((v, idx) => {
+    values.forEach((v: string, idx: number) => {
       const frameDateTime = Number(frames[idx].replace(regex, ""));
 
       if (

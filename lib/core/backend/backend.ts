@@ -20,12 +20,13 @@
  */
 
 import fs from "node:fs";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { EventDefinition, NameGenerator } from "../../../index";
+import type { EventDefinition } from "../../../index";
+import { NameGenerator } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -41,11 +42,12 @@ import {
   BackendSubscription,
 } from "./index";
 import { Logger } from "../../kuzzle/Logger";
+import Plugin from "../plugin/plugin";
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
 
-let _app = null;
+let _app: Backend | null = null;
 
 Reflect.defineProperty(global, "app", {
   configurable: true,
@@ -73,10 +75,15 @@ Reflect.defineProperty(global, "app", {
 export class Backend {
   private _kuzzle: any;
   private _name: string;
-  private _sdk: EmbeddedSDK;
-  private _started: boolean;
+  /**
+   * Both are defined with `Reflect.defineProperty` in the constructor, so
+   * that they stay off the enumerable surface a plugin sees; the compiler
+   * does not read that as an initialisation.
+   */
+  private _sdk!: EmbeddedSDK;
+  private _started = false;
 
-  protected _pipes = {};
+  protected _pipes: Record<string, Array<() => Promise<void>>> = {};
   protected _hooks = {};
   protected _controllers = {};
   protected _plugins = {};
@@ -97,14 +104,19 @@ export class Backend {
   }> = [];
 
   /**
-   * Requiring the PluginObject on module top level creates cyclic dependency
+   * The `Plugin` wrapper class, held on the instance rather than imported at
+   * use site — see the `Reflect.defineProperty` in the constructor.
    */
-  protected PluginObject: any;
+  /**
+   * Defined with `Reflect.defineProperty` below, for the same reason as
+   * `_kuzzle` and `_sdk`.
+   */
+  protected PluginObject!: typeof Plugin;
 
   /**
    * Application version
    */
-  public version: string;
+  public version = "";
 
   /**
    * Current Git commit (if available)
@@ -229,14 +241,11 @@ export class Backend {
    * @param name - Your application name
    */
   constructor(name: string) {
-    /**
-     * Requiring the PluginObject on module top level creates cyclic dependency
-     */
     Reflect.defineProperty(this, "PluginObject", {
-      value: require("../plugin/plugin"),
+      value: Plugin,
     });
 
-    if (!this.PluginObject.checkName(name)) {
+    if (!Plugin.checkName(name)) {
       throw assertionError.get("invalid_application_name", name);
     }
 
@@ -274,7 +283,7 @@ export class Backend {
     try {
       const info = JSON.parse(fs.readFileSync("./package.json", "utf8"));
       this.version = info.version;
-    } catch (error) {
+    } catch {
       // Silent if no version can be found
     }
 
@@ -440,7 +449,7 @@ export class Backend {
   /**
    * Try to read the current commit hash.
    */
-  private _readCommit(dir = process.cwd(), depth = 3) {
+  private _readCommit(dir = process.cwd(), depth = 3): string | null {
     if (depth === 0) {
       return null;
     }
@@ -455,7 +464,14 @@ export class Backend {
       return null;
     }
 
+    // A detached HEAD holds the hash itself, with no "ref: " prefix: there is
+    // no ref file to follow, and the split answered undefined for it.
     const ref = fs.readFileSync(`${dir}/.git/HEAD`, "utf8").split("ref: ")[1];
+
+    if (ref === undefined) {
+      return null;
+    }
+
     const refFile = `${dir}/.git/${ref}`.replace("\n", "");
 
     if (!fs.existsSync(refFile)) {

@@ -8,7 +8,19 @@ description: KuzzleRequest class setResult() method
 
 # setResult
 
+<DeprecatedBadge version="2.12.0" />
+
 Sets the request result and status
+
+::: warning
+**Use [request.response.configure](/core/2/framework/classes/request-response/configure) instead**, which takes a `result` option <SinceBadge version="auto" />:
+
+```ts
+request.response.configure({ result, status, headers, format: 'raw' });
+```
+
+`setResult` still works and will only be removed in a major version. Unlike `configure`, it resets the status to `200` when no `status` option is given.
+:::
 
 ### Arguments
 
@@ -40,9 +52,20 @@ The `options` argument may contain the following properties:
 ### Example
 
 ```ts
+// Deprecated
 request.setResult(null, {
   raw: true,
   // HTTP status code for redirection
+  status: 302,
+  headers: {
+    'Location': 'http://kuzzle.io'
+  }
+});
+
+// Equivalent
+request.response.configure({
+  result: null,
+  format: 'raw',
   status: 302,
   headers: {
     'Location': 'http://kuzzle.io'

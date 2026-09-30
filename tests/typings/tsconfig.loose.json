@@ -1,0 +1,9 @@
+{
+  // The same consumer, without `strict` — see tsconfig.json. Some breaks only
+  // show here, or only there: a narrowed parameter fails both, a new `| null`
+  // only the strict one.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": false
+  }
+}

@@ -19,6 +19,19 @@ URL: http://kuzzle:7512/users/<userId>/api-keys/<apiKeyId>[?refresh=wait_for]
 Method: DELETE
 ```
 
+The API key can also be targeted by its clear-text `key` or its `fingerprint`
+instead of its `_id`, using query string parameters:
+
+```http
+URL: http://kuzzle:7512/users/<userId>/api-keys[?key=<key>&refresh=wait_for]
+Method: DELETE
+```
+
+```http
+URL: http://kuzzle:7512/users/<userId>/api-keys[?fingerprint=<fingerprint>&refresh=wait_for]
+Method: DELETE
+```
+
 ### Other protocols
 
 ```js
@@ -34,8 +47,13 @@ Method: DELETE
 
 ## Arguments
 
-- `_id`: API key ID
 - `userId`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
+
+Exactly one of the following must be provided to identify the API key to delete:
+
+- `_id`: API key ID
+- `key`: the clear-text API key
+- `fingerprint`: the API key fingerprint (SHA-256 hash of the clear-text key)
 
 ### Optional:
 

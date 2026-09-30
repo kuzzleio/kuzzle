@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import { Backend } from "../../core/backend";
-import { ControllerDefinition } from "./ControllerDefinition";
-import { EmbeddedSDK } from "../../core/shared/sdk/embeddedSdk";
+import type { Backend } from "../../core/backend";
+import type { ControllerDefinition } from "./ControllerDefinition";
+import type { EmbeddedSDK } from "../../core/shared/sdk/embeddedSdk";
 
 /**
  * Base class to declare a controller class
@@ -34,8 +34,13 @@ export abstract class Controller {
 
   /**
    * Controller name
+   *
+   * May be left unset: `app.controller.use()` derives it from the class name
+   * when the author has not set one. Declared as always present (`!`)
+   * because it is from `use()` on, and because v2.56.0 declared it so — an
+   * optional field broke `this.name` read as a `string` under `strict`.
    */
-  public name: string;
+  public name!: string;
 
   /**
    * Controller definition
@@ -50,8 +55,12 @@ export abstract class Controller {
    *   }
    * }
    *
+   * The documented pattern is to assign it in the subclass constructor, and
+   * `app.controller.use()` rejects a controller without one — see
+   * Plugin.checkControllerDefinition. Declared as always present (`!`) for
+   * that reason, as v2.56.0 declared it.
    */
-  public definition: ControllerDefinition;
+  public definition!: ControllerDefinition;
 
   /**
    * EmbeddedSDK instance

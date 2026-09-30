@@ -2,6 +2,27 @@ name: Tests
 
 on: [pull_request]
 
+env:
+  # Referenced by every job that does not deliberately run a Node matrix.
+  # It used to be spelled NODE_LTS_ACTIVE_VERSION and was never defined
+  # anywhere, so those jobs ran on whatever Node the runner image shipped
+  # (ADR-0001 type-debt register, TD-47 — #2734).
+  NODE_VERSION: "22"
+
+# Least privilege: only the Sonar job needs more, and it mints its own app
+# token for PR decoration (TD-47).
+permissions:
+  contents: read
+
+# A push supersedes the run it interrupts. Without this, three pushes in a row
+# mean three full ~50-job runs to completion, two of them answering a question
+# nobody is asking any more. Pairs with the `fail-fast: false` TD-33 (#2715)
+# put on the functional matrix: that keeps sibling variants running, which is
+# worth paying for on the *current* commit only (TD-47).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   error-codes-check:
     name: Documentation - Error codes check
@@ -10,17 +31,14 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
 
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -28,28 +46,130 @@ jobs:
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
+    # No Node matrix: ESLint's and Prettier's verdict on a fixed source tree
+    # with a fixed config does not depend on the Node major running them, and
+    # this job gates three others — the slowest of three identical runs used to
+    # sit on the critical path for nothing (TD-47).
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ matrix.node-version }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       - name: ESLint
         run: npm run test:lint
+        shell: bash
+
+      # `npm run prettier` only ever *wrote*; nothing checked. Both globs now
+      # cover ./tests, the vitest tree every new spec goes to, which neither
+      # tool used to see (TD-39 — #2726).
+      - name: Prettier
+        run: npm run prettier:check
+        shell: bash
+
+  migration-ratchets:
+    name: TS migration - ratchets & test type-check
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: ./.ci/scripts/with-retry.sh npm ci
+        shell: bash
+
+      # Ratchets: the .js / explicit-any / cast counts may only decrease.
+      # See docs/adr-001/steps/01-sprint-0-tooling.md, step 06 and scripts/ratchet.sh.
+      # Two have retired, both by reaching their floor and staying there: the
+      # `implicit-any` ratchet with the strict flip (step 12, K6) — `strict` in
+      # tsconfig.json subsumes `noImplicitAny` for lib/, and the build now fails on
+      # what that ratchet used to count — and the `mocha` ratchet with step 13's L7,
+      # which deleted the suite it counted.
+      - name: Migration ratchets (js / any / casts / cpd-exclusions)
+        run: npm run ratchet
+        shell: bash
+
+      # `strict` lives in tsconfig.json since step 12 (K6), so the production
+      # type-check IS the build, gated by the `build` job below. What that program
+      # does not cover is the test code: `strict` applies to a whole program, so the
+      # test code has its own, `tsconfig.tests.json` — `strict: true` since step 14's
+      # M6 moved the last directory into it, and `noEmit`, because the build emits
+      # from the other one. See docs/adr-001/steps/14-test-program-strict.md.
+      - name: Type-check the test program
+        run: npm run typecheck:tests
+        shell: bash
+
+  # The build and its payload gate used to live inside `sonarqube`, which is
+  # fork-gated — so on a pull request from a fork, `check-build-payload.sh`
+  # never ran at all, and neither did the 30 functional jobs nor the 6 monkey
+  # jobs that hung off `needs: [sonarqube]` (a skipped `needs` skips its
+  # dependents). See ADR-0001 type-debt register, TD-38 (#2725).
+  #
+  # `sonarqube` keeps a build step of its own: artifacts are not shared between
+  # jobs here, and its coverage run needs the package built.
+  build:
+    name: Build and payload gate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: ./.ci/scripts/with-retry.sh npm ci
+        shell: bash
+
+      # dumpme, boost-geospatial-index and kuzzle-espresso-logic-minimizer ship
+      # prebuilt binaries: a compile at install time is a regression (#2839).
+      - name: Check that no native addon was compiled
+        run: ./.ci/scripts/check-prebuilt-addons.sh
+        shell: bash
+
+      - name: Build
+        run: npm run build
+        shell: bash
+
+      # `tsc` succeeding does not mean the build is complete: the .proto files
+      # and the server entrypoint are copied in by bin/copy-binaries.ts, and
+      # the error-code catalogue by tsc's own `resolveJsonModule`. The gate is
+      # derived from package.json's `files` (TD-35/36/37).
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
+        shell: bash
+
+      # The published typings, compiled by a consumer — an application and a
+      # plugin — with `strict` on and off. A declaration change that makes code
+      # compiled against the previous release fail is a breaking change even
+      # when `lib/` is right, and nothing else here compiles against `dist/`
+      # (ADR-0001 step 15, TY-01…TY-07). See tests/typings/tsconfig.json.
+      - name: Type-check a consumer of the published typings
+        run: npm run typecheck:typings
+        shell: bash
+
+      # The same typings, installed from the packed tarball as a consumer gets
+      # them — production dependencies only — and compiled without
+      # `skipLibCheck`: a type package they need must not be a dev dependency.
+      - name: Check the published typings need no dev dependency
+        run: ./.ci/scripts/check-typings-dependencies.sh
         shell: bash
 
   sonarqube:
@@ -62,26 +182,52 @@ jobs:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
       - name: Build
         run: npm run build
         shell: bash
 
-      - name: Mocha coverage
-        run: npm run test:unit:mocha:coverage
+      # `tsc` succeeding does not mean the build is complete: the .proto files and
+      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
+      # used to assert ran. A published package missing its .proto files only fails
+      # when a cluster node boots.
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
         shell: bash
+
+      # One runner feeds the scanner since step 13 closed axis 2. Before ADR-0001
+      # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
+      # every JS->TS conversion silently left the coverage gate (TD-24) — that is
+      # the debt the two-runner pairing paid off, and it is paid.
+      - name: Vitest coverage
+        run: npm run test:unit:vitest
+        shell: bash
+
+      # Holds the rule the aggregate gate cannot: every lib/**.ts this PR adds
+      # must be executed by at least one spec. SonarCloud's 80% new_coverage is
+      # an aggregate over the block, and an aggregate says nothing about its
+      # worst member — #2723 passed at 88.3% with three files carrying no spec
+      # at all (TD-42, #2729). The base commit is what "new in this PR" is
+      # measured against; the checkout above is unshallow, so it is in history.
+      #
+      # This was `prepare-coverage.ts`, and it also normalised the two reports
+      # the two runners produced — a c8 artefact correction and an ownership
+      # arbiter. Step 13's L7b removed both with the second runner; see that
+      # step's `What L7b found` for the measurement that justified it.
+      - name: Coverage gate — every new lib/ file is executed by a spec
+        run: npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
+        shell: bash
+        env:
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -100,15 +246,14 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
+        # One runner, so no suite dimension: `mocha` left this matrix with the last
+        # Mocha spec (step 13, L6h) and its apparatus with L7. ADR-0001's axis 2 is
+        # closed — vitest is the unit runner.
         node-version: [20, 22, 24]
-        test-suits: ["mocha", "vitest"]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -118,8 +263,6 @@ jobs:
 
       - name: Unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
-        with:
-          suit: ${{ matrix.test-suits }}
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 
@@ -135,9 +278,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
         with:
@@ -146,8 +286,17 @@ jobs:
 
   functional-tests:
     name: Functional tests
-    needs: [sonarqube, unit-tests]
+    # Not `needs: [sonarqube]`: nothing in the functional suite consumes the
+    # Sonar scan, and depending on a fork-gated job skipped this whole matrix
+    # on every pull request from a fork (TD-38).
+    # Not `needs: [unit-tests]` either: the unit tests sat on the critical path
+    # (~2.5 min) for a gate the functional jobs do not use. A unit failure now
+    # no longer spares the 30 functional jobs, which is the price of the time.
+    needs: [build]
     strategy:
+      # One flaky variant must not cancel the 29 others: a re-run is otherwise
+      # the only way to learn whether anything else was broken.
+      fail-fast: false
       matrix:
         test-set:
           [
@@ -163,9 +312,6 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -185,15 +331,16 @@ jobs:
     needs: [functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-24.04
     strategy:
+      # Same reason as the functional matrix above, and it was left off this one
+      # when TD-33 added it there: the monkey suite is randomised, so one
+      # variant failing is exactly when the other five results matter most.
+      fail-fast: false
       matrix:
         node-version: [20, 22, 24]
         es-version: [7, 8]
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Cloning Monkey Tester
         uses: actions/checkout@v4

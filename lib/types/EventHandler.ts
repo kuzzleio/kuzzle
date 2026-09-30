@@ -77,6 +77,20 @@ export type PipeEventHandler<
 > = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
 
 /**
+ * A plugin pipe in its **callback** form: instead of answering a promise it
+ * takes a trailing `callback(error, result)`. The pipe runner supports both,
+ * and `PluginsManager.registerPipe` always hands over this one.
+ */
+export type CallbackPipeHandler = (...args: unknown[]) => void;
+
+/**
+ * What the emitter actually stores for a plugin pipe: either form.
+ */
+export type RegisteredPipeHandler<
+  TEventDefinition extends EventDefinition = EventDefinition,
+> = PipeEventHandler<TEventDefinition> | CallbackPipeHandler;
+
+/**
  * Handler for cluster event.
  */
 export type ClusterEventHandler<

@@ -19,10 +19,13 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "../../types/JSONObject";
 import * as assert from "../../util/assertType";
-import { Deprecation } from "../../types";
-import { KuzzleError } from "../../kerror/errors/kuzzleError";
+// Type-only: `kuzzleRequest` imports this module back, and an import elided at
+// compile time cannot close that cycle at runtime.
+import type { KuzzleRequest } from "./kuzzleRequest";
+import type { Deprecation } from "../../types";
+import type { KuzzleError } from "../../kerror/errors/kuzzleError";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
@@ -36,14 +39,16 @@ const restrictedHeaders = ["set-cookie"];
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
-  private proxy: any;
+  // Not private: `RequestResponse.headers` hands this proxy out, which is the
+  // whole point of building one.
+  proxy: any;
 
   constructor() {
     this.namesMap = new Map();
     this.headers = {};
     this.proxy = new Proxy(this.headers, {
       deleteProperty: (target, name) => this.removeHeader(name as string),
-      get: (target, name) => this.getHeader(name as string),
+      get: (target, name) => this.getHeader(name),
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
@@ -55,7 +60,7 @@ export class Headers {
    *
    * @param name Header name. Could be a string (case-insensitive) or a symbol
    */
-  getHeader(name: any): string | void {
+  getHeader(name: any): string | undefined {
     if (typeof name === "symbol") {
       return this.headers[name as unknown as string];
     }
@@ -66,7 +71,9 @@ export class Headers {
       return;
     }
 
-    return this.headers[this.namesMap.get(name.toLowerCase())];
+    const storedName = this.namesMap.get(name.toLowerCase());
+
+    return storedName === undefined ? undefined : this.headers[storedName];
   }
 
   removeHeader(name: string): boolean {
@@ -154,7 +161,23 @@ export class RequestResponse {
    */
   public raw: boolean;
 
-  constructor(request) {
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They keep the zero-width-space keys rather than
+   * becoming `private` or `#` names, which is what keeps `console.log` output
+   * as it has been for ten years — see the comment on those constants.
+   * Declaring them changes nothing at runtime.
+   */
+  [_request]: KuzzleRequest;
+  [_headers]: Headers;
+  [_userHeaders]: Set<string>;
+
+  /**
+   * @param request - the request this is the response of. Declared
+   * `unknown`, as v2.56.0's `any` accepted anything.
+   */
+  constructor(request: unknown);
+  constructor(request: KuzzleRequest) {
     this.raw = false;
     this[_request] = request;
     this[_headers] = new Headers();
@@ -174,7 +197,7 @@ export class RequestResponse {
    * Set the parent request deprecations
    * @param {Object[]} deprecations
    */
-  set deprecations(deprecations: Array<Deprecation> | void) {
+  set deprecations(deprecations: Array<Deprecation> | undefined) {
     this[_request].deprecations = deprecations;
   }
 
@@ -197,7 +220,12 @@ export class RequestResponse {
     return this[_request].error;
   }
 
-  set error(e: KuzzleError | null) {
+  /**
+   * Narrower than the getter on purpose: `setError` throws an InternalError on
+   * anything that is not an Error, so assigning null here has never cleared the
+   * error — `KuzzleRequest.clearError()` is what does that.
+   */
+  set error(e: KuzzleError) {
     this[_request].setError(e);
   }
 
@@ -272,9 +300,17 @@ export class RequestResponse {
    * Configure the response
    *
    * @param [options]
+   * @param [options.result] - Response result. Set only when the key is
+   *   present, so `{ result: null }` clears it; the status is left to the
+   *   `status` option, unlike the `result` setter, which resets it to 200
    * @param [options.headers] - Additional protocol headers
-   * @param [options.status=200] - HTTP status code
+   * @param [options.status] - HTTP status code. When absent, a pending 102
+   *   becomes 200 and any other status is kept
    * @param [options.format] - Response format, standard or raw
+   *
+   * @throws {InternalError} if the result is an Error
+   * @throws {api.assert.forbidden_stream} if the result is an HttpStream and
+   *   the protocol is not HTTP
    *
    * @returns void
    */
@@ -283,8 +319,15 @@ export class RequestResponse {
       headers?: JSONObject;
       status?: number;
       format?: "standard" | "raw";
+      result?: unknown;
     } = {},
   ): void {
+    // First, so that a refused result (an Error, a stream outside HTTP)
+    // throws before anything else is changed.
+    if ("result" in options) {
+      this[_request].assignResult(options.result);
+    }
+
     if (options.headers) {
       this.setHeaders(options.headers);
 
@@ -311,23 +354,35 @@ export class RequestResponse {
 
   /**
    * Gets a header value (case-insensitive)
+   *
+   * A missing header gives `undefined`, as it always has. The declared
+   * `string | null` is v2.56.0's, which code compiled against it assigns to
+   * a `string | null` — so test a result with `== null`, which covers both.
    */
   getHeader(name: string): string | null {
-    return this[_headers].getHeader(name);
+    return this[_headers].getHeader(name)!;
   }
 
   /**
    * Deletes a header (case-insensitive)
+   *
+   * Answers `true`. Declared `any`, as v2.56.0 declared it: a `boolean`
+   * breaks code compiled against that, e.g. `return` of it from a function
+   * declared `void`.
    */
-  removeHeader(name: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  removeHeader(name: string): any {
     return this[_headers].removeHeader(name);
   }
 
   /**
    * Sets a new array. Behaves the same as Node.js' HTTP response.setHeader
    * method (@see https://nodejs.org/api/http.html#http_response_setheader_name_value)
+   *
+   * Answers `true`, declared `any` for the reason given on `removeHeader`.
    */
-  setHeader(name: string, value: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- v2.56.0's public type, kept for compatibility
+  setHeader(name: string, value: string): any {
     return this[_headers].setHeader(name, value);
   }
 
@@ -361,9 +416,9 @@ export class RequestResponse {
       };
     }
 
-    const filteredHeaders = {};
+    const filteredHeaders: Record<string, string | undefined> = {};
     for (const name of this[_userHeaders]) {
-      filteredHeaders[name] = this.getHeader(name);
+      filteredHeaders[name] = this[_headers].getHeader(name);
     }
 
     /**

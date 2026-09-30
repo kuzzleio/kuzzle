@@ -25,19 +25,51 @@ export class PartialError extends KuzzleError {
   public errors: Array<KuzzleError>;
   public count: number;
 
-  constructor(message, body, id, code) {
+  constructor(message?: string | Error, id?: string, code?: number);
+  constructor(
+    message?: string | Error,
+    body?: KuzzleError[],
+    id?: string,
+    code?: number,
+  );
+  /**
+   * v2.56.0 declared all four arguments untyped: a body that is not a list of
+   * `KuzzleError` (`[{ _id, reason }]`, `Error[]`) compiled, and must still.
+   */
+  constructor(message?: unknown, body?: unknown, id?: unknown, code?: unknown);
+  /**
+   * Two call shapes, both public API: the documented one carries the partial
+   * errors — `(message, body, id, code)` — and the one `kerror` uses for every
+   * other error class — `(message, id, code)`. They are told apart the way
+   * they always were: a numeric third argument with no fourth means the
+   * arguments are shifted by one.
+   */
+  constructor(
+    message: unknown = "",
+    body?: unknown,
+    id?: unknown,
+    code?: unknown,
+  ) {
+    let errors: KuzzleError[] = [];
+    let errorId: string | undefined;
+    let errorCode: unknown;
+
     if (code === undefined && typeof id === "number") {
-      code = id;
-      id = body;
-      body = [];
-    } else if (body === undefined) {
-      body = [];
+      errorCode = id;
+      errorId = typeof body === "string" ? body : undefined;
+    } else {
+      errorId = typeof id === "string" ? id : undefined;
+      errorCode = code;
+
+      if (Array.isArray(body)) {
+        errors = body;
+      }
     }
 
-    super(message, 206, id, code);
+    super(message, 206, errorId, errorCode);
 
-    this.errors = body;
-    this.count = body.length;
+    this.errors = errors;
+    this.count = errors.length;
   }
 
   toJSON() {
