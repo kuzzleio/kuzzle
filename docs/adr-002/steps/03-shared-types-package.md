@@ -35,6 +35,12 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 - Secrets: nothing to add — `KUZZLE_BOT_PRIVATE_KEY`, `SEMANTIC_RELEASE_SLACK_WEBHOOK` and `NPM_TOKEN` are org secrets visible to all repositories, `KUZZLE_BOT_APP_ID` an org variable. The `kuzzlebot` app (`KUZZLE_BOT_APP_ID`) is installed on all the org's repositories, this one included.
 - Trusted publishing is configured per existing package: the first release goes out with the bootstrap `NPM_TOKEN` (which must still be valid and allowed to create packages); then declare `kuzzleio/types` / `release.workflow.yaml` as the trusted publisher of `kuzzle-types` and remove the `NPM_TOKEN` line.
 
+## First release — `kuzzle-types@1.0.0-beta.1` (2026-09-30)
+
+- **The CI release failed, nothing was published**: the org `NPM_TOKEN` is invalid (`EINVALIDNPMTOKEN`), and OIDC could not take over (`404 … package not found`: trusted publishing is configured per existing package).
+- **Published by hand** by the maintainer from `beta` (`43d6222`), `npm publish --tag beta` after the `prepublishOnly` build + types-only check; git tag `v1.0.0-beta.1` pushed on that commit so semantic-release resumes from it. Tarball shasum `10a72ec479b930c21516e749706e4cc67023724f`, 35 files, 10.2 kB. It took a few minutes to show on the registry after npm's "published" e-mail. As the first version, it is also `latest`.
+- **Then**: declare `kuzzleio/types` / `release.workflow.yaml` as the trusted publisher of `kuzzle-types` on npmjs.com, and merge the removal of the bootstrap `NPM_TOKEN` line (branch `ci/drop-bootstrap-npm-token`, a `ci:` commit — no release).
+
 ## Planned, not started
 
 - **`kuzzle-sdk` minor** depending on `kuzzle-types` and re-exporting it (all names but `Document`), old `src/types/*` paths kept as re-export stubs; then **`kuzzle` minor** doing the same for the contract types it takes from the SDK today (list in [step 02](02-kuzzle-owns-its-types.md#what-was-done)).
