@@ -2,6 +2,8 @@ import type { estypes } from "sdk-es8";
 
 import type { JSONObject } from "../../JSONObject";
 
+export type { KRequestBody, KuzzleInfo } from "../KuzzleInfo";
+
 export type InfoResult = {
   type: string;
   version: string;
@@ -37,9 +39,6 @@ export type KStats = {
   indexes: KStatsIndex[];
   size: estypes.ByteSize;
 };
-
-// Shared by both Elasticsearch versions.
-export type { KuzzleInfo, KRequestBody } from "../KuzzleInfo";
 
 // Kuzzle's own `JSONObject` (ADR-0002 step 02, TD-10), re-exported under the
 // name this module has always exported.
