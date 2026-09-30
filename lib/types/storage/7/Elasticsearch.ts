@@ -17,6 +17,10 @@ export type InfoResult = {
  * `author` and `updater` are kuids, and `getKuid` answers `null` for an
  * anonymous write — so both are nullable, as is `updatedAt` on a document that
  * has only ever been created.
+ *
+ * Wider than the API contract's `KDocumentKuzzleInfo`, whose `author` is a
+ * `string`: that type describes what a client is handed, this one what the
+ * storage layer may write. Kept apart on purpose.
  */
 export type KuzzleInfo = {
   author: string | null;

@@ -28,6 +28,12 @@ import type {
  * Policy definition for a role
  * and its restrictions
  *
+ * The same policy as the API contract's `ProfilePolicy`, typed differently on
+ * purpose: `ProfilePolicy.restrictedTo` is a one-element tuple and leaves
+ * `collections` optional; here it is a list of any length and
+ * `PolicyRestrictions.collections` is required. Kept apart, since aligning
+ * either one would stop code written against it from compiling.
+ *
  * @example
  * {
  *   "roleId": "admin",
