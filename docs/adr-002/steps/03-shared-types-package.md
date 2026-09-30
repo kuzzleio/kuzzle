@@ -1,6 +1,6 @@
 # Step 03 — Shared types-only contract package
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-30 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
+**Status:** 🟦 In progress — released 2026-09-30, reconciliation left · **Opened:** 2026-09-30 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
 
 ## Goal
 
@@ -58,6 +58,20 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 - Checked: `dist/index.d.ts` exports the same 279 names with the same kinds, `dist/index.js` the same 82 runtime values (diffed); no `require("kuzzle-types")` in `dist/`; `check-typings-dependencies.sh` green (the published typings compile with production dependencies only); `kuzzle-plugin-commons` type-checks against this build as against 2.55.0.
 - Gate: `tests/typings/consumer/contractTypes.ts` — each of the 36 names (35 + `JSONObject`) exported by `"kuzzle"` identical to `kuzzle-types`' and to the installed `kuzzle-sdk`'s, in both strict modes. Checked it bites.
 - **`kuzzle-types` 1.0.0** published 2026-09-30 ([types#3](https://github.com/kuzzleio/types/pull/3), `beta` → `master`), by the release workflow through OIDC — the first automatic release, proving the trusted publisher. The maintainer's call: once validated in beta, go straight to the stable versions. The SDK's range still reads `^1.0.0-beta.1` (it accepts `1.0.0`); moved to `^1.0.0` before the SDK's stable release — no prerelease runtime dependency in a stable release.
+
+## Released — 2026-09-30
+
+Straight from beta to stable once validated (maintainer's call):
+
+| Package        | Beta                     | Stable   | Release PRs                                                                                                                                                                                      |
+| -------------- | ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kuzzle-types` | `1.0.0-beta.1` (by hand) | `1.0.0`  | [types#3](https://github.com/kuzzleio/types/pull/3), back-merge [types#4](https://github.com/kuzzleio/types/pull/4)                                                                              |
+| `kuzzle-sdk`   | `7.18.0-beta.1`          | `7.18.0` | [#773](https://github.com/kuzzleio/sdk-javascript/pull/773), [#774](https://github.com/kuzzleio/sdk-javascript/pull/774), back-merge [#775](https://github.com/kuzzleio/sdk-javascript/pull/775) |
+| `kuzzle`       | `2.58.0-beta.1`          | `2.58.0` | [#2955](https://github.com/kuzzleio/kuzzle/pull/2955), [#2956](https://github.com/kuzzleio/kuzzle/pull/2956), back-merge [#2957](https://github.com/kuzzleio/kuzzle/pull/2957)                   |
+
+- **Validation on the published betas**: `kuzzle-device-manager` 2.12.0 (sources + tests) and `kuzzle-plugin-commons` 1.3.1 (type-check + build) compile against `kuzzle@2.58.0-beta.1` + `kuzzle-sdk@7.18.0-beta.1`. Gotcha when testing a Kuzzle beta: a prerelease does not satisfy a peer range such as `kuzzle >=2.55.0` (`kuzzle-plugin-commons`), so npm installs a second `kuzzle` next to the beta and TypeScript rejects the two copies' classes (private members). Not a regression — a stable version satisfies the range; test with a single copy.
+- Every release went out through npm trusted publishing (OIDC). The SDK's first beta run failed on a transient npm error in the OIDC exchange (`error.errors is not iterable`, `@semantic-release/npm` 13.1.3 masking the registry's answer); re-run as is, it passed.
+- Not ours: the `SBOM publish` workflow fails on every release since 2.57.0-beta.4 (Dependency-Track answers HTTP 500).
 
 ## Planned, not started
 
