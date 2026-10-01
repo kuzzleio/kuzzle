@@ -42,7 +42,7 @@ export class IndexCache {
    *
    * Map<index, Set<collection>>
    */
-  private indexes = new Map<string, Set<string>>();
+  private readonly indexes = new Map<string, Set<string>>();
 
   /**
    * Collection write locks, a local copy of the cluster-wide state (see
@@ -51,11 +51,7 @@ export class IndexCache {
    *
    * Map<index, Map<collection, CollectionLock>>
    */
-  private locks = new Map<string, Map<string, CollectionLock>>();
-
-  constructor() {
-    this.indexes = new Map();
-  }
+  private readonly locks = new Map<string, Map<string, CollectionLock>>();
 
   /**
    * Cache a new index
