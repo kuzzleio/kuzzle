@@ -1,3 +1,15 @@
+## [2.59.0](https://github.com/kuzzleio/kuzzle/compare/v2.58.0...v2.59.0) (2026-10-01)
+
+### Features
+
+* **storage:** collection write locks and unmanaged indices ([c376e74](https://github.com/kuzzleio/kuzzle/commit/c376e7422c8da8622e892089ed05a66d9ca12847))
+
+## [2.59.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.58.0...v2.59.0-beta.1) (2026-10-01)
+
+### Features
+
+* **storage:** collection write locks and unmanaged indices ([c376e74](https://github.com/kuzzleio/kuzzle/commit/c376e7422c8da8622e892089ed05a66d9ca12847))
+
 ## [2.58.0](https://github.com/kuzzleio/kuzzle/compare/v2.57.0...v2.58.0) (2026-09-30)
 
 ### Features
