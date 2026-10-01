@@ -282,9 +282,16 @@ export function describeInternals(harness: ESHarness) {
       { index: "%nepali.mehry", status: "open" },
     ];
 
-    const arm = (client: any, aliases: unknown[]) => {
+    const arm = (
+      client: any,
+      aliases: unknown[],
+      catAliases: Array<{ alias: string; index: string }> = [],
+    ) => {
       client._client.cat.indices.mockResolvedValue(
         harness.envelope.respond(indices),
+      );
+      client._client.cat.aliases.mockResolvedValue(
+        harness.envelope.respond(catAliases),
       );
       client._client.indices.updateAliases.mockResolvedValue(
         harness.envelope.respond({}),
@@ -351,6 +358,35 @@ export function describeInternals(harness: ESHarness) {
       expect(publicES._client.indices.updateAliases).not.toHaveBeenCalled();
       expect(privateES._client.indices.updateAliases).not.toHaveBeenCalled();
     });
+
+    /*
+     * A mapping migration builds a collection's next indice beside it, with
+     * no alias until the swap: the marker keeps a restart from turning it into
+     * a phantom collection. ES 8 only (ADR-0001 of the mapping-migration
+     * plugin).
+     */
+    it.runIf(harness.envelope.version === "8")(
+      "leaves the indices marked as unmanaged alone",
+      async () => {
+        const { public: publicES } = scopes();
+
+        arm(
+          publicES,
+          [],
+          [{ alias: "kuzzle-unmanaged", index: "&nepali.liia" }],
+        );
+
+        await publicES.generateMissingAliases();
+
+        expect(publicES._client.indices.updateAliases).toHaveBeenCalledWith({
+          body: {
+            actions: [
+              { add: { alias: "@&nepali.mehry", index: "&nepali.mehry" } },
+            ],
+          },
+        });
+      },
+    );
   });
 
   describe("#_extractIndex / #_extractCollection", () => {

@@ -600,6 +600,62 @@ describe("ClusterNode", () => {
 
       expect(node.publisher.send.mock.calls).toEqual([[topic, expected]]);
     });
+
+    /*
+     * Collection write locks ride on the existing ClusterWideEvent topic: a
+     * dedicated topic would get this node evicted by any older node, which
+     * does not know it, during a rolling upgrade.
+     */
+    describe("collection write locks", () => {
+      const lock = { lockedAt: 42, owner: "o", reason: "r" };
+
+      it.each([
+        [
+          "core:storage:collection:lock:after",
+          "core:storage:collection:lock",
+          { collection: "c", index: "i", lock, scope: "public" },
+        ],
+        [
+          "core:storage:collection:unlock:after",
+          "core:storage:collection:unlock",
+          { collection: "c", index: "i", scope: "public" },
+        ],
+      ])("%s is broadcast as %s", (event, clusterEvent, payload) => {
+        kuzzle.emit(event, payload);
+
+        expect(node.publisher.sendClusterWideEvent.mock.calls).toEqual([
+          [clusterEvent, payload],
+        ]);
+        expect(node.publisher.send).not.toHaveBeenCalled();
+      });
+
+      it("caches a lock taken on another node", () => {
+        const setLock = vi.fn();
+        kuzzle.onAsk("core:storage:public:cache:setLock", setLock);
+
+        node.eventEmitter.emit("core:storage:collection:lock", {
+          collection: "c",
+          index: "i",
+          lock,
+          scope: "public",
+        });
+
+        expect(setLock.mock.calls).toEqual([["i", "c", lock]]);
+      });
+
+      it("drops a lock released on another node", () => {
+        const removeLock = vi.fn();
+        kuzzle.onAsk("core:storage:private:cache:removeLock", removeLock);
+
+        node.eventEmitter.emit("core:storage:collection:unlock", {
+          collection: "c",
+          index: "i",
+          scope: "private",
+        });
+
+        expect(removeLock.mock.calls).toEqual([["i", "c"]]);
+      });
+    });
   });
 
   describe("#handshake", () => {

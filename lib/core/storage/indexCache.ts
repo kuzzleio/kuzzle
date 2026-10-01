@@ -23,6 +23,19 @@ import * as kerror from "../../kerror";
 
 const storageError = kerror.wrap("services", "storage");
 
+/**
+ * A collection write lock: while it is held, the storage layer rejects every
+ * action writing to the collection, and serves reads as usual.
+ */
+export interface CollectionLock {
+  /** Who holds the lock (e.g. a plugin name), the only one who can release it */
+  owner: string;
+  /** Why the collection is locked, quoted in the error writers receive */
+  reason: string;
+  /** Lock timestamp (Epoch-millis) */
+  lockedAt: number;
+}
+
 export class IndexCache {
   /**
    * Index map: each entry holds a set of collection names
@@ -30,6 +43,15 @@ export class IndexCache {
    * Map<index, Set<collection>>
    */
   private indexes = new Map<string, Set<string>>();
+
+  /**
+   * Collection write locks, a local copy of the cluster-wide state (see
+   * `ClientAdapter`): checking a lock on every write must not cost a round
+   * trip to Redis.
+   *
+   * Map<index, Map<collection, CollectionLock>>
+   */
+  private locks = new Map<string, Map<string, CollectionLock>>();
 
   constructor() {
     this.indexes = new Map();
@@ -145,6 +167,85 @@ export class IndexCache {
   assertCollectionExists(index: string, collection: string) {
     if (!this.getCollections(index).has(collection)) {
       throw storageError.get("unknown_collection", index, collection);
+    }
+  }
+
+  /**
+   * Cache a collection write lock, replacing the one it may already hold
+   */
+  setLock(index: string, collection: string, lock: CollectionLock): void {
+    let collections = this.locks.get(index);
+
+    if (collections === undefined) {
+      collections = new Map();
+      this.locks.set(index, collections);
+    }
+
+    collections.set(collection, lock);
+  }
+
+  /**
+   * Remove a collection write lock from the cache
+   */
+  removeLock(index: string, collection: string): void {
+    const collections = this.locks.get(index);
+
+    if (collections) {
+      collections.delete(collection);
+
+      if (collections.size === 0) {
+        this.locks.delete(index);
+      }
+    }
+  }
+
+  /**
+   * Remove every cached collection write lock
+   */
+  clearLocks(): void {
+    this.locks.clear();
+  }
+
+  /**
+   * Return a collection write lock, or null if the collection is not locked
+   */
+  getLock(index: string, collection: string): CollectionLock | null {
+    return this.locks.get(index)?.get(collection) ?? null;
+  }
+
+  /**
+   * Assert that the provided collection is not write-locked
+   *
+   * @throws If the collection is locked
+   */
+  assertCollectionWritable(index: string, collection: string): void {
+    const lock = this.getLock(index, collection);
+
+    if (lock !== null) {
+      throw storageError.get(
+        "collection_locked",
+        index,
+        collection,
+        lock.owner,
+        lock.reason,
+      );
+    }
+  }
+
+  /**
+   * Assert that none of the provided index collections is write-locked
+   *
+   * @throws If one of the index collections is locked
+   */
+  assertIndexWritable(index: string): void {
+    const collections = this.locks.get(index);
+
+    if (collections === undefined) {
+      return;
+    }
+
+    for (const collection of collections.keys()) {
+      this.assertCollectionWritable(index, collection);
     }
   }
 }

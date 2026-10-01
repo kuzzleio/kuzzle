@@ -293,6 +293,12 @@
           "message": "Attempt to recreate an existing collection %s of index %s of scope %s with non matching static setting : %s at %s while existing one is at %s",
           "code": 51,
           "class": "BadRequestError"
+        },
+        "collection_locked": {
+          "description": "The collection is locked against writes, typically during a maintenance operation such as a mapping migration. Reads are still served: retry the write once the lock is released",
+          "message": "The collection \"%s\":\"%s\" is locked by \"%s\" (%s): write actions are rejected until it is unlocked.",
+          "code": 52,
+          "class": "ServiceUnavailableError"
         }
       }
     },

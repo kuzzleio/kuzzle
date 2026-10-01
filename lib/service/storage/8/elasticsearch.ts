@@ -82,6 +82,14 @@ const PUBLIC_PREFIX = "&";
 const INDEX_PREFIX_POSITION_IN_INDICE = 0;
 const INDEX_PREFIX_POSITION_IN_ALIAS = 1;
 const NAME_SEPARATOR = ".";
+/**
+ * Marks an indice the core must leave alone: neither given a missing alias
+ * (`generateMissingAliases`) nor counted in the storage stats. Set by tools
+ * building a collection's next indice beside it (e.g. a mapping migration).
+ * It sits outside the `@&` / `@%` alias convention, so every alias reader
+ * already ignores it.
+ */
+const UNMANAGED_INDICE_ALIAS = "kuzzle-unmanaged";
 const FORBIDDEN_CHARS = `\\/*?"<>| \t\r\n,+#:${NAME_SEPARATOR}${PUBLIC_PREFIX}${PRIVATE_PREFIX}`;
 const DYNAMIC_PROPERTY_VALUES = ["true", "false", "strict"];
 
@@ -266,15 +274,17 @@ export class ES8 {
     };
 
     const stats = await this._client.indices.stats(esRequest);
+    const unmanaged = await this._listUnmanagedIndices();
     const indexes: KStatsIndexes = {};
     let size = 0;
 
     for (const [indice, indiceInfo] of Object.entries(stats.indices ?? {})) {
       const infos = indiceInfo as any;
-      // Ignore non-Kuzzle indices
+      // Ignore non-Kuzzle indices, and the ones Kuzzle must leave alone
       if (
-        !indice.startsWith(PRIVATE_PREFIX) &&
-        !indice.startsWith(PUBLIC_PREFIX)
+        (!indice.startsWith(PRIVATE_PREFIX) &&
+          !indice.startsWith(PUBLIC_PREFIX)) ||
+        unmanaged.has(indice)
       ) {
         continue;
       }
@@ -3424,6 +3434,19 @@ export class ES8 {
   }
 
   /**
+   * Returns the indices marked with `UNMANAGED_INDICE_ALIAS`.
+   */
+  async _listUnmanagedIndices(): Promise<Set<string>> {
+    const body = await this._catAliases();
+
+    return new Set(
+      body
+        .filter(({ alias }) => alias === UNMANAGED_INDICE_ALIAS)
+        .map(({ index }) => index),
+    );
+  }
+
+  /**
    * Check for each indice whether it has an alias or not.
    * When the latter is missing, create one based on the indice name.
    *
@@ -3437,10 +3460,12 @@ export class ES8 {
         indice === undefined ? [] : [indice],
       );
       const aliases = await this.listAliases();
+      const unmanaged = await this._listUnmanagedIndices();
 
       const indicesWithoutAlias = indices.filter(
         (indice) =>
           indice[INDEX_PREFIX_POSITION_IN_INDICE] === this._indexPrefix &&
+          !unmanaged.has(indice) &&
           !aliases.some((alias) => alias.indice === indice),
       );
 
