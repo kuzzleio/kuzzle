@@ -61,6 +61,10 @@ import ClusterSubscriber from "./subscriber";
 
 const debug = createDebug("kuzzle:cluster:sync");
 
+/** Cluster-wide events carrying the collection write locks (see registerEvents) */
+const COLLECTION_LOCK_EVENT = "core:storage:collection:lock";
+const COLLECTION_UNLOCK_EVENT = "core:storage:collection:unlock";
+
 /**
  * How long `addNode()` may wait for a joining node's first sync message before
  * it answers that node's handshake anyway.
@@ -1284,6 +1288,38 @@ class ClusterNode {
       ({ collection, index, scope }) => {
         this.onCollectionRemoved(scope, index, collection);
       },
+    );
+
+    // Collection write locks travel as cluster-wide events rather than as
+    // dedicated sync topics: a node evicts the sender of a topic it does not
+    // know, which would turn a rolling upgrade into evictions.
+    global.kuzzle.on("core:storage:collection:lock:after", (payload) =>
+      this.broadcast(COLLECTION_LOCK_EVENT, payload),
+    );
+
+    global.kuzzle.on("core:storage:collection:unlock:after", (payload) =>
+      this.broadcast(COLLECTION_UNLOCK_EVENT, payload),
+    );
+
+    this.eventEmitter.on(
+      COLLECTION_LOCK_EVENT,
+      ({ collection, index, lock, scope }) =>
+        global.kuzzle.ask(
+          `core:storage:${scope}:cache:setLock`,
+          index,
+          collection,
+          lock,
+        ),
+    );
+
+    this.eventEmitter.on(
+      COLLECTION_UNLOCK_EVENT,
+      ({ collection, index, scope }) =>
+        global.kuzzle.ask(
+          `core:storage:${scope}:cache:removeLock`,
+          index,
+          collection,
+        ),
     );
   }
 

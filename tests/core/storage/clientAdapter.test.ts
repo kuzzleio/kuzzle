@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { storeScopeEnum } from "../../../lib/core/storage/storeScopeEnum";
 
@@ -51,13 +51,19 @@ const CACHE_METHODS = [
   "addCollection",
   "addIndex",
   "assertCollectionExists",
+  "assertCollectionWritable",
   "assertIndexExists",
+  "assertIndexWritable",
+  "clearLocks",
+  "getLock",
   "hasCollection",
   "hasIndex",
   "listCollections",
   "listIndexes",
   "removeCollection",
   "removeIndex",
+  "removeLock",
+  "setLock",
 ] as const;
 
 type Recorder = Record<string, ReturnType<typeof vi.fn>>;
@@ -112,13 +118,19 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "addCollection",
       "addIndex",
       "assertCollectionExists",
+      "assertCollectionWritable",
       "assertIndexExists",
+      "assertIndexWritable",
+      "clearLocks",
+      "getLock",
       "hasCollection",
       "hasIndex",
       "listCollections",
       "listIndexes",
       "removeCollection",
       "removeIndex",
+      "removeLock",
+      "setLock",
     ];
     const createdEs: unknown[] = [];
     const createdCache: unknown[] = [];
@@ -171,6 +183,9 @@ describe("#core/storage/ClientAdapter", () => {
   let emitted: Array<{ event: string; payload: unknown }>;
   let client: Recorder;
   let cache: Recorder;
+  let pipes: Map<string, () => unknown>;
+  /** The Redis hash behind `core:cache:internal:execute`, per key. */
+  let redis: Map<string, Map<string, string>>;
 
   /** Invokes a registered ask handler by its event suffix. */
   const ask = (suffix: string, ...args: unknown[]) => {
@@ -186,6 +201,44 @@ describe("#core/storage/ClientAdapter", () => {
     cacheInstances.length = 0;
     handlers = new Map();
     emitted = [];
+    pipes = new Map();
+    redis = new Map();
+
+    const hash = (key: string) => {
+      let fields = redis.get(key);
+
+      if (fields === undefined) {
+        fields = new Map();
+        redis.set(key, fields);
+      }
+
+      return fields;
+    };
+
+    // The four hash commands the collection write locks use, on a Map.
+    const execute = (command: string, key: string, ...args: string[]) => {
+      const [field = "", value = ""] = args;
+
+      switch (command) {
+        case "hgetall":
+          return Object.fromEntries(hash(key));
+        case "hget":
+          return hash(key).get(field) ?? null;
+        case "hset":
+          hash(key).set(field, value);
+          return 1;
+        case "hsetnx":
+          if (hash(key).has(field)) {
+            return 0;
+          }
+          hash(key).set(field, value);
+          return 1;
+        case "hdel":
+          return hash(key).delete(field) ? 1 : 0;
+        default:
+          throw new Error(`unexpected Redis command ${command}`);
+      }
+    };
 
     (globalThis as { kuzzle?: unknown }).kuzzle = {
       config: {
@@ -199,8 +252,16 @@ describe("#core/storage/ClientAdapter", () => {
       onAsk: vi.fn((event: string, handler: (...a: unknown[]) => unknown) => {
         handlers.set(event, handler);
       }),
-      // `loadMappings` takes a Mutex, which reaches the cache through `ask`.
-      ask: vi.fn(async () => true),
+      onPipe: vi.fn((event: string, handler: () => unknown) => {
+        pipes.set(event, handler);
+      }),
+      // `loadMappings` takes a Mutex, which reaches the cache through `ask`;
+      // the collection write locks reach Redis through it.
+      ask: vi.fn(async (event: string, ...args: unknown[]) =>
+        event === "core:cache:internal:execute"
+          ? execute(...(args as [string, string, ...string[]]))
+          : true,
+      ),
     };
 
     adapter = new ClientAdapter(storeScopeEnum.PRIVATE);
@@ -226,7 +287,15 @@ describe("#core/storage/ClientAdapter", () => {
       expect(adapter.es.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
-      expect(handlers.size).toBe(51);
+      expect(handlers.size).toBe(56);
+    });
+
+    it("reloads the collection write locks once the cluster is joined", async () => {
+      const loadLocks = vi.spyOn(adapter, "loadLocks");
+
+      await pipes.get("kuzzle:state:live")?.();
+
+      expect(loadLocks).toHaveBeenCalledOnce();
     });
 
     it("namespaces every event with the adapter's scope", () => {
@@ -505,6 +574,8 @@ describe("#core/storage/ClientAdapter", () => {
         true,
       ],
 
+      ["collection:lock:get", [IDX, COL], "cache", "getLock", [IDX, COL]],
+
       ["cache:addIndex", [IDX], "cache", "addIndex", [IDX]],
       ["cache:addCollection", [IDX, COL], "cache", "addCollection", [IDX, COL]],
       [
@@ -514,7 +585,39 @@ describe("#core/storage/ClientAdapter", () => {
         "removeCollection",
         [IDX, COL],
       ],
+      [
+        "cache:setLock",
+        [IDX, COL, { owner: "o" }],
+        "cache",
+        "setLock",
+        [IDX, COL, { owner: "o" }],
+      ],
+      ["cache:removeLock", [IDX, COL], "cache", "removeLock", [IDX, COL]],
     ];
+
+    /** The rows a collection write lock rejects; every other row is a read. */
+    const WRITES = new Set([
+      "collection:truncate",
+      "collection:update",
+      "document:bulk",
+      "document:create",
+      "document:createOrReplace",
+      "document:delete",
+      "document:deleteByQuery",
+      "document:deleteFields",
+      "document:mCreate",
+      "document:mCreateOrReplace",
+      "document:mDelete",
+      "document:mReplace",
+      "document:mUpdate",
+      "document:mUpsert",
+      "document:replace",
+      "document:update",
+      "document:updateByQuery",
+      "bulk:updateByQuery",
+      "document:upsert",
+      "mappings:update",
+    ]);
 
     it.each(rows)(
       "%s forwards to %s.%s",
@@ -531,6 +634,26 @@ describe("#core/storage/ClientAdapter", () => {
         } else {
           expect(cache.assertCollectionExists).not.toHaveBeenCalled();
         }
+
+        if (WRITES.has(event)) {
+          expect(cache.assertCollectionWritable).toHaveBeenCalledWith(IDX, COL);
+        } else {
+          expect(cache.assertCollectionWritable).not.toHaveBeenCalled();
+        }
+      },
+    );
+
+    it.each([...WRITES])(
+      "%s writes nothing to a locked collection",
+      async (event) => {
+        const [, args, , method] = rows.find(([e]) => e === event) as Row;
+
+        cache.assertCollectionWritable.mockImplementation(() => {
+          throw new Error("locked");
+        });
+
+        expect(() => ask(event, ...args)).toThrow("locked");
+        expect(client[method]).not.toHaveBeenCalled();
       },
     );
 
@@ -550,6 +673,8 @@ describe("#core/storage/ClientAdapter", () => {
         "document:multiSearch",
         "mappings:import",
         "cache:removeIndexes",
+        "collection:lock",
+        "collection:unlock",
       ];
       const tabled = rows.map(([event]) => event);
 
@@ -626,6 +751,8 @@ describe("#core/storage/ClientAdapter", () => {
         "index:mDelete": vi.spyOn(adapter, "deleteIndexes"),
         "document:import": vi.spyOn(adapter, "loadFixtures"),
         "mappings:import": vi.spyOn(adapter, "loadMappings"),
+        "collection:lock": vi.spyOn(adapter, "lockCollection"),
+        "collection:unlock": vi.spyOn(adapter, "unlockCollection"),
       };
 
       for (const spy of Object.values(spies)) {
@@ -640,6 +767,8 @@ describe("#core/storage/ClientAdapter", () => {
       await ask("index:mDelete", ["i"]);
       await ask("document:import", { i: {} }, { o: 1 });
       await ask("mappings:import", { i: {} }, { o: 1 });
+      await ask("collection:lock", "i", "c", { owner: "o", reason: "r" });
+      await ask("collection:unlock", "i", "c", "o");
 
       for (const [event, spy] of Object.entries(spies)) {
         expect(spy, event).toHaveBeenCalledOnce();
@@ -652,6 +781,11 @@ describe("#core/storage/ClientAdapter", () => {
         { p: 1 },
       );
       expect(spies["index:mDelete"]).toHaveBeenCalledWith(["i"]);
+      expect(spies["collection:lock"]).toHaveBeenCalledWith("i", "c", {
+        owner: "o",
+        reason: "r",
+      });
+      expect(spies["collection:unlock"]).toHaveBeenCalledWith("i", "c", "o");
     });
   });
 
@@ -722,6 +856,21 @@ describe("#core/storage/ClientAdapter", () => {
       expect(client.createCollection).not.toHaveBeenCalled();
       expect(cache.addCollection).toHaveBeenCalledWith("i", "c");
       expect(emitted).toHaveLength(0);
+      // Cluster sync replays a creation another node made: nothing to reject.
+      expect(cache.assertCollectionWritable).not.toHaveBeenCalled();
+    });
+
+    /* Creating an existing collection updates its mappings. */
+    it("does not touch a locked collection", async () => {
+      cache.assertCollectionWritable.mockImplementation(() => {
+        throw new Error("locked");
+      });
+
+      await expect(adapter.createCollection("i", "c", {})).rejects.toThrow(
+        "locked",
+      );
+      expect(cache.assertCollectionWritable).toHaveBeenCalledWith("i", "c");
+      expect(client.createCollection).not.toHaveBeenCalled();
     });
   });
 
@@ -736,6 +885,16 @@ describe("#core/storage/ClientAdapter", () => {
         event: "core:storage:index:delete:after",
         payload: { index: "i", scope: storeScopeEnum.PRIVATE },
       });
+    });
+
+    it("does not delete an index holding a locked collection", async () => {
+      cache.assertIndexWritable.mockImplementation(() => {
+        throw new Error("locked");
+      });
+
+      await expect(adapter.deleteIndex("i")).rejects.toThrow("locked");
+      expect(cache.assertIndexWritable).toHaveBeenCalledWith("i");
+      expect(client.deleteIndex).not.toHaveBeenCalled();
     });
   });
 
@@ -762,6 +921,19 @@ describe("#core/storage/ClientAdapter", () => {
       expect(cache.removeIndex).not.toHaveBeenCalled();
       expect(emitted).toHaveLength(0);
     });
+
+    it("deletes nothing if one index holds a locked collection", async () => {
+      cache.assertIndexWritable.mockImplementation((index: string) => {
+        if (index === "i2") {
+          throw new Error("locked");
+        }
+      });
+
+      await expect(adapter.deleteIndexes(["i1", "i2"])).rejects.toThrow(
+        "locked",
+      );
+      expect(client.deleteIndexes).not.toHaveBeenCalled();
+    });
   });
 
   describe("#deleteCollection", () => {
@@ -775,6 +947,17 @@ describe("#core/storage/ClientAdapter", () => {
         event: "core:storage:collection:delete:after",
         payload: { collection: "c", index: "i", scope: storeScopeEnum.PRIVATE },
       });
+    });
+
+    it("does not delete a locked collection", async () => {
+      cache.assertCollectionWritable.mockImplementation(() => {
+        throw new Error("locked");
+      });
+
+      await expect(adapter.deleteCollection("i", "c")).rejects.toThrow(
+        "locked",
+      );
+      expect(client.deleteCollection).not.toHaveBeenCalled();
     });
   });
 
@@ -808,6 +991,174 @@ describe("#core/storage/ClientAdapter", () => {
 
       expect(client.generateMissingAliases).toHaveBeenCalledOnce();
     });
+
+    it("loads the collection write locks too", async () => {
+      const loadLocks = vi.spyOn(adapter, "loadLocks");
+
+      await adapter.populateCache();
+
+      expect(loadLocks).toHaveBeenCalledOnce();
+    });
+  });
+
+  // ---------------------------------------------------- collection write locks
+  describe("collection write locks", () => {
+    const KEY = "{core/storage}/collection-locks/private";
+    const FIELD = JSON.stringify(["i", "c"]);
+    const options = { owner: "mapping-migration", reason: "job-1" };
+
+    const stored = () => {
+      const value = redis.get(KEY)?.get(FIELD);
+
+      return value === undefined ? undefined : JSON.parse(value);
+    };
+
+    beforeEach(() => {
+      vi.spyOn(Date, "now").mockReturnValue(42);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    describe("#lockCollection", () => {
+      it("stores, caches and announces the lock", async () => {
+        const lock = { lockedAt: 42, ...options };
+
+        await expect(
+          adapter.lockCollection("i", "c", options),
+        ).resolves.toEqual(lock);
+
+        expect(cache.assertCollectionExists).toHaveBeenCalledWith("i", "c");
+        expect(stored()).toEqual(lock);
+        expect(cache.setLock).toHaveBeenCalledWith("i", "c", lock);
+        expect(emitted).toContainEqual({
+          event: "core:storage:collection:lock:after",
+          payload: {
+            collection: "c",
+            index: "i",
+            lock,
+            scope: storeScopeEnum.PRIVATE,
+          },
+        });
+      });
+
+      it("refreshes a lock its owner takes again", async () => {
+        await adapter.lockCollection("i", "c", options);
+        vi.mocked(Date.now).mockReturnValue(43);
+
+        await adapter.lockCollection("i", "c", { ...options, reason: "job-2" });
+
+        expect(stored()).toEqual({ ...options, lockedAt: 43, reason: "job-2" });
+      });
+
+      /* Redis decides, not the local cache: the other owner may have locked
+       * the collection on another node a moment ago. */
+      it("rejects a collection locked by another owner", async () => {
+        await adapter.lockCollection("i", "c", { owner: "other", reason: "r" });
+        cache.setLock.mockClear();
+        emitted.length = 0;
+
+        await expect(
+          adapter.lockCollection("i", "c", options),
+        ).rejects.toMatchObject({
+          id: "services.storage.collection_locked",
+          message:
+            'The collection "i":"c" is locked by "other" (r): write actions are rejected until it is unlocked.',
+        });
+        expect(stored()).toMatchObject({ owner: "other" });
+        expect(cache.setLock).not.toHaveBeenCalled();
+        expect(emitted).toHaveLength(0);
+      });
+
+      it("rejects an unknown collection", async () => {
+        cache.assertCollectionExists.mockImplementation(() => {
+          throw new Error("unknown");
+        });
+
+        await expect(adapter.lockCollection("i", "c", options)).rejects.toThrow(
+          "unknown",
+        );
+        expect(stored()).toBeUndefined();
+      });
+    });
+
+    describe("#unlockCollection", () => {
+      it("removes, un-caches and announces the lock", async () => {
+        await adapter.lockCollection("i", "c", options);
+
+        await expect(
+          adapter.unlockCollection("i", "c", options.owner),
+        ).resolves.toBe(true);
+
+        expect(stored()).toBeUndefined();
+        expect(cache.removeLock).toHaveBeenCalledWith("i", "c");
+        expect(emitted).toContainEqual({
+          event: "core:storage:collection:unlock:after",
+          payload: {
+            collection: "c",
+            index: "i",
+            scope: storeScopeEnum.PRIVATE,
+          },
+        });
+      });
+
+      it("answers false for a collection that is not locked", async () => {
+        await expect(
+          adapter.unlockCollection("i", "c", options.owner),
+        ).resolves.toBe(false);
+
+        // A stale local copy is dropped all the same.
+        expect(cache.removeLock).toHaveBeenCalledWith("i", "c");
+        expect(emitted).toHaveLength(0);
+      });
+
+      it("rejects another owner", async () => {
+        await adapter.lockCollection("i", "c", options);
+        emitted.length = 0;
+
+        await expect(
+          adapter.unlockCollection("i", "c", "other"),
+        ).rejects.toMatchObject({ id: "services.storage.collection_locked" });
+        expect(stored()).toMatchObject(options);
+        expect(emitted).toHaveLength(0);
+      });
+    });
+
+    describe("#loadLocks", () => {
+      it("replaces the cached locks with the stored ones", async () => {
+        const lock = { lockedAt: 1, ...options };
+
+        redis.set(
+          KEY,
+          new Map([
+            [FIELD, JSON.stringify(lock)],
+            [JSON.stringify(["i", "c.d"]), JSON.stringify(lock)],
+          ]),
+        );
+
+        // `init` already loaded them once, from an empty hash.
+        cache.clearLocks.mockClear();
+
+        await adapter.loadLocks();
+
+        expect(cache.clearLocks).toHaveBeenCalledOnce();
+        expect(cache.setLock).toHaveBeenCalledTimes(2);
+        expect(cache.setLock).toHaveBeenCalledWith("i", "c", lock);
+        expect(cache.setLock).toHaveBeenCalledWith("i", "c.d", lock);
+      });
+
+      it("keeps each scope's locks apart", async () => {
+        redis.set(
+          "{core/storage}/collection-locks/public",
+          new Map([[FIELD, JSON.stringify({ lockedAt: 1, ...options })]]),
+        );
+
+        await adapter.loadLocks();
+
+        expect(cache.setLock).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("#loadFixtures", () => {
@@ -822,6 +1173,17 @@ describe("#core/storage/ClientAdapter", () => {
       expect(client.import).toHaveBeenCalledWith("i1", "c1", [{ a: 1 }], {
         refresh: "wait_for",
       });
+    });
+
+    it("imports nothing into a locked collection", async () => {
+      cache.assertCollectionWritable.mockImplementation(() => {
+        throw new Error("locked");
+      });
+
+      await expect(
+        adapter.loadFixtures({ i1: { c1: [{ a: 1 }] } } as never),
+      ).rejects.toThrow("locked");
+      expect(client.import).not.toHaveBeenCalled();
     });
 
     it("rejects a non-object payload, at either level", async () => {

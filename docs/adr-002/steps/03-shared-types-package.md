@@ -1,6 +1,6 @@
 # Step 03 — Shared types-only contract package
 
-**Status:** 🟦 In progress · **Opened:** 2026-09-30 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
+**Status:** ✅ Done · **Opened:** 2026-09-30 · **Closed:** 2026-10-01 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · [#2959](https://github.com/kuzzleio/kuzzle/pull/2959) + [types#5](https://github.com/kuzzleio/types/pull/5) (reconciliation) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
 
 ## Goal
 
@@ -59,10 +59,38 @@ Move the API contract types out of `sdk-javascript/src/types` into a **types-onl
 - Gate: `tests/typings/consumer/contractTypes.ts` — each of the 36 names (35 + `JSONObject`) exported by `"kuzzle"` identical to `kuzzle-types`' and to the installed `kuzzle-sdk`'s, in both strict modes. Checked it bites.
 - **`kuzzle-types` 1.0.0** published 2026-09-30 ([types#3](https://github.com/kuzzleio/types/pull/3), `beta` → `master`), by the release workflow through OIDC — the first automatic release, proving the trusted publisher. The maintainer's call: once validated in beta, go straight to the stable versions. The SDK's range still reads `^1.0.0-beta.1` (it accepts `1.0.0`); moved to `^1.0.0` before the SDK's stable release — no prerelease runtime dependency in a stable release.
 
-## Planned, not started
+## Released — 2026-09-30
 
-- **Reconcile the duplicates** listed in [step 02](02-kuzzle-owns-its-types.md#for-step-03--kuzzle-types-that-duplicate-an-sdk-contract-type), non-breaking only: same shape → one type plus an alias under the other name (`RoleDefinition` / `RoleRightsDefinition`); diverged (`ProfilePolicy.restrictedTo` tuple, `KuzzleInfo.author` nullable) → both kept, the gap documented.
-- **Additive fix found while opening**: the SDK's `ResponsePayload.error` lacks `props`, which `KuzzleError.toJSON()` sends (`lib/kerror/errors/kuzzleError.ts`) — add it as optional.
+Straight from beta to stable once validated (maintainer's call):
+
+| Package        | Beta                     | Stable   | Release PRs                                                                                                                                                                                      |
+| -------------- | ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kuzzle-types` | `1.0.0-beta.1` (by hand) | `1.0.0`  | [types#3](https://github.com/kuzzleio/types/pull/3), back-merge [types#4](https://github.com/kuzzleio/types/pull/4)                                                                              |
+| `kuzzle-sdk`   | `7.18.0-beta.1`          | `7.18.0` | [#773](https://github.com/kuzzleio/sdk-javascript/pull/773), [#774](https://github.com/kuzzleio/sdk-javascript/pull/774), back-merge [#775](https://github.com/kuzzleio/sdk-javascript/pull/775) |
+| `kuzzle`       | `2.58.0-beta.1`          | `2.58.0` | [#2955](https://github.com/kuzzleio/kuzzle/pull/2955), [#2956](https://github.com/kuzzleio/kuzzle/pull/2956), back-merge [#2957](https://github.com/kuzzleio/kuzzle/pull/2957)                   |
+
+- **Validation on the published betas**: `kuzzle-device-manager` 2.12.0 (sources + tests) and `kuzzle-plugin-commons` 1.3.1 (type-check + build) compile against `kuzzle@2.58.0-beta.1` + `kuzzle-sdk@7.18.0-beta.1`. Gotcha when testing a Kuzzle beta: a prerelease does not satisfy a peer range such as `kuzzle >=2.55.0` (`kuzzle-plugin-commons`), so npm installs a second `kuzzle` next to the beta and TypeScript rejects the two copies' classes (private members). Not a regression — a stable version satisfies the range; test with a single copy.
+- Every release went out through npm trusted publishing (OIDC). The SDK's first beta run failed on a transient npm error in the OIDC exchange (`error.errors is not iterable`, `@semantic-release/npm` 13.1.3 masking the registry's answer); re-run as is, it passed.
+- Not ours: the `SBOM publish` workflow fails on every release since 2.57.0-beta.4 (Dependency-Track answers HTTP 500).
+
+## Duplicates reconciled, `error.props` added
+
+Non-breaking only; each change is pinned by a type test.
+
+- **`RoleDefinition`** (kuzzle): step 02 listed it as "same shape" as `RoleRightsDefinition`. It is not: it is `{ controllers: RoleRightsDefinition }`. It is now written that way, with no alias, and `tests/typings/consumer/contractTypes.ts` asserts it is still identical to the literal type it declared before.
+- **Diverged, kept apart and documented in their TSDoc**:
+  - `Policy` / `PolicyRestrictions` against `ProfilePolicy`: a list vs a one-element tuple, `collections` required vs optional.
+  - `KuzzleInfo` (`lib/types/storage/{7,8}/`) against `KDocumentKuzzleInfo`: `author` is nullable in Kuzzle's type, a `string` in the contract.
+
+  Aligning either side of either pair would stop code written against it from compiling.
+
+- **`ResponsePayload.error.props?: string[]`** (kuzzle-types 1.1.0): Kuzzle's `KuzzleError.toJSON()` has always sent it, and the SDK's `KuzzleError` already reads it with that type. `tests/sdk-equivalence.ts` in kuzzle-types asserts the rest is unchanged and that the new type and 7.17.1's are assignable both ways.
+- **Released 2026-10-01**: `kuzzle-types` 1.1.0-beta.1, then 1.1.0 (`latest`) — [types#5](https://github.com/kuzzleio/types/pull/5), [#6](https://github.com/kuzzleio/types/pull/6), back-merge [#7](https://github.com/kuzzleio/types/pull/7). Validated on the beta: kuzzle `2-dev` builds and passes its typings gate against it and `kuzzle-sdk` 7.18.0 (one `kuzzle-types` copy).
+- **Kuzzle's lockfile moved to `kuzzle-sdk` 7.18.0 + `kuzzle-types` 1.1.0** (ranges unchanged). Gotcha: `contractTypes.ts` asserts Kuzzle's types identical to the _installed_ SDK's. With `kuzzle-sdk` 7.17.1, which carries its own copy of the types, `ResponsePayload` would differ by the new optional `props`. A consumer still on 7.17.1 is not broken: the two types assign both ways. The `kuzzle-sdk` lower bound stays `>=7.17.1`: raising it would nest a second SDK under `kuzzle` for apps pinned to 7.17.1, and their classes would no longer be assignable (private members).
+- **SonarCloud duplication gate**: the identical comment added to `storage/7` and `storage/8` landed inside a block those two files already duplicated. `KuzzleInfo` and `KRequestBody` now live in `lib/types/storage/KuzzleInfo.ts`, re-exported by both under the same names (type-only, recorded in `.migration/coverage-exempt.txt`).
+
+## Gates used
+
 - **Gates**: type tests inside `kuzzleio/types`; `tests/typings/` here (the re-exported names, `sdkReexports.ts`, must still compile); canary builds of `kuzzle-plugin-commons` and `kuzzle-device-manager` against the beta — the first imports 14 names from `"kuzzle"`, 3 of them SDK re-exports (`JSONObject`, `EmbeddedSDK`, `Document`).
 
 ## Risks checked
