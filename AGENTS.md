@@ -80,3 +80,7 @@ most likely to fail on a first push.
 - Error codes are documented and checked: `npm run doc-error-codes` and
   `.ci/scripts/check-error-codes-documentation.sh`. New error codes need docs.
 - Don't commit changes to `dist/`, `coverage/`, or `node_modules/`.
+- Kuzzle 2 takes no breaking change. Anything set aside because it would be
+  breaking (a `@deprecated`, a "next major" `@todo`, a type kept as v2.56.0
+  declared it) gets a row in [docs/v3-breaking-changes.md](./docs/v3-breaking-changes.md),
+  in the same PR.

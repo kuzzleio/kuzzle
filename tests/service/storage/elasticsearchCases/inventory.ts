@@ -88,6 +88,9 @@ export function describeInventory(harness: ESHarness) {
       vi.spyOn(harness.client, "_getAliasFromIndice").mockImplementation(
         aliasFromIndice,
       );
+      harness.clientStub.cat.aliases.mockResolvedValue(
+        harness.envelope.respond([]),
+      );
     };
 
     it("asks the client for the two metrics it reads, and no others", async () => {
@@ -124,6 +127,31 @@ export function describeInventory(harness: ESHarness) {
         ],
       });
     });
+
+    /*
+     * An unmanaged indice has no `@` alias, which `_getAliasFromIndice` throws
+     * on: skipping it is what keeps `index:stats` answering during a mapping
+     * migration. ES 8 only.
+     */
+    it.runIf(harness.envelope.version === "8")(
+      "ignores the indices marked as unmanaged",
+      async () => {
+        armStats();
+        harness.clientStub.cat.aliases.mockResolvedValue(
+          harness.envelope.respond([
+            { alias: "kuzzle-unmanaged", index: "&test-index.test-collection" },
+          ]),
+        );
+
+        expect(await harness.client.stats()).toMatchObject({
+          size: 0,
+          indexes: [],
+        });
+        expect(harness.client._getAliasFromIndice).not.toHaveBeenCalledWith(
+          "&test-index.test-collection",
+        );
+      },
+    );
   });
 
   describe("#listCollections", () => {

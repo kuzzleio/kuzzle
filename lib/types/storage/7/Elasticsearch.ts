@@ -2,6 +2,8 @@ import type { ByteSize, ClusterNodesStats } from "sdk-es7/api/types";
 
 import type { JSONObject } from "../../JSONObject";
 
+export type { KRequestBody, KuzzleInfo } from "../KuzzleInfo";
+
 export type InfoResult = {
   type: string;
   version: string;
@@ -9,29 +11,6 @@ export type InfoResult = {
   lucene?: string;
   spaceUsed?: ByteSize;
   nodes?: ClusterNodesStats;
-};
-
-/**
- * Kuzzle's own metadata, stored alongside every document it writes.
- *
- * `author` and `updater` are kuids, and `getKuid` answers `null` for an
- * anonymous write — so both are nullable, as is `updatedAt` on a document that
- * has only ever been created.
- */
-export type KuzzleInfo = {
-  author: string | null;
-  createdAt: number;
-  updatedAt: number | null;
-  updater: string | null;
-};
-
-/**
- * `_kuzzle_info` is `Partial` because a partial update writes only the two
- * fields it owns (`updatedAt`, `updater`) and leaves the creation pair to the
- * document already in the index.
- */
-export type KRequestBody<T> = T & {
-  _kuzzle_info?: Partial<KuzzleInfo>;
 };
 
 // Kuzzle's own `JSONObject` (ADR-0002 step 02, TD-10), re-exported under the

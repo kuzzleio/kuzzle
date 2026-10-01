@@ -22,7 +22,7 @@
 import type { JSONObject } from "../../types/JSONObject";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
-import { IndexCache } from "./indexCache";
+import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
 import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
@@ -30,6 +30,13 @@ import type { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
 
 const servicesError = kerror.wrap("services", "storage");
+
+/**
+ * Redis hash holding the collection write locks of a storage scope, the
+ * cluster-wide source of truth that each node mirrors in its index cache.
+ * One field per locked collection: `JSON.stringify([index, collection])`.
+ */
+const LOCKS_KEY_PREFIX = "{core/storage}/collection-locks/";
 
 /** Where `createIndex` / `createCollection` / `loadMappings` write, and whether
  * the change is broadcast to the rest of the cluster. */
@@ -91,6 +98,12 @@ class ClientAdapter {
     this.registerDocumentEvents();
     this.registerMappingEvents();
     this.registerCacheEvents();
+    this.registerLockEvents();
+
+    // The locks were first loaded with the cache, before this node joined the
+    // cluster: one taken in between was broadcast before this node could hear
+    // it. Reading them again once the cluster is joined closes that gap.
+    global.kuzzle.onPipe("kuzzle:state:live", () => this.loadLocks());
 
     // Global store events registration
 
@@ -150,6 +163,8 @@ class ClientAdapter {
     { indexCacheOnly = false, propagate = true }: WriteScopeOptions = {},
   ) {
     if (!indexCacheOnly) {
+      // Creating an existing collection updates its mappings and settings
+      this.cache.assertCollectionWritable(index, collection);
       await this.client.createCollection(index, collection, opts);
     }
 
@@ -166,6 +181,7 @@ class ClientAdapter {
 
   async deleteIndex(index: string) {
     this.cache.assertIndexExists(index);
+    this.cache.assertIndexWritable(index);
 
     await this.client.deleteIndex(index);
 
@@ -180,6 +196,7 @@ class ClientAdapter {
   async deleteIndexes(indexes: string[]): Promise<string[]> {
     for (const index of indexes) {
       this.cache.assertIndexExists(index);
+      this.cache.assertIndexWritable(index);
     }
 
     const deleted = await this.client.deleteIndexes(indexes);
@@ -200,6 +217,7 @@ class ClientAdapter {
 
   async deleteCollection(index: string, collection: string) {
     this.cache.assertCollectionExists(index, collection);
+    this.cache.assertCollectionWritable(index, collection);
 
     await this.client.deleteCollection(index, collection);
 
@@ -231,6 +249,162 @@ class ClientAdapter {
       for (const collection of collections) {
         this.cache.addCollection(index, collection);
       }
+    }
+
+    await this.loadLocks();
+  }
+
+  /**
+   * Replaces the cached collection write locks with the cluster-wide ones,
+   * stored in Redis.
+   */
+  async loadLocks(): Promise<void> {
+    const fields: Record<string, string> | null = await global.kuzzle.ask(
+      "core:cache:internal:execute",
+      "hgetall",
+      this.locksKey,
+    );
+
+    this.cache.clearLocks();
+
+    for (const [field, value] of Object.entries(fields ?? {})) {
+      const [index, collection]: [string, string] = JSON.parse(field);
+
+      this.cache.setLock(index, collection, JSON.parse(value));
+    }
+  }
+
+  /**
+   * Write-locks a collection cluster-wide: until it is unlocked, every action
+   * writing to it is rejected with `services.storage.collection_locked`, and
+   * reads are served as usual. Locking a collection again with the same owner
+   * refreshes the lock.
+   *
+   * The other nodes learn about the lock asynchronously (cluster sync): a write
+   * they accepted just before may still land.
+   *
+   * @throws If the collection does not exist, or is locked by another owner
+   */
+  async lockCollection(
+    index: string,
+    collection: string,
+    { owner, reason }: { owner: string; reason: string },
+  ): Promise<CollectionLock> {
+    this.cache.assertCollectionExists(index, collection);
+
+    const field = JSON.stringify([index, collection]);
+    const lock: CollectionLock = { lockedAt: Date.now(), owner, reason };
+
+    // Redis decides, not the local copy: two nodes locking the same collection
+    // at once must not both win.
+    const created = await global.kuzzle.ask(
+      "core:cache:internal:execute",
+      "hsetnx",
+      this.locksKey,
+      field,
+      JSON.stringify(lock),
+    );
+
+    if (created === 0) {
+      this.assertLockOwner(
+        index,
+        collection,
+        await this.fetchLock(field),
+        owner,
+      );
+
+      await global.kuzzle.ask(
+        "core:cache:internal:execute",
+        "hset",
+        this.locksKey,
+        field,
+        JSON.stringify(lock),
+      );
+    }
+
+    this.cache.setLock(index, collection, lock);
+
+    global.kuzzle.emit("core:storage:collection:lock:after", {
+      collection,
+      index,
+      lock,
+      scope: this.scope,
+    });
+
+    return lock;
+  }
+
+  /**
+   * Releases a collection write lock.
+   *
+   * @returns false if the collection was not locked
+   * @throws If the collection is locked by another owner
+   */
+  async unlockCollection(
+    index: string,
+    collection: string,
+    owner: string,
+  ): Promise<boolean> {
+    const field = JSON.stringify([index, collection]);
+    const current = await this.fetchLock(field);
+
+    if (current === null) {
+      this.cache.removeLock(index, collection);
+      return false;
+    }
+
+    this.assertLockOwner(index, collection, current, owner);
+
+    await global.kuzzle.ask(
+      "core:cache:internal:execute",
+      "hdel",
+      this.locksKey,
+      field,
+    );
+
+    this.cache.removeLock(index, collection);
+
+    global.kuzzle.emit("core:storage:collection:unlock:after", {
+      collection,
+      index,
+      scope: this.scope,
+    });
+
+    return true;
+  }
+
+  private get locksKey(): string {
+    return `${LOCKS_KEY_PREFIX}${this.scope}`;
+  }
+
+  private async fetchLock(field: string): Promise<CollectionLock | null> {
+    const value: string | null = await global.kuzzle.ask(
+      "core:cache:internal:execute",
+      "hget",
+      this.locksKey,
+      field,
+    );
+
+    return value === null ? null : JSON.parse(value);
+  }
+
+  /**
+   * @throws If `lock` is held by someone other than `owner`
+   */
+  private assertLockOwner(
+    index: string,
+    collection: string,
+    lock: CollectionLock | null,
+    owner: string,
+  ) {
+    if (lock !== null && lock.owner !== owner) {
+      throw servicesError.get(
+        "collection_locked",
+        index,
+        collection,
+        lock.owner,
+        lock.reason,
+      );
     }
   }
 
@@ -326,6 +500,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:collection:truncate`,
       (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.truncateCollection(index, collection);
       },
     );
@@ -341,6 +516,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:collection:update`,
       (index: string, collection: string, changes: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.updateCollection(index, collection, changes);
       },
     );
@@ -427,6 +603,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.import(index, collection, bulk, opts);
       },
     );
@@ -465,6 +642,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.create(index, collection, content, opts);
       },
     );
@@ -489,6 +667,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.createOrReplace(
           index,
           collection,
@@ -512,6 +691,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:delete`,
       (index: string, collection: string, id: string, opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.delete(index, collection, id, opts);
       },
     );
@@ -534,6 +714,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.deleteByQuery(index, collection, query, opts);
       },
     );
@@ -558,6 +739,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.deleteFields(index, collection, id, fields, opts);
       },
     );
@@ -639,6 +821,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mCreate(index, collection, documents, opts);
       },
     );
@@ -661,6 +844,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mCreateOrReplace(index, collection, documents, opts);
       },
     );
@@ -678,6 +862,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:mDelete`,
       (index: string, collection: string, ids: string[], opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mDelete(index, collection, ids, opts);
       },
     );
@@ -700,6 +885,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mReplace(index, collection, documents, opts);
       },
     );
@@ -722,6 +908,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mUpdate(index, collection, documents, opts);
       },
     );
@@ -745,6 +932,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.mUpsert(index, collection, documents, opts);
       },
     );
@@ -809,6 +997,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.replace(index, collection, id, content, opts);
       },
     );
@@ -889,6 +1078,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.update(index, collection, id, content, opts);
       },
     );
@@ -914,6 +1104,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.updateByQuery(
           index,
           collection,
@@ -945,6 +1136,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.bulkUpdateByQuery(
           index,
           collection,
@@ -976,6 +1168,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.upsert(index, collection, id, content, opts);
       },
     );
@@ -1025,8 +1218,54 @@ class ClientAdapter {
       `core:storage:${this.scope}:mappings:update`,
       (index: string, collection: string, mappings: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
         return this.client.updateMapping(index, collection, mappings);
       },
+    );
+  }
+
+  registerLockEvents() {
+    /**
+     * Write-lock a collection, cluster-wide
+     * @param {string} index
+     * @param {string} collection
+     * @param {Object} options -- { owner, reason }
+     * @returns {Promise.<{ owner, reason, lockedAt }>}
+     * @throws If the collection does not exist, or is locked by another owner
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:lock`,
+      (
+        index: string,
+        collection: string,
+        options: { owner: string; reason: string },
+      ) => this.lockCollection(index, collection, options),
+    );
+
+    /**
+     * Release a collection write lock
+     * @param {string} index
+     * @param {string} collection
+     * @param {string} owner
+     * @returns {Promise.<boolean>} false if the collection was not locked
+     * @throws If the collection is locked by another owner
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:unlock`,
+      (index: string, collection: string, owner: string) =>
+        this.unlockCollection(index, collection, owner),
+    );
+
+    /**
+     * Return a collection write lock
+     * @param {string} index
+     * @param {string} collection
+     * @returns {{ owner, reason, lockedAt }|null}
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:lock:get`,
+      (index: string, collection: string) =>
+        this.cache.getLock(index, collection),
     );
   }
 
@@ -1078,6 +1317,29 @@ class ClientAdapter {
       (index: string, collection: string) =>
         this.cache.removeCollection(index, collection),
     );
+
+    /**
+     * Caches a collection write lock taken on another node
+     * @param  {string} index
+     * @param  {string} collection
+     * @param  {Object} lock -- { owner, reason, lockedAt }
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:setLock`,
+      (index: string, collection: string, lock: CollectionLock) =>
+        this.cache.setLock(index, collection, lock),
+    );
+
+    /**
+     * Removes a collection write lock released on another node
+     * @param  {string} index
+     * @param  {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:removeLock`,
+      (index: string, collection: string) =>
+        this.cache.removeLock(index, collection),
+    );
   }
 
   /**
@@ -1110,6 +1372,7 @@ class ClientAdapter {
 
       for (const [collection, payload] of Object.entries(collections)) {
         this.cache.assertCollectionExists(index, collection);
+        this.cache.assertCollectionWritable(index, collection);
 
         const { errors } = await this.client.import(
           index,

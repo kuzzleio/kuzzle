@@ -280,3 +280,28 @@ After({ tags: "@cluster" }, async function (this: KuzzleWorld) {
     sdk.disconnect();
   }
 });
+
+// Defined after the `@cluster` hook so that it runs before it (cucumber runs
+// `After` hooks in reverse order): a scenario failing half-way must not leave
+// its collection locked, or every later `admin:resetDatabase` is rejected.
+After({ tags: "@collectionLock" }, async function (this: KuzzleWorld) {
+  await this.sdk.query({
+    action: "unlockCollection",
+    collection: "yellow-taxi",
+    controller: "tests",
+    index: "nyc-open-data",
+  });
+});
+
+// Scenarios on a core behaviour that only the Elasticsearch 8 storage class
+// implements.
+Before({ tags: "@es8" }, async function (this: KuzzleWorld) {
+  const { result } = await this.sdk.query({
+    action: "info",
+    controller: "server",
+  });
+
+  if (!result.serverInfo.services.publicStorage.version.startsWith("8.")) {
+    return "skipped";
+  }
+});

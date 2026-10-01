@@ -4,16 +4,10 @@ import should from "should/as-function";
 import { PassThrough } from "stream";
 import YAML from "yaml";
 import functionalFixtures from "./features/fixtures/imports.json";
-import {
-  Controller,
-  Request,
-  Backend,
-  HttpStream,
-  KuzzleRequest,
-  Mutex,
-} from "./index";
-import { HttpMessage } from "./lib/types/HttpMessage";
-import { EventGenericDocumentInjectMetadata } from "./lib/types/events/EventGenericDocument";
+import type { Request, KuzzleRequest } from "./index";
+import { Controller, Backend, HttpStream, Mutex } from "./index";
+import type { HttpMessage } from "./lib/types/HttpMessage";
+import type { EventGenericDocumentInjectMetadata } from "./lib/types/events/EventGenericDocument";
 
 class FunctionalTestsController extends Controller {
   constructor(app: Backend) {
@@ -421,6 +415,58 @@ app.controller.register("tests", {
         }
       },
       http: [{ path: "/tests/simulate-outage", verb: "get" }],
+    },
+
+    // Collection write locks (core primitive used by the mapping-migration
+    // plugin). See features/CollectionLock.feature.
+    lockCollection: {
+      handler: async (request: KuzzleRequest) =>
+        global.kuzzle.ask(
+          "core:storage:public:collection:lock",
+          request.getIndex(),
+          request.getCollection(),
+          { owner: "functional-tests", reason: "functional tests" },
+        ),
+    },
+
+    unlockCollection: {
+      handler: async (request: KuzzleRequest) =>
+        global.kuzzle.ask(
+          "core:storage:public:collection:unlock",
+          request.getIndex(),
+          request.getCollection(),
+          request.getString("owner", "functional-tests"),
+        ),
+    },
+
+    // An indice the core must leave alone, as a mapping migration builds one
+    // beside a collection: public name, no "@" alias, marked unmanaged (ES 8).
+    createUnmanagedIndice: {
+      handler: async (request: KuzzleRequest) => {
+        const index = `&${request.getIndex()}.${request.getCollection()}`;
+        const client = app.storage.storageClient;
+
+        if (await client.indices.exists({ index })) {
+          await client.indices.delete({ index });
+        }
+
+        await client.indices.create({
+          aliases: { "kuzzle-unmanaged": {} },
+          index,
+        });
+
+        return index;
+      },
+    },
+
+    deleteUnmanagedIndice: {
+      handler: async (request: KuzzleRequest) => {
+        const index = `&${request.getIndex()}.${request.getCollection()}`;
+
+        await app.storage.storageClient.indices.delete({ index });
+
+        return index;
+      },
     },
 
     // Access storage client

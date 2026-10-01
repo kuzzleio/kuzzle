@@ -42,13 +42,13 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 ## Cold start
 
-**Where we are (2026-09-30):** step 03 is open ([detail](steps/03-shared-types-package.md)): the contract types go to `kuzzle-types`, a types-only package in its own public repository `kuzzleio/types`, re-exported by `kuzzle` and `kuzzle-sdk` under their current names.
+**Where we are (2026-10-01):** step 03 is done ([detail](steps/03-shared-types-package.md)): the contract types live in `kuzzle-types` (1.1.0), a types-only package in its own public repository `kuzzleio/types`, re-exported by `kuzzle` (2.58.0) and `kuzzle-sdk` (7.18.0) under their current names.
 
 **Before (2026-09-25):** steps 01 ([#2927](https://github.com/kuzzleio/kuzzle/pull/2927)) and 02 ([#2928](https://github.com/kuzzleio/kuzzle/pull/2928)) are merged into `2-dev`. Kuzzle re-exports the SDK by an explicit list, owns its `JSONObject`, and exports `KuzzleUser` / `KuzzleToken`. The two `Token`s stay apart: the exported interface declares a `connectionId` no runtime token has ever carried (TD-07) — the proposed `@deprecated` on it awaits the maintainer.
 
 **Why it mattered:** steps 01–02 were to land **before the beta** that [ADR-0001 step 15](../adr-001/steps/15-consolidation-non-regression.md) prepares — the maintainer's decision. When they merge: add what a user sees (four `@deprecated` client-transport re-exports; new `KuzzleUser` / `KuzzleToken`; Kuzzle's own `JSONObject`) to [step 15's release notes draft](../adr-001/step-15-release-notes.md), and re-run step 15's phase C if `lib/` changed.
 
-**Next action:** `kuzzle-types` 1.0.0 is out; land [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) (`^1.0.0`), move the SDK to `^1.0.0` on `7-dev`, then the betas (SDK `7-dev` → `beta`, Kuzzle `2-dev` → `beta`) and, once validated, straight to the stable releases (maintainer, 2026-09-30). Then the duplicates reconciliation and the `ResponsePayload.error.props` fix, in `kuzzle-types`.
+**Next action:** none before the next major. Step 04 (drop the client-runtime re-exports) is breaking, so it waits for Kuzzle 3. New contract changes go to `kuzzleio/types` first (types PR → release → consumer), non-breaking only.
 
 **Conventions** (same as ADR-0001): base branch `2-dev`; non-breaking only; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands (a stacked PR merges through `gh api -X PUT repos/kuzzleio/kuzzle/pulls/<n>/merge-async -f merge_method=merge`). The typings gate is `npm run typecheck:typings` (`tests/typings/`); `tests/typings/consumer/sdkReexports.ts` pins the 139 re-exported names.
 
@@ -56,12 +56,12 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 ## Step table
 
-| # | Step | Status | PR(s) | Detail |
-| --- | --- | --- | --- | --- |
-| 01 | Freeze the SDK re-export: explicit list, client transport `@deprecated` | ✅ Done 2026-09-25 | [#2927](https://github.com/kuzzleio/kuzzle/pull/2927) | [detail](steps/01-freeze-sdk-reexport.md) |
-| 02 | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token` | ✅ Done 2026-09-25 — the two `Token`s left apart (TD-07, see open points) | [#2928](https://github.com/kuzzleio/kuzzle/pull/2928) | [detail](steps/02-kuzzle-owns-its-types.md) |
-| 03 | Shared types-only contract package `kuzzle-types`, consumed by `kuzzle` and `kuzzle-sdk` | 🟦 In progress | [#2953](https://github.com/kuzzleio/kuzzle/pull/2953), [types#1](https://github.com/kuzzleio/types/pull/1), [sdk#771](https://github.com/kuzzleio/sdk-javascript/pull/771), [#2954](https://github.com/kuzzleio/kuzzle/pull/2954) | [detail](steps/03-shared-types-package.md) |
-| 04 | Next major: drop the client-runtime re-exports | ⬜ To do (next major) | — | — |
+| #   | Step                                                                                     | Status                                                                          | PR(s)                                                                                                                                                                                                                                                                                    | Detail                                      |
+| --- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 01  | Freeze the SDK re-export: explicit list, client transport `@deprecated`                  | ✅ Done 2026-09-25                                                              | [#2927](https://github.com/kuzzleio/kuzzle/pull/2927)                                                                                                                                                                                                                                    | [detail](steps/01-freeze-sdk-reexport.md)   |
+| 02  | Kuzzle owns its types: `JSONObject`, `KuzzleUser`, `KuzzleToken`, one `Token`            | ✅ Done 2026-09-25 — the two `Token`s left apart (TD-07, see open points)       | [#2928](https://github.com/kuzzleio/kuzzle/pull/2928)                                                                                                                                                                                                                                    | [detail](steps/02-kuzzle-owns-its-types.md) |
+| 03  | Shared types-only contract package `kuzzle-types`, consumed by `kuzzle` and `kuzzle-sdk` | ✅ Done 2026-10-01 (`kuzzle-types` 1.1.0, `kuzzle-sdk` 7.18.0, `kuzzle` 2.58.0) | [#2953](https://github.com/kuzzleio/kuzzle/pull/2953), [types#1](https://github.com/kuzzleio/types/pull/1), [sdk#771](https://github.com/kuzzleio/sdk-javascript/pull/771), [#2954](https://github.com/kuzzleio/kuzzle/pull/2954), [#2959](https://github.com/kuzzleio/kuzzle/pull/2959) | [detail](steps/03-shared-types-package.md)  |
+| 04  | Next major: drop the client-runtime re-exports                                           | ⬜ To do (next major)                                                           | —                                                                                                                                                                                                                                                                                        | —                                           |
 
 ---
 
@@ -74,6 +74,7 @@ Measured on `2-dev` and on v2.56.0 (identical on both — nothing here is a regr
 
 - **2026-09-25** — **TD-07: the two `Token`s stay apart; `Token.connectionId` is `@deprecated`.** No runtime token has ever carried `connectionId` (the token manager keeps the connection links), so declaring it on the model would be false and removing it from the interface would break strict consumers. It is deprecated, with a pointer to `request.context.connection.id`, and goes in step 04.
 - **2026-09-30** — **Step 03: `kuzzle-types` (unscoped: `@kuzzleio` is for private packages), own public repository `kuzzleio/types`, types only.** Zero runtime and zero dependencies (enums and classes stay in the SDK — the lesson of the archived `kuzzle-common-objects`); a regular `dependency` of both packages; seeded with `sdk-javascript/src/types` as is; `kuzzle-plugin-commons` is a consumer to keep green, not a home ([step 03](steps/03-shared-types-package.md#decisions-taken-when-opening)).
+- **2026-10-01** — **Duplicates: built on the contract where identical, kept apart where diverged.** `RoleDefinition` is `{ controllers: RoleRightsDefinition }`; `Policy` vs `ProfilePolicy` and `KuzzleInfo` vs `KDocumentKuzzleInfo` stay two, the gap in their TSDoc, since aligning either side breaks code. `ResponsePayload.error.props` added as optional (`kuzzle-types` 1.1.0). `kuzzle-sdk` lower bound left at `>=7.17.1` ([step 03](steps/03-shared-types-package.md#duplicates-reconciled-errorprops-added)).
 
 ---
 
