@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { IndexCache } from "../../../lib/core/storage/indexCache";
 import { PreconditionError } from "../../../lib/kerror/errors/preconditionError";
+import { ServiceUnavailableError } from "../../../lib/kerror/errors/serviceUnavailableError";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 describe("#core/storage/IndexCache", () => {
@@ -160,6 +161,80 @@ describe("#core/storage/IndexCache", () => {
       expect(() => indexCache.assertIndexExists("bar")).toThrow(
         PreconditionError,
       );
+    });
+  });
+
+  describe("collection write locks", () => {
+    const lock = { lockedAt: 42, owner: "mapping-migration", reason: "job-1" };
+
+    it("caches, answers and removes a lock", () => {
+      expect(indexCache.getLock("foo", "bar")).toBeNull();
+
+      indexCache.setLock("foo", "bar", lock);
+
+      expect(indexCache.getLock("foo", "bar")).toBe(lock);
+      expect(indexCache.getLock("foo", "baz")).toBeNull();
+
+      indexCache.removeLock("foo", "bar");
+      indexCache.removeLock("foo", "bar");
+      indexCache.removeLock("fooz", "bar");
+
+      expect(indexCache.getLock("foo", "bar")).toBeNull();
+    });
+
+    it("replaces the lock a collection already holds", () => {
+      const refreshed = { ...lock, lockedAt: 43 };
+
+      indexCache.setLock("foo", "bar", lock);
+      indexCache.setLock("foo", "bar", refreshed);
+
+      expect(indexCache.getLock("foo", "bar")).toBe(refreshed);
+    });
+
+    it("clears every lock at once", () => {
+      indexCache.setLock("foo", "bar", lock);
+      indexCache.setLock("fooz", "baz", lock);
+
+      indexCache.clearLocks();
+
+      expect(indexCache.getLock("foo", "bar")).toBeNull();
+      expect(indexCache.getLock("fooz", "baz")).toBeNull();
+    });
+
+    /* Locks are independent from the index cache: a lock check never asserts
+     * the collection exists, the handlers do that first. */
+    it("rejects writes to a locked collection only", () => {
+      indexCache.setLock("foo", "bar", lock);
+
+      expect(() =>
+        indexCache.assertCollectionWritable("foo", "baz"),
+      ).not.toThrow();
+      expect(() =>
+        indexCache.assertCollectionWritable("fooz", "bar"),
+      ).not.toThrow();
+      expect(() => indexCache.assertCollectionWritable("foo", "bar")).toThrow(
+        expect.objectContaining({
+          id: "services.storage.collection_locked",
+          message:
+            'The collection "foo":"bar" is locked by "mapping-migration" (job-1): write actions are rejected until it is unlocked.',
+        }),
+      );
+      expect(() => indexCache.assertCollectionWritable("foo", "bar")).toThrow(
+        ServiceUnavailableError,
+      );
+    });
+
+    it("rejects index-wide writes when one of its collections is locked", () => {
+      indexCache.setLock("foo", "bar", lock);
+
+      expect(() => indexCache.assertIndexWritable("fooz")).not.toThrow();
+      expect(() => indexCache.assertIndexWritable("foo")).toThrow(
+        expect.objectContaining({ id: "services.storage.collection_locked" }),
+      );
+
+      indexCache.removeLock("foo", "bar");
+
+      expect(() => indexCache.assertIndexWritable("foo")).not.toThrow();
     });
   });
 });
