@@ -1,6 +1,6 @@
 # Step 03 — Shared types-only contract package
 
-**Status:** 🟦 In progress — released 2026-09-30, reconciliation left · **Opened:** 2026-09-30 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
+**Status:** ✅ Done · **Opened:** 2026-09-30 · **Closed:** 2026-10-01 · **PR(s):** [#2953](https://github.com/kuzzleio/kuzzle/pull/2953) (this step) · [kuzzleio/types#1](https://github.com/kuzzleio/types/pull/1) (seed) · [#2959](https://github.com/kuzzleio/kuzzle/pull/2959) + [types#5](https://github.com/kuzzleio/types/pull/5) (reconciliation) · **Hub:** [ADR-0002](../ADR-0002-own-api-contract-types.md)
 
 ## Goal
 
@@ -85,6 +85,9 @@ Non-breaking only; each change is pinned by a type test.
   Aligning either side of either pair would stop code written against it from compiling.
 
 - **`ResponsePayload.error.props?: string[]`** (kuzzle-types 1.1.0): Kuzzle's `KuzzleError.toJSON()` has always sent it, and the SDK's `KuzzleError` already reads it with that type. `tests/sdk-equivalence.ts` in kuzzle-types asserts the rest is unchanged and that the new type and 7.17.1's are assignable both ways.
+- **Released 2026-10-01**: `kuzzle-types` 1.1.0-beta.1, then 1.1.0 (`latest`) — [types#5](https://github.com/kuzzleio/types/pull/5), [#6](https://github.com/kuzzleio/types/pull/6), back-merge [#7](https://github.com/kuzzleio/types/pull/7). Validated on the beta: kuzzle `2-dev` builds and passes its typings gate against it and `kuzzle-sdk` 7.18.0 (one `kuzzle-types` copy).
+- **Kuzzle's lockfile moved to `kuzzle-sdk` 7.18.0 + `kuzzle-types` 1.1.0** (ranges unchanged). Gotcha: `contractTypes.ts` asserts Kuzzle's types identical to the _installed_ SDK's. With `kuzzle-sdk` 7.17.1, which carries its own copy of the types, `ResponsePayload` would differ by the new optional `props`. A consumer still on 7.17.1 is not broken: the two types assign both ways. The `kuzzle-sdk` lower bound stays `>=7.17.1`: raising it would nest a second SDK under `kuzzle` for apps pinned to 7.17.1, and their classes would no longer be assignable (private members).
+- **SonarCloud duplication gate**: the identical comment added to `storage/7` and `storage/8` landed inside a block those two files already duplicated. `KuzzleInfo` and `KRequestBody` now live in `lib/types/storage/KuzzleInfo.ts`, re-exported by both under the same names (type-only, recorded in `.migration/coverage-exempt.txt`).
 
 ## Gates used
 
