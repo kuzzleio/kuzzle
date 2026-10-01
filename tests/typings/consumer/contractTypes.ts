@@ -118,3 +118,22 @@ assert<Equals<Kuzzle.ServerNotification, Types.ServerNotification>>();
 assert<Equals<Kuzzle.ServerNotification, Sdk.ServerNotification>>();
 assert<Equals<Kuzzle.UserNotification, Types.UserNotification>>();
 assert<Equals<Kuzzle.UserNotification, Sdk.UserNotification>>();
+
+// Kuzzle's own types built on the contract: `RoleDefinition` wraps
+// `RoleRightsDefinition` under `controllers`, and is still the literal type it
+// declared up to 2.58.0.
+assert<
+  Equals<Kuzzle.RoleDefinition["controllers"], Types.RoleRightsDefinition>
+>();
+assert<
+  Equals<
+    Kuzzle.RoleDefinition,
+    {
+      controllers: {
+        [controllerName: string]: {
+          actions: { [actionName: string]: boolean };
+        };
+      };
+    }
+  >
+>();

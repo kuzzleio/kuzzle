@@ -73,10 +73,21 @@ Straight from beta to stable once validated (maintainer's call):
 - Every release went out through npm trusted publishing (OIDC). The SDK's first beta run failed on a transient npm error in the OIDC exchange (`error.errors is not iterable`, `@semantic-release/npm` 13.1.3 masking the registry's answer); re-run as is, it passed.
 - Not ours: the `SBOM publish` workflow fails on every release since 2.57.0-beta.4 (Dependency-Track answers HTTP 500).
 
-## Planned, not started
+## Duplicates reconciled, `error.props` added
 
-- **Reconcile the duplicates** listed in [step 02](02-kuzzle-owns-its-types.md#for-step-03--kuzzle-types-that-duplicate-an-sdk-contract-type), non-breaking only: same shape → one type plus an alias under the other name (`RoleDefinition` / `RoleRightsDefinition`); diverged (`ProfilePolicy.restrictedTo` tuple, `KuzzleInfo.author` nullable) → both kept, the gap documented.
-- **Additive fix found while opening**: the SDK's `ResponsePayload.error` lacks `props`, which `KuzzleError.toJSON()` sends (`lib/kerror/errors/kuzzleError.ts`) — add it as optional.
+Non-breaking only; each change is pinned by a type test.
+
+- **`RoleDefinition`** (kuzzle): step 02 listed it as "same shape" as `RoleRightsDefinition`. It is not: it is `{ controllers: RoleRightsDefinition }`. It is now written that way, with no alias, and `tests/typings/consumer/contractTypes.ts` asserts it is still identical to the literal type it declared before.
+- **Diverged, kept apart and documented in their TSDoc**:
+  - `Policy` / `PolicyRestrictions` against `ProfilePolicy`: a list vs a one-element tuple, `collections` required vs optional.
+  - `KuzzleInfo` (`lib/types/storage/{7,8}/`) against `KDocumentKuzzleInfo`: `author` is nullable in Kuzzle's type, a `string` in the contract.
+
+  Aligning either side of either pair would stop code written against it from compiling.
+
+- **`ResponsePayload.error.props?: string[]`** (kuzzle-types 1.1.0): Kuzzle's `KuzzleError.toJSON()` has always sent it, and the SDK's `KuzzleError` already reads it with that type. `tests/sdk-equivalence.ts` in kuzzle-types asserts the rest is unchanged and that the new type and 7.17.1's are assignable both ways.
+
+## Gates used
+
 - **Gates**: type tests inside `kuzzleio/types`; `tests/typings/` here (the re-exported names, `sdkReexports.ts`, must still compile); canary builds of `kuzzle-plugin-commons` and `kuzzle-device-manager` against the beta — the first imports 14 names from `"kuzzle"`, 3 of them SDK re-exports (`JSONObject`, `EmbeddedSDK`, `Document`).
 
 ## Risks checked

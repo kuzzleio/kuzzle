@@ -1,5 +1,8 @@
+import type { RoleRightsDefinition } from "kuzzle-types";
+
 /**
- * A role definition
+ * A role definition: its rights, under `controllers`, in the shape of the API
+ * contract's `RoleRightsDefinition`
  *
  * @see https://docs.kuzzle.io/core/2/guides/main-concepts/permissions/#roles
  *
@@ -17,11 +20,5 @@
  * }
  */
 export type RoleDefinition = {
-  controllers: {
-    [controllerName: string]: {
-      actions: {
-        [actionName: string]: boolean;
-      };
-    };
-  };
+  controllers: RoleRightsDefinition;
 };

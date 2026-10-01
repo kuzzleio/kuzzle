@@ -8,3 +8,4 @@
 # not one: that is the case the gate exists for.
 #
 lib/types/JSONObject.ts type-only: a single `export type` alias, no executable line (ADR-0002 step 02)
+lib/types/storage/KuzzleInfo.ts type-only: two `export type` aliases shared by the ES 7 and 8 storage types, no executable line (ADR-0002 step 03)
