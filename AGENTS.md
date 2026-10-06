@@ -65,6 +65,8 @@ most likely to fail on a first push.
 ## Key config files
 
 - `.kuzzlerc.sample.jsonc` — full annotated config reference.
+- `docs/adr-state.json` — current state of each ADR (next action, blockers), checked
+  by `.ci/scripts/adr-state.ts --check`; its digest is injected at session start.
 - `docker-compose.yml` + `docker-compose.override.yml` — local dev stack (ES7 vs ES8).
 - `.ci/test-cluster-7.yml` / `.ci/test-cluster-8.yml` — 3-node cluster used by functional tests.
 - `cucumber.config.cjs` — functional test profiles (http/websocket/mqtt, legacy vs current).

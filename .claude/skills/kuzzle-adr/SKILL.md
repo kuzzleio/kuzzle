@@ -60,6 +60,23 @@ un-enforced rows are read as the backlog of what to gate next. Reference impleme
 
 The hub **never** holds a step's detailed narrative nor a session-by-session journal — that lives in the step files.
 
+### Structured extract — `docs/adr-state.json`
+
+The hub is the narrative source of truth, but it is expensive to read. Each ADR's **current** state is mirrored in [`docs/adr-state.json`](../../../docs/adr-state.json), which feeds the digest injected at every session start (`SessionStart` hook → `node .ci/scripts/adr-state.ts --digest`, ~200 tokens). Update it in the same pass as the hub: a stale entry silently misleads every future session. It holds **state, never history**; `node .ci/scripts/adr-state.ts --check` (CI job `adr-state`) enforces:
+
+| Field | Content | Limit |
+| --- | --- | --- |
+| `snapshot`, `latestVersion` | date of the last state change; npm `latest` | — |
+| `adrs[].id`, `hub`, `title` | number, hub path, the hub's title | `title` ≤ 80 |
+| `adrs[].status` | `proposed` · `accepted` · `active` (a step is open) · `closed` · `abandoned`; closed/abandoned must match the hub's `**Status:**` | enum |
+| `adrs[].statusLabel` | emoji + short label | ≤ 40 |
+| `adrs[].openStep` | path of **the** open step, or `null`; its `**Status:**` must be open (⬜/🟦); required when `active` | — |
+| `adrs[].nextAction` | **one** imperative action, or `null` — never what was just done | ≤ 300, one line |
+| `adrs[].blockers[]` | a gate and what lifts it | ≤ 4 × 200 |
+| `adrs[].openPoints[]` | the open points that matter; **no ✅ / struck-through entry**: what is done is told in the hub or the step, then removed here | ≤ 6 × 200 |
+
+Whole file ≤ 8 KB, digest ≤ 2 500 chars. If something does not fit, it belongs in the hub, not in abbreviations. **Public repository:** private projects (client comparisons, private plugins) never go in this file.
+
 ## A STEP file — `steps/NN-<slug>.md`
 
 Granularity: **one milestone/step = one file**, grouping its sub-tasks. Sub-split (one file per sub-step) **only** when a step gets heavy (e.g. several parts with a prod migration).

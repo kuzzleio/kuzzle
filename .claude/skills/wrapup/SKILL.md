@@ -26,6 +26,7 @@ The ritual to *land* a change once it works: leave the docs true, the branch pus
 Before considering the wrapup done, sanity-check that a brand-new session with **zero prior context** could pick the work up from the written record alone:
 
 - The ADR's **Cold start** block names the branch, what is done/validated, the next step, and the key gotchas — updated to this session.
+- **`docs/adr-state.json`** reflects it, if any ADR state changed (step opened/closed, next action, blocker lifted, release): **replace** the fields, never append; then `node .ci/scripts/adr-state.ts --check` and read `--digest` as a fresh session would (schema: `kuzzle-adr` skill).
 - The **memory** file states the current state and the concrete next action (absolute dates, not "today"/"yesterday").
 - Anything you only "know" from this conversation (a live-validation result, a deferred decision, a trigger for a deferred item) is written down somewhere durable — not left implicit.
 
