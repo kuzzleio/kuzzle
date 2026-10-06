@@ -1,13 +1,13 @@
 ---
 name: kuzzle-adr
-description: Structure, split and maintain Architecture Decision Records (ADR) in the kuzzle repo — a hub file (decision + cold-start + step table + central decision register) plus one file per milestone/step under docs/adr-<n>/steps/, frozen once shipped. Use when creating a new ADR, splitting or shrinking a large ADR, opening/closing a step, or when wrapup must update an ADR's structure. Reference implementation: docs/adr-001/.
+description: Structure, split and maintain Architecture Decision Records (ADR) in the kuzzle repo — a hub file (decision + cold-start + step table + central decision register) plus one file per milestone/step under docs/adr-<n>/steps/, frozen once shipped. Use when creating a new ADR, splitting or shrinking a large ADR, opening/closing a step, or when wrapup must update an ADR's structure. Reference implementation: docs/adr-003/.
 ---
 
 # Kuzzle — ADR structure
 
 An ADR in this repo is **not** a frozen one-shot decision record: it is a **living document** that tracks an effort end to end. Left unstructured it fuses three documents of different natures and bloats every session. This skill keeps them separated.
 
-**Reference implementation:** [`docs/adr-001/`](../../../docs/adr-001/ADR-0001-migration-typescript.md). Match its shape.
+**Reference implementation:** [`docs/adr-003/`](../../../docs/adr-003/ADR-0003-storage-drivers.md). Match its shape. ADR-0001 is the historical first one, frozen: it shows the structure at scale, not the size to aim for.
 
 ## The three natures to separate
 
@@ -56,7 +56,8 @@ In order:
 Alongside the hub, an ADR that runs long enough to accumulate review findings keeps a **lessons index** (`lessons.md`):
 one row per *generalisable part*, with its source finding and **what enforces it** — a gate, a line in the standards a
 contributor reads, or nothing. The last column is the point: a lesson that stays prose gets broken again, so the
-un-enforced rows are read as the backlog of what to gate next. Reference implementation: `docs/adr-001/lessons.md`.
+un-enforced rows are read as the backlog of what to gate next. Each ADR keeps its own; `docs/adr-001/lessons.md` is the
+example, frozen with its ADR (its "What to gate next" list is carried by [#2968](https://github.com/kuzzleio/kuzzle/issues/2968)).
 
 The hub **never** holds a step's detailed narrative nor a session-by-session journal — that lives in the step files.
 
@@ -71,6 +72,10 @@ Content: **Title + status + dates + PR(s)** (+ back-link to the hub) · **Goal**
 1. **Open**: create `steps/NN-<slug>.md` when the step **starts**; add its row to the hub table (`⬜ To do` / `🟦 In progress`).
 2. **During**: only the step file and the hub's cold-start move.
 3. **Close** (done / in prod): **freeze** the step file (archive — do not reopen). Update only its hub-table row (✅ + PR), the cold-start, and the hub register if a structural decision came out.
+
+## Closing an ADR
+
+When the last step closes, **freeze the whole ADR**: hub status `Closed`, every step ✅/🧊/🚫, a cold start that says there is nothing to resume. A step must not outlive its ADR as a "parallel track": what is still open goes to a GitHub issue (with the corrections the frozen files would need), and the step closes with a pointer to it. Rewrite the cold start, the register and the open points to their final, short form, and evict the long versions **verbatim** to the ADR's `journal.md` (write-once archive; only heading levels change). Reference: ADR-0001, frozen 2026-10-06, with remainder in [#2968](https://github.com/kuzzleio/kuzzle/issues/2968).
 
 ## Normalized statuses
 
