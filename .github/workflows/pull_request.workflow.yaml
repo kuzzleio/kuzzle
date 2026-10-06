@@ -24,6 +24,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # docs/adr-state.json is the structured extract of the ADR hubs that feeds
+  # the Claude Code session-start digest. It holds the current state only,
+  # under a schema, and must not contradict the hubs it points to. Node only,
+  # through Node's type stripping: no `npm ci`.
+  adr-state:
+    name: ADR state schema
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Schema and consistency of docs/adr-state.json
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/adr-state.ts --check
+
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-24.04

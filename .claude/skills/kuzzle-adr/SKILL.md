@@ -61,6 +61,23 @@ example, frozen with its ADR (its "What to gate next" list is carried by [#2968]
 
 The hub **never** holds a step's detailed narrative nor a session-by-session journal — that lives in the step files.
 
+### Structured extract — `docs/adr-state.json`
+
+The hub is the narrative source of truth, but it is expensive to read. Each ADR's **current** state is mirrored in [`docs/adr-state.json`](../../../docs/adr-state.json), which feeds the digest injected at every session start (`SessionStart` hook → `node .ci/scripts/adr-state.ts --digest`, ~200 tokens). Update it in the same pass as the hub: a stale entry silently misleads every future session. It holds **state, never history**; `node .ci/scripts/adr-state.ts --check` (CI job `adr-state`) enforces:
+
+| Field | Content | Limit |
+| --- | --- | --- |
+| `snapshot`, `latestVersion` | date of the last state change; npm `latest` | — |
+| `adrs[].id`, `hub`, `title` | number, hub path, the hub's title | `title` ≤ 80 |
+| `adrs[].status` | `proposed` · `accepted` · `active` (a step is open) · `closed` · `abandoned`; closed/abandoned must match the hub's `**Status:**` | enum |
+| `adrs[].statusLabel` | emoji + short label | ≤ 40 |
+| `adrs[].openStep` | path of **the** open step, or `null`; its `**Status:**` must be open (⬜/🟦); required when `active` | — |
+| `adrs[].nextAction` | **one** imperative action, or `null` — never what was just done | ≤ 300, one line |
+| `adrs[].blockers[]` | a gate and what lifts it | ≤ 4 × 200 |
+| `adrs[].openPoints[]` | the open points that matter; **no ✅ / struck-through entry**: what is done is told in the hub or the step, then removed here | ≤ 6 × 200 |
+
+Whole file ≤ 8 KB, digest ≤ 2 500 chars. If something does not fit, it belongs in the hub, not in abbreviations. **Public repository:** private projects (client comparisons, private plugins) never go in this file.
+
 ## Budgets — what keeps this structure from regrowing
 
 ADR-0001's hub was compacted on 2026-09-18 and was back at 116 KB nine days later: every pass appended a dated report and nothing bounded it. Now [`docs/doc-budgets.json`](../../../docs/doc-budgets.json) does, checked by `node .ci/scripts/check-doc-budgets.ts` on every PR (job `doc-budgets`, blocking), by `pr-preflight`, and by a non-blocking `PostToolUse` hook (`.claude/settings.json`) right after an edit. Roles: `living` (re-read at every resume → bounded), `archive` (write-once → exempt, but flagged when it grows in a PR), `exempt` (generated, legal, or the product docs under `doc/`).
