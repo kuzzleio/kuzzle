@@ -62,6 +62,32 @@ jobs:
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
+  # Bounds the repository's own living documentation (ADR hubs, open steps,
+  # AGENTS.md, skills...). ADR-0001's hub was compacted on 2026-09-18 and was
+  # back at 116 KB nine days later, because nothing bounded it. Node only: the
+  # script runs through Node's type stripping, so no `npm ci`. Rules:
+  # docs/doc-budgets.json.
+  doc-budgets:
+    name: Documentation budgets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          # The base branch's history is what tells a write-once archive that
+          # grew in this PR apart from one that was already that size.
+          fetch-depth: 0
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Size budgets of the documentation
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/check-doc-budgets.ts --base "origin/$BASE_REF"
+
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04

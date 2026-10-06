@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"$CLAUDE_PROJECT_DIR/.ci/scripts/check-doc-budgets.ts\" --hook"
+          }
+        ]
+      }
     ]
   }
 }

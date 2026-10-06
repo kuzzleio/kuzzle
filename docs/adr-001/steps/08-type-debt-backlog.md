@@ -1,7 +1,7 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 22 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-43 · TD-44 · TD-45 · TD-46 · TD-47 · TD-48 · TD-49), TD-33 open
-**Date:** 2026-09-09 → …
+**Status:** ✅ Done — closed and frozen 2026-10-06; the findings still open moved to [#2968](https://github.com/kuzzleio/kuzzle/issues/2968). Before that: 22 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 through TD-49), then TD-20 and TD-74 through TD-81
+**Date:** 2026-09-09 → 2026-10-06
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
 
@@ -809,3 +809,7 @@ wrong ids evict once, no answer evicts, an older id asks for nothing),
 `command.test.ts` (real sockets: frames in order, `null` when no longer
 kept, on a partial answer, and on silence), `config/index.test.ts`,
 `kuzzle.test.ts` (exit code), and the eviction specs pin `shutdown(1)`.
+
+## Closure — 2026-10-06
+
+The step was meant to stay open for as long as the register had open findings. It closes with the ADR instead: ADR-0001 is frozen, and a step that outlives its ADR becomes a living file that nobody reads at resume time. The 14 findings still open, re-checked against the code on 2026-10-06, are tracked in [#2968](https://github.com/kuzzleio/kuzzle/issues/2968), which also corrects the statuses the frozen register gets wrong. Three of them are deferred to v3 and already have a row in [`docs/v3-breaking-changes.md`](../../v3-breaking-changes.md).

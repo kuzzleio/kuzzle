@@ -82,6 +82,9 @@ most likely to fail on a first push.
 - Error codes are documented and checked: `npm run doc-error-codes` and
   `.ci/scripts/check-error-codes-documentation.sh`. New error codes need docs.
 - Don't commit changes to `dist/`, `coverage/`, or `node_modules/`.
+- Living docs (ADR hubs, open steps, `AGENTS.md`, skills, `CONTRIBUTING.md`) have
+  size budgets in `docs/doc-budgets.json`, enforced in CI: narrative goes in the
+  open ADR step, never appended to a hub or a reference doc (`kuzzle-adr` skill).
 - Kuzzle 2 takes no breaking change. Anything set aside because it would be
   breaking (a `@deprecated`, a "next major" `@todo`, a type kept as v2.56.0
   declared it) gets a row in [docs/v3-breaking-changes.md](./docs/v3-breaking-changes.md),
