@@ -61,6 +61,23 @@ example, frozen with its ADR (its "What to gate next" list is carried by [#2968]
 
 The hub **never** holds a step's detailed narrative nor a session-by-session journal — that lives in the step files.
 
+## Budgets — what keeps this structure from regrowing
+
+ADR-0001's hub was compacted on 2026-09-18 and was back at 116 KB nine days later: every pass appended a dated report and nothing bounded it. Now [`docs/doc-budgets.json`](../../../docs/doc-budgets.json) does, checked by `node .ci/scripts/check-doc-budgets.ts` on every PR (job `doc-budgets`, blocking), by `pr-preflight`, and by a non-blocking `PostToolUse` hook (`.claude/settings.json`) right after an edit. Roles: `living` (re-read at every resume → bounded), `archive` (write-once → exempt, but flagged when it grows in a PR), `exempt` (generated, legal, or the product docs under `doc/`).
+
+| File | Budget | When it overflows |
+| --- | --- | --- |
+| hub `ADR-000X-*.md` | 40 KB | move step narrative to its file; evict a journal already written **verbatim** to `journal.md` with a pointer |
+| **open** step (`⬜`/`🟦`) | 60 KB | **sub-split** (below) |
+| other ADR annexes (`docs/adr-<n>/*.md`) | 40 KB | evict what is settled to `journal.md` or the frozen step that produced it |
+| closed step (`✅`/`🧊`/`🚫`), `journal*.md`, **every file of a Closed/Abandoned ADR** | exempt (archive) | never reopened, never fed |
+
+A budget is raised only by a reasoned edit of `doc-budgets.json` (say why in the commit), never to let a journal through. Do not compress into abbreviations either: if it does not fit, it belongs somewhere else.
+
+**Sub-split rule.** When an open step nears 60 KB, keep `steps/NN-<slug>.md` as the step's chapeau (goal, status, a table of its parts with links, local decisions) and move each part's narrative to `steps/NN-<slug>/<part>.md`, each with its own `**Status:**` line. A part that is done is frozen like any step and stops counting.
+
+The `**Status:**` line of a step file (first lines) is **machine-read**: its first emoji decides open (`⬜`, `🟦` → bounded) or closed (`✅`, `🧊`, `🚫` → archive). Keep the emoji first; put the detail after it.
+
 ## A STEP file — `steps/NN-<slug>.md`
 
 Granularity: **one milestone/step = one file**, grouping its sub-tasks. Sub-split (one file per sub-step) **only** when a step gets heavy (e.g. several parts with a prod migration).
