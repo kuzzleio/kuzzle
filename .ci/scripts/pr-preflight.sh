@@ -64,6 +64,15 @@ else
 fi
 
 echo
+echo "==> Documentation budgets (docs/doc-budgets.json)"
+if node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/check-doc-budgets.ts --base "${PREFLIGHT_BASE:-origin/2-dev}"; then
+  echo "[OK] documentation budgets"
+else
+  echo "[FAIL] documentation budgets — move the content where the message says, do not raise the budget"
+  status=1
+fi
+
+echo
 echo "==> Test & doc coverage reminder (heuristic, not a hard gate)"
 # The base is `2-dev`, not `master`: the migration lands there, and master is
 # hundreds of commits behind it. Diffing against master made both reminders
