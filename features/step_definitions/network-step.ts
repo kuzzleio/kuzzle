@@ -1,4 +1,5 @@
 import http from "http";
+import net from "net";
 import YAML from "yaml";
 import should from "should";
 import requestPromise from "request-promise";
@@ -91,6 +92,74 @@ async function sendRawRequest(
   });
 }
 
+/**
+ * Sends an empty-body request over a raw socket, the final CRLF of its headers
+ * in a TCP packet of its own: uWS then never fires `onData`, and a server
+ * waiting for it never answers.
+ */
+async function sendSplitHeadersRequest(
+  world: KuzzleWorld,
+  { method, path, port }: { method: string; path: string; port: number },
+): Promise<RawHttpResponse> {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect({ host: world.host, port });
+    let raw = Buffer.alloc(0);
+
+    socket.setNoDelay(true);
+    socket.setTimeout(3000, () => {
+      socket.destroy();
+      reject(new Error("No response: the request hung"));
+    });
+
+    socket.on("connect", () => {
+      socket.write(
+        `${method} ${path} HTTP/1.1\r\nHost: ${world.host}\r\nContent-Length: 0\r\n`,
+      );
+      setTimeout(() => socket.write("\r\n"), 100);
+    });
+
+    // The connection is kept alive: the response is complete once its
+    // announced content-length is received.
+    socket.on("data", (chunk: Buffer) => {
+      raw = Buffer.concat([raw, chunk]);
+
+      const headEnd = raw.indexOf("\r\n\r\n");
+
+      if (headEnd === -1) {
+        return;
+      }
+
+      const [statusLine, ...headerLines] = raw
+        .subarray(0, headEnd)
+        .toString()
+        .split("\r\n");
+      const headers: Record<string, string> = {};
+
+      for (const line of headerLines) {
+        const separator = line.indexOf(":");
+        headers[line.slice(0, separator).trim().toLowerCase()] = line
+          .slice(separator + 1)
+          .trim();
+      }
+
+      const body = raw.subarray(headEnd + 4);
+
+      if (body.byteLength < Number(headers["content-length"])) {
+        return;
+      }
+
+      socket.destroy();
+      resolve({
+        body: body.toString(),
+        headers,
+        statusCode: Number(statusLine.split(" ")[1]),
+      });
+    });
+
+    socket.on("error", (error) => reject(error));
+  });
+}
+
 async function sendHttpRequest(
   world: KuzzleWorld,
   { method, url, headers = {}, body }: any,
@@ -139,6 +208,17 @@ When(
 
     this.props.httpResponse = await sendRawRequest(this, {
       headers,
+      method,
+      path,
+      port,
+    });
+  },
+);
+
+When(
+  "I send a HTTP {string} request with an empty body to {string} on port {int}, its headers split across TCP packets",
+  async function (this: KuzzleWorld, method, path, port) {
+    this.props.httpResponse = await sendSplitHeadersRequest(this, {
       method,
       path,
       port,
