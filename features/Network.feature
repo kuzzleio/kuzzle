@@ -23,6 +23,13 @@ Feature: Network
     Then The HTTP response JSON should match:
       | result | { "greeting": "Hello, Martial" } |
 
+  @network @http
+  Scenario: Answers an empty-body request whose headers span several TCP packets
+    When I send a HTTP "POST" request with an empty body to "/_checkToken" on port 17510, its headers split across TCP packets
+    Then The HTTP response status should be 200
+    And The HTTP response JSON should match:
+      | result | { "valid": true } |
+
   @network
   Scenario: Healthcheck endpoint returns status
     When I send a raw HTTP "GET" request to "/_healthcheck" on port 7512
