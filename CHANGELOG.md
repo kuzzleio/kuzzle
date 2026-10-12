@@ -1,3 +1,13 @@
+## [2.60.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.59.0...v2.60.0-beta.1) (2026-10-12)
+
+### Features
+
+* **logger:** upgrade kuzzle-logger to 1.5.0 ([bdf25a0](https://github.com/kuzzleio/kuzzle/commit/bdf25a02eff9b8de086bc9805b5df5798d0742be))
+
+### Bug Fixes
+
+* **http:** answer empty-body requests without waiting for uWS data ([#2972](https://github.com/kuzzleio/kuzzle/issues/2972)) ([0517dc9](https://github.com/kuzzleio/kuzzle/commit/0517dc929046b4e3b22842c2b1730ed733e006ec))
+
 ## [2.59.0](https://github.com/kuzzleio/kuzzle/compare/v2.58.0...v2.59.0) (2026-10-01)
 
 ### Features
