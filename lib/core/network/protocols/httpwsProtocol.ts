@@ -716,6 +716,20 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     let payload: Buffer | null = null;
     response.aborted = false;
 
+    // Beware: the "response" object might be invalidated at any point of time,
+    // whenever the connection gets closed by the client for instance
+    response.onAborted(() => {
+      response.aborted = true;
+    });
+
+    // uWS never fires `onData` for an empty body when the request headers
+    // span several TCP packets (large headers, e.g. a forwarded client
+    // certificate): waiting for it hung the request until the idle timeout.
+    if (message.headers["content-length"] === "0") {
+      cb();
+      return;
+    }
+
     response.onData((data, isLast) => {
       const chunk = Buffer.from(data);
 
@@ -761,12 +775,6 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
       });
 
       return promise;
-    });
-
-    // Beware: the "response" object might be invalidated at any point of time,
-    // whenever the connection gets closed by the client for instance
-    response.onAborted(() => {
-      response.aborted = true;
     });
   }
 
