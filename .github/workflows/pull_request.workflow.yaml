@@ -229,10 +229,13 @@ jobs:
         env:
           COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
+      # client-id replaces the deprecated app-id: the action passes the value as-is
+      # as the JWT iss, which GitHub accepts as a Client ID or a numeric App ID,
+      # hence the unchanged KUZZLE_BOT_APP_ID variable.
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ vars.KUZZLE_BOT_APP_ID }}
+          client-id: ${{ vars.KUZZLE_BOT_APP_ID }}
           private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
 
       - name: SonarQube Scan
