@@ -99,7 +99,9 @@ class IndexController extends NativeController {
 
     const response: {
       indexes: string[];
-      collections?: { [index: string]: number };
+      // `| undefined` is spelled out so that the published `.d.ts` stays as
+      // TypeScript 5.4 emitted it: TypeScript 6 prints the annotation verbatim.
+      collections?: { [index: string]: number } | undefined;
     } = {
       indexes,
     };
