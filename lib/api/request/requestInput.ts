@@ -327,7 +327,7 @@ export class RequestInput {
    * it. The parameter type excluded the one value the implementation handles
    * first — the same asymmetry `headers` documents just below.
    */
-  set body(obj: JSONObject | Array<any> | null) {
+  set body(obj: JSONObject | unknown[] | null) {
     this[_body] = assert.assertArrayOrObject("body", obj);
   }
 
