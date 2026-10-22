@@ -9,3 +9,6 @@
 #
 lib/types/JSONObject.ts type-only: a single `export type` alias, no executable line (ADR-0002 step 02)
 lib/types/storage/KuzzleInfo.ts type-only: two `export type` aliases shared by the ES 7 and 8 storage types, no executable line (ADR-0002 step 03)
+lib/types/controllers/GetCurrentUserResponse.ts type-only: renamed from authController.type.ts, one `export type` alias, no executable line (TD-08)
+lib/types/controllers/ResetSecurityResult.ts type-only: renamed from adminController.type.ts, one `export type` alias, no executable line (TD-08)
+lib/types/core/auth/Serialized.ts type-only: renamed from formatProcessing.type.ts, two `export type` aliases, no executable line (TD-08)

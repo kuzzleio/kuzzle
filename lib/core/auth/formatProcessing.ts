@@ -23,7 +23,7 @@ import type { Profile } from "../../model/security/profile";
 import type { Role } from "../../model/security/role";
 import type { User } from "../../model/security/user";
 
-import type { Serialized } from "../../types/core/auth/formatProcessing.type";
+import type { Serialized } from "../../types/core/auth/Serialized";
 
 export default {
   /**

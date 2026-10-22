@@ -1,12 +1,7 @@
 /**
- * What `formatProcessing` can serialize: anything carrying an id. The id is
- * nullable because the security models are — they carry `null` until they have
- * been stored (ADR-0001, TD-62) — and `Serialized` echoes back whichever it
- * has rather than widening it for everyone.
+ * @deprecated Moved to `./Serialized` when `lib/types/` settled on PascalCase
+ * file names (TD-08). Kept so that deep imports of the published
+ * `dist/lib/...` path keep compiling; removed in v3
+ * (docs/v3-breaking-changes.md).
  */
-export type Serializable = { _id: string | null };
-
-export type Serialized<T extends Serializable> = {
-  _id: T["_id"];
-  _source: Record<string, any>;
-};
+export type { Serializable, Serialized } from "./Serialized";

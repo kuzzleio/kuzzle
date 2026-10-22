@@ -38,7 +38,7 @@ import SecurityController from "./securityController";
 import type { JSONObject } from "../../types/JSONObject";
 import type { Token } from "../../model/security/token";
 
-import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
+import type { GetCurrentUserResponse } from "../../types/controllers/GetCurrentUserResponse";
 
 const securityError = kerror.wrap("security", "token");
 

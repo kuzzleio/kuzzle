@@ -3,7 +3,38 @@
 // per-directory `.eslintrc.json` files (features, features-legacy — and, until
 // step 13's L7 deleted the Mocha suite, test) and `.eslintignore` are folded in
 // here — flat config is one file, top to bottom, last block wins.
+import { basename } from "node:path";
+
 import kuzzle from "eslint-plugin-kuzzle";
+
+// Rules local to this repository, too small to be worth a plugin package.
+const local = {
+  rules: {
+    // ADR-0001, TD-08: `lib/types/` mixed `foo.type.ts` and `Foo.ts`. A file
+    // there is named after the type it declares, in PascalCase.
+    "types-file-name": {
+      meta: {
+        type: "suggestion",
+        schema: [],
+        messages: {
+          pascalCase:
+            '"{{name}}": files under lib/types/ are named after the type they declare, in PascalCase (Token.ts, ControllerDefinition.ts). (ADR-0001, TD-08)',
+        },
+      },
+      create(context) {
+        return {
+          Program(node) {
+            const name = basename(context.filename);
+
+            if (!/^[A-Z][A-Za-z0-9]*\.ts$/u.test(name)) {
+              context.report({ data: { name }, messageId: "pascalCase", node });
+            }
+          },
+        };
+      },
+    },
+  },
+};
 
 export default [
   {
@@ -68,6 +99,21 @@ export default [
         },
       ],
     },
+  },
+
+  {
+    files: ["lib/types/**/*.ts"],
+    ignores: [
+      // The barrel.
+      "lib/types/index.ts",
+      // @deprecated re-exports at the pre-TD-08 paths, kept for deep imports
+      // of `dist/lib/...`; removed in v3 (docs/v3-breaking-changes.md).
+      "lib/types/controllers/adminController.type.ts",
+      "lib/types/controllers/authController.type.ts",
+      "lib/types/core/auth/formatProcessing.type.ts",
+    ],
+    plugins: { local },
+    rules: { "local/types-file-name": "error" },
   },
 
   {
