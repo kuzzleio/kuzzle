@@ -72,6 +72,30 @@ if [ "$metric" = "cpd-exclusions" ]; then
   exit 0
 fi
 
+# Runs one of the AST counters (scripts/count-*.ts) and prints its count.
+#
+# Fail CLOSED: `tail -n 1` of a crashed script is a stack trace line, not a
+# count, and a ratchet that reads it as 0 reports "below baseline" — i.e. it
+# tells the caller to disarm itself. The counter must exit 0 AND its last line
+# must be a number. Same defect class as TD-44 (#2731), and as the `npx tsc`
+# that prints "This is not the tsc command you are looking for" and exits 0
+# (#2793), which is what this guard actually caught. Exits the whole script
+# (status 2) otherwise: `set -e` aborts on the failing `$(...)` assignment.
+run_counter() {
+  local out status count
+  out="$(npx tsx "$1" 2>&1)" && status=0 || status=$?
+  count="$(printf '%s\n' "$out" | tail -n 1)"
+
+  if [ "$status" -ne 0 ] || ! printf '%s' "$count" | grep -qE '^[0-9]+$'; then
+    echo "❌ '$metric': $1 exited $status and its last line" >&2
+    echo "   is not a count, so nothing was measured. Its output:" >&2
+    printf '%s\n' "$out" | sed -n '1,20p' >&2
+    exit 2
+  fi
+
+  echo "$count"
+}
+
 case "$metric" in
   js)
     label="JavaScript files under lib/ and bin/"
@@ -95,18 +119,24 @@ case "$metric" in
     # 'as unknown as' is counted too: it is the escape hatch a conversion reaches
     # for once ': any' is forbidden, so leaving it out would just move the debt.
     #
+    # Counted by parsing, not grepping (TD-73): the grep this replaced counted
+    # matching LINES of text, so it charged prose ("total: anything else"),
+    # charged a Prettier line split as +1, let a second 'any' on a counted line
+    # in for free, and never saw 'Promise<any>' or 'Record<string, any>'. See
+    # scripts/count-any.ts for what counts.
+    #
     # There used to be a sibling 'implicit-any' ratchet counting the TS7xxx
     # diagnostics tsc reports under a `noImplicitAny`-only program. It retired with
     # the strict flip (step 12, K6): `strict` in tsconfig.json subsumes
     # `noImplicitAny`, and the build itself now fails on an inferred any in lib/,
     # which is a harder floor than a count that may only decrease.
-    label="': any' / 'as any' / 'as unknown as' lines in lib/**/*.ts"
+    label="'any' keywords and 'as unknown as' chains in lib/**/*.ts"
     baseline_file=".migration/any-baseline.txt"
-    current="$(grep -rE ': any|as any|as unknown as' lib --include='*.ts' 2>/dev/null | wc -l | tr -d ' ')"
+    current="$(run_counter scripts/count-any.ts)"
     hint="Type explicitly instead of 'any' (prefer 'unknown' + narrowing if dynamic)."
     ;;
   casts)
-    # The 'any' ratchet counts the hatches it was told about — ': any', 'as any',
+    # The 'any' ratchet counts the hatches it was told about — 'any' and
     # 'as unknown as'. 'as SomeType' is the NEXT one, and the debt moved there
     # exactly as that comment predicted (ADR-0001 register, TD-43). It is the
     # worse hatch of the two: 'any' degrades to a permissive type and strict
@@ -118,23 +148,7 @@ case "$metric" in
     # scripts/count-casts.ts for what counts and, more importantly, what does not.
     label="type assertions in lib/**/*.ts"
     baseline_file=".migration/casts-baseline.txt"
-    #
-    # Fail CLOSED: `tail -n 1` of a crashed script is a stack trace line, not a
-    # count, and a ratchet that reads it as 0 reports "below baseline" — i.e. it
-    # tells the caller to disarm itself. The counter must exit 0 AND its last line
-    # must be a number. Same defect class as TD-44 (#2731), and as the `npx tsc`
-    # that prints "This is not the tsc command you are looking for" and exits 0
-    # (#2793), which is what this guard actually caught.
-    casts_out="$(npx tsx scripts/count-casts.ts 2>&1)" && casts_status=0 || casts_status=$?
-    current="$(printf '%s\n' "$casts_out" | tail -n 1)"
-
-    if [ "$casts_status" -ne 0 ] || ! printf '%s' "$current" | grep -qE '^[0-9]+$'; then
-      echo "❌ 'casts': scripts/count-casts.ts exited $casts_status and its last line" >&2
-      echo "   is not a count, so nothing was measured. Its output:" >&2
-      printf '%s\n' "$casts_out" | sed -n '1,20p' >&2
-      exit 2
-    fi
-
+    current="$(run_counter scripts/count-casts.ts)"
     hint="Narrow instead of asserting (type guard, 'satisfies', or fix the source type)."
     ;;
   *)
