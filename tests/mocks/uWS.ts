@@ -112,8 +112,16 @@ export class MockHttpResponse {
     this._onAbortedHandler = handler;
   });
 
-  _onData(data: ArrayBuffer | string, isLast?: boolean) {
-    return this._onDataHandler?.(data, isLast);
+  /**
+   * Specs build their payloads with `Buffer.from(...)`; uWS hands the handler
+   * an `ArrayBuffer`, so a `Buffer` (or any `Uint8Array`) is copied into one
+   * first — the type system no longer treats the two as interchangeable.
+   */
+  _onData(data: ArrayBuffer | Uint8Array | string, isLast?: boolean) {
+    const chunk =
+      data instanceof Uint8Array ? new Uint8Array(data).buffer : data;
+
+    return this._onDataHandler?.(chunk, isLast);
   }
 
   _onAborted() {
