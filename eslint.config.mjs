@@ -87,7 +87,11 @@ export default [
         "error",
         { disallowTypeAnnotations: false },
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      // An error everywhere but in the test trees, which the block below
+      // keeps at `warn` (ADR-0001, TD-02 — kuzzle#2968). An `any` kept on
+      // the public boundary for compatibility is disabled on its line and
+      // listed in docs/v3-breaking-changes.md.
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/ban-ts-comment": [
         "error",
         {
@@ -98,6 +102,16 @@ export default [
           minimumDescriptionLength: 20,
         },
       ],
+    },
+  },
+
+  // Still advisory in the test trees (162 occurrences when lib/ went to
+  // `error`): mocks and fixtures, typed in a follow-up. `*.ts` only: the
+  // typescript-eslint plugin is only registered for TypeScript files.
+  {
+    files: ["tests/**/*.ts", "features/**/*.ts", "features-legacy/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 
