@@ -21,7 +21,7 @@
 
 import Bluebird from "bluebird";
 import Deque from "denque";
-import * as Cookie from "cookie";
+import { parseCookie } from "cookie";
 import get from "lodash/get";
 
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
@@ -721,7 +721,7 @@ class Funnel {
 
     let cookie;
     try {
-      cookie = Cookie.parse(request.input.headers.cookie);
+      cookie = parseCookie(request.input.headers.cookie);
     } catch {
       throw kerror.get("security", "cookie", "invalid");
     }
