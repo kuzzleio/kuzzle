@@ -38,7 +38,12 @@
     // ratchet counts outside `lib/`. Re-measure with
     // `npx tsc -p tsconfig.tests.json --noUncheckedIndexedAccess`.
     "noUncheckedIndexedAccess": false,
-    "noEmit": true
+    "noEmit": true,
+    // Nothing is emitted, so there are no declarations whose portability to
+    // check. Inherited from `tsconfig.json`, it made every bare `vi.fn()` in an
+    // exported fixture fail with vitest 5 (TS2883: its `Procedure` type is not
+    // exported).
+    "declaration": false
   },
   "include": [
     // Ambient declarations: they are `.d.ts`, so nothing imports them and the
