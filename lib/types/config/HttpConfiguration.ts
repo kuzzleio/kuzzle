@@ -6,6 +6,7 @@
  */
 
 export type HttpConfiguration = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   routes: any;
   /**
    * Sets the default Access-Control-Allow-Origin HTTP

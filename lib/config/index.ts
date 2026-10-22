@@ -26,7 +26,10 @@ import type { JSONObject } from "../types/JSONObject";
 
 import rc from "rc";
 import defaultConfig from "./default.config";
-import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type {
+  IKuzzleConfiguration,
+  PackagedKuzzleConfiguration,
+} from "../types/config/KuzzleConfiguration";
 import packageJson from "../../package.json";
 import { wrap } from "../kerror";
 import { isPlainObject } from "../util/safeObject";
@@ -55,10 +58,10 @@ const wrapped = wrap("core", "configuration");
 type RawConfig = JSONObject;
 
 export function loadConfig(): IKuzzleConfiguration {
-  let config: any;
+  let loaded: PackagedKuzzleConfiguration;
 
   try {
-    config = rc("kuzzle", defaultConfig);
+    loaded = rc("kuzzle", defaultConfig);
   } catch (e) {
     throw wrapped.get(
       "cannot_parse",
@@ -66,26 +69,32 @@ export function loadConfig(): IKuzzleConfiguration {
     );
   }
 
-  config = unstringify(config);
+  // In place: what `unstringify` answers is the object it was given.
+  unstringify(loaded);
 
-  checkLimitsConfig(config);
-  checkHttpOptions(config);
-  checkWebSocketOptions(config);
-  checkClusterOptions(config);
+  checkLimitsConfig(loaded);
+  checkHttpOptions(loaded);
+  checkWebSocketOptions(loaded);
+  checkClusterOptions(loaded);
 
-  config.internal = {
-    hash: {
-      seed: Buffer.from("^m&mOISKBvb1xpl1mRsrylaQXpjb&IJX"),
+  // The two sections the defaults do not carry. `notifiableProtocols` is
+  // filled in by `preprocessProtocolsOptions` below; `version` injects the
+  // current Kuzzle version.
+  const config: IKuzzleConfiguration = {
+    ...loaded,
+    internal: {
+      hash: {
+        seed: Buffer.from("^m&mOISKBvb1xpl1mRsrylaQXpjb&IJX"),
+      },
+      notifiableProtocols: [],
     },
+    version: packageJson.version,
   };
 
   preprocessHttpOptions(config);
   preprocessProtocolsOptions(config);
   preprocessRedisOptions(config.services.internalCache);
   preprocessRedisOptions(config.services.memoryStorage);
-
-  // Injects the current Kuzzle version
-  config.version = packageJson.version;
 
   return config;
 }
@@ -376,14 +385,11 @@ function preprocessHttpOptions(config: RawConfig): void {
 }
 
 function preprocessProtocolsOptions(config: RawConfig): void {
-  const protocols: any = config.server.protocols;
+  const protocols: JSONObject = config.server.protocols;
 
   config.internal.notifiableProtocols = [];
 
-  for (const [protocolName, protocolConfig] of Object.entries(protocols) as [
-    string,
-    any,
-  ][]) {
+  for (const [protocolName, protocolConfig] of Object.entries(protocols)) {
     if (protocolConfig.enabled && protocolConfig.realtimeNotifications) {
       config.internal.notifiableProtocols.push(protocolName);
     }

@@ -129,6 +129,7 @@ export interface IKuzzleConfiguration {
     /**
      * @default null
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     interface: any;
 
     /**
@@ -189,6 +190,7 @@ export interface IKuzzleConfiguration {
   };
 
   internal: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     hash: any;
     notifiableProtocols: string[];
 
