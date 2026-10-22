@@ -7,7 +7,6 @@
 import type {
   IKuzzleConfiguration,
   JSONObject,
-  KuzzleRequest,
   PluginHookDefinition,
   PluginPipeDefinition,
   SecurityConfiguration,
@@ -15,9 +14,13 @@ import type {
 } from "kuzzle";
 import {
   Backend,
+  Connection,
+  Headers,
   Inflector,
+  KuzzleRequest,
   ObjectRepository,
   QueryTranslator,
+  RequestContext,
   RequestInput,
   RequestResponse,
   cacheDbEnum,
@@ -141,4 +144,26 @@ export async function storeAnswers(store: Store, filters: unknown) {
   const created: Driver[] = await store.createCollections({});
 
   return { count, created, found, next: next.total };
+}
+
+// TD-15: building a request out of untyped values, then reading its result,
+// headers and connection details without narrowing.
+export function untypedRequest(data: unknown, options: unknown) {
+  const request = new KuzzleRequest(data, options);
+  const context = new RequestContext(options);
+  const connection = new Connection(options);
+
+  request.setResult(data);
+  request.response.result = options;
+  request.input.body = [data];
+
+  const result: { total: number } = request.result;
+  const answered: string[] = request.response.result;
+  const proxied: string = request.response.headers["x-a"];
+  const header: string | undefined = new Headers().getHeader(data);
+  const misc: number = connection.misc.port;
+  const tags: string[] = request.getArray("tags");
+  const ids: JSONObject = request.getArrayFromBodyOrArgs("ids", "a,b");
+
+  return { answered, context, header, ids, misc, proxied, result, tags };
 }
