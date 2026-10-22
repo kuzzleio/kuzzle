@@ -6,14 +6,19 @@ import { ES8 } from "./8/elasticsearch";
 
 import Service from "../service";
 import { storeScopeEnum } from "../../core/storage/storeScopeEnum";
+import type { JSONObject } from "../../types/JSONObject";
+import type { StorageEngineElasticsearch } from "../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 
-export class Elasticsearch extends Service {
-  public client: any;
+export class Elasticsearch extends Service<StorageEngineElasticsearch> {
+  public client: ES7 | ES8;
   private readonly logger = global.kuzzle.log.child(
     "service:storage:elasticsearch",
   );
 
-  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
+  constructor(
+    config: StorageEngineElasticsearch,
+    scope = storeScopeEnum.PUBLIC,
+  ) {
     super("elasticsearch", config);
 
     if (config.majorVersion === "7") {
@@ -25,7 +30,10 @@ export class Elasticsearch extends Service {
     }
   }
 
-  static buildClient(config: any, version?: "7" | "8"): any {
+  static buildClient(
+    config: JSONObject,
+    version?: "7" | "8",
+  ): ClientES7 | ClientES8 {
     if (!version) {
       version = "7";
     }

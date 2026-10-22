@@ -21,10 +21,14 @@
 
 import _ from "lodash";
 
-import type { RequestParams } from "sdk-es7";
+import type { ApiResponse, RequestParams } from "sdk-es7";
 import { Client } from "sdk-es7";
 import type { Index, IndicesCreate } from "sdk-es7/api/requestParams";
-import type { TypeMapping } from "sdk-es7/api/types";
+import type {
+  ElasticsearchVersionInfo,
+  ShardStatistics,
+  TypeMapping,
+} from "sdk-es7/api/types";
 import type {
   AliasToTargets,
   CatAliasRecord,
@@ -45,6 +49,7 @@ import ms from "ms";
 import semver from "semver";
 
 import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
+import type { StorageEngineElasticsearch } from "../../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import * as kerror from "../../../kerror";
 import didYouMean from "../../../util/didYouMean";
 import extractFields from "../../../util/extractFields";
@@ -106,20 +111,23 @@ export class ES7 {
   public _scope: storeScopeEnum;
   public _indexPrefix: string;
   public _esWrapper!: ESWrapper;
-  public _esVersion: any;
+  public _esVersion: ElasticsearchVersionInfo | null;
   public _translator: QueryTranslator;
   public searchBodyKeys: string[];
   public scriptKeys: string[];
   public scriptAllowedArgs: string[];
   public maxScrollDuration: number;
   public scrollTTL: number;
-  public _config: any;
+  public _config: StorageEngineElasticsearch;
 
   private readonly logger = global.kuzzle.log.child(
     "service:storage:elasticsearch:7",
   );
 
-  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
+  constructor(
+    config: StorageEngineElasticsearch,
+    scope = storeScopeEnum.PUBLIC,
+  ) {
     this._config = config;
     this._scope = scope;
     this._indexPrefix =
@@ -233,7 +241,7 @@ export class ES7 {
   info() {
     const result: InfoResult = {
       type: "elasticsearch",
-      version: this._esVersion,
+      version: this._esVersion?.number ?? "",
     };
 
     return this._client
@@ -275,8 +283,9 @@ export class ES7 {
     > = {};
     let size = 0;
 
-    for (const [indice, indiceInfo] of Object.entries(body.indices ?? {})) {
-      const infos = indiceInfo as any;
+    for (const [indice, indiceInfo] of Object.entries<JSONObject>(
+      body.indices ?? {},
+    )) {
       // Ignore non-Kuzzle indices
       if (
         !indice.startsWith(PRIVATE_PREFIX) &&
@@ -304,12 +313,12 @@ export class ES7 {
       });
 
       indexStats.collections.push({
-        documentCount: infos.total.docs.count,
+        documentCount: indiceInfo.total.docs.count,
         name: collectionName,
-        size: infos.total.store.size_in_bytes,
+        size: indiceInfo.total.store.size_in_bytes,
       });
-      indexStats.size += infos.total.store.size_in_bytes;
-      size += infos.total.store.size_in_bytes;
+      indexStats.size += indiceInfo.total.store.size_in_bytes;
+      size += indiceInfo.total.store.size_in_bytes;
     }
 
     return {
@@ -330,7 +339,7 @@ export class ES7 {
    */
   async scroll(scrollId: string, { scrollTTL }: { scrollTTL?: string } = {}) {
     const _scrollTTL = scrollTTL || this._config.defaults.scrollTTL;
-    const esRequest: RequestParams.Scroll<Record<string, any>> = {
+    const esRequest: RequestParams.Scroll<JSONObject> = {
       scroll: _scrollTTL,
       scroll_id: scrollId,
     };
@@ -415,7 +424,7 @@ export class ES7 {
       index?: string;
       collection?: string;
       searchBody?: JSONObject;
-      targets?: any[];
+      targets?: ValidatedTarget[];
     } = {},
     {
       from,
@@ -427,7 +436,7 @@ export class ES7 {
       scroll?: string;
     } = {},
   ) {
-    let esIndexes: any;
+    let esIndexes: string;
 
     if (targets && targets.length > 0) {
       esIndexes = this._targetsToIndexes(targets);
@@ -537,7 +546,15 @@ export class ES7 {
     return aliasToTargets;
   }
 
-  async _formatSearchResult(body: any, searchInfo: any = {}) {
+  async _formatSearchResult(
+    // The ES 7 client does not type its answers.
+    body: JSONObject,
+    searchInfo: {
+      collection?: string;
+      index?: string;
+      targets?: ValidatedTarget[];
+    } = {},
+  ) {
     let aliasToTargets: AliasToTargets = {};
     const aliasCache = new Map<string, string[]>();
 
@@ -602,17 +619,20 @@ export class ES7 {
       const formattedInnerHits: JSONObject = {};
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
-          (innerHit as any).hits.hits,
+          innerHit.hits.hits,
           formatHit,
         );
       }
       return formattedInnerHits;
     }
 
-    const hits = await Bluebird.map(body.hits.hits, async (hit: any) => ({
-      inner_hits: await formatInnerHits(hit.inner_hits),
-      ...(await formatHit(hit)),
-    }));
+    const hits = await Bluebird.map(
+      body.hits.hits,
+      async (hit: JSONObject) => ({
+        inner_hits: await formatInnerHits(hit.inner_hits),
+        ...(await formatHit(hit)),
+      }),
+    );
 
     return {
       aggregations: body.aggregations,
@@ -1205,7 +1225,7 @@ export class ES7 {
     index: string,
     collection: string,
     id: string,
-    fields: string,
+    fields: string[],
     {
       refresh,
       userId = null,
@@ -1358,7 +1378,7 @@ export class ES7 {
 
     const flatChanges = extractFields(changes, { alsoExtractValues: true });
 
-    for (const { key, value } of flatChanges as any) {
+    for (const { key, value } of flatChanges) {
       script.source += `ctx._source.${key} = params['${key}'];`;
       script.params[key] = value;
     }
@@ -1415,7 +1435,7 @@ export class ES7 {
     index: string,
     collection: string,
     query: JSONObject,
-    callback: any,
+    callback: (hits: JSONObject[]) => unknown,
     {
       size = 10,
       scrollTTl = "5s",
@@ -1423,7 +1443,7 @@ export class ES7 {
       size?: number;
       scrollTTl?: string;
     } = {},
-  ): Promise<any> {
+  ): Promise<unknown[]> {
     const esRequest: RequestParams.Search = {
       body: this._sanitizeSearchBody({ query }),
       from: 0,
@@ -1437,13 +1457,13 @@ export class ES7 {
     }
 
     const client = this._client;
-    let results: JSONObject[] = [];
+    let results: unknown[] = [];
 
     let processed = 0;
     let scrollId: string | undefined;
 
     try {
-      results = await new Bluebird<JSONObject[]>((resolve, reject) => {
+      results = await new Bluebird<unknown[]>((resolve, reject) => {
         this._client.search(
           esRequest,
           async function getMoreUntilDone(
@@ -1547,7 +1567,7 @@ export class ES7 {
     {
       mappings = {},
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
+    }: { mappings?: TypeMapping; settings?: JSONObject } = {},
   ) {
     this._assertValidIndexAndCollection(index, collection);
 
@@ -1716,7 +1736,7 @@ export class ES7 {
     }: {
       mappings?: TypeMapping;
       reindexCollection?: boolean;
-      settings?: Record<string, any>;
+      settings?: JSONObject;
     } = {},
   ) {
     const esRequest = {
@@ -1828,7 +1848,7 @@ export class ES7 {
     collection: string,
     mappings: TypeMapping = {},
   ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
-    const esRequest: RequestParams.IndicesPutMapping<Record<string, any>> = {
+    const esRequest: RequestParams.IndicesPutMapping<JSONObject> = {
       body: {},
       index: this._getAlias(index, collection),
     };
@@ -1992,7 +2012,7 @@ export class ES7 {
 
     this._setLastActionToKuzzleMeta(esRequest, alias, kuzzleMeta);
 
-    let response: Record<string, any>;
+    let response: ApiResponse<JSONObject>;
 
     try {
       response = await this._client.bulk(esRequest);
@@ -2229,7 +2249,7 @@ export class ES7 {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
-    const deleted = new Set();
+    const deleted = new Set<string>();
 
     try {
       const body = await this._catAliases();
@@ -2296,7 +2316,7 @@ export class ES7 {
       index: this._getAlias(index, collection),
     };
 
-    let _shards: any;
+    let _shards: ShardStatistics;
 
     try {
       ({
@@ -2444,7 +2464,7 @@ export class ES7 {
   async mCreate(
     index: string,
     collection: string,
-    documents: JSON[],
+    documents: JSONObject[],
     {
       refresh,
       timeout,
@@ -3312,7 +3332,7 @@ export class ES7 {
    */
   async _getSettings(
     esRequest: RequestParams.IndicesGetSettings,
-  ): Promise<any> {
+  ): Promise<JSONObject> {
     const response = await this._client.indices.getSettings(esRequest);
     const index = esRequest.index as string;
 
@@ -3594,9 +3614,7 @@ export class ES7 {
    *
    * @returns {Promise.<Array>} resolve to an array of documents
    */
-  async _getAllDocumentsFromQuery(
-    esRequest: RequestParams.Search<Record<string, any>>,
-  ) {
+  async _getAllDocumentsFromQuery(esRequest: RequestParams.Search<JSONObject>) {
     let {
       body: { hits, _scroll_id },
     } = await this._client.search(esRequest);

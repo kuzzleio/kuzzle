@@ -45,6 +45,12 @@ export type StorageEngineElasticsearch = {
    */
   commonMapping: {
     /**
+     * Collection metadata applied to a new collection whose mappings carry
+     * none of their own. Not in the defaults.
+     */
+    _meta?: Record<string, unknown>;
+
+    /**
      * @default "false"
      */
     dynamic: "true" | "false" | "strict";

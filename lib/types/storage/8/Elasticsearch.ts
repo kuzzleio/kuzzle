@@ -19,16 +19,17 @@ export type KUpdateResponse = {
   _version: number;
 };
 
+/** `size` is in bytes: `store.size_in_bytes`, never the human-readable form. */
 export type KStatsIndexesCollection = {
   documentCount: number;
   name: string;
-  size: estypes.ByteSize;
+  size: number;
 };
 
 export type KStatsIndex = {
   collections: KStatsIndexesCollection[];
   name: string;
-  size: estypes.ByteSize;
+  size: number;
 };
 
 export type KStatsIndexes = {
@@ -37,7 +38,7 @@ export type KStatsIndexes = {
 
 export type KStats = {
   indexes: KStatsIndex[];
-  size: estypes.ByteSize;
+  size: number;
 };
 
 // Kuzzle's own `JSONObject` (ADR-0002 step 02, TD-10), re-exported under the

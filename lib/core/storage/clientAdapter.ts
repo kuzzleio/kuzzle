@@ -20,6 +20,7 @@
  */
 
 import type { JSONObject } from "../../types/JSONObject";
+import type { ValidatedTarget } from "../../types/Target";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache, type CollectionLock } from "./indexCache";
@@ -52,7 +53,7 @@ interface LoadMappingsOptions extends WriteScopeOptions {
 
 /** `{ index: { collection: payload } }`, as the fixtures and mappings
  * import payloads are shaped. */
-type ImportPayload = Record<string, Record<string, JSONObject>>;
+type ImportPayload = Record<string, Record<string, JSONObject[]>>;
 
 /** Hoisted out of the signature: an object literal as a default parameter is
  * re-allocated on every call, and this one is only ever read. */
@@ -70,10 +71,8 @@ const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
 class ClientAdapter {
   public es: Elasticsearch;
   /**
-   * The version-specific ES service (ES7 or ES8). Its type is whatever
-   * `Elasticsearch` exposes — which is `any` today, and is tracked there as
-   * TD-13; referencing it rather than re-writing `any` keeps that one hole
-   * counted once, at its source.
+   * The version-specific ES service: `ES7 | ES8`, as `Elasticsearch` declares
+   * it. Each call below type-checks against both.
    */
   public client: Elasticsearch["client"];
   public scope: storeScopeEnum;
@@ -1047,7 +1046,11 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:multiSearch`,
-      (targets: JSONObject[], searchBody: JSONObject, opts: JSONObject) => {
+      (
+        targets: ValidatedTarget[],
+        searchBody: JSONObject,
+        opts: JSONObject,
+      ) => {
         for (const target of targets) {
           for (const collection of target.collections) {
             this.cache.assertCollectionExists(target.index, collection);
@@ -1350,7 +1353,7 @@ class ClientAdapter {
    */
   async loadFixtures(
     fixtures: ImportPayload = {},
-    { refresh = "wait_for" }: { refresh?: string } = {},
+    { refresh = "wait_for" }: { refresh?: boolean | "wait_for" } = {},
   ) {
     if (!isPlainObject(fixtures)) {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");

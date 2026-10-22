@@ -267,7 +267,7 @@ describe("#core/storage/ClientAdapter", () => {
     adapter = new ClientAdapter(storeScopeEnum.PRIVATE);
     await adapter.init();
 
-    client = adapter.client as Recorder;
+    client = adapter.client as unknown as Recorder;
     cache = adapter.cache as unknown as Recorder;
   });
 

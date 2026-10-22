@@ -22,12 +22,17 @@ export function describeInternals(harness: ESHarness) {
    * what states which one.
    */
   const scopes = () => {
-    const publicES = harness.build(storeScopeEnum.PUBLIC);
-    const privateES = harness.build(storeScopeEnum.PRIVATE);
+    // Read as `harness.client` is: the cases arm the stubbed ES client's spies.
+    const publicES: ESHarness["client"] = harness.build(
+      storeScopeEnum.PUBLIC,
+    ).client;
+    const privateES: ESHarness["client"] = harness.build(
+      storeScopeEnum.PRIVATE,
+    ).client;
 
     return {
-      public: publicES.client,
-      private: privateES.client,
+      public: publicES,
+      private: privateES,
     };
   };
 
