@@ -38,17 +38,15 @@ export class BackendStorage extends ApplicationManager {
   get StorageClient(): new (clientConfig?: any) => any {
     const kuzzle = this._kuzzle;
 
-    if (!this._Client) {
-      this._Client = function ESClient(clientConfig: JSONObject = {}) {
-        return Elasticsearch.buildClient(
-          {
-            ...kuzzle.config.services.storageEngine.client,
-            ...clientConfig,
-          },
-          kuzzle.config.services.storageEngine.majorVersion,
-        );
-      } as unknown as BackendStorage["StorageClient"];
-    }
+    this._Client ??= function ESClient(clientConfig: JSONObject = {}) {
+      return Elasticsearch.buildClient(
+        {
+          ...kuzzle.config.services.storageEngine.client,
+          ...clientConfig,
+        },
+        kuzzle.config.services.storageEngine.majorVersion,
+      );
+    } as unknown as BackendStorage["StorageClient"];
 
     return this._Client;
   }

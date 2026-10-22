@@ -444,7 +444,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       (apiKey: JSONObject) => apiKey.fingerprint === fingerprint,
     );
 
-    if (!targetApiKey || targetApiKey._id === null) {
+    if (typeof targetApiKey?._id !== "string") {
       throw securityError.get("invalid");
     }
 

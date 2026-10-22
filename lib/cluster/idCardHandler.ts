@@ -96,7 +96,7 @@ export class ClusterIdCardHandler {
   /**
    * Node instance. Represents the local node.
    */
-  private node: ClusterNode;
+  private readonly node: ClusterNode;
 
   /**
    * Local node ID Card

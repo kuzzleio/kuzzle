@@ -57,7 +57,7 @@ const debug = createDebug("kuzzle:realtime:hotelClerk");
  * according to the notification and notify them.
  */
 export class HotelClerk {
-  private module: RealtimeModule;
+  private readonly module: RealtimeModule;
 
   /**
    * Number of created rooms.

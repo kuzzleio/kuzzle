@@ -264,7 +264,7 @@ class Kuzzle extends KuzzleEventEmitter {
   start(application: unknown, options?: StartOptions): Promise<void>;
   async start(
     application: Plugin & { openApi: OpenApiDefinition },
-    options: StartOptions = { import: {} },
+    options?: StartOptions,
   ): Promise<void> {
     this.registerSignalHandlers();
 
@@ -290,8 +290,8 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.initKuzzleNode();
 
       this.vault = vault.load(
-        options.vaultKey,
-        options.secretsFile,
+        options?.vaultKey,
+        options?.secretsFile,
         this.config.vault?.newAlgorithm,
       );
 
@@ -312,13 +312,13 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.debugger.init();
 
       this.pluginsManager.application = application;
-      const pluginImports = await this.pluginsManager.init(options.plugins);
+      const pluginImports = await this.pluginsManager.init(options?.plugins);
 
-      const imports = _.merge({}, pluginImports, options.import);
+      const imports = _.merge({}, pluginImports, options?.import);
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.loadInitialState(imports, options.support);
+      await this.loadInitialState(imports, options?.support);
 
       await this.ask("core:security:verify");
 
@@ -326,7 +326,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.log.info("[✔] Core components loaded");
 
-      await this.install(options.installations);
+      await this.install(options?.installations);
 
       // `application` is the very wrapper handed to the plugins manager six
       // lines up, so reading the name back off the manager was a round trip

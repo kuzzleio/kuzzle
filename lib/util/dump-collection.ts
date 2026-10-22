@@ -285,7 +285,7 @@ class CSVDumper extends AbstractDumper {
   constructor(
     index: string,
     collection: string,
-    query: JSONObject = {},
+    query: JSONObject,
     writeStream: stream.Writable,
     options: JSONObject,
     protected fields: string[],

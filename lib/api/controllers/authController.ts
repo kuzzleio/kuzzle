@@ -332,7 +332,7 @@ class AuthController extends NativeController {
   }
 
   // Used to send the Token using different ways when in cookieAuth mode. (DRY)
-  async _sendToken(token: Token, request: KuzzleRequest): Promise<SentToken> {
+  _sendToken(token: Token, request: KuzzleRequest): SentToken {
     const tokenResponse: SentToken = {
       _id: token.userId,
       expiresAt: token.expiresAt,
@@ -407,12 +407,11 @@ class AuthController extends NativeController {
     passportRequest.httpVersion = "1.1";
     passportRequest.httpVersionMajor = 1;
     passportRequest.httpVersionMinor = 1;
-    const headers: JSONObject = Object.assign({}, request.input.headers);
+    const headers: JSONObject = { ...request.input.headers };
     passportRequest.headers = headers;
 
     for (const h of Object.keys(headers)) {
-      passportRequest.rawHeaders.push(h);
-      passportRequest.rawHeaders.push(headers[h]);
+      passportRequest.rawHeaders.push(h, headers[h]);
     }
 
     if (!has(globalThis.kuzzle.pluginsManager.strategies, strategy)) {
