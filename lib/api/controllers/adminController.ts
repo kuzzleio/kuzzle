@@ -25,7 +25,7 @@ import { NativeController } from "./baseController";
 import { Mutex } from "../../util/mutex";
 import type { KuzzleRequest } from "../request";
 import type { User } from "../../model/security/user";
-import type { ResetSecurityResult } from "../../types/controllers/adminController.type";
+import type { ResetSecurityResult } from "../../types/controllers/ResetSecurityResult";
 
 /**
  * @class AdminController
