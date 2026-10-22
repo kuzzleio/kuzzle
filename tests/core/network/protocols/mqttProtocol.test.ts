@@ -31,10 +31,16 @@ type AedesHandler = (...args: unknown[]) => void;
 type AedesOnCall = [string, AedesHandler];
 
 vi.mock("aedes", () => ({
-  default: class Aedes {
+  Aedes: class Aedes {
+    constructor(public options: unknown) {}
+
     public authorizePublish: unknown = null;
     public authorizeSubscribe: unknown = null;
     public handle = vi.fn();
+    // aedes 1 starts its broker here; the protocol awaits it before listening.
+    public listen = vi.fn(async () => {
+      expect(net.listen).not.toHaveBeenCalled();
+    });
     // Typed, so that reading `mock.calls` says what a call carries: the specs
     // below pick handlers and published packets out of them.
     public on = vi.fn<(event: string, handler: AedesHandler) => void>();
@@ -120,8 +126,22 @@ describe("MqttProtocol", () => {
       await expect(init()).resolves.toBe(false);
     });
 
-    it("listens on the configured port and answers true", async () => {
+    it("does not start the broker when the protocol is disabled", async () => {
+      entryPoint.config.protocols.mqtt.enabled = false;
+
+      await init();
+
+      expect(protocol.aedes.listen).not.toHaveBeenCalled();
+    });
+
+    it("keeps aedes 0.x's behaviour: no drain timeout", () => {
+      expect(protocol.aedes.options).toEqual({ drainTimeout: 0 });
+    });
+
+    it("starts the broker, then listens on the configured port and answers true", async () => {
       await expect(init()).resolves.toBe(true);
+
+      expect(protocol.aedes.listen).toHaveBeenCalledTimes(1);
 
       expect(net.createServer.mock.calls).toEqual([[protocol.aedes.handle]]);
       expect(net.listen.mock.calls[0][0]).toBe(1883);

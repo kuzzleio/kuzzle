@@ -144,6 +144,7 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 | Raise `engines.node` to what the package really needs: `uuid@13` needs Node ≥ 20.19, and `start-kuzzle-server` (`yargs@18`) needs ≥ 22.12                | Raising `engines` is breaking, ruled out by D-1 | Candidate | `package.json`; TD-84; [step 15 inventory](adr-001/step-15-inventory.md) |
 | `start-kuzzle-server --enable-plugins` does nothing in the published package (`bin/plugins/` is not in `files`): publish the fixtures or drop the option | Dropping a CLI option is a CLI change           | Candidate | TD-84                                                                    |
 | Adopt ioredis 6's connection defaults (RESP3, TCP keep-alive after 30s, exponential reconnection backoff) instead of pinning ioredis 5's                 | Changes Redis wire protocol and retry timing    | Candidate | `lib/service/cache/redis.ts` (`IOREDIS_V5_DEFAULTS`)                     |
+| Adopt aedes 1's default `drainTimeout` (disconnect an MQTT client whose socket stays undrained for 60s), or expose it in `server.protocols.mqtt`         | MQTT clients that are slow to read get dropped  | Candidate | `lib/core/network/protocols/mqttProtocol.ts` (`AEDES_OPTIONS`)           |
 
 ## User documentation
 
