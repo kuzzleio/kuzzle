@@ -28,7 +28,7 @@ import type { JSONObject } from "../../types/JSONObject";
  * for an error built in another realm, which `instanceof` does not, and false
  * for an object that merely has `Error.prototype`. Node deprecates it in
  * favour of `Error.isError`, which needs Node 24 while this package supports
- * `>=20` — hence the NOSONAR. Revisit when the floor moves.
+ * `>=22.12` — hence the NOSONAR. Revisit when the floor reaches Node 24.
  */
 function isError(value: unknown): value is Error {
   return util.types.isNativeError(value); // NOSONAR

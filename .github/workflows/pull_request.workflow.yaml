@@ -127,10 +127,10 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Node version 20
+      - name: Node version 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -297,7 +297,7 @@ jobs:
         # One runner, so no suite dimension: `mocha` left this matrix with the last
         # Mocha spec (step 13, L6h) and its apparatus with L7. ADR-0001's axis 2 is
         # closed — vitest is the unit runner.
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -354,7 +354,7 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
         es-version: [7, 8]
     runs-on: ubuntu-24.04
     steps:
@@ -384,7 +384,7 @@ jobs:
       # variant failing is exactly when the other five results matter most.
       fail-fast: false
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
         es-version: [7, 8]
     steps:
       - name: Checkout project
