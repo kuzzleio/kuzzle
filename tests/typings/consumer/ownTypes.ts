@@ -5,10 +5,15 @@
  */
 
 import type {
+  ImportConfig,
+  InstallationConfig,
   JSONObject,
   KuzzleRequest,
   KuzzleToken,
   KuzzleUser,
+  Plugin,
+  StartOptions,
+  SupportConfig,
   Token,
 } from "kuzzle";
 import type { JSONObject as SdkJSONObject } from "kuzzle-sdk";
@@ -50,3 +55,31 @@ export function tokenAsInterface(request: KuzzleRequest) {
 export function deprecatedConnectionId(token: Token): string | null {
   return token.connectionId;
 }
+
+// TD-05: the shapes `Plugin.imports` and the server's start options are typed
+// with, importable by name.
+export const pluginImports: ImportConfig = {
+  mappings: { nyc: { collections: {} } },
+  onExistingUsers: "skip",
+};
+
+export function importsOf(plugin: Plugin): ImportConfig | undefined {
+  return plugin.imports;
+}
+
+export const fixtures: SupportConfig = {
+  fixtures: {},
+  securities: { profiles: {}, roles: {}, users: {} },
+};
+
+export const installation: InstallationConfig = {
+  description: "seed the catalog",
+  handler: async () => {},
+  id: "seed-catalog",
+};
+
+export const startOptions: StartOptions = {
+  import: pluginImports,
+  installations: [installation],
+  support: fixtures,
+};

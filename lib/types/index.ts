@@ -30,6 +30,7 @@ export * from "./Global";
 export * from "./HttpMessage";
 export * from "./HttpStream";
 export * from "./JSONObject";
+export * from "./Kuzzle";
 export * from "./KuzzleDocument";
 export * from "./OpenApiDefinition";
 export * from "./PasswordPolicy";
