@@ -62,7 +62,14 @@ const INDEXED_ASK_SUFFIXES = {
   updateMapping: "mappings:update",
 } as const;
 
-type StoreAskMethod = (...args: any[]) => Promise<any>;
+/**
+ * `Store` is exported, and v2.56.0 declared each of these methods as taking
+ * and answering `any`. The arguments are `unknown`, which every call that
+ * compiled still satisfies; the answer stays `any`, since any precise type
+ * would break a consumer that reads it without narrowing.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
+type StoreAskMethod = (...args: unknown[]) => Promise<any>;
 
 /**
  * Wrapper around the document store.
@@ -128,21 +135,25 @@ export class Store {
       // `this[method] = ...` cannot be typed without an index signature that
       // would swallow every real member — the trade-off TD-28 settled with
       // `Reflect.set` in `memoryStorageController` and `baseController`.
-      Reflect.set(this, method, (...args: any[]) =>
+      Reflect.set(this, method, (...args: unknown[]) =>
         global.kuzzle.ask(event, this.index, ...args),
       );
     }
 
     // the scroll and multiSearch method are special: they doesn't need an index parameter
     // we keep them for ease of use
-    this.scroll = (scrollId: string, opts: any) =>
+    this.scroll = (scrollId?: unknown, opts?: unknown) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:scroll`,
         scrollId,
         opts,
       );
 
-    this.multiSearch = (targets: any, searchBody: any, opts: any) =>
+    this.multiSearch = (
+      targets?: unknown,
+      searchBody?: unknown,
+      opts?: unknown,
+    ) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:multiSearch`,
         targets,
@@ -187,6 +198,7 @@ export class Store {
   createCollections(
     collections: StoreCollectionsDefinition,
     { indexCacheOnly = false } = {},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ): Promise<any> {
     return promiseAllN(
       Object.entries(collections).map(([collection, config]) => async () => {
