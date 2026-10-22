@@ -622,14 +622,16 @@ export class ES8 {
         return undefined;
       }
 
-      const formattedInnerHits: JSONObject = {};
-      for (const [name, innerHit] of Object.entries(innerHits)) {
-        formattedInnerHits[name] = await Bluebird.map(
-          innerHit.hits.hits,
-          formatHit,
-        );
-      }
-      return formattedInnerHits;
+      const formatted = await Promise.all(
+        Object.entries(innerHits).map(
+          async ([name, innerHit]): Promise<[string, unknown[]]> => [
+            name,
+            await Bluebird.map(innerHit.hits.hits, formatHit),
+          ],
+        ),
+      );
+
+      return Object.fromEntries(formatted);
     }
 
     const hits = await Bluebird.map(body.hits.hits, async (hit) => ({
