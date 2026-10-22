@@ -139,12 +139,11 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 
 ## Runtime, engines and dependencies
 
-| Change in v3                                                                                                                                             | Why it waits                                    | Basis     | Source                                                                   |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --------- | ------------------------------------------------------------------------ |
-| Raise `engines.node` to what the package really needs: `uuid@13` needs Node ≥ 20.19, and `start-kuzzle-server` (`yargs@18`) needs ≥ 22.12                | Raising `engines` is breaking, ruled out by D-1 | Candidate | `package.json`; TD-84; [step 15 inventory](adr-001/step-15-inventory.md) |
-| `start-kuzzle-server --enable-plugins` does nothing in the published package (`bin/plugins/` is not in `files`): publish the fixtures or drop the option | Dropping a CLI option is a CLI change           | Candidate | TD-84                                                                    |
-| Adopt ioredis 6's connection defaults (RESP3, TCP keep-alive after 30s, exponential reconnection backoff) instead of pinning ioredis 5's                 | Changes Redis wire protocol and retry timing    | Candidate | `lib/service/cache/redis.ts` (`IOREDIS_V5_DEFAULTS`)                     |
-| Adopt aedes 1's default `drainTimeout` (disconnect an MQTT client whose socket stays undrained for 60s), or expose it in `server.protocols.mqtt`         | MQTT clients that are slow to read get dropped  | Candidate | `lib/core/network/protocols/mqttProtocol.ts` (`AEDES_OPTIONS`)           |
+| Change in v3                                                                                                                                             | Why it waits                                   | Basis     | Source                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------- | -------------------------------------------------------------- |
+| `start-kuzzle-server --enable-plugins` does nothing in the published package (`bin/plugins/` is not in `files`): publish the fixtures or drop the option | Dropping a CLI option is a CLI change          | Candidate | TD-84                                                          |
+| Adopt ioredis 6's connection defaults (RESP3, TCP keep-alive after 30s, exponential reconnection backoff) instead of pinning ioredis 5's                 | Changes Redis wire protocol and retry timing   | Candidate | `lib/service/cache/redis.ts` (`IOREDIS_V5_DEFAULTS`)           |
+| Adopt aedes 1's default `drainTimeout` (disconnect an MQTT client whose socket stays undrained for 60s), or expose it in `server.protocols.mqtt`         | MQTT clients that are slow to read get dropped | Candidate | `lib/core/network/protocols/mqttProtocol.ts` (`AEDES_OPTIONS`) |
 
 ## User documentation
 
@@ -172,4 +171,5 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 
 - **The CSV array form** (`getArrayOrCsv`) stays the API, with no forced switch in v3: decision 3-B, TD-20 / #2721. `type-debt-register.md` and `lessons.md` still describe #2721 as "scheduled for the next major"; that wording is stale.
 - **TD-77**: the two never-raised `invalid_openapi_schema` codes were removed in v2. Only the validation itself waits for v3 (listed above).
+- **Raising `engines.node`** (TD-84) did not wait for v3: Node 20 support was dropped in a 2.x minor, as Node 18 was in 2.50.0. `engines` is `>=22.12.0`, what `yargs@18` (`start-kuzzle-server`) needs.
 - **TypeScript pinned at 5.4.5** (devDependency): no reason tied to a major is recorded. Lifted in v2: Kuzzle compiles with TypeScript 6.0 since the deps refresh, with no consumer-visible change to the published typings. The published typings are verified on TS 5.0.4 to 7.0.2.

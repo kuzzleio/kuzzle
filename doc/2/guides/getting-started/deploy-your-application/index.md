@@ -126,18 +126,18 @@ This configuration allows to run a Kuzzle application with Node.js alongside Ela
 
 Kuzzle needs compiled dependencies for the cluster and the realtime engine.  
 
-We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
+We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the dependencies and then use the [node:24](https://hub.docker.com/_/node) image (Kuzzle needs Node.js 22.12 or later) to run the application.
 
 Create the `deployment/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
-FROM node:18 as builder
+FROM node:24 AS builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       python \
+       python3 \
        make \
        g++ \
        libzmq3-dev
@@ -149,7 +149,7 @@ WORKDIR /var/app
 RUN  npm ci && npm run build && npm prune --production
 
 # run image
-FROM node:18
+FROM node:24
 
 COPY --from=builder /var/app /var/app
 
