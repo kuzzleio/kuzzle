@@ -53,6 +53,16 @@ export const cluster: IKuzzleConfiguration["cluster"] = {
   syncTimeout: 5000,
 };
 
+// TD-19: the config members v2.56.0 declared `any`, read without narrowing.
+export function untypedSections(config: IKuzzleConfiguration) {
+  const iface: string = config.cluster.interface;
+  const seed: Buffer = config.internal.hash.seed;
+  const routes: Array<{ path: string }> = config.http.routes;
+  const node: string = config.services.storageEngine.client.node;
+
+  return { iface, node, routes, seed };
+}
+
 // T-14: a security section without the deprecated `jwt`.
 export function security(
   section: Omit<SecurityConfiguration, "jwt">,
