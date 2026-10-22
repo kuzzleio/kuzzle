@@ -21,7 +21,7 @@
 import { IncomingMessage } from "node:http";
 import { Socket } from "node:net";
 import { inspect } from "node:util";
-import * as Cookie from "cookie";
+import { stringifySetCookie } from "cookie";
 
 import Bluebird from "bluebird";
 import { isEmpty } from "lodash";
@@ -317,12 +317,14 @@ class AuthController extends NativeController {
     ) {
       request.response.configure({
         headers: {
-          // The empty string, not `null`: `cookie.serialize` stringifies its
+          // The empty string, not `null`: the cookie library stringifies its
           // value, so this header used to read `authToken=null`.
-          "Set-Cookie": Cookie.serialize("authToken", "", {
+          "Set-Cookie": stringifySetCookie({
             httpOnly: true,
+            name: "authToken",
             path: "/",
             sameSite: "strict",
+            value: "",
           }),
         },
       });
@@ -365,11 +367,13 @@ class AuthController extends NativeController {
 
       request.response.configure({
         headers: {
-          "Set-Cookie": Cookie.serialize("authToken", token.jwt, {
+          "Set-Cookie": stringifySetCookie({
             expires: new Date(token.expiresAt),
             httpOnly: true,
+            name: "authToken",
             path: "/",
             sameSite: "strict",
+            value: token.jwt,
           }),
         },
       });
