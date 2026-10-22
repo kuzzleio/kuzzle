@@ -48,6 +48,24 @@ type DynamicCommand = (...args: unknown[]) => Promise<unknown>;
 type RedisServiceConfig =
   InternalCacheConfiguration | PublicCacheRedisConfiguration;
 
+/**
+ * ioredis 6 changed three connection defaults. Kuzzle 2 pins them back to
+ * what ioredis 5 used, so upgrading the library changes nothing on the wire
+ * or in how a lost connection is retried. Anything set in `.kuzzlerc` (or
+ * from code) still wins: these are only the fallbacks.
+ *
+ * - `protocol`: ioredis 6 speaks RESP3 by default; RESP2 is what Kuzzle has
+ *   always used, and what Redis servers older than 6 only understand.
+ * - `keepAlive`: ioredis 6 enables TCP keep-alive probes after 30s.
+ * - `retryStrategy`: ioredis 6 uses an exponential backoff capped at 5s,
+ *   plus jitter; ioredis 5 waited 50ms more per attempt, capped at 2s.
+ */
+const IOREDIS_V5_DEFAULTS = {
+  keepAlive: 0,
+  protocol: 2,
+  retryStrategy: (times: number): number => Math.min(times * 50, 2000),
+} as const;
+
 interface RedisInfo {
   memoryPeak: string;
   memoryUsed: string;
@@ -127,7 +145,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     const client = config.nodes
       ? this._buildClusterClient({
           ...config.clusterOptions,
-          redisOptions: config.options,
+          redisOptions: { ...IOREDIS_V5_DEFAULTS, ...config.options },
         })
       : this._buildClient(config.options ?? {});
 
@@ -329,7 +347,11 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   }
 
   private _buildClient(options: Record<string, unknown>): IORedis {
-    return new IORedis({ ...this._config.node, ...options });
+    return new IORedis({
+      ...IOREDIS_V5_DEFAULTS,
+      ...this._config.node,
+      ...options,
+    });
   }
 
   private _buildClusterClient(options: Record<string, unknown>): Cluster {
