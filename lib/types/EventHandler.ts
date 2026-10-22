@@ -34,6 +34,7 @@ export type EventDefinition = {
   /**
    * Arguments of the event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   args: any[];
 };
 
@@ -52,11 +53,13 @@ export type AskEventDefinition = {
   /**
    * Payload of the event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   payload: any;
 
   /**
    * Result of the event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   result: any;
 };
 
@@ -95,6 +98,7 @@ export type RegisteredPipeHandler<
  */
 export type ClusterEventHandler<
   TEventDefinition extends EventDefinition = EventDefinition,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
 > = (...args: TEventDefinition["args"]) => any;
 
 /**
@@ -103,6 +107,7 @@ export type ClusterEventHandler<
 export type AskEventHandler<
   TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
 > = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ...args: [payload?: TAskEventDefinition["payload"], ...rest: any[]]
 ) => Promise<TAskEventDefinition["result"]> | TAskEventDefinition["result"];
 
@@ -112,10 +117,12 @@ export type AskEventHandler<
 export type CallEventHandler<
   TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
 > = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ...args: [payload?: TAskEventDefinition["payload"], ...rest: any[]]
 ) => TAskEventDefinition["result"];
 
 /**
  * @deprecated Use HookEventHandler, PipeEventHandler or ClusterEventHandler
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
 export type EventHandler = (...payload: any) => any;

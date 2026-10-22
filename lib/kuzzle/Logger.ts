@@ -33,7 +33,7 @@ export class Logger extends KuzzleLogger {
    * Shared pino instance to avoid spawning a transport worker for every
    * Logger instance (pino.transport adds a process "exit" listener).
    */
-  private static basePino: any;
+  private static basePino: KuzzleLogger["pino"] | undefined;
 
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
@@ -76,9 +76,10 @@ export class Logger extends KuzzleLogger {
       return mergingObject;
     };
 
-    const hasSharedPino = Logger.basePino !== undefined;
+    const sharedPino = Logger.basePino;
+    const hasSharedPino = sharedPino !== undefined;
 
-    let loggerConfig: any;
+    let loggerConfig: ConstructorParameters<typeof KuzzleLogger>[0];
 
     if (hasSharedPino) {
       loggerConfig = { getMergingObject, skipPinoInstance: true };
@@ -118,10 +119,10 @@ export class Logger extends KuzzleLogger {
 
     super(loggerConfig);
 
-    if (hasSharedPino) {
+    if (sharedPino !== undefined) {
       // Reuse the shared pino instance to avoid stacking process exit listeners
       // added by pino.transport when spawning its worker thread.
-      this.pino = Logger.basePino.child({});
+      this.pino = sharedPino.child({});
     } else {
       Logger.basePino = this.pino;
     }

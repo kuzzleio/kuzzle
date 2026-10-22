@@ -27,6 +27,7 @@ import Bluebird from "bluebird";
 
 import "../types";
 import type { JSONObject } from "../types/JSONObject";
+import type ClusterNode from "./node";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
@@ -95,7 +96,7 @@ export class ClusterIdCardHandler {
   /**
    * Node instance. Represents the local node.
    */
-  private node: any;
+  private node: ClusterNode;
 
   /**
    * Local node ID Card
@@ -127,7 +128,7 @@ export class ClusterIdCardHandler {
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
    */
-  private refreshTimer: any = null;
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Local node ID
@@ -150,7 +151,7 @@ export class ClusterIdCardHandler {
 
   private readonly logger = global.kuzzle.log.child("cluster:id-card");
 
-  constructor(node: any) {
+  constructor(node: ClusterNode) {
     this.node = node;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
@@ -287,7 +288,7 @@ export class ClusterIdCardHandler {
       "message",
       ({ initialized }: { initialized: JSONObject }) => {
         if (initialized) {
-          clearInterval(this.refreshTimer);
+          clearInterval(this.refreshTimer ?? undefined);
           this.refreshTimer = null;
         }
       },

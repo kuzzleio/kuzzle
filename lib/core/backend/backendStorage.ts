@@ -25,8 +25,8 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
-  private _client: any = null;
-  private _Client: (new (clientConfig?: any) => any) | null = null;
+  private _client: ReturnType<typeof Elasticsearch.buildClient> | null = null;
+  private _Client: BackendStorage["StorageClient"] | null = null;
 
   /**
    * Storage client constructor.
@@ -34,6 +34,7 @@ export class BackendStorage extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get StorageClient(): new (clientConfig?: any) => any {
     const kuzzle = this._kuzzle;
 
@@ -46,7 +47,7 @@ export class BackendStorage extends ApplicationManager {
           },
           kuzzle.config.services.storageEngine.majorVersion,
         );
-      } as unknown as new (clientConfig?: any) => any;
+      } as unknown as BackendStorage["StorageClient"];
     }
 
     return this._Client;
@@ -56,6 +57,7 @@ export class BackendStorage extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get storageClient(): any {
     const kuzzle = this._kuzzle;
 

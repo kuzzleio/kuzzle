@@ -27,7 +27,7 @@ import { Token } from "../../model/security/token";
 interface ISortedArray<T> {
   array: T[];
 
-  search(item: any): number;
+  search(item: Partial<T>): number;
 
   insert(item: T): void;
 }

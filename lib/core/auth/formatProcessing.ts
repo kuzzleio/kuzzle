@@ -35,7 +35,7 @@ export default {
   serializeProfile(profile: Profile): Serialized<Profile> {
     const { _id, ..._source } = profile;
 
-    return { _id, _source: _source as Record<string, any> };
+    return { _id, _source };
   },
 
   /**
@@ -47,7 +47,7 @@ export default {
   serializeRole(role: Role & { restrictedTo?: unknown }): Serialized<Role> {
     const { _id, ..._source } = role;
 
-    return { _id, _source: _source as Record<string, any> };
+    return { _id, _source };
   },
 
   /**
@@ -59,6 +59,6 @@ export default {
   serializeUser(user: User): Serialized<User> {
     const { _id, ..._source } = user;
 
-    return { _id, _source: _source as Record<string, any> };
+    return { _id, _source };
   },
 };

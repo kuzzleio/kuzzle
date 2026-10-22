@@ -177,3 +177,20 @@ export function untypedRequest(data: unknown, options: unknown) {
 
   return { answered, context, header, ids, misc, proxied, result, tags };
 }
+
+// TD-02: untyped values handed to the application's logger, config and
+// pipes, and the members still declared `any` read without narrowing.
+export function untypedApplication(raw: unknown) {
+  app.log.info(raw);
+  app.log.error(raw);
+  app.config.set("limits.documentsFetchCount", raw);
+  app.pipe.register("custom:event", async (payload: JSONObject) => payload, {
+    dynamic: true,
+    name: "custom",
+  });
+
+  const client: { ping(): Promise<boolean> } = app.storage.storageClient;
+  const appError: Error = app.kerror.get("some_error", raw);
+
+  return { appError, client };
+}

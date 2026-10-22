@@ -23,6 +23,7 @@ import type Kuzzle from "../../kuzzle/kuzzle";
 import type { Backend } from "./index";
 
 export class ApplicationManager {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   protected _application: any;
 
   constructor(application: Backend) {

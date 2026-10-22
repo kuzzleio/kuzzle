@@ -429,7 +429,7 @@ export class TokenRepository extends ObjectRepository<Token> {
   async _verifyApiKey(decoded: JSONObject, token: string) {
     const fingerprint = sha256(token);
 
-    const userApiKeys: any = await ApiKey.search(
+    const userApiKeys = await ApiKey.search(
       {
         query: {
           term: {
@@ -444,11 +444,11 @@ export class TokenRepository extends ObjectRepository<Token> {
       (apiKey: JSONObject) => apiKey.fingerprint === fingerprint,
     );
 
-    if (!targetApiKey) {
+    if (!targetApiKey || targetApiKey._id === null) {
       throw securityError.get("invalid");
     }
 
-    const apiKey: any = await ApiKey.load(decoded._id, targetApiKey._id);
+    const apiKey = await ApiKey.load(decoded._id, targetApiKey._id);
 
     const userToken = new Token({
       _id: `${decoded._id}#${token}`,

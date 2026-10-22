@@ -37,6 +37,7 @@ import { ConnectionRooms } from "./connectionRooms";
 import { Room } from "./room";
 import { Subscription } from "./subscription";
 import type { User } from "../../model/security/user";
+import type RealtimeModule from "./index";
 
 const realtimeError = kerror.wrap("core", "realtime");
 
@@ -56,7 +57,7 @@ const debug = createDebug("kuzzle:realtime:hotelClerk");
  * according to the notification and notify them.
  */
 export class HotelClerk {
-  private module: any;
+  private module: RealtimeModule;
 
   /**
    * Number of created rooms.
@@ -100,7 +101,7 @@ export class HotelClerk {
 
   private readonly logger = global.kuzzle.log.child("core:realtime:hotelClerk");
 
-  constructor(realtimeModule: any) {
+  constructor(realtimeModule: RealtimeModule) {
     this.module = realtimeModule;
 
     this.koncorde = global.kuzzle.koncorde;

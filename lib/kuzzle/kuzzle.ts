@@ -39,6 +39,8 @@ import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
 import EntryPoint from "../core/network/entryPoint";
 import Router from "../core/network/router";
 import PluginsManager from "../core/plugin/pluginsManager";
+import type Plugin from "../core/plugin/plugin";
+import type { OpenApiDefinition } from "../types/OpenApiDefinition";
 import RealtimeModule from "../core/realtime";
 import SecurityModule from "../core/security";
 import Statistics from "../core/statistics/statistics";
@@ -147,6 +149,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public vault: any;
 
   /**
@@ -253,8 +256,16 @@ class Kuzzle extends KuzzleEventEmitter {
    * @param {Object} - Additional options (import, installations, plugins, secretsFile, support, vaultKey)
    *
    * @this {Kuzzle}
+   *
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies. `Backend.start()` is the one caller, and
+   * it hands the application wrapper the implementation reads.
    */
-  async start(application: any, options: StartOptions = { import: {} }) {
+  start(application: unknown, options?: StartOptions): Promise<void>;
+  async start(
+    application: Plugin & { openApi: OpenApiDefinition },
+    options: StartOptions = { import: {} },
+  ): Promise<void> {
     this.registerSignalHandlers();
 
     try {
@@ -480,17 +491,17 @@ class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask(event: string, ...args: [payload?: any, ...rest: any]) {
+  async ask(event: string, ...args: [payload?: unknown, ...rest: unknown[]]) {
     return super.ask(event, ...args);
   }
 
   // For testing purpose
-  emit(event: string, ...args: any[]) {
+  emit(event: string, ...args: unknown[]) {
     return super.emit(event, ...args);
   }
 
   // For testing purpose
-  async pipe(event: string, ...args: any[]) {
+  async pipe(event: string, ...args: unknown[]) {
     return super.pipe(event, ...args);
   }
 
@@ -878,7 +889,7 @@ class Kuzzle extends KuzzleEventEmitter {
     return this.dumpGenerator.dump(suffix);
   }
 
-  hash(input: any) {
+  hash(input: unknown) {
     let inString;
 
     switch (typeof input) {

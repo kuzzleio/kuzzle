@@ -26,13 +26,14 @@ import { Mutex } from "../../util/mutex";
 import type { KuzzleRequest } from "../request";
 import type { User } from "../../model/security/user";
 import type { ResetSecurityResult } from "../../types/controllers/ResetSecurityResult";
+import type { KuzzleLogger } from "kuzzle-logger";
 
 /**
  * @class AdminController
  */
 class AdminController extends NativeController {
   protected shuttingDown: boolean;
-  protected logger: any;
+  protected logger: KuzzleLogger;
 
   constructor() {
     super([
@@ -216,7 +217,7 @@ class AdminController extends NativeController {
 
   _waitForAction(
     waitForRefresh: string,
-    promise: Promise<any>,
+    promise: Promise<unknown>,
   ): Promise<{ acknowledge: boolean }> {
     const result = { acknowledge: true };
 
