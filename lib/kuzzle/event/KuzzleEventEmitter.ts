@@ -176,7 +176,7 @@ class KuzzleEventEmitter extends EventEmitter {
    *
    * @warning Critical section of code
    */
-  emit(event: string | symbol, ...args: any[]): boolean {
+  emit(event: string | symbol, ...args: unknown[]): boolean {
     const events = getWildcardEvents(event as string);
     debug('Triggering event "%s" with data: %o', event, args);
 
@@ -271,7 +271,7 @@ class KuzzleEventEmitter extends EventEmitter {
     TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
   >(
     event: TAskEventDefinition["name"],
-    ...args: [payload?: TAskEventDefinition["payload"], ...rest: any]
+    ...args: [payload?: TAskEventDefinition["payload"], ...rest: unknown[]]
   ): Promise<TAskEventDefinition["result"]> {
     debug('Triggering ask "%s" with payload: %o', event, args);
 
@@ -306,7 +306,7 @@ class KuzzleEventEmitter extends EventEmitter {
    */
   call<TAskEventDefinition extends AskEventDefinition = AskEventDefinition>(
     event: TAskEventDefinition["name"],
-    ...args: [payload?: TAskEventDefinition["payload"], ...rest: any]
+    ...args: [payload?: TAskEventDefinition["payload"], ...rest: unknown[]]
   ): TAskEventDefinition["result"] {
     debug('Triggering callback "%s" with payload: %o', event, args);
 
@@ -449,7 +449,7 @@ async function pipeCallback(
   const corePipes = this.corePipes.get(this.targetEvent);
 
   if (corePipes) {
-    await Bluebird.map(corePipes, (fn: any) => fn(...updated));
+    await Bluebird.map(corePipes, (fn) => fn(...updated));
   }
 
   for (const element of this.events) {

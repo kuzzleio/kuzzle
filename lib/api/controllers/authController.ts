@@ -43,6 +43,24 @@ import type { GetCurrentUserResponse } from "../../types/controllers/GetCurrentU
 const securityError = kerror.wrap("security", "token");
 
 /**
+ * The token as the API answers it. Cookie authentication keeps `jwt` out of
+ * the body.
+ */
+type SentToken = {
+  _id: Token["userId"];
+  expiresAt: Token["expiresAt"];
+  jwt?: Token["jwt"];
+  ttl: Token["ttl"];
+};
+
+/** The pseudo HTTP request handed to Passport for a login. */
+type PassportRequest = IncomingMessage & {
+  body: KuzzleRequest["input"]["body"];
+  original: KuzzleRequest;
+  query: JSONObject;
+};
+
+/**
  * A user that has been stored, and so has a kuid. `User._id` is null until
  * then (TD-62); a user the funnel attached to a request has been loaded or is
  * the anonymous one, and every API key and token this controller handles is
@@ -92,7 +110,7 @@ class AuthController extends NativeController {
    *
    * @returns {Promise}
    */
-  async init(): Promise<any> {
+  async init(): Promise<void> {
     const anonymous = await globalThis.kuzzle.ask(
       "core:security:user:anonymous:get",
     );
@@ -314,8 +332,8 @@ class AuthController extends NativeController {
   }
 
   // Used to send the Token using different ways when in cookieAuth mode. (DRY)
-  async _sendToken(token: Token, request: KuzzleRequest): Promise<Token> {
-    const tokenResponse: any = {
+  _sendToken(token: Token, request: KuzzleRequest): SentToken {
+    const tokenResponse: SentToken = {
       _id: token.userId,
       expiresAt: token.expiresAt,
       jwt: token.jwt,
@@ -368,12 +386,19 @@ class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<Token>}
    */
-  async login(request: KuzzleRequest): Promise<Token> {
+  async login(request: KuzzleRequest): Promise<unknown> {
     const strategy = request.getString("strategy");
     // An unconnected socket rather than `null`: `IncomingMessage` only reads
     // `readableHighWaterMark` off it, `net.Socket` opens no descriptor until
     // it is connected, and the parameter is not optional.
-    const passportRequest: any = new IncomingMessage(new Socket());
+    const passportRequest: PassportRequest = Object.assign(
+      new IncomingMessage(new Socket()),
+      {
+        body: request.input.body,
+        original: request,
+        query: request.input.args,
+      },
+    );
 
     // Even in http, the url and the method are not pushed back to the request object
     // set some arbitrary values to get a pseudo-valid object.
@@ -382,16 +407,12 @@ class AuthController extends NativeController {
     passportRequest.httpVersion = "1.1";
     passportRequest.httpVersionMajor = 1;
     passportRequest.httpVersionMinor = 1;
-    passportRequest.body = request.input.body;
-    passportRequest.query = request.input.args;
-    passportRequest.headers = Object.assign({}, request.input.headers);
+    const headers: JSONObject = { ...request.input.headers };
+    passportRequest.headers = headers;
 
-    for (const h of Object.keys(passportRequest.headers)) {
-      passportRequest.rawHeaders.push(h);
-      passportRequest.rawHeaders.push(passportRequest.headers[h]);
+    for (const h of Object.keys(headers)) {
+      passportRequest.rawHeaders.push(h, headers[h]);
     }
-
-    passportRequest.original = request;
 
     if (!has(globalThis.kuzzle.pluginsManager.strategies, strategy)) {
       throw kerror.get("security", "credentials", "unknown_strategy", strategy);
@@ -502,7 +523,9 @@ class AuthController extends NativeController {
 
     const strategies = await Bluebird.all(promises);
 
-    formattedUser.strategies = strategies.filter((item) => item !== null);
+    formattedUser.strategies = strategies.filter(
+      (item): item is string => item !== null,
+    );
 
     return formattedUser;
   }

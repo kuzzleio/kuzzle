@@ -39,6 +39,8 @@ import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
 import EntryPoint from "../core/network/entryPoint";
 import Router from "../core/network/router";
 import PluginsManager from "../core/plugin/pluginsManager";
+import type Plugin from "../core/plugin/plugin";
+import type { OpenApiDefinition } from "../types/OpenApiDefinition";
 import RealtimeModule from "../core/realtime";
 import SecurityModule from "../core/security";
 import Statistics from "../core/statistics/statistics";
@@ -147,6 +149,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public vault: any;
 
   /**
@@ -253,8 +256,16 @@ class Kuzzle extends KuzzleEventEmitter {
    * @param {Object} - Additional options (import, installations, plugins, secretsFile, support, vaultKey)
    *
    * @this {Kuzzle}
+   *
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies. `Backend.start()` is the one caller, and
+   * it hands the application wrapper the implementation reads.
    */
-  async start(application: any, options: StartOptions = { import: {} }) {
+  start(application: unknown, options?: StartOptions): Promise<void>;
+  async start(
+    application: Plugin & { openApi: OpenApiDefinition },
+    options?: StartOptions,
+  ): Promise<void> {
     this.registerSignalHandlers();
 
     try {
@@ -279,8 +290,8 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.initKuzzleNode();
 
       this.vault = vault.load(
-        options.vaultKey,
-        options.secretsFile,
+        options?.vaultKey,
+        options?.secretsFile,
         this.config.vault?.newAlgorithm,
       );
 
@@ -301,13 +312,13 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.debugger.init();
 
       this.pluginsManager.application = application;
-      const pluginImports = await this.pluginsManager.init(options.plugins);
+      const pluginImports = await this.pluginsManager.init(options?.plugins);
 
-      const imports = _.merge({}, pluginImports, options.import);
+      const imports = _.merge({}, pluginImports, options?.import);
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.loadInitialState(imports, options.support);
+      await this.loadInitialState(imports, options?.support);
 
       await this.ask("core:security:verify");
 
@@ -315,7 +326,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.log.info("[✔] Core components loaded");
 
-      await this.install(options.installations);
+      await this.install(options?.installations);
 
       // `application` is the very wrapper handed to the plugins manager six
       // lines up, so reading the name back off the manager was a round trip
@@ -480,17 +491,17 @@ class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask(event: string, ...args: [payload?: any, ...rest: any]) {
+  async ask(event: string, ...args: [payload?: unknown, ...rest: unknown[]]) {
     return super.ask(event, ...args);
   }
 
   // For testing purpose
-  emit(event: string, ...args: any[]) {
+  emit(event: string, ...args: unknown[]) {
     return super.emit(event, ...args);
   }
 
   // For testing purpose
-  async pipe(event: string, ...args: any[]) {
+  async pipe(event: string, ...args: unknown[]) {
     return super.pipe(event, ...args);
   }
 
@@ -878,7 +889,7 @@ class Kuzzle extends KuzzleEventEmitter {
     return this.dumpGenerator.dump(suffix);
   }
 
-  hash(input: any) {
+  hash(input: unknown) {
     let inString;
 
     switch (typeof input) {

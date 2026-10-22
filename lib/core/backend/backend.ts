@@ -73,6 +73,10 @@ Reflect.defineProperty(global, "app", {
 });
 
 export class Backend {
+  // `Kuzzle` would reject `start()`'s options: the protected
+  // `_installationsWaitingList` declares `() => void` handlers, where
+  // `StartOptions` (and `install()`) take `() => Promise<void>`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   private _kuzzle: any;
   private _name: string;
   /**
@@ -126,6 +130,7 @@ export class Backend {
   /**
    * Errors manager
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public kerror: any;
 
   /**

@@ -80,7 +80,9 @@ export class BaseController {
 }
 
 export class NativeController extends BaseController {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   protected ask: (event: string, ...args: any[]) => Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   protected pipe: (event: string, ...args: any[]) => Promise<any>;
 
   constructor(actions: string[] = []) {

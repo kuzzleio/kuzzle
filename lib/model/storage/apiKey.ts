@@ -50,7 +50,7 @@ class ApiKey extends BaseModel {
   declare userId: string;
   declare description: string;
   declare expiresAt: number;
-  declare ttl: number | string;
+  declare ttl: number;
   declare token: string;
   declare fingerprint: string;
 

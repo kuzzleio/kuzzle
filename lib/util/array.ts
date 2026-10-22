@@ -29,18 +29,24 @@
  * - [0] Both value are equals
  * @returns {number} The index of the value, or -1 if not found
  */
-export function binarySearch(array: any[], predicate: (value: any) => number) {
+export function binarySearch<T>(
+  array: readonly T[],
+  predicate: (value: T) => number,
+): number {
   let lowerBound = 0;
   let upperBound = array.length - 1;
-
-  if (array.length === 1) {
-    return predicate(array[0]) === 0 ? 0 : -1;
-  }
 
   while (lowerBound <= upperBound) {
     // 5x faster than Math.floor((lowerBound + upperBound) / 2)
     const index = (lowerBound + upperBound) >> 1;
-    const comparison = predicate(array[index]);
+    const value = array[index];
+
+    // Only a hole or an `undefined` element: the index is within bounds.
+    if (value === undefined) {
+      return -1;
+    }
+
+    const comparison = predicate(value);
     if (comparison < 0) {
       upperBound = index - 1;
     } else if (comparison > 0) {

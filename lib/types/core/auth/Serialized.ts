@@ -1,3 +1,5 @@
+import type { JSONObject } from "../../JSONObject";
+
 /**
  * What `formatProcessing` can serialize: anything carrying an id. The id is
  * nullable because the security models are — they carry `null` until they have
@@ -8,5 +10,5 @@ export type Serializable = { _id: string | null };
 
 export type Serialized<T extends Serializable> = {
   _id: T["_id"];
-  _source: Record<string, any>;
+  _source: JSONObject;
 };

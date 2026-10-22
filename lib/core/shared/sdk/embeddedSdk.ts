@@ -19,7 +19,12 @@
  * limitations under the License.
  */
 
-import type { RealtimeController, ScopeOption, UserOption } from "kuzzle-sdk";
+import type {
+  KuzzleAbstractProtocol,
+  RealtimeController,
+  ScopeOption,
+  UserOption,
+} from "kuzzle-sdk";
 import type { BaseRequest, Notification, ResponsePayload } from "kuzzle-types";
 import type { JSONObject } from "../../../types/JSONObject";
 import { Kuzzle } from "kuzzle-sdk";
@@ -120,7 +125,9 @@ export class EmbeddedSDK extends Kuzzle {
 
   constructor() {
     // FunnelProtocol is not technically a valid SDK protocol
-    super(new FunnelProtocol() as any, { autoResubscribe: false });
+    super(new FunnelProtocol() as unknown as KuzzleAbstractProtocol, {
+      autoResubscribe: false,
+    });
   }
 
   /**
