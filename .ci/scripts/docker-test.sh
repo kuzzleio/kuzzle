@@ -66,15 +66,21 @@ run_functional() {
       ;;
   esac
 
-  trap 'docker compose -f "$yml_file" logs --tail=200' ERR
+  # `node_modules` lives in a named volume here too, NOT in the bind-mounted
+  # checkout — same reason as `run_unit` (#2790). The cluster containers must
+  # all see the installed tree, so the volume is declared for every Kuzzle
+  # service in an overlay rather than passed to one `run`.
+  local compose=(docker compose -f "$yml_file" -f .ci/docker-test-node-modules.yml)
 
-  docker compose -f "$yml_file" down -v
+  trap '"${compose[@]}" logs --tail=200' ERR
+
+  "${compose[@]}" down -v
 
   echo "Installing dependencies..."
-  docker compose -f "$yml_file" run --rm --no-deps kuzzle_node_1 npm ci
+  "${compose[@]}" run --rm --no-deps kuzzle_node_1 npm ci
 
   echo "Starting Kuzzle cluster..."
-  docker compose -f "$yml_file" up -d
+  "${compose[@]}" up -d
 
   echo "Waiting for the cluster to be reachable..."
   # `bin/wait-kuzzle.ts` is TypeScript and not part of the published build, so
@@ -82,17 +88,17 @@ run_functional() {
   # `start-kuzzle-test.ts`. See docs/adr-001/steps/03-sprint-2-bin.md.
   local wait_kuzzle=(node -r ts-node/register/transpile-only bin/wait-kuzzle.ts)
 
-  docker compose -f "$yml_file" run --rm --no-deps \
+  "${compose[@]}" run --rm --no-deps \
     -e KUZZLE_HOST=kuzzle_node_1 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
-  docker compose -f "$yml_file" run --rm --no-deps \
+  "${compose[@]}" run --rm --no-deps \
     -e KUZZLE_HOST=kuzzle_node_2 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
-  docker compose -f "$yml_file" run --rm --no-deps \
+  "${compose[@]}" run --rm --no-deps \
     -e KUZZLE_HOST=kuzzle_node_3 -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
   # The production-mode node: nginx does not balance over it, so nothing else
   # would wait for it, and features/StackTrace.feature addresses it directly.
-  docker compose -f "$yml_file" run --rm --no-deps \
+  "${compose[@]}" run --rm --no-deps \
     -e KUZZLE_HOST=kuzzle_node_prod -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
-  docker compose -f "$yml_file" run --rm --no-deps \
+  "${compose[@]}" run --rm --no-deps \
     -e KUZZLE_HOST=nginx -e KUZZLE_PORT=7512 kuzzle_node_1 "${wait_kuzzle[@]}"
 
   trap - ERR
@@ -113,13 +119,13 @@ run_functional() {
 
   if [ "${#extra_args[@]}" -gt 0 ]; then
     echo "Running functional tests: ${test_script} -- ${extra_args[*]}"
-    docker compose -f "$yml_file" run --rm --no-deps \
+    "${compose[@]}" run --rm --no-deps \
       -e KUZZLE_HOST=nginx \
       "${node_env_flags[@]}" \
       kuzzle_node_1 npm run "$test_script" -- "${extra_args[@]}"
   else
     echo "Running functional tests: ${test_script}"
-    docker compose -f "$yml_file" run --rm --no-deps \
+    "${compose[@]}" run --rm --no-deps \
       -e KUZZLE_HOST=nginx \
       "${node_env_flags[@]}" \
       kuzzle_node_1 npm run "$test_script"
