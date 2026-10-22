@@ -11,6 +11,7 @@ import type {
   PluginHookDefinition,
   PluginPipeDefinition,
   SecurityConfiguration,
+  Store,
 } from "kuzzle";
 import {
   Backend,
@@ -131,3 +132,13 @@ export const camel: string = Inflector.camelCase(42 as unknown);
 
 // Profile._hash, v2.56.0's `() => boolean`.
 export const unpatched: boolean = Profile._hash();
+
+// TD-11: a `Store`'s answers, read and assigned without narrowing.
+export async function storeAnswers(store: Store, filters: unknown) {
+  const count: number = await store.count("drivers", filters);
+  const found: { hits: Driver[] } = await store.search("drivers", filters);
+  const next: { total: number } = await store.scroll(found, "1m");
+  const created: Driver[] = await store.createCollections({});
+
+  return { count, created, found, next: next.total };
+}
