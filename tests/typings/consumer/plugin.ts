@@ -145,3 +145,65 @@ export class DeclaringPlugin extends Plugin {
     return this.context.accessors.sdk.server.now({});
   }
 }
+
+// TD-12: the context's untyped members, read without narrowing, and replaced
+// the way a plugin's unit tests stub them — with narrower parameters.
+type Mail = { to: string };
+
+class MailRepository {
+  constructor(
+    readonly collection: string,
+    readonly objectConstructor: new () => Mail,
+  ) {}
+  create = async (document: JSONObject) => document;
+  createOrReplace = async (document: JSONObject) => document;
+  delete = async (id: string) => id;
+  get = async (id: string) => id;
+  mGet = async (ids: string[]) => ids;
+  replace = async (document: JSONObject) => document;
+  search = async (query: JSONObject) => query;
+  update = async (document: JSONObject) => document;
+}
+
+export async function untypedContext(context: PluginContext, raw: unknown) {
+  const repository = new context.constructors.Repository("mails", raw);
+  const mail: Mail = await repository.get("id");
+  const found: { total: number } = await repository.search({}, raw);
+  const piped: Mail = await context.accessors.trigger("sent", raw);
+  const client: { ping(): Promise<boolean> } =
+    new context.constructors.ESClient();
+  const notFound: Error = new context.errors.NotFoundError("gone");
+  const wrapped: Error = context.kerror.get("some_error", raw);
+  const valid: boolean = await context.accessors.validation.validate(raw);
+
+  await context.accessors.strategies.add("local", raw);
+  await context.accessors.storage.createCollection("mails", raw);
+  await context.accessors.storage.bootstrap(raw);
+  context.log.info(raw);
+
+  const stubs: PluginContext = {
+    ...context,
+    accessors: {
+      ...context.accessors,
+      storage: {
+        bootstrap: async (collections: JSONObject) => {
+          context.log.debug(collections);
+        },
+        createCollection: async (collection: string, mappings: JSONObject) => {
+          context.log.debug({ collection, mappings });
+        },
+      },
+      strategies: {
+        add: async (name: string, properties: JSONObject) => {
+          context.log.debug({ name, properties });
+        },
+        remove: async () => {},
+      },
+      trigger: async (event: string, payload: Mail) => payload,
+    },
+    constructors: { ...context.constructors, Repository: MailRepository },
+    log: { ...context.log, info: (message: string) => message.length },
+  };
+
+  return { client, found, mail, notFound, piped, stubs, valid, wrapped };
+}
