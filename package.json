@@ -83,7 +83,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "12.5.0",
+    "@cucumber/cucumber": "13.3.0",
     "@types/async": "^3.2.24",
     "@types/cookie": "1.0.0",
     "@types/lodash": "4.17.21",
