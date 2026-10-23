@@ -1,3 +1,28 @@
+## [2.60.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.1...v2.60.0-beta.2) (2026-10-23)
+
+### Features
+
+* require Node.js 22.12, drop Node.js 20 support ([98e74fc](https://github.com/kuzzleio/kuzzle/commit/98e74fcfee800c8d381342198164df3249444782))
+* **types:** export StartOptions, InstallationConfig, ImportConfig, SupportConfig ([2b53683](https://github.com/kuzzleio/kuzzle/commit/2b536832b68bc6a4fc0aa35af5592e0101abb8f9)), closes [#2968](https://github.com/kuzzleio/kuzzle/issues/2968)
+
+### Bug Fixes
+
+* **ci:** docker-test.sh functional installs into a volume, not the checkout ([c12eb62](https://github.com/kuzzleio/kuzzle/commit/c12eb62bc8a7881b04e17348d83c13074ec5e14a)), closes [#2790](https://github.com/kuzzleio/kuzzle/issues/2790) [#2797](https://github.com/kuzzleio/kuzzle/issues/2797) [#2968](https://github.com/kuzzleio/kuzzle/issues/2968)
+* **cluster:** leave the cluster when the handshake lock is lost ([#2894](https://github.com/kuzzleio/kuzzle/issues/2894)) ([a890d16](https://github.com/kuzzleio/kuzzle/commit/a890d162bd8083d97c3bb8ecb5c03714cebcb119))
+* **cluster:** mark the shutdown on a lost handshake lock as not awaited ([#2894](https://github.com/kuzzleio/kuzzle/issues/2894)) ([0bf43c5](https://github.com/kuzzleio/kuzzle/commit/0bf43c5134b639fa016d33e5c629696df54add7b))
+* **core:** a lock taken with no retry is refused at once, and only for itself ([#2894](https://github.com/kuzzleio/kuzzle/issues/2894)) ([bf08076](https://github.com/kuzzleio/kuzzle/commit/bf08076223ed2f5ce43f9ddd00585b1edcb3404a))
+* **core:** a node that exits frees the locks it took with withLock ([#2894](https://github.com/kuzzleio/kuzzle/issues/2894)) ([deee923](https://github.com/kuzzleio/kuzzle/commit/deee92369208488a6321aaec38f6ba2ca1927c7b)), closes [#2933](https://github.com/kuzzleio/kuzzle/issues/2933)
+* **core:** wait for the startup imports run by another node ([#3003](https://github.com/kuzzleio/kuzzle/issues/3003)) ([cfa6682](https://github.com/kuzzleio/kuzzle/commit/cfa668289460d436e7aa1768f55308e759a2e725))
+* **ratchet:** count `any` off the AST instead of grepping lines ([de0d94a](https://github.com/kuzzleio/kuzzle/commit/de0d94ab40df19d8db337a14e3aa7ad530c35f3e)), closes [#2968](https://github.com/kuzzleio/kuzzle/issues/2968)
+* **storage:** check number_of_shards only when it is configured ([#3009](https://github.com/kuzzleio/kuzzle/issues/3009)) ([f0f1236](https://github.com/kuzzleio/kuzzle/commit/f0f12361850a2fc9224844c77f4dc6d14b7f8342))
+* **storage:** drop _kuzzle_keep only after the collection is created ([#3013](https://github.com/kuzzleio/kuzzle/issues/3013)) ([2edaed5](https://github.com/kuzzleio/kuzzle/commit/2edaed5707827481267a8e6cb2d2977ebe63cbf1))
+* **storage:** stop recreating _kuzzle_keep when createCollection drops it ([#3013](https://github.com/kuzzleio/kuzzle/issues/3013)) ([2f62822](https://github.com/kuzzleio/kuzzle/commit/2f6282200ecaaa042a94d2866eaa29064792fee3))
+* **test:** legacy harness unsubscribe rejects on an unknown room ([1087f28](https://github.com/kuzzleio/kuzzle/commit/1087f28d20e022a1b6099655e4af45e824e43609)), closes [#2968](https://github.com/kuzzleio/kuzzle/issues/2968)
+
+### Reverts
+
+* **index:** drop the spelled-out | undefined on IndexController.list ([eca434e](https://github.com/kuzzleio/kuzzle/commit/eca434e73f0e56e576101f8e9f30810304d6315c))
+
 ## [2.60.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.59.0...v2.60.0-beta.1) (2026-10-12)
 
 ### Features
