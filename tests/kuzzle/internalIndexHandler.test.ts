@@ -28,7 +28,7 @@ const mutexes = vi.hoisted(() => {
 /** Every lock taken through `withLock`, and whether it was given back. */
 const locks = vi.hoisted(() => {
   const taken: {
-    config: { retryAttempts?: number } | undefined;
+    config: { retryAttempts?: number; ttl?: number } | undefined;
     released: boolean;
     resource: string;
   }[] = [];
@@ -42,7 +42,7 @@ vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
     async (
       resource: string,
       callback: () => Promise<unknown>,
-      config?: { retryAttempts?: number },
+      config?: { retryAttempts?: number; ttl?: number },
     ) => {
       const lock = { config, released: false, resource };
       locks.taken.push(lock);
@@ -194,7 +194,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
       ]);
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
           released: true,
           resource: "InternalIndexBootstrap",
         },

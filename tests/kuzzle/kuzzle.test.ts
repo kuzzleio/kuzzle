@@ -10,7 +10,11 @@ import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
-import { MutexAcquireError, withLock } from "../../lib/util/distributedLock";
+import {
+  MutexAcquireError,
+  MutexLockLostError,
+  withLock,
+} from "../../lib/util/distributedLock";
 import { MutexStub, releaseAllLocksBeforeExit } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
@@ -41,7 +45,9 @@ vi.mock("../../lib/util/mutex", async () => ({
 /**
  * Every lock taken through `withLock`, in order, with what happened to it.
  * `refused` lists the resources another node holds: those reject with the
- * real `MutexAcquireError`, as `withLock` does.
+ * real `MutexAcquireError`, as `withLock` does. `lost` lists the resources
+ * whose lock is lost once its callback has run: those reject with the real
+ * `MutexLockLostError`.
  */
 const locks = vi.hoisted(() => {
   const taken: {
@@ -49,7 +55,12 @@ const locks = vi.hoisted(() => {
     resource: string;
   }[] = [];
 
-  return { events: [] as string[], refused: new Set<string>(), taken };
+  return {
+    events: [] as string[],
+    lost: new Set<string>(),
+    refused: new Set<string>(),
+    taken,
+  };
 });
 
 vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
@@ -75,7 +86,13 @@ vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
         locks.events.push(`lock:${resource}`);
 
         try {
-          return await callback();
+          const result = await callback();
+
+          if (locks.lost.has(resource)) {
+            throw new original.MutexLockLostError(resource);
+          }
+
+          return result;
         } finally {
           locks.events.push(`unlock:${resource}`);
         }
@@ -230,6 +247,7 @@ describe("#kuzzle/Kuzzle", () => {
     locks.taken.length = 0;
     locks.events.length = 0;
     locks.refused.clear();
+    locks.lost.clear();
 
     order = [];
     answers = new Map();
@@ -796,8 +814,9 @@ describe("#kuzzle/Kuzzle", () => {
         );
       });
 
-      /* Every lock is held until the `finally`, across every import type
-       * and the wait that follows. */
+      /* Each type's lock wraps the remaining types: every lock is held across
+       * the imports and the wait that follows, then released innermost
+       * first. */
       it("should hold every import lock until the imports are done", async () => {
         internalsOf(kuzzle)._waitForImportToFinish = async () => {
           locks.events.push("wait");
@@ -835,6 +854,19 @@ describe("#kuzzle/Kuzzle", () => {
             .mock.calls.map(([hashed]) => hashed.type),
         ).toEqual(["fixtures", "permissions", "userMappings"]);
         expect(locks.events).toContain("lock:backend:import:userMappings");
+      });
+
+      /* A lost lock is not "locked elsewhere" either: the node that held it
+       * fails its startup instead of running the import again, unlocked. */
+      it("should fail when an import lock is lost", async () => {
+        const importMappings = vi.fn(async () => undefined);
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+        locks.lost.add("backend:import:mappings");
+
+        await expect(
+          kuzzle.loadInitialState(toImport, {}),
+        ).rejects.toBeInstanceOf(MutexLockLostError);
+        expect(importMappings).toHaveBeenCalledOnce();
       });
 
       /* Only the import's own lock being held means "locked elsewhere": an

@@ -884,8 +884,9 @@ class Kuzzle extends KuzzleEventEmitter {
 
       // A single acquisition attempt: exactly one node runs the import and
       // the others carry on with `locked: false`. The lock is refreshed for
-      // as long as it is held; the bookkeeping write stays idempotent all the
-      // same, in case it is lost (TD-69).
+      // as long as it is held; if a refresh fails, the lock is lost and this
+      // node's startup fails with `MutexLockLostError`. The bookkeeping write
+      // stays idempotent all the same (TD-69).
       let acquired = false;
 
       try {
