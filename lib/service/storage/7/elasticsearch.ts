@@ -2242,7 +2242,11 @@ export class ES7 {
         });
       }
 
-      await this._createHiddenCollection(index);
+      // `createCollection` drops the placeholder through here: recreating it
+      // would undo that.
+      if (collection !== HIDDEN_COLLECTION) {
+        await this._createHiddenCollection(index);
+      }
     } catch (e) {
       throw this._esWrapper.formatESError(e);
     }
