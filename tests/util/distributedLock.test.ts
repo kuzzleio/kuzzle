@@ -19,6 +19,7 @@ describe("#distributedLock", () => {
   let other: InstanceType<typeof RedisMock>;
   let kuzzle: { ask: ReturnType<typeof vi.fn> };
   let withLock: typeof import("../../lib/util/distributedLock").withLock;
+  let MutexAcquireError: typeof import("../../lib/util/distributedLock").MutexAcquireError;
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
 
   beforeEach(async () => {
@@ -32,7 +33,7 @@ describe("#distributedLock", () => {
     // Force lib/util/distributedLock.ts to re-evaluate so its module-level
     // client cache starts fresh for every test.
     vi.resetModules();
-    ({ withLock, MutexLockLostError } =
+    ({ withLock, MutexAcquireError, MutexLockLostError } =
       await import("../../lib/util/distributedLock"));
   });
 
@@ -99,6 +100,19 @@ describe("#distributedLock", () => {
       expect(callback).not.toHaveBeenCalled();
       // Never touches a lock it does not own
       expect(await other.get("busy")).toBe("node-2");
+    });
+
+    it("fails fast with MutexAcquireError when told not to retry", async () => {
+      await other.set("busy", "node-2", "PX", 10000);
+      const setSpy = vi.spyOn(client, "set");
+      const callback = vi.fn(async () => "never");
+
+      await expect(
+        withLock("busy", callback, { retryAttempts: 0 }),
+      ).rejects.toBeInstanceOf(MutexAcquireError);
+
+      expect(setSpy).toHaveBeenCalledTimes(1);
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it("gets the key once another holder's TTL expires", async () => {

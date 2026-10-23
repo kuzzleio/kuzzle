@@ -62,6 +62,17 @@ export class MutexLockLostError extends Error {
   }
 }
 
+/**
+ * Thrown by `withLock` when the lock cannot be acquired within its retry
+ * attempts: the callback did not run.
+ */
+export class MutexAcquireError extends Error {
+  constructor(key: string, attempts: number) {
+    super(`Failed to acquire lock "${key}" after ${attempts} attempts`);
+    this.name = "MutexAcquireError";
+  }
+}
+
 type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
 
 /**
@@ -136,7 +147,8 @@ async function getClient(): Promise<RedisClient> {
  *
  * The lock's TTL is extended in the background while `callback` runs. If
  * the lock cannot be acquired within `retryAttempts + 1` attempts, the
- * returned promise rejects without running `callback`.
+ * returned promise rejects with `MutexAcquireError` without running
+ * `callback`.
  *
  * If the lock is lost mid-callback (e.g. TTL extension failed and another
  * node may now hold it), the returned promise rejects with
@@ -187,9 +199,7 @@ export async function withLock<T>(
   });
 
   if (!(await mutex.tryAcquire())) {
-    throw new Error(
-      `Failed to acquire lock "${key}" after ${retryAttempts + 1} attempts`,
-    );
+    throw new MutexAcquireError(key, retryAttempts + 1);
   }
 
   try {
