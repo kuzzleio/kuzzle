@@ -23,7 +23,7 @@ import * as kerror from "../../kerror";
 import type { StoreCollectionsDefinition } from "../../types";
 import { promiseAllN } from "../../util/async";
 import { getESIndexDynamicSettings } from "../../util/esRequest";
-import { Mutex } from "../../util/mutex";
+import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
@@ -164,28 +164,17 @@ export class Store {
 
   /**
    * Initialize the index, and creates provided collections
+   *
+   * Every node creates the collections in turn, under the same lock, and
+   * waits for it with no limit. The lock is refreshed while the collections
+   * are created; if it is lost, this rejects with `MutexLockLostError`.
    */
   async init(collections: StoreCollectionsDefinition = {}): Promise<void> {
-    const creatingMutex = new Mutex(`Store.init(${this.index})`, {
-      timeout: 0,
-      ttl: 30000,
-    });
-
-    if (await creatingMutex.lock()) {
-      try {
-        await this.createCollections(collections, {
-          indexCacheOnly: false,
-        });
-      } finally {
-        await creatingMutex.unlock();
-      }
-    } else {
-      await creatingMutex.wait({ timeout: -1 });
-
-      await this.createCollections(collections, {
-        indexCacheOnly: true,
-      });
-    }
+    await withLock(
+      `Store.init(${this.index})`,
+      () => this.createCollections(collections, { indexCacheOnly: false }),
+      { retryAttempts: Number.POSITIVE_INFINITY },
+    );
   }
 
   /**

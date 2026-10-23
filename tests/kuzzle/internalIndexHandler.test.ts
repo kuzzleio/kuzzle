@@ -9,23 +9,9 @@ import { restoreKuzzle, stubKuzzle } from "../mocks/kuzzle";
 const INDEX = "%kuzzle";
 
 /**
- * Every mutex the base class takes: `Store.init`, for `Store.init(%kuzzle)`.
- * `vi.mock` replaces the module for the whole graph, so the base class picks
- * the stub up too. The handler's own `InternalIndexBootstrap` lock goes
- * through `withLock`, listed in `locks` below.
+ * Every lock taken through `withLock`, and whether it was given back: the base
+ * class's `Store.init(%kuzzle)` and the handler's own `InternalIndexBootstrap`.
  */
-const mutexes = vi.hoisted(() => {
-  const taken: {
-    lock: ReturnType<typeof import("vitest").vi.fn>;
-    resource: string;
-    unlock: ReturnType<typeof import("vitest").vi.fn>;
-    wait: ReturnType<typeof import("vitest").vi.fn>;
-  }[] = [];
-
-  return { granted: true, taken };
-});
-
-/** Every lock taken through `withLock`, and whether it was given back. */
 const locks = vi.hoisted(() => {
   const taken: {
     config: { retryAttempts?: number; ttl?: number } | undefined;
@@ -56,18 +42,6 @@ vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
   ),
 }));
 
-vi.mock("../../lib/util/mutex", () => ({
-  Mutex: class {
-    public lock = vi.fn(async () => mutexes.granted);
-    public unlock = vi.fn(async () => undefined);
-    public wait = vi.fn(async () => true);
-
-    constructor(public readonly resource: string) {
-      mutexes.taken.push(this);
-    }
-  },
-}));
-
 const randomBytes = vi.hoisted(() => vi.fn(() => Buffer.from("12345")));
 
 vi.mock("node:crypto", async (importOriginal) => {
@@ -88,8 +62,6 @@ describe("#kuzzle/InternalIndexHandler", () => {
       .map(([, ...args]) => args);
 
   beforeEach(() => {
-    mutexes.taken.length = 0;
-    mutexes.granted = true;
     locks.taken.length = 0;
     randomBytes.mockClear();
 
@@ -141,9 +113,8 @@ describe("#kuzzle/InternalIndexHandler", () => {
        * ⚠️ The fourth argument is the one the Mocha spec did not mention:
        * `should(spy).calledWith(a, b, c)` is satisfied by a call that passed
        * `(a, b, c, d)` — sinon matches a prefix. `createCollections` passes
-       * `{ indexCacheOnly }`, and whether the node writes the mappings or
-       * only caches them is the difference between the node that won the
-       * `Store.init` lock and the ones that waited for it.
+       * `{ indexCacheOnly }`, and every node now creates the collections
+       * itself (`false`), in turn under the `Store.init` lock.
        */
       expect(asked("core:storage:private:collection:create")).toEqual(
         expect.arrayContaining([
@@ -185,14 +156,16 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(bootstrap).toHaveBeenCalledTimes(1);
 
       /*
-       * Two locks, not one: `Store.init` takes its own (still a `Mutex`)
-       * before creating the collections. The bootstrap one waits with no
-       * retry limit, as the `Mutex` it replaces did.
+       * Two locks, not one: `Store.init` takes its own before creating the
+       * collections, and only then the bootstrap one. Both wait with no retry
+       * limit, as the `Mutex` they replace did.
        */
-      expect(mutexes.taken.map((mutex) => mutex.resource)).toEqual([
-        `Store.init(${INDEX})`,
-      ]);
       expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          released: true,
+          resource: `Store.init(${INDEX})`,
+        },
         {
           config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
           released: true,
