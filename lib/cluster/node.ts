@@ -861,9 +861,7 @@ class ClusterNode {
           debug("[CLUSTER] Fullstate retrieved, loading into node..");
 
           await this.fullState.loadFullState(fullState); // NOSONAR: TD-26
-          this.activity = fullState.activity
-            ? fullState.activity
-            : this.activity;
+          this.activity = fullState.activity ?? this.activity;
 
           debug("[CLUSTER] Fullstate loaded.");
 
