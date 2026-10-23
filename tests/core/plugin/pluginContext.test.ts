@@ -681,7 +681,7 @@ describe("#core/plugin/pluginContext", () => {
       expect(locks.taken).toEqual([]);
     });
 
-    it("rejects with MutexLockLostError when the lock is lost", async () => {
+    it("rejects an add with MutexLockLostError when the lock is lost", async () => {
       locks.lost = true;
 
       await expect(
@@ -743,7 +743,7 @@ describe("#core/plugin/pluginContext", () => {
       expect(locks.taken[0]?.held).toBe(false);
     });
 
-    it("rejects with MutexLockLostError when the lock is lost", async () => {
+    it("rejects a removal with MutexLockLostError when the lock is lost", async () => {
       locks.lost = true;
 
       await expect(
