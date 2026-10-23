@@ -192,4 +192,63 @@ describe("#core/shared/Store", () => {
       expect(locks.taken[0].released).toBe(true);
     });
   });
+
+  /*
+   * An existing collection's shard count cannot change: in development, a
+   * configured `number_of_shards` that differs from it fails the startup.
+   */
+  describe("#createCollections: number_of_shards check", () => {
+    const mappings = { properties: { foo: { type: "keyword" } } };
+    let nodeEnv: string | undefined;
+
+    beforeEach(() => {
+      nodeEnv = global.NODE_ENV;
+      global.NODE_ENV = "development";
+      answers["core:storage:public:collection:exist"] = true;
+      answers["core:storage:public:collection:settings:get"] = {
+        number_of_shards: "1",
+      };
+    });
+
+    afterEach(() => {
+      global.NODE_ENV = nodeEnv;
+    });
+
+    it("throws when the configured number_of_shards differs", async () => {
+      await expect(
+        store.createCollections({
+          foo: { mappings, settings: { number_of_shards: 2 } },
+        }),
+      ).rejects.toMatchObject({
+        id: "services.storage.wrong_es_static_settings_for_collection_recreation",
+      });
+    });
+
+    it("accepts the existing number_of_shards", async () => {
+      await store.createCollections({
+        foo: { mappings, settings: { number_of_shards: 1 } },
+      });
+
+      expect(asked("collection:create")).toHaveLength(1);
+    });
+
+    // #3009: `number_of_shards` left out means "not specified", not a mismatch
+    it("skips the check when only number_of_replicas is configured", async () => {
+      await store.createCollections({
+        foo: { mappings, settings: { number_of_replicas: 1 } },
+      });
+
+      expect(asked("collection:create")).toEqual([
+        {
+          args: [
+            INDEX,
+            "foo",
+            { mappings, settings: { number_of_replicas: 1 } },
+            { indexCacheOnly: true },
+          ],
+          underLock: false,
+        },
+      ]);
+    });
+  });
 });
