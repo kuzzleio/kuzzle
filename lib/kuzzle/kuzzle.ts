@@ -50,11 +50,7 @@ import * as kerror from "../kerror";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
-import {
-  MutexAcquireError,
-  releaseAllLocksBeforeExit,
-  withLock,
-} from "../util/distributedLock";
+import { releaseAllLocksBeforeExit, withLock } from "../util/distributedLock";
 import { Mutex } from "../util/mutex";
 import type {
   ImportConfig,
@@ -101,7 +97,6 @@ Reflect.defineProperty(global, "kuzzle", {
  */
 
 type ImportStatus = {
-  locked?: boolean;
   initialized?: boolean;
   firstCall?: boolean;
 };
@@ -557,11 +552,8 @@ class Kuzzle extends KuzzleEventEmitter {
         "core:storage:public:mappings:import",
         toSupport.mappings,
         {
-          /**
-           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-           * we just want to load the mapping in our own index cache and not in the database.
-           */
-          indexCacheOnly: status.initialized || !status.locked,
+          // Already imported (by this node or another one): only fill the cache
+          indexCacheOnly: status.initialized,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
@@ -570,11 +562,8 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info("[✔] Mappings import successful");
     } else if (!_.isEmpty(toImport.mappings)) {
       await this.ask("core:storage:public:mappings:import", toImport.mappings, {
-        /**
-         * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-         * we just want to load the mapping in our own index cache and not in the database.
-         */
-        indexCacheOnly: status.initialized || !status.locked,
+        // Already imported (by this node or another one): only fill the cache
+        indexCacheOnly: status.initialized,
         propagate: false, // Each node needs to do the import themselves
         refresh: true,
       });
@@ -658,27 +647,6 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info("[✔] Permissions import successful");
     }
   }
-  /**
-   * Check if every import has been done, if one of them is not finished yet, wait for it
-   */
-  private async _waitForImportToFinish() {
-    const importTypes = Object.keys(this.importTypes);
-
-    for (const importType of importTypes) {
-      // If the import is done, we pop it from the queue to check the next one
-      if (
-        await this.ask(
-          "core:cache:internal:get",
-          `backend:init:import:${importType}`,
-        )
-      ) {
-        return;
-      }
-
-      await Bluebird.delay(1000);
-    }
-  }
-
   private isConfigsEmpty(
     importConfig: ImportConfig,
     supportConfig: SupportConfig,
@@ -698,20 +666,28 @@ class Kuzzle extends KuzzleEventEmitter {
     return false;
   }
 
+  /**
+   * Records the hash of the payload just imported (or found already imported)
+   * in both Redis and `%kuzzle.imports`, so that the next node or the next
+   * start can tell the import is done for this very payload
+   */
   private async persistHashedImport({
     existingRedisHash,
     existingESHash,
     importPayloadHash,
+    initialized,
     type,
   }: {
     existingRedisHash: string | null;
     existingESHash: string | null;
     importPayloadHash: string;
+    initialized: boolean;
     type: string;
   }) {
-    if (!existingRedisHash && !existingESHash) {
-      // If the import is not initialized in the redis cache and in the ES, we initialize it
-      this.log.info(`${type} import is not initialized, initializing...`);
+    // Not initialized: the payload was just imported, and a hash left by a
+    // previous payload must be replaced, or every start would import it again
+    if (!initialized || !existingESHash) {
+      this.log.info(`Recording the ${type} import in %kuzzle.imports...`);
 
       // `createOrReplace`, not `create`: this document has a fixed id, so a
       // conflict on it means another node initialized the same import — an
@@ -726,51 +702,13 @@ class Kuzzle extends KuzzleEventEmitter {
           hash: importPayloadHash,
         },
       );
+    }
+
+    if (!initialized || !existingRedisHash) {
       await this.ask(
         "core:cache:internal:store",
         `backend:init:import:${type}`,
         importPayloadHash,
-      );
-    } else if (existingRedisHash && !existingESHash) {
-      // If the import is initialized in the redis cache but not in the ES
-      // We initialize it in the ES
-      this.log.info(
-        `${type} import is not initialized in %kuzzle.imports, initializing...`,
-      );
-
-      const redisCache = await this.ask(
-        "core:cache:internal:get",
-        `backend:init:import:${type}`,
-      );
-
-      // Same reasoning as above: a fixed id, so a conflict is convergence.
-      await this.ask(
-        "core:storage:private:document:createOrReplace",
-        "kuzzle",
-        "imports",
-        `backend:init:import:${type}`,
-        {
-          hash: redisCache,
-        },
-      );
-    } else if (!existingRedisHash && existingESHash) {
-      // If the import is initialized in the ES but not in the redis cache
-      // We initialize it in the redis cache
-      this.log.info(
-        `${type} import is not initialized in the redis cache, initializing...`,
-      );
-
-      const esDocument = await this.ask(
-        "core:storage:private:document:get",
-        "kuzzle",
-        "imports",
-        `backend:init:import:${type}`,
-      );
-
-      await this.ask(
-        "core:cache:internal:store",
-        `backend:init:import:${type}`,
-        esDocument._source.hash,
       );
     }
   }
@@ -795,12 +733,12 @@ class Kuzzle extends KuzzleEventEmitter {
 
     // Imports the types from `index` on. Each type's lock is taken around the
     // remaining types, so that every lock taken is held until all the imports
-    // are done, including the wait that follows them.
+    // are done: a node waiting for the first lock starts only once the node
+    // ahead of it has imported everything.
     const importFrom = async (index: number): Promise<void> => {
       const next = importTypes[index];
 
       if (!next) {
-        await this._waitForImportToFinish();
         return;
       }
 
@@ -827,7 +765,7 @@ class Kuzzle extends KuzzleEventEmitter {
       // cannot serialise, and the payload is built right above.
       const importPayloadHash = sha256(stringify(importPayload) ?? "");
 
-      const importType = async (locked: boolean) => {
+      const importType = async () => {
         // Read the bookkeeping *after* the lock, never before: a read taken
         // before acquiring it is not protected by it, and the holder that
         // acted on a stale "not initialized" used to create a document the
@@ -864,49 +802,32 @@ class Kuzzle extends KuzzleEventEmitter {
         await importMethod(
           { toImport, toSupport },
           {
-            firstCall: !initialized && locked,
-            initialized: initialized,
-            locked,
+            firstCall: !initialized,
+            initialized,
           },
         );
 
-        if (locked) {
-          await this.persistHashedImport({
-            existingESHash,
-            existingRedisHash,
-            importPayloadHash,
-            type,
-          });
-        }
+        await this.persistHashedImport({
+          existingESHash,
+          existingRedisHash,
+          importPayloadHash,
+          initialized,
+          type,
+        });
 
         await importFrom(index + 1);
       };
 
-      // A single acquisition attempt: exactly one node runs the import and
-      // the others carry on with `locked: false`. The lock is refreshed for
-      // as long as it is held; if a refresh fails, the lock is lost and this
-      // node's startup fails with `MutexLockLostError`. The bookkeeping write
-      // stays idempotent all the same (TD-69).
-      let acquired = false;
-
-      try {
-        await withLock(
-          `backend:import:${type}`,
-          async () => {
-            acquired = true;
-            await importType(true);
-          },
-          { retryAttempts: 0, ttl: 60000 },
-        );
-      } catch (error) {
-        // Only this lock being taken elsewhere means "not locked": the same
-        // error thrown by an import itself is that import's failure
-        if (acquired || !(error instanceof MutexAcquireError)) {
-          throw error;
-        }
-
-        await importType(false);
-      }
+      // No retry limit: the node holding it is running this import, and this
+      // one must not start before it is done. Once it gets the lock, it finds
+      // the import done for this payload and only fills its cache; if the
+      // node ahead died mid-import, it runs the import itself. The lock is
+      // refreshed while held; a lost lock fails the startup with
+      // `MutexLockLostError` (the bookkeeping write stays idempotent, TD-69).
+      await withLock(`backend:import:${type}`, importType, {
+        retryAttempts: Number.POSITIVE_INFINITY,
+        ttl: 60000,
+      });
     };
 
     await importFrom(0);
