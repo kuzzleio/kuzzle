@@ -45,6 +45,7 @@ import {
   UnauthorizedError,
 } from "../../kerror/errors";
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { withLock } from "../../util/distributedLock";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
@@ -675,6 +676,17 @@ function inheritInput(
 }
 
 /**
+ * Lock options of `auth:strategies:add` and `auth:strategies:remove`: wait
+ * as long as it takes, as the deprecated `Mutex` did (no acquisition
+ * timeout), with the same 30 s TTL — now refreshed while the strategy is
+ * being added or removed.
+ */
+const STRATEGY_LOCK = {
+  retryAttempts: Number.POSITIVE_INFINITY,
+  ttl: 30000,
+};
+
+/**
  * Returns a currified function of pluginsManager.registerStrategy
  *
  * @param  {string} pluginName
@@ -697,22 +709,24 @@ function curryAddStrategy(pluginName: string) {
       throw contextError.get("missing_authenticator", pluginName, name);
     }
 
-    const mutex = new Mutex("auth:strategies:add", { ttl: 30000 });
+    return withLock(
+      "auth:strategies:add",
+      async () => {
+        // @todo use Plugin.checkName to ensure format
+        global.kuzzle.pluginsManager.registerStrategy(
+          pluginName,
+          name,
+          strategy,
+        );
 
-    await mutex.lock();
-
-    try {
-      // @todo use Plugin.checkName to ensure format
-      global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
-
-      return await global.kuzzle.pipe("core:auth:strategyAdded", {
-        name,
-        pluginName,
-        strategy,
-      });
-    } finally {
-      await mutex.unlock();
-    }
+        return global.kuzzle.pipe("core:auth:strategyAdded", {
+          name,
+          pluginName,
+          strategy,
+        });
+      },
+      STRATEGY_LOCK,
+    );
   };
 }
 
@@ -728,18 +742,17 @@ function curryRemoveStrategy(pluginName: string) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name: string) {
-    const mutex = new Mutex("auth:strategies:remove", { ttl: 30000 });
+    return withLock(
+      "auth:strategies:remove",
+      async () => {
+        global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
 
-    await mutex.lock();
-
-    try {
-      global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-      return await global.kuzzle.pipe("core:auth:strategyRemoved", {
-        name,
-        pluginName,
-      });
-    } finally {
-      await mutex.unlock();
-    }
+        return global.kuzzle.pipe("core:auth:strategyRemoved", {
+          name,
+          pluginName,
+        });
+      },
+      STRATEGY_LOCK,
+    );
   };
 }

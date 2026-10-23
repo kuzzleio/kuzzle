@@ -21,6 +21,7 @@ import { ServiceUnavailableError } from "../../../lib/kerror/errors/serviceUnava
 import { SizeLimitError } from "../../../lib/kerror/errors/sizeLimitError";
 import { TooManyRequestsError } from "../../../lib/kerror/errors/tooManyRequestsError";
 import { UnauthorizedError } from "../../../lib/kerror/errors/unauthorizedError";
+import { MutexLockLostError } from "../../../lib/util/distributedLock";
 import { Mutex } from "../../../lib/util/mutex";
 import { invalid } from "../../helpers/invalid";
 import { present } from "../../helpers/present";
@@ -44,39 +45,56 @@ const SECRETS = {
  */
 
 /**
- * ⚠️ `lib/util/mutex` is the one substitution this spec genuinely needs, and
- * the Mocha spec never said so.
- *
- * It registered `test/mocks/mutex.mock.js` in a bare `beforeEach` and
- * re-required the subject against it, with no comment and nothing in the block
- * that follows needing it. What needs it is `#accessors.strategies`, five
- * hundred lines further down: `curryAddStrategy` takes a real
- * `new Mutex("auth:strategies:add").lock()`, which retries against the cache
- * until it wins or times out — so against a fixture that answers nothing, all
- * four strategy tests hang for the full timeout rather than failing.
- *
- * The mock's own accessor for this — `MutexMock.__getLastMutex()` — existed
- * precisely so a spec could check the lock, and no spec ever called it. The
- * resources are recorded here, and asserted.
+ * ⚠️ `lib/util/distributedLock` is the one substitution this spec genuinely
+ * needs. `#accessors.strategies` adds and removes strategies under
+ * `withLock("auth:strategies:add" | "auth:strategies:remove")`, which asks the
+ * cache for its Redis client — a fixture that answers nothing would make the
+ * strategy tests fail for the wrong reason. The stand-in records each lock
+ * (resource, options, whether the callback ran while it was held) and can be
+ * told to lose it, as a failed TTL refresh would.
  */
-const mutexes = vi.hoisted(() => {
-  const taken: string[] = [];
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: unknown;
+    held: boolean;
+    resource: string;
+  }[] = [];
 
-  return { taken };
+  return { lost: false, taken };
 });
 
-vi.mock("../../../lib/util/mutex", () => ({
-  Mutex: class {
-    constructor(public readonly resource: string) {}
+vi.mock("../../../lib/util/distributedLock", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("../../../lib/util/distributedLock")>();
 
-    async lock() {
-      mutexes.taken.push(this.resource);
-      return true;
-    }
+  return {
+    ...original,
+    withLock: vi.fn(
+      async (
+        resource: string,
+        callback: () => Promise<unknown>,
+        config?: unknown,
+      ) => {
+        const lock = { config, held: true, resource };
+        locks.taken.push(lock);
 
-    async unlock() {}
-  },
-}));
+        try {
+          const result = callback();
+
+          if (locks.lost) {
+            // `withLock` rejects at once; the callback keeps running
+            result.catch(() => undefined);
+            throw new original.MutexLockLostError(resource);
+          }
+
+          return await result;
+        } finally {
+          lock.held = false;
+        }
+      },
+    ),
+  };
+});
 
 describe("#core/plugin/pluginContext", () => {
   let context: PluginContext;
@@ -88,7 +106,8 @@ describe("#core/plugin/pluginContext", () => {
   let unregisterStrategy: Mock;
 
   beforeEach(() => {
-    mutexes.taken.length = 0;
+    locks.taken.length = 0;
+    locks.lost = false;
     logger = stubLogger();
     ask = vi.fn(async () => undefined);
     pipe = vi.fn(async () => undefined);
@@ -630,7 +649,44 @@ describe("#core/plugin/pluginContext", () => {
         pluginName: "pluginName",
         strategy,
       });
-      expect(mutexes.taken).toEqual(["auth:strategies:add"]);
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          held: false,
+          resource: "auth:strategies:add",
+        },
+      ]);
+    });
+
+    it("registers the strategy while holding the lock", async () => {
+      const heldDuring: boolean[] = [];
+      registerStrategy.mockImplementation(() => {
+        heldDuring.push(locks.taken[0]?.held);
+      });
+      pipe.mockImplementation(async () => {
+        heldDuring.push(locks.taken[0]?.held);
+      });
+
+      await context.accessors.strategies.add("foo", strategy);
+
+      expect(heldDuring).toEqual([true, true]);
+      expect(locks.taken[0]?.held).toBe(false);
+    });
+
+    it("takes no lock for a strategy that names no authenticator", async () => {
+      await expect(
+        context.accessors.strategies.add("foo", invalid<never>(null)),
+      ).rejects.toBeInstanceOf(PluginImplementationError);
+
+      expect(locks.taken).toEqual([]);
+    });
+
+    it("rejects an add with MutexLockLostError when the lock is lost", async () => {
+      locks.lost = true;
+
+      await expect(
+        context.accessors.strategies.add("foo", strategy),
+      ).rejects.toBeInstanceOf(MutexLockLostError);
     });
 
     it("rejects when the registration throws", async () => {
@@ -663,7 +719,36 @@ describe("#core/plugin/pluginContext", () => {
         name: "foo",
         pluginName: "pluginName",
       });
-      expect(mutexes.taken).toEqual(["auth:strategies:remove"]);
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          held: false,
+          resource: "auth:strategies:remove",
+        },
+      ]);
+    });
+
+    it("unregisters the strategy while holding the lock", async () => {
+      const heldDuring: boolean[] = [];
+      unregisterStrategy.mockImplementation(() => {
+        heldDuring.push(locks.taken[0]?.held);
+      });
+      pipe.mockImplementation(async () => {
+        heldDuring.push(locks.taken[0]?.held);
+      });
+
+      await context.accessors.strategies.remove("foo");
+
+      expect(heldDuring).toEqual([true, true]);
+      expect(locks.taken[0]?.held).toBe(false);
+    });
+
+    it("rejects a removal with MutexLockLostError when the lock is lost", async () => {
+      locks.lost = true;
+
+      await expect(
+        context.accessors.strategies.remove("foo"),
+      ).rejects.toBeInstanceOf(MutexLockLostError);
     });
 
     it("rejects when the removal throws", async () => {
