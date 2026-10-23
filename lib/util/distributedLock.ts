@@ -182,9 +182,9 @@ async function getClient(): Promise<RedisClient> {
  * be cancelled and keeps running in the background; do not perform
  * authoritative side effects after observing this rejection.
  *
- * Do not use on the same resource key as the deprecated `Mutex` class
- * concurrently: both write to the same Redis key with incompatible
- * value/TTL formats and will contend with (but never corrupt) each other.
+ * The deprecated `Mutex` class takes the same Redis key with `SET NX`: on
+ * the same resource, the two exclude each other, and neither can release
+ * the other's lock.
  *
  * @param key - resource identifier to be locked (must be identical across
  *              all nodes)
@@ -225,7 +225,9 @@ export async function withLock<T>(
     onLockLost: (error) => {
       loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
     },
-    retryInterval: retryDelay,
+    // redis-semaphore waits `retryInterval` after every failed attempt, the
+    // last one included: with no retry, that wait only delays the failure
+    retryInterval: retryAttempts === 0 ? 0 : retryDelay,
   });
 
   if (!(await mutex.tryAcquire())) {

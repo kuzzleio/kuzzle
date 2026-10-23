@@ -90,10 +90,10 @@ export interface MutexOptions {
  * synchronization between servers (see https://redis.io/topics/distlock)
  *
  * @deprecated Use `withLock` from `./distributedLock` instead: it supports
- * real Redlock semantics and reentrancy. Do not mix `Mutex` and `withLock`
- * on the same resource key — they use incompatible acquisition/TTL formats
- * and will contend with (though never corrupt) each other's lock on that
- * key.
+ * real Redlock semantics and reentrancy. `Mutex` and `withLock` take the
+ * same Redis key with `SET NX`, so they exclude each other on the same
+ * resource (which keeps old and new nodes apart during a rolling upgrade),
+ * and neither can release the other's lock.
  */
 export class Mutex {
   readonly resource: string;
