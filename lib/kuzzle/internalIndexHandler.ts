@@ -29,7 +29,7 @@ import { storeScopeEnum } from "../core/storage/storeScopeEnum";
 import { configuredSpecifications } from "../core/validation/specification";
 import * as kerror from "../kerror";
 import createDebug from "../util/debug";
-import { Mutex } from "../util/mutex"; // NOSONAR: see init()
+import { withLock } from "../util/distributedLock";
 
 const debug = createDebug("kuzzle:bootstrap:internalIndex");
 
@@ -110,45 +110,48 @@ class InternalIndexHandler extends Store {
   async init(): Promise<void> {
     await super.init(this.config.collections);
 
-    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
-    // incompatible acquisition/TTL formats and must not contend on the same
-    // key — swapping it is a behaviour change, deferred to #2894.
-    const lockOptions = { timeout: -1, ttl: 30000 };
-    const mutex = new Mutex("InternalIndexBootstrap", lockOptions); // NOSONAR
+    // No retry limit: the node holding it is bootstrapping the internal
+    // index, and this one cannot start before that is done
+    await withLock(
+      "InternalIndexBootstrap",
+      async () => {
+        try {
+          const bootstrapped = await this.exists(
+            "config",
+            this._BOOTSTRAP_DONE_ID,
+          );
 
-    await mutex.lock();
+          if (bootstrapped) {
+            await this._initSecret();
+            return;
+          }
 
-    try {
-      const bootstrapped = await this.exists("config", this._BOOTSTRAP_DONE_ID);
+          await Bluebird.resolve(this._bootstrapSequence()).timeout(
+            this.timeout,
+          );
 
-      if (bootstrapped) {
-        await this._initSecret();
-        return;
-      }
+          await this.create(
+            "config",
+            { timestamp: Date.now() },
+            {
+              id: this._BOOTSTRAP_DONE_ID,
+            },
+          );
+        } catch (error) {
+          if (error instanceof Bluebird.TimeoutError) {
+            throw kerror.get(
+              "services",
+              "storage",
+              "bootstrap_timeout",
+              "internalIndex",
+            );
+          }
 
-      await Bluebird.resolve(this._bootstrapSequence()).timeout(this.timeout);
-
-      await this.create(
-        "config",
-        { timestamp: Date.now() },
-        {
-          id: this._BOOTSTRAP_DONE_ID,
-        },
-      );
-    } catch (error) {
-      if (error instanceof Bluebird.TimeoutError) {
-        throw kerror.get(
-          "services",
-          "storage",
-          "bootstrap_timeout",
-          "internalIndex",
-        );
-      }
-
-      throw error;
-    } finally {
-      await mutex.unlock();
-    }
+          throw error;
+        }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+    );
   }
 
   /**

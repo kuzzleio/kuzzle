@@ -1,0 +1,24 @@
+# Overlay for `.ci/scripts/docker-test.sh functional` ONLY, on top of
+# `.ci/test-cluster-{7,8}.yml`: every Kuzzle container sees `node_modules` from
+# a named volume instead of the bind-mounted checkout.
+#
+# Without it, the container's `npm ci` deletes and rewrites the HOST's
+# `node_modules` — Linux native builds in a macOS checkout, or an empty tree when
+# the install fails partway (#2790, ADR-0001 register TD-72). The unit path got
+# the same fix in #2797.
+#
+# Not used by CI (`run-test-cluster.sh`): there the suite runs on the Linux
+# runner itself, against the `node_modules` the container installed into the
+# checkout, so the bind-mounted install is what it needs.
+x-node-modules: &node-modules
+  volumes:
+    - kuzzle_functional_node_modules:/var/app/node_modules
+
+services:
+  kuzzle_node_1: *node-modules
+  kuzzle_node_2: *node-modules
+  kuzzle_node_3: *node-modules
+  kuzzle_node_prod: *node-modules
+
+volumes:
+  kuzzle_functional_node_modules:

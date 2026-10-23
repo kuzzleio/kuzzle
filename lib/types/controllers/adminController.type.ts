@@ -1,5 +1,7 @@
-export type ResetSecurityResult = {
-  deletedUsers?: (event: string, ...args: any[]) => Promise<any>;
-  deletedProfiles?: (event: string, ...args: any[]) => Promise<any>;
-  deletedRoles?: (event: string, ...args: any[]) => Promise<any>;
-};
+/**
+ * @deprecated Moved to `./ResetSecurityResult` when `lib/types/` settled on
+ * PascalCase file names (TD-08). Kept so that deep imports of the published
+ * `dist/lib/...` path keep compiling; removed in v3
+ * (docs/v3-breaking-changes.md).
+ */
+export type { ResetSecurityResult } from "./ResetSecurityResult";

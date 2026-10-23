@@ -88,7 +88,9 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * was never read (ADR-0001, TD-62).
    */
   protected collection!: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   protected ObjectConstructor: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   protected store: any;
   protected cacheDb: cacheDbEnum;
 
@@ -299,6 +301,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param options.method -
    * @returns {Promise}
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   persistToDatabase(object: TObject, options: any = {}) {
     const method = options.method || "createOrReplace";
 
@@ -324,6 +327,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param object - The object to delete
    * @param options.key - if provided, removes the given key instead of the default one (<collection>/<id>)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   async delete(object: TObject, options: any = {}): Promise<void> {
     const promises = [];
 
@@ -484,6 +488,7 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
    * @param {ObjectConstructor} o
    * @returns {object}
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   toDTO(o: TObject): any {
     return { ...o };
   }

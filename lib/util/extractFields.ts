@@ -26,6 +26,17 @@ interface ExtractedField {
   value: unknown;
 }
 
+interface ExtractOptions {
+  fieldsToIgnore?: string[];
+  alsoExtractValues?: boolean;
+}
+
+/** The recursion's own arguments: not for callers. */
+interface ExtractState {
+  path?: string | null;
+  extractedFields?: Array<string | ExtractedField>;
+}
+
 /**
  * Extract nested fields of an object in a flat array.
  * Example: { field : { 1: "nested", 2: "nested" } } => [ 'field.1', 'field.2' ]
@@ -37,17 +48,21 @@ interface ExtractedField {
  */
 function extractFields(
   document: Record<string, unknown>,
-  {
-    fieldsToIgnore = [],
-    alsoExtractValues = false,
-  }: { fieldsToIgnore?: string[]; alsoExtractValues?: boolean } = {},
-  {
-    path = null,
-    extractedFields = [],
-  }: {
-    path?: string | null;
-    extractedFields?: Array<string | ExtractedField>;
-  } = {},
+  options: ExtractOptions & { alsoExtractValues: true },
+): ExtractedField[];
+function extractFields(
+  document: Record<string, unknown>,
+  options?: ExtractOptions & { alsoExtractValues?: false },
+): string[];
+function extractFields(
+  document: Record<string, unknown>,
+  options?: ExtractOptions,
+  state?: ExtractState,
+): Array<string | ExtractedField>;
+function extractFields(
+  document: Record<string, unknown>,
+  { fieldsToIgnore = [], alsoExtractValues = false }: ExtractOptions = {},
+  { path = null, extractedFields = [] }: ExtractState = {},
 ): Array<string | ExtractedField> {
   for (const [key, value] of Object.entries(document)) {
     if (fieldsToIgnore.includes(key)) {

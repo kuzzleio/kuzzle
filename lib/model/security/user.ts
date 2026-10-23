@@ -40,6 +40,7 @@ export class User {
   public _id: string;
   public profileIds: string[];
   // TODO modify this type to reflect the real type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public strategies: any;
 
   constructor() {

@@ -134,21 +134,22 @@ abstract class WebSocketApiBase extends ApiBase {
 
     const socket = this.sockets[socketName];
     if (!socket) {
-      return;
+      return Promise.reject(
+        new Error(`Cannot unsubscribe: no socket named "${socketName}"`),
+      );
     }
 
-    const rooms = this.subscribedRooms[socketName];
-    if (!rooms) {
-      return;
-    }
-
-    const room = rooms[roomId];
+    const room = this.subscribedRooms[socketName]?.[roomId];
     if (!room) {
-      return;
+      return Promise.reject(
+        new Error(
+          `Cannot unsubscribe: room "${roomId}" is not open on "${socketName}"`,
+        ),
+      );
     }
 
     this._socketRemoveListener(socket, room.channel, room.listener);
-    delete rooms[roomId];
+    delete this.subscribedRooms[socketName][roomId];
     this.responses = null;
 
     return this.send(msg, waitForResponse, socketName);

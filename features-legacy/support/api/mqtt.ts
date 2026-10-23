@@ -159,10 +159,20 @@ export default class MqttApi extends ApiBase {
   unsubscribe(roomId: string, clientName: string, waitForResponse = false) {
     const client = this.clients[clientName];
     if (!client) {
-      return;
+      return Promise.reject(
+        new Error(`Cannot unsubscribe: no MQTT client named "${clientName}"`),
+      );
     }
 
-    const room = this.subscribedRooms[clientName][roomId];
+    const room = this.subscribedRooms[clientName]?.[roomId];
+    if (!room) {
+      return Promise.reject(
+        new Error(
+          `Cannot unsubscribe: room "${roomId}" is not open on "${clientName}"`,
+        ),
+      );
+    }
+
     client.unsubscribe(room.channel);
     delete this.subscribedRooms[clientName][roomId];
 

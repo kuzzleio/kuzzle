@@ -11,9 +11,9 @@
  * English sentence teaches contributors to reword comments, so this walks the
  * TypeScript AST instead and counts assertion *nodes*.
  *
- * Nodes, not lines: the `any` ratchet counts matching lines, which lets a
- * second `any` on an already-counted line in for free. There is no reason to
- * repeat that here.
+ * Nodes, not lines: a line count lets a second hatch on an already-counted
+ * line in for free. The `any` ratchet made that mistake until TD-73 moved it
+ * onto the same footing (scripts/count-any.ts).
  *
  * WHAT COUNTS
  * -----------
@@ -39,26 +39,14 @@
  * Prints the count; with `--list`, one `file:line: text` per assertion first.
  */
 
-import { readdirSync, readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
 
 import ts from "typescript";
 
+import { tsFilesUnder } from "./ts-files";
+
 const ROOT = resolve(__dirname, "..");
-
-function tsFilesUnder(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      return tsFilesUnder(path);
-    }
-
-    return entry.isFile() && path.endsWith(".ts") && !path.endsWith(".d.ts")
-      ? [path]
-      : [];
-  });
-}
 
 /**
  * `as const` parses as a type *reference* whose name is the identifier
@@ -103,7 +91,7 @@ function counts(node: ts.AsExpression | ts.TypeAssertion): boolean {
 
 const found: string[] = [];
 
-for (const path of tsFilesUnder(resolve(ROOT, "lib")).sort()) {
+for (const path of tsFilesUnder(resolve(ROOT, "lib"))) {
   const source = ts.createSourceFile(
     path,
     readFileSync(path, "utf8"),

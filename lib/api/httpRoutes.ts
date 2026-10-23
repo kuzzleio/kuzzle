@@ -21,6 +21,8 @@
 
 /* eslint sort-keys: 0 */
 
+import type { JSONObject } from "../types/JSONObject";
+
 /**
  * A native Kuzzle HTTP route, as exposed through `config.http.routes`.
  *
@@ -39,7 +41,7 @@ interface KuzzleHttpRoute {
   };
   /** Alias of `path`, populated below. */
   url?: string;
-  openapi?: Record<string, any>;
+  openapi?: JSONObject;
 }
 
 const routes: KuzzleHttpRoute[] = [

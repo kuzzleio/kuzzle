@@ -30,42 +30,42 @@ export class InternalLogger extends ApplicationManager {
   /**
    * Logs a trace message
    */
-  trace(message: any): void {
+  trace(message: unknown): void {
     this._log("trace", message);
   }
 
   /**
    * Logs an debug message
    */
-  debug(message: any): void {
+  debug(message: unknown): void {
     this._log("debug", message);
   }
 
   /**
    * Logs an info message
    */
-  info(message: any): void {
+  info(message: unknown): void {
     this._log("info", message);
   }
 
   /**
    * Logs a warn message
    */
-  warn(message: any): void {
+  warn(message: unknown): void {
     this._log("warn", message);
   }
 
   /**
    * Logs an error message
    */
-  error(message: any): void {
+  error(message: unknown): void {
     this._log("error", message);
   }
 
   /**
    * Logs a fatal message
    */
-  fatal(message: any): void {
+  fatal(message: unknown): void {
     this._log("fatal", message);
   }
 
@@ -74,7 +74,7 @@ export class InternalLogger extends ApplicationManager {
    *
    * @deprecated Use InternalLogger.debug instead.
    */
-  verbose(message: any): void {
+  verbose(message: unknown): void {
     this._log("verbose", message);
   }
 
@@ -92,7 +92,7 @@ export class InternalLogger extends ApplicationManager {
     }
   }
 
-  private _log(level: LogLevel, message: any) {
+  private _log(level: LogLevel, message: unknown) {
     if (!this._application.started) {
       // eslint-disable-next-line no-console
       console.log(util.inspect(message));

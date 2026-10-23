@@ -53,8 +53,8 @@ most likely to fail on a first push.
 - ESLint config: `eslint.config.mjs` — flat config, one file for the whole repo
   (`eslint-plugin-kuzzle` 2.x, which also ships prettier and typescript-eslint).
   The TS ruleset is scoped to `**/*.ts` and `**/*.js` is linted as CommonJS;
-  both are load-bearing, see the comments in the file. ESLint 10 needs Node
-  `^20.19.0 || >=22.12.0`, tighter than the `engines` of the server itself.
+  both are load-bearing, see the comments in the file. Node `>=22.12.0`
+  (`engines`) covers ESLint 10's own requirement.
 - Prettier: `.prettierrc` (semicolons on).
 - Async/await or promises over callbacks — **except** for code invoked before
   the funnel module (network connection handling), which must use callbacks

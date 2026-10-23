@@ -82,7 +82,15 @@ export class KuzzleRequest {
   [_deprecations]: Deprecation[] | undefined;
   [_timestamp]: number;
 
-  constructor(data: any, options?: any) {
+  /**
+   * Both arguments are checked at runtime: `RequestInput` throws on anything
+   * but a plain object, and so does this constructor on non-object options.
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies; the implementation reads them as the
+   * objects those checks make them.
+   */
+  constructor(data: unknown, options?: unknown);
+  constructor(data: JSONObject, options?: JSONObject | null) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -226,6 +234,7 @@ export class KuzzleRequest {
   /**
    * Request result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get result(): any | null {
     return this[_result];
   }
@@ -276,7 +285,7 @@ export class KuzzleRequest {
    *    - `raw` (boolean): instead of a Kuzzle response, forward the result directly (default: false)
    */
   setResult(
-    result: any,
+    result: unknown,
     options: {
       /**
        * HTTP status code
@@ -691,6 +700,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArray(name: string, def: [] | undefined = undefined): any[] {
     return this._getArray(this.input.args, name, name, def, true);
   }
@@ -750,6 +760,7 @@ export class KuzzleRequest {
    * behaviour, named after what it does. Kept because `KuzzleRequest` is part
    * of the public plugin API.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
     return this.getArrayOrCsv(name, def);
   }
@@ -982,6 +993,7 @@ export class KuzzleRequest {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArrayFromBodyOrArgs(name: string, def?: any): JSONObject {
     if (
       this.context.connection.protocol !== "http" ||
@@ -1202,6 +1214,8 @@ export class KuzzleRequest {
     errorName: string,
     def: [] | undefined = undefined,
     querystring = false,
+    // `getBodyArray` answers this undeclared, so it is that public answer.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ): any[] {
     const value = get(obj, name, def);
 

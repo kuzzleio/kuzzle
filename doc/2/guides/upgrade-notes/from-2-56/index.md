@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-order: 100
+order: 200
 title: Upgrading from 2.56 | Upgrade notes | Guide | Core
 meta:
   - name: description
@@ -83,7 +83,7 @@ Other observable changes:
 
 ### Runtime API
 
-- New exports: `withLock`, a distributed and reentrant Redis lock, and `MutexLockLostError`. `withLock` replaces the deprecated `Mutex`; do not use both on the same key.
+- New exports: [`withLock`](/core/2/framework/functions/with-lock), a distributed and reentrant Redis lock, and [`MutexLockLostError`](/core/2/framework/error-classes/mutex-lock-lost-error). `withLock` replaces the deprecated `Mutex`. Both take the same Redis key with `SET NX`, so on the same key they exclude each other, and neither can release the other's lock: you can move your call sites from `Mutex` to `withLock` one at a time, and nodes of different versions stay mutually excluded during a rolling upgrade.
 - `request.response.configure({ result })` sets a result without resetting the status; `request.setResult` stays, deprecated. `request.getArrayOrCsv()` names what `getArrayLegacy()` did; `getArrayLegacy()` is still available, deprecated.
 - **`context.constructors.ESClient` follows `services.storageEngine.majorVersion`.** It always built an Elasticsearch 7 client, even on an Elasticsearch 8 deployment; it now builds a client of the configured major, like `app.storage.StorageClient` already did. Nothing changes on Elasticsearch 7.
   **Action:** on Elasticsearch 8, if a plugin uses this client, check its calls against the 8.x client (for instance, responses are no longer wrapped in `body`).

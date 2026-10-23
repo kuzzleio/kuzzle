@@ -36,6 +36,8 @@ import { NameGenerator } from "../../util/name-generator";
 import type { JSONObject } from "../../types/JSONObject";
 import type { Profile } from "../../model/security/profile";
 import type { User } from "../../model/security/user";
+import type PluginsManager from "../../core/plugin/pluginsManager";
+import type { KuzzleLogger } from "kuzzle-logger";
 
 /**
  * Whatever was thrown, as an `Error`. `catch` answers `unknown`, and the
@@ -51,8 +53,8 @@ function causeOf(thrown: unknown): Error {
 class SecurityController extends NativeController {
   protected readonly subdomain: string;
   protected readonly securityCollections: string[];
-  protected getStrategyMethod: any;
-  protected readonly logger: any;
+  protected getStrategyMethod: PluginsManager["getStrategyMethod"];
+  protected readonly logger: KuzzleLogger;
   protected anonymousId: string | null = null;
 
   static userOrSdk(userId: string | null) {
@@ -1419,7 +1421,7 @@ class SecurityController extends NativeController {
   async _changeUser(
     request: KuzzleRequest,
     id: string,
-    content: any,
+    content: JSONObject,
     userId: string | null,
     profileIds: string[] | null,
   ) {
@@ -1452,7 +1454,7 @@ class SecurityController extends NativeController {
   async _persistUser(
     request: KuzzleRequest,
     profileIds: string[],
-    content: any,
+    content: JSONObject,
     { humanReadableId = true }: { humanReadableId?: boolean } = {},
   ) {
     const credentials = request.getBodyObject("credentials", {});
@@ -1486,7 +1488,7 @@ class SecurityController extends NativeController {
         }
 
         const exists = this.getStrategyMethod(strategy, "exists");
-        alreadyExists = await exists(request, id, strategy);
+        alreadyExists = Boolean(await exists(request, id, strategy));
         if (alreadyExists) {
           if (generated) {
             break; // exit for loop, to regenerate an id

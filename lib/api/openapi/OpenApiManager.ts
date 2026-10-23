@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import type { JSONObject } from "../../types/JSONObject";
 import type { OpenApiDefinition } from "../../types/OpenApiDefinition";
 import { version } from "../../../package.json";
 import { generateOpenApi } from "./openApiGenerator";
@@ -59,8 +60,8 @@ export class OpenApiManager {
    */
   constructor(
     applicationDefinition: OpenApiDefinition,
-    kuzzleRoutes: any[],
-    pluginsRoutes: any[],
+    kuzzleRoutes: JSONObject[],
+    pluginsRoutes: JSONObject[],
   ) {
     this.applicationDefinition = applicationDefinition;
 

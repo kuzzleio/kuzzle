@@ -20,7 +20,13 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    // `node` (node10) is what a CommonJS plugin or application typically
+    // still compiles with, so it is what this gate checks. TypeScript 6
+    // deprecates it (Kuzzle's own program moved to `bundler`); silencing the
+    // deprecation here keeps the most common consumer setting under test.
+    // Revisit when the compiler becomes TypeScript 7, which removes it.
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

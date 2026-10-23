@@ -73,6 +73,7 @@ export type ControllerDefinition = {
       /**
        * Function handler for incoming requests.
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       handler: (request: KuzzleRequest) => Promise<any>;
       /**
        * Declare HTTP routes (optional).

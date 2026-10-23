@@ -11,19 +11,21 @@
  *
  * Two things are stubbed here that are not stubbed elsewhere:
  *
- * - **The `Mutex`.** `createCollection` and `_createHiddenCollection` each
- *   take one, and a real one asks the cache bus in a retry loop. It is not
- *   the subject; the cases assert that it is taken and released.
+ * - **The lock.** `createCollection` and `_createHiddenCollection` each
+ *   take one through `withLock`, which needs Redis. Both entry points mock it
+ *   with `lockFixture.ts`; the cases assert which lock is taken, with which
+ *   options, and that the work happens while it is held.
  * - **The seams these actions stand on** — `hasCollection`,
  *   `deleteCollection`, `_getAvailableIndice`, `_getIndice` — each of which
  *   has its own block in `inventory.ts` (L5a). Everything below them is the
  *   real client stub.
  */
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Mutex } from "../../../../lib/util/mutex";
+import { MutexAcquireError } from "../../../../lib/util/distributedLock";
 
 import type { ESHarness } from "./harness";
+import { locks } from "./lockFixture";
 
 const index = "nyc-open-data";
 const collection = "yellow-taxi";
@@ -33,14 +35,21 @@ const indice = "&nyc-open-data.yellow-taxi";
 export function describeLifecycle(harness: ESHarness) {
   /**
    * `createCollection` and `_createHiddenCollection` serialise themselves on
-   * a Mutex whose real implementation polls the cache bus until it wins. The
-   * lock is not what these cases are about — that it is taken and released
-   * is, so both halves are spies rather than no-ops.
+   * a `withLock` key per index. The lock is mocked (`lockFixture.ts`); what
+   * these cases check is which key is taken, that it waits with no retry
+   * limit as the `Mutex` it replaced did, and what runs while it is held.
    */
-  const stubMutex = () => ({
-    lock: vi.spyOn(Mutex.prototype, "lock").mockResolvedValue(true),
-    unlock: vi.spyOn(Mutex.prototype, "unlock").mockResolvedValue(undefined),
+  beforeEach(() => {
+    locks.taken.length = 0;
+    locks.failWith = undefined;
   });
+
+  const lockOn = (key: string) => locks.taken.find((lock) => lock.key === key);
+
+  /** Whether `key` is held right now, read from inside a stubbed call. */
+  const heldWhen = (key: string) => () => lockOn(key)?.held === true;
+
+  const noRetryLimit = { retryAttempts: Number.POSITIVE_INFINITY };
 
   /**
    * How many nodes `cat.nodes` reports, which is the only thing
@@ -116,7 +125,6 @@ export function describeLifecycle(harness: ESHarness) {
 
   describe("#createCollection", () => {
     const arm = () => {
-      stubMutex();
       armNodeCount(1);
 
       harness.clientStub.indices.create.mockResolvedValue(
@@ -178,18 +186,95 @@ export function describeLifecycle(harness: ESHarness) {
      */
     it("drops the index's placeholder collection once a real one arrives", async () => {
       arm();
-      const mutex = stubMutex();
+      const key = `hiddenCollection/create/${index}`;
+      const deletedUnderLock: boolean[] = [];
       harness.client._hasHiddenCollection.mockResolvedValue(true);
+      harness.client.deleteCollection.mockImplementation(async () => {
+        deletedUnderLock.push(heldWhen(key)());
+      });
 
       await harness.client.createCollection(index, collection, {});
 
-      expect(mutex.lock).toHaveBeenCalled();
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(lockOn(key)).toMatchObject({ config: noRetryLimit, held: false });
       expect(harness.client._hasHiddenCollection).toHaveBeenCalledWith(index);
       expect(harness.client.deleteCollection).toHaveBeenCalledWith(
         index,
         "_kuzzle_keep",
       );
+      expect(deletedUnderLock).toEqual([true]);
+    });
+
+    /*
+     * The case above stubs `deleteCollection`; this one runs it. Deleting the
+     * placeholder must not bring it straight back: once the first real
+     * collection is created, the only indice the client creates is that one.
+     */
+    it("does not recreate the placeholder it just dropped", async () => {
+      arm();
+      const hiddenIndice = `&${index}._kuzzle_keep`;
+      vi.mocked(harness.client.deleteCollection).mockRestore();
+      vi.spyOn(harness.client, "_getIndice").mockResolvedValue(hiddenIndice);
+      vi.spyOn(harness.client, "_checkIfAliasExists").mockResolvedValue(false);
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      harness.clientStub.indices.delete.mockImplementation(async () => {
+        harness.client._hasHiddenCollection.mockResolvedValue(false);
+        return harness.envelope.respond({});
+      });
+
+      await harness.client.createCollection(index, collection, {});
+
+      expect(harness.clientStub.indices.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ index: hiddenIndice }),
+      );
+      expect(createdBody().aliases).toEqual({ [alias]: {} });
+    });
+
+    /*
+     * The lock waits with no limit, so in practice it fails only when Redis
+     * does or when it is lost. It is taken after the indice is created, so the
+     * placeholder stays, and the error goes through the wrapper like an
+     * Elasticsearch one.
+     */
+    it("keeps the placeholder when the lock fails, and rejects through the wrapper", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      const lockError = new MutexAcquireError(
+        `hiddenCollection/create/${index}`,
+        1,
+      );
+      locks.failWith = lockError;
+
+      await expect(
+        harness.client.createCollection(index, collection, {}),
+      ).rejects.toBe(lockError);
+
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(lockError);
+      expect(harness.client.deleteCollection).not.toHaveBeenCalled();
+    });
+
+    /*
+     * The placeholder is what makes an empty index exist. Dropped before a
+     * creation that then fails, it would leave the index with no indice at
+     * all: gone from Elasticsearch while Kuzzle still lists it.
+     */
+    it("keeps the placeholder when the collection cannot be created", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      const mappings = { dynamik: "strict" };
+
+      await expect(
+        harness.client.createCollection(index, collection, { mappings }),
+      ).rejects.toMatchObject({ id: "services.storage.invalid_mapping" });
+
+      harness.clientStub.indices.create.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.createCollection(index, collection, {}),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.client.deleteCollection).not.toHaveBeenCalled();
     });
 
     it("takes the caller's `dynamic` and `_meta` over the common ones", async () => {
@@ -1143,9 +1228,9 @@ export function describeLifecycle(harness: ESHarness) {
       vi.spyOn(harness.client, "_getAvailableIndice").mockResolvedValue(
         hiddenIndice,
       );
-
-      return stubMutex();
     };
+
+    const key = "hiddenCollection/nisantasi";
 
     const createdBody = () => {
       const sent = harness.sent(harness.clientStub.indices.create);
@@ -1160,7 +1245,12 @@ export function describeLifecycle(harness: ESHarness) {
      * creating the same index at once.
      */
     it("creates the placeholder collection that makes an empty index exist", async () => {
-      const mutex = arm();
+      arm();
+      const createdUnderLock: boolean[] = [];
+      harness.clientStub.indices.create.mockImplementation(async () => {
+        createdUnderLock.push(heldWhen(key)());
+        return harness.envelope.respond({});
+      });
 
       await harness.client._createHiddenCollection("nisantasi");
 
@@ -1173,8 +1263,8 @@ export function describeLifecycle(harness: ESHarness) {
         settings: { number_of_shards: 1, number_of_replicas: 1 },
       });
 
-      expect(mutex.lock).toHaveBeenCalled();
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(lockOn(key)).toMatchObject({ config: noRetryLimit, held: false });
+      expect(createdUnderLock).toEqual([true]);
     });
 
     it("does nothing when the placeholder is already there", async () => {
@@ -1215,7 +1305,7 @@ export function describeLifecycle(harness: ESHarness) {
     });
 
     it("releases the lock even when the client fails", async () => {
-      const mutex = arm();
+      arm();
       harness.clientStub.indices.create.mockRejectedValue(
         harness.esClientError,
       );
@@ -1224,7 +1314,24 @@ export function describeLifecycle(harness: ESHarness) {
         harness.client._createHiddenCollection("nisantasi"),
       ).rejects.toBe(harness.esClientError);
 
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(
+        harness.esClientError,
+      );
+      expect(lockOn(key)).toMatchObject({ held: false });
+    });
+
+    it("creates nothing when the lock fails, and rejects through the wrapper", async () => {
+      arm();
+      const lockError = new MutexAcquireError(key, 1);
+      locks.failWith = lockError;
+
+      await expect(
+        harness.client._createHiddenCollection("nisantasi"),
+      ).rejects.toBe(lockError);
+
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(lockError);
+      expect(harness.clientStub.cat.aliases).not.toHaveBeenCalled();
+      expect(harness.clientStub.indices.create).not.toHaveBeenCalled();
     });
   });
 

@@ -154,6 +154,7 @@ export abstract class Plugin {
     /**
      * The key is the authenticator name and the value is the class.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     [name: string]: any;
   };
 
@@ -177,6 +178,7 @@ export abstract class Plugin {
    *
    * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   abstract init(config: JSONObject, context: PluginContext): Promise<any> | any;
 
   /**

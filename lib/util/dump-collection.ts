@@ -84,7 +84,7 @@ export function extractMappingFields(mapping: JSONObject) {
  * @returns The values in the same order as the fields
  * @see https://lodash.com/docs/4.17.15#values
  */
-export function pickValues(object: any, fields: string[]): any[] {
+export function pickValues(object: unknown, fields: string[]): unknown[] {
   return fields.map((f) => formatValueForCSV(get(object, f)));
 }
 
@@ -95,7 +95,7 @@ export function pickValues(object: any, fields: string[]): any[] {
  * @param value The value to format
  * @returns The value or a string telling the value is not scalar
  */
-function formatValueForCSV(value: any) {
+function formatValueForCSV(value: unknown) {
   if (isObject(value)) {
     return "[OBJECT]";
   }
@@ -112,7 +112,7 @@ abstract class AbstractDumper {
   constructor(
     protected readonly index: string,
     protected readonly collection: string,
-    protected readonly query: any = {},
+    protected readonly query: JSONObject = {},
     protected readonly writeStream: stream.Writable,
     protected readonly options: JSONObject = {
       fieldsName: {},
@@ -157,7 +157,7 @@ abstract class AbstractDumper {
    * @param data The data to be written to the dump (can be
    *             an item or anything else).
    */
-  abstract writeLine(data: any): Promise<void>;
+  abstract writeLine(data: unknown): Promise<void>;
 
   /**
    * Iterative call, on each item in the collection to
@@ -167,7 +167,10 @@ abstract class AbstractDumper {
    *
    * @param document The document to be written in a line of the dump.
    */
-  abstract onResult(document: { _id: string; _source: any }): Promise<void>;
+  abstract onResult(document: {
+    _id: string;
+    _source: JSONObject;
+  }): Promise<void>;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public async tearDown() {}
@@ -256,7 +259,7 @@ class JSONLDumper extends AbstractDumper {
     });
   }
 
-  writeLine(content: any): Promise<void> {
+  writeLine(content: unknown): Promise<void> {
     return new Promise((resolve) => {
       if (this.ndjsonStream.write(content)) {
         resolve();
@@ -266,7 +269,7 @@ class JSONLDumper extends AbstractDumper {
     });
   }
 
-  onResult(document: { _id: string; _source: any }): Promise<void> {
+  onResult(document: { _id: string; _source: JSONObject }): Promise<void> {
     return this.writeLine({
       _id: document._id,
       body: document._source,
@@ -282,7 +285,7 @@ class CSVDumper extends AbstractDumper {
   constructor(
     index: string,
     collection: string,
-    query: any = {},
+    query: JSONObject,
     writeStream: stream.Writable,
     options: JSONObject,
     protected fields: string[],
@@ -321,7 +324,7 @@ class CSVDumper extends AbstractDumper {
     return this.writeLine(mappedFieldsName.join(this.options.separator));
   }
 
-  writeLine(content: any): Promise<void> {
+  writeLine(content: unknown): Promise<void> {
     return new Promise((resolve) => {
       if (this.writeStream.write(`${content}\n`)) {
         resolve();
@@ -331,7 +334,7 @@ class CSVDumper extends AbstractDumper {
     });
   }
 
-  onResult(document: { _id: string; _source: any }): Promise<void> {
+  onResult(document: { _id: string; _source: JSONObject }): Promise<void> {
     const values = [document._id, ...pickValues(document._source, this.fields)];
     return this.writeLine(values.join(this.options.separator));
   }
@@ -340,7 +343,7 @@ class CSVDumper extends AbstractDumper {
 export function dumpCollectionDocuments(
   index: string,
   collection: string,
-  query: any = {},
+  query: JSONObject = {},
   format = "jsonl",
   fields: string[] = [],
   options: JSONObject = {},

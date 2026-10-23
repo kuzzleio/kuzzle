@@ -65,7 +65,7 @@ export class BackendConfig extends ApplicationManager {
    * @param path - Path to the configuration key (lodash style)
    * @param value - Value for the configuration key
    */
-  set(path: string, value: any) {
+  set(path: string, value: unknown) {
     if (this._application.started) {
       throw runtimeError.get("already_started", "config");
     }

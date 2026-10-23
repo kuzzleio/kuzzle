@@ -12,6 +12,10 @@ Initializes the plugin private storage.
 
 Can be called as much as needed as long as identical mappings are provided.
 
+In a cluster, the nodes create the collections one at a time, under a cluster-wide lock, and each node waits for that lock with no time limit. <SinceBadge version="2.60.0" /> Before 2.60.0, a single node created them while the others waited, then only loaded them into their cache.
+
+The lock is extended while the collections are created. If it is lost, the returned promise rejects with [MutexLockLostError](/core/2/framework/error-classes/mutex-lock-lost-error).
+
 
 ## Arguments
 

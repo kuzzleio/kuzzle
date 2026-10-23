@@ -9,6 +9,13 @@ description: Mutex class wait() method
 # wait
 
 <SinceBadge version="2.19.1"/>
+<DeprecatedBadge version="2.57.0" />
+
+::: warning
+`Mutex` is deprecated since 2.57.0: use [withLock](/core/2/framework/functions/with-lock) instead. Both take the same Redis key, so a `Mutex` and a `withLock` call on the same resource exclude each other, and call sites can be migrated one at a time.
+:::
+
+`withLock` has no `wait` counterpart: have every node run the initialization under `withLock`, and skip it when it finds the work already done.
 
 ```js
 async wait ({ attemptDelay = this.attemptDelay, timeout = this.timeout }): Promise<boolean> {

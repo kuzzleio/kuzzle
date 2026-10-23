@@ -175,6 +175,61 @@ describe("#service/cache/Redis", () => {
 
       expect(clientOf(redis).options).toMatchObject({ retryStrategy });
     });
+
+    /* ioredis 6 moved to RESP3, TCP keep-alive after 30s and an exponential
+     * reconnection backoff. Kuzzle 2 keeps ioredis 5's behaviour unless the
+     * configuration says otherwise. */
+    it("should default a single client to ioredis 5's connection settings", async () => {
+      await redis.init();
+
+      const { keepAlive, protocol, retryStrategy } = clientOf(redis)
+        .options as {
+        keepAlive: number;
+        protocol: number;
+        retryStrategy: (times: number) => number;
+      };
+
+      expect(protocol).toBe(2);
+      expect(keepAlive).toBe(0);
+      expect([1, 2, 10, 40, 41, 1000].map(retryStrategy)).toEqual([
+        50, 100, 500, 2000, 2000, 2000,
+      ]);
+    });
+
+    it("should default the nodes of a cluster client to ioredis 5's connection settings", async () => {
+      config = { nodes: [{ host: "foobar", port: 6379 }] };
+      redis = new Redis(invalid(config), "internalCache");
+
+      await redis.init();
+
+      expect(clientOf(redis).options).toMatchObject({
+        redisOptions: { keepAlive: 0, protocol: 2 },
+      });
+    });
+
+    it("should let the configuration override ioredis 5's connection settings", async () => {
+      config.options = { keepAlive: 30000, protocol: 3 };
+      redis = new Redis(invalid(config), "internalCache");
+
+      await redis.init();
+
+      expect(clientOf(redis).options).toMatchObject({
+        keepAlive: 30000,
+        protocol: 3,
+      });
+
+      config = {
+        nodes: [{ host: "foobar", port: 6379 }],
+        options: { protocol: 3 },
+      };
+      redis = new Redis(invalid(config), "internalCache");
+
+      await redis.init();
+
+      expect(clientOf(redis).options).toMatchObject({
+        redisOptions: { keepAlive: 0, protocol: 3 },
+      });
+    });
   });
 
   describe("#_setupKeepAlive", () => {

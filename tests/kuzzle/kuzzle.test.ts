@@ -10,7 +10,12 @@ import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
-import { lastMutex, MutexStub, resetMutexes } from "./kuzzleFixture";
+import {
+  MutexAcquireError,
+  MutexLockLostError,
+  withLock,
+} from "../../lib/util/distributedLock";
+import { MutexStub, releaseAllLocksBeforeExit } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -36,6 +41,65 @@ vi.mock("../../lib/kuzzle/vault", async () => {
 vi.mock("../../lib/util/mutex", async () => ({
   Mutex: (await import("./kuzzleFixture")).MutexStub,
 }));
+
+/**
+ * Every lock taken through `withLock`, in order, with what happened to it.
+ * `refused` lists the resources another node holds: those reject with the
+ * real `MutexAcquireError`, as `withLock` does. `lost` lists the resources
+ * whose lock is lost once its callback has run: those reject with the real
+ * `MutexLockLostError`.
+ */
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: { retryAttempts?: number; ttl?: number } | undefined;
+    resource: string;
+  }[] = [];
+
+  return {
+    events: [] as string[],
+    lost: new Set<string>(),
+    refused: new Set<string>(),
+    taken,
+  };
+});
+
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("../../lib/util/distributedLock")>();
+
+  return {
+    ...original,
+    releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
+      .releaseAllLocksBeforeExit,
+    withLock: vi.fn(
+      async (
+        resource: string,
+        callback: () => Promise<unknown>,
+        config?: { retryAttempts?: number; ttl?: number },
+      ) => {
+        locks.taken.push({ config, resource });
+
+        if (locks.refused.has(resource)) {
+          throw new original.MutexAcquireError(resource, 1);
+        }
+
+        locks.events.push(`lock:${resource}`);
+
+        try {
+          const result = await callback();
+
+          if (locks.lost.has(resource)) {
+            throw new original.MutexLockLostError(resource);
+          }
+
+          return result;
+        } finally {
+          locks.events.push(`unlock:${resource}`);
+        }
+      },
+    ),
+  };
+});
 
 /** The five modules `start()` constructs and initialises, in place. */
 vi.mock("../../lib/core/cache/cacheEngine", async () => {
@@ -69,7 +133,13 @@ vi.mock("../../lib/cluster", async () => {
 });
 
 type Internals = {
-  _waitForImportToFinish: () => Promise<unknown>;
+  importTypes: Record<
+    string,
+    (
+      config: unknown,
+      status: { firstCall: boolean; initialized: boolean },
+    ) => Promise<void>
+  >;
   persistHashedImport: (payload: Record<string, unknown>) => Promise<void>;
 };
 
@@ -173,7 +243,10 @@ describe("#kuzzle/Kuzzle", () => {
     const fixture = await import("./kuzzleFixture");
 
     fixture.reset();
-    resetMutexes();
+    locks.taken.length = 0;
+    locks.events.length = 0;
+    locks.refused.clear();
+    locks.lost.clear();
 
     order = [];
     answers = new Map();
@@ -224,7 +297,6 @@ describe("#kuzzle/Kuzzle", () => {
 
   describe("#start", () => {
     beforeEach(() => {
-      internalsOf(kuzzle)._waitForImportToFinish = async () => undefined;
       kuzzle.install = vi.fn(async () => undefined);
       kuzzle.loadInitialState = vi.fn(async () => undefined);
     });
@@ -292,7 +364,6 @@ describe("#kuzzle/Kuzzle", () => {
 
       const withPcre = buildKuzzle();
 
-      internalsOf(withPcre)._waitForImportToFinish = async () => undefined;
       withPcre.install = vi.fn(async () => undefined);
       withPcre.loadInitialState = vi.fn(async () => undefined);
       withPcre.config.realtime.pcreSupport = true;
@@ -478,10 +549,15 @@ describe("#kuzzle/Kuzzle", () => {
 
       await kuzzle.shutdown(1);
 
-      const [release] = MutexStub.releaseAllBeforeExit.mock.invocationCallOrder;
+      for (const releaseAll of [
+        MutexStub.releaseAllBeforeExit,
+        releaseAllLocksBeforeExit,
+      ]) {
+        const [release] = releaseAll.mock.invocationCallOrder;
 
-      expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
-      expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+        expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
+        expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      }
     });
   });
 
@@ -519,6 +595,25 @@ describe("#kuzzle/Kuzzle", () => {
       expect(kuzzle.log.info).toHaveBeenCalledOnce();
     });
 
+    /* As the `Mutex` it replaces: a node waits for as long as another one
+     * runs the installations. */
+    it("should run the installations under a lock with no retry limit", async () => {
+      answers.set("core:storage:private:document:exist", false);
+
+      await kuzzle.install([{ handler, id: "id" }]);
+
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          resource: "backend:installations",
+        },
+      ]);
+      expect(locks.events).toEqual([
+        "lock:backend:installations",
+        "unlock:backend:installations",
+      ]);
+    });
+
     it("should skip an installation that already ran", async () => {
       answers.set("core:storage:private:document:exist", true);
 
@@ -548,8 +643,6 @@ describe("#kuzzle/Kuzzle", () => {
     const payload = { something: "here" };
 
     beforeEach(() => {
-      internalsOf(kuzzle)._waitForImportToFinish = async () => undefined;
-
       toImport = {
         mappings: payload,
         onExistingUsers: "skip",
@@ -658,12 +751,18 @@ describe("#kuzzle/Kuzzle", () => {
       });
 
       it.each([
-        ["neither Redis nor ES holds a hash", null, false],
-        ["ES holds a hash and Redis does not", null, true],
-        ["Redis holds a hash and ES does not", "123", false],
+        ["neither Redis nor ES holds a hash", null, false, false],
+        ["ES holds a hash and Redis does not", null, true, false],
+        ["Redis holds a hash and ES does not", "123", false, false],
+        ["Redis holds the current hash", "current", true, true],
       ])(
         "should persist the payload hash when %s",
-        async (_name, existingRedisHash, existingESHash) => {
+        async (_name, redisHash, existingESHash, initialized) => {
+          const importPayloadHash = sha256(
+            stable({ toImport: { mappings: payload }, toSupport: {} }),
+          );
+          const existingRedisHash =
+            redisHash === "current" ? importPayloadHash : redisHash;
           answers.set("core:cache:internal:get", existingRedisHash);
           answers.set("core:storage:private:document:exist", existingESHash);
           answers.set("core:storage:private:document:get", {
@@ -677,9 +776,8 @@ describe("#kuzzle/Kuzzle", () => {
           ).toHaveBeenCalledWith({
             existingESHash,
             existingRedisHash,
-            importPayloadHash: sha256(
-              stable({ toImport: { mappings: payload }, toSupport: {} }),
-            ),
+            importPayloadHash,
+            initialized,
             type: "mappings",
           });
         },
@@ -694,24 +792,128 @@ describe("#kuzzle/Kuzzle", () => {
 
         await kuzzle.loadInitialState(toImport, {});
 
-        const mutex = lastMutex();
-        const locked = mutex.lock.mock.invocationCallOrder[0];
+        const locked = vi.mocked(withLock).mock.invocationCallOrder.at(-1);
         const read = ask.mock.invocationCallOrder.at(-1);
 
         expect(locked).toBeLessThan(read!);
         expect(order.at(-2)).toBe("ask:core:cache:internal:get");
       });
 
-      /* The lock is held until the `finally`, across every import type and the
-       * wait that follows; the 5s default expired under its own holder. */
-      it("should hold the lock for longer than the default TTL", async () => {
+      /* #3003: a node waits, with no limit, for the node running an import,
+       * instead of carrying on before the import is done. The lock is
+       * refreshed while held; the TTL bounds a node that dies. */
+      it("should wait for each import lock with no retry limit", async () => {
         await kuzzle.loadInitialState(toImport, {});
 
-        expect(lastMutex().ttl).toBeGreaterThan(5000);
+        expect(locks.taken).toEqual(
+          ["fixtures", "mappings", "permissions", "userMappings"].map(
+            (type) => ({
+              config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+              resource: `backend:import:${type}`,
+            }),
+          ),
+        );
+      });
+
+      /* Each type's lock wraps the remaining types: every lock is held until
+       * all the imports are done, then released innermost first, so a node
+       * waiting for the first one starts after every import. */
+      it("should hold every import lock until the imports are done", async () => {
+        internalsOf(kuzzle).importTypes.userMappings = async () => {
+          locks.events.push("import:userMappings");
+        };
+
+        await kuzzle.loadInitialState(toImport, {});
+
+        expect(locks.events).toEqual([
+          "lock:backend:import:fixtures",
+          "lock:backend:import:mappings",
+          "lock:backend:import:permissions",
+          "lock:backend:import:userMappings",
+          "import:userMappings",
+          "unlock:backend:import:userMappings",
+          "unlock:backend:import:permissions",
+          "unlock:backend:import:mappings",
+          "unlock:backend:import:fixtures",
+        ]);
+      });
+
+      /* The node that gets the lock after the importing one finds the
+       * import done for this payload: it only fills its cache. */
+      it("should only fill the cache when the import is already done", async () => {
+        const importMappings = vi.fn(async () => undefined);
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+        answers.set(
+          "core:cache:internal:get",
+          sha256(stable({ toImport: { mappings: payload }, toSupport: {} })),
+        );
+
+        await kuzzle.loadInitialState(toImport, {});
+
+        expect(importMappings).toHaveBeenCalledWith(
+          { toImport, toSupport: {} },
+          { firstCall: false, initialized: true },
+        );
+      });
+
+      /* A hash left by another payload is not "done": the import runs. */
+      it("should import again when the payload changed", async () => {
+        const importMappings = vi.fn(async () => undefined);
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+        answers.set("core:cache:internal:get", "previous-payload-hash");
+        answers.set("core:storage:private:document:exist", true);
+
+        await kuzzle.loadInitialState(toImport, {});
+
+        expect(importMappings).toHaveBeenCalledWith(
+          { toImport, toSupport: {} },
+          { firstCall: true, initialized: false },
+        );
+      });
+
+      /* A lost lock fails the startup instead of carrying on unprotected. */
+      it("should fail when an import lock is lost", async () => {
+        const importMappings = vi.fn(async () => undefined);
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+        locks.lost.add("backend:import:mappings");
+
+        await expect(
+          kuzzle.loadInitialState(toImport, {}),
+        ).rejects.toBeInstanceOf(MutexLockLostError);
+        expect(importMappings).toHaveBeenCalledOnce();
+      });
+
+      /* An import failing with a lock error of its own fails the startup,
+       * and is not run a second time. */
+      it("should fail on a MutexAcquireError thrown by an import", async () => {
+        const failure = new MutexAcquireError("some other lock", 1);
+        const importMappings = vi.fn(async () => {
+          throw failure;
+        });
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+
+        await expect(kuzzle.loadInitialState(toImport, {})).rejects.toBe(
+          failure,
+        );
+        expect(importMappings).toHaveBeenCalledOnce();
+        expect(locks.events).toContain("unlock:backend:import:mappings");
       });
     });
 
     describe("#persistHashedImport", () => {
+      const record = (hash: string) => [
+        "core:storage:private:document:createOrReplace",
+        "kuzzle",
+        "imports",
+        "backend:init:import:mappings",
+        { hash },
+      ];
+      const cache = (hash: string) => [
+        "core:cache:internal:store",
+        "backend:init:import:mappings",
+        hash,
+      ];
+
       /* The id is fixed, so a conflict means another node initialized the same
        * import — convergence, not an error. `create` made it kill startup. */
       it("should write with createOrReplace", async () => {
@@ -719,16 +921,12 @@ describe("#kuzzle/Kuzzle", () => {
           existingESHash: false,
           existingRedisHash: null,
           importPayloadHash: "hash",
+          initialized: false,
           type: "mappings",
         });
 
-        expect(ask).toHaveBeenCalledWith(
-          "core:storage:private:document:createOrReplace",
-          "kuzzle",
-          "imports",
-          "backend:init:import:mappings",
-          { hash: "hash" },
-        );
+        expect(ask).toHaveBeenCalledWith(...record("hash"));
+        expect(ask).toHaveBeenCalledWith(...cache("hash"));
         expect(ask).not.toHaveBeenCalledWith(
           "core:storage:private:document:create",
           expect.anything(),
@@ -738,23 +936,45 @@ describe("#kuzzle/Kuzzle", () => {
         );
       });
 
-      it("should write the cached hash when only Redis holds one", async () => {
-        answers.set("core:cache:internal:get", "cached-hash");
-
+      /* #3003: the hash of a previous payload used to stay, so every start
+       * imported the new payload again. */
+      it("should replace the hashes of a previous payload", async () => {
         await internalsOf(kuzzle).persistHashedImport({
-          existingESHash: false,
-          existingRedisHash: "cached-hash",
+          existingESHash: true,
+          existingRedisHash: "previous",
           importPayloadHash: "hash",
+          initialized: false,
           type: "mappings",
         });
 
-        expect(ask).toHaveBeenCalledWith(
-          "core:storage:private:document:createOrReplace",
-          "kuzzle",
-          "imports",
-          "backend:init:import:mappings",
-          { hash: "cached-hash" },
-        );
+        expect(ask).toHaveBeenCalledWith(...record("hash"));
+        expect(ask).toHaveBeenCalledWith(...cache("hash"));
+      });
+
+      it("should only fill in the side missing the current hash", async () => {
+        await internalsOf(kuzzle).persistHashedImport({
+          existingESHash: false,
+          existingRedisHash: "hash",
+          importPayloadHash: "hash",
+          initialized: true,
+          type: "mappings",
+        });
+
+        expect(ask).toHaveBeenCalledWith(...record("hash"));
+        expect(ask).not.toHaveBeenCalledWith(...cache("hash"));
+      });
+
+      it("should write nothing when both hold the current hash", async () => {
+        await internalsOf(kuzzle).persistHashedImport({
+          existingESHash: true,
+          existingRedisHash: "hash",
+          importPayloadHash: "hash",
+          initialized: true,
+          type: "mappings",
+        });
+
+        expect(ask).not.toHaveBeenCalledWith(...record("hash"));
+        expect(ask).not.toHaveBeenCalledWith(...cache("hash"));
       });
     });
   });

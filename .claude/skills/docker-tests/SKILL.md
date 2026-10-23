@@ -39,6 +39,8 @@ This spins up the 3-node Kuzzle cluster + nginx + Elasticsearch + Redis defined
 in `.ci/test-cluster-7.yml` (or `-8.yml`), waits for every node to be reachable,
 then runs the matching `test:functional:*` npm script (Cucumber) inside a
 container attached to that same cluster network — nothing runs on the host.
+Dependencies install into a Docker volume (`.ci/docker-test-node-modules.yml`),
+so the host's `node_modules` is left alone, as on the unit path.
 
 First run pulls the Elasticsearch image and can take a few minutes; subsequent
 runs are faster. On failure, the last 200 lines of every service's logs are
