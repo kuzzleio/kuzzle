@@ -894,7 +894,7 @@ class ClusterNode {
         this.logger.error(
           "[CLUSTER] Lost the handshake lock while joining the cluster. Shutting down.",
         );
-        global.kuzzle.shutdown();
+        void global.kuzzle.shutdown();
       }
 
       throw error;
