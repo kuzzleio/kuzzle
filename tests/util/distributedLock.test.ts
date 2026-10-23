@@ -380,12 +380,18 @@ describe("#distributedLock", () => {
       await releaseAllLocksBeforeExit();
       await other.del("foo");
 
+      // It gets the key on a later attempt, then gives it back: waited for
+      // rather than assumed done within a fixed delay
+      await vi.waitFor(async () => {
+        expect(
+          await Promise.all(setSpy.mock.results.map(({ value }) => value)),
+        ).toContain("OK");
+      });
+      await vi.waitFor(async () => {
+        expect(await other.exists("foo")).toBe(0);
+      });
+
       expect(await settled(locking)).toBe("pending");
-      // It did get the key, then gave it back
-      expect(
-        await Promise.all(setSpy.mock.results.map(({ value }) => value)),
-      ).toContain("OK");
-      expect(await other.exists("foo")).toBe(0);
       expect(callback).not.toHaveBeenCalled();
     });
   });
