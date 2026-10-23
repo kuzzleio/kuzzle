@@ -28,6 +28,9 @@ export function moduleStub(name: string) {
   };
 }
 
+/** Frees the locks taken through `withLock`; see `MutexStub` for the rest. */
+export const releaseAllLocksBeforeExit = vi.fn(async () => undefined);
+
 const mutexes: MutexStub[] = [];
 
 /**
@@ -69,4 +72,5 @@ export function reset(): void {
 
   resetMutexes();
   MutexStub.releaseAllBeforeExit.mockClear();
+  releaseAllLocksBeforeExit.mockClear();
 }
