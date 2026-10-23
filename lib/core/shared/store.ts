@@ -237,15 +237,17 @@ export class Store {
             collection,
           );
 
+          // A `number_of_shards` left out is not specified, not a mismatch
           if (
-            !isConfigDeprecated &&
+            config.settings.number_of_shards !== undefined &&
             parseInt(existingSettings.number_of_shards) !==
               config.settings.number_of_shards
           ) {
             if (global.NODE_ENV === "development") {
               throw kerror.get(
+                "services",
                 "storage",
-                "wrong_collection_number_of_shards",
+                "wrong_es_static_settings_for_collection_recreation",
                 collection,
                 this.index,
                 this.scope,
