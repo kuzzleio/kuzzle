@@ -53,7 +53,7 @@ import type { StorageEngineElasticsearch } from "../../../types/config/storageEn
 import * as kerror from "../../../kerror";
 import didYouMean from "../../../util/didYouMean";
 import extractFields from "../../../util/extractFields";
-import { Mutex } from "../../../util/mutex";
+import { withLock } from "../../../util/distributedLock";
 import { randomNumber } from "../../../util/name-generator";
 import { assertIsObject } from "../../../util/requestAssertions";
 import { isPlainObject } from "../../../util/safeObject";
@@ -78,6 +78,14 @@ const CHILD_MAPPING_PROPERTIES = ["type"];
 
 // Used for collection emulation
 const HIDDEN_COLLECTION = "_kuzzle_keep";
+
+// The hidden collection locks wait for as long as it takes, as the `Mutex`
+// they replace did: they guard a collection creation, which must not fail
+// only because another request on the same index got there first. The lock
+// is refreshed while held, so a live holder is never overtaken; a crashed
+// one leaves it for at most `ttl` (30 s).
+const HIDDEN_COLLECTION_LOCK = { retryAttempts: Number.POSITIVE_INFINITY };
+
 const ALIAS_PREFIX = "@"; // @todo next major release: Add ALIAS_PREFIX in FORBIDDEN_CHARS
 const PRIVATE_PREFIX = "%";
 const PUBLIC_PREFIX = "&";
@@ -1582,17 +1590,19 @@ export class ES7 {
       );
     }
 
-    const mutex = new Mutex(`hiddenCollection/create/${index}`);
+    // Lock and ES errors alike reach the caller through `formatESError`
     try {
-      await mutex.lock();
-
-      if (await this._hasHiddenCollection(index)) {
-        await this.deleteCollection(index, HIDDEN_COLLECTION);
-      }
+      await withLock(
+        `hiddenCollection/create/${index}`,
+        async () => {
+          if (await this._hasHiddenCollection(index)) {
+            await this.deleteCollection(index, HIDDEN_COLLECTION);
+          }
+        },
+        HIDDEN_COLLECTION_LOCK,
+      );
     } catch (error) {
       throw this._esWrapper.formatESError(error);
-    } finally {
-      await mutex.unlock();
     }
 
     const requestBody: KRequestBody<JSONObject> = {
@@ -3556,34 +3566,35 @@ export class ES7 {
    * @param {String} index Index name
    */
   async _createHiddenCollection(index: string) {
-    const mutex = new Mutex(`hiddenCollection/${index}`);
-
     try {
-      await mutex.lock();
+      await withLock(
+        `hiddenCollection/${index}`,
+        async () => {
+          if (await this._hasHiddenCollection(index)) {
+            return;
+          }
 
-      if (await this._hasHiddenCollection(index)) {
-        return;
-      }
+          const esRequest: IndicesCreate<KRequestBody<JSONObject>> = {
+            body: {
+              aliases: {
+                [this._getAlias(index, HIDDEN_COLLECTION)]: {},
+              },
+              settings: {
+                number_of_replicas:
+                  this._config.defaultSettings.number_of_replicas,
+                number_of_shards: this._config.defaultSettings.number_of_shards,
+              },
+            },
+            index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
+            wait_for_active_shards: await this._getWaitForActiveShards(),
+          };
 
-      const esRequest: IndicesCreate<KRequestBody<JSONObject>> = {
-        body: {
-          aliases: {
-            [this._getAlias(index, HIDDEN_COLLECTION)]: {},
-          },
-          settings: {
-            number_of_replicas: this._config.defaultSettings.number_of_replicas,
-            number_of_shards: this._config.defaultSettings.number_of_shards,
-          },
+          await this._client.indices.create(esRequest);
         },
-        index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
-        wait_for_active_shards: await this._getWaitForActiveShards(),
-      };
-
-      await this._client.indices.create(esRequest);
+        HIDDEN_COLLECTION_LOCK,
+      );
     } catch (e) {
       throw this._esWrapper.formatESError(e);
-    } finally {
-      await mutex.unlock();
     }
   }
 
