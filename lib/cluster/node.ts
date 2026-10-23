@@ -47,7 +47,7 @@ import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
 import createDebug from "../util/debug";
 import { fromKoncordeIndex } from "../util/koncordeCompat";
-import { withLock } from "../util/distributedLock";
+import { MutexLockLostError, withLock } from "../util/distributedLock";
 import ClusterCommand from "./command";
 import { ClusterIdCardHandler } from "./idCardHandler";
 import type { IdCard } from "./idCardHandler";
@@ -795,7 +795,7 @@ class ClusterNode {
 
     // No retry limit: the handshakes are taken one at a time, and the
     // `joinTimeout` above is what gives up on a cluster that never lets this
-    // node in
+    // node in.
     try {
       await withLock(
         "clusterHandshake",
@@ -886,6 +886,18 @@ class ClusterNode {
         },
         { retryAttempts: Number.POSITIVE_INFINITY },
       );
+    } catch (error) {
+      // The handshake cannot be stopped where it is: it may still introduce
+      // this node to the others. Leave the cluster rather than stay in it
+      // half-joined, whatever the application does with the failed startup.
+      if (error instanceof MutexLockLostError) {
+        this.logger.error(
+          "[CLUSTER] Lost the handshake lock while joining the cluster. Shutting down.",
+        );
+        global.kuzzle.shutdown();
+      }
+
+      throw error;
     } finally {
       clearTimeout(handshakeTimeout);
     }

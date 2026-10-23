@@ -81,10 +81,15 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
   return { ClusterIdCardHandler: IdCardHandlerStub, IdCard: actual.IdCard };
 });
 
-vi.mock("../../lib/util/distributedLock", async () => {
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
   const { withLock } = await import("./nodeFixture");
 
-  return { withLock };
+  return {
+    ...(await importOriginal<
+      typeof import("../../lib/util/distributedLock")
+    >()),
+    withLock,
+  };
 });
 
 async function loadSubject() {
@@ -735,6 +740,31 @@ describe("ClusterNode", () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    /* The handshake keeps running once its lock is lost, and may still
+     * introduce this node to the others: it leaves the cluster. */
+    it("shuts down when it loses the handshake lock", async () => {
+      const { MutexLockLostError } =
+        await import("../../lib/util/distributedLock");
+      const lost = new MutexLockLostError("clusterHandshake");
+      withLock.mockRejectedValue(lost);
+
+      await expect(node.handshake()).rejects.toBe(lost);
+
+      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(error.mock.calls.flat().join("\n")).toMatch(
+        /Lost the handshake lock while joining the cluster/,
+      );
+    });
+
+    it("does not shut down for any other handshake failure", async () => {
+      const failure = new Error("Redis is gone");
+      withLock.mockRejectedValue(failure);
+
+      await expect(node.handshake()).rejects.toBe(failure);
+
+      expect(kuzzle.shutdown).not.toHaveBeenCalled();
     });
 
     it("stops the join timer once the handshake is over", async () => {
