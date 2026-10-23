@@ -47,10 +47,7 @@ import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
 import createDebug from "../util/debug";
 import { fromKoncordeIndex } from "../util/koncordeCompat";
-// NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
-// incompatible acquisition/TTL formats and must not contend on the same key —
-// every node takes "clusterHandshake" with `Mutex`. Deferred to #2894.
-import { Mutex } from "../util/mutex"; // NOSONAR
+import { MutexLockLostError, withLock } from "../util/distributedLock";
 import ClusterCommand from "./command";
 import { ClusterIdCardHandler } from "./idCardHandler";
 import type { IdCard } from "./idCardHandler";
@@ -796,100 +793,113 @@ class ClusterNode {
       global.kuzzle.shutdown();
     }, this.config.joinTimeout);
 
-    // NOSONAR (S1874): same deferral as the import above — every node takes
-    // "clusterHandshake" with `Mutex`, so converting one site to `withLock`
-    // would remove the exclusion it exists for. #2894.
-    const lockOptions = { timeout: this.config.joinTimeout };
-    const mutex = new Mutex("clusterHandshake", lockOptions); // NOSONAR
-
+    // No retry limit: the handshakes are taken one at a time, and the
+    // `joinTimeout` above is what gives up on a cluster that never lets this
+    // node in.
     try {
-      await mutex.lock();
+      await withLock(
+        "clusterHandshake",
+        async () => {
+          // Create the ID Key AFTER the handshake lock is actually taken,
+          // to prevent race conditions (other nodes attempting to connect to this
+          // node while it's still initializing)
+          await this.idCardHandler.createIdCard();
+          debug("[CLUSTER] ID Card created");
 
-      // Create the ID Key AFTER the handshake mutex is actually locked,
-      // to prevent race conditions (other nodes attempting to connect to this
-      // node while it's still initializing)
-      await this.idCardHandler.createIdCard();
-      debug("[CLUSTER] ID Card created");
+          const nodeId = this.idCardHandler.nodeId;
 
-      const nodeId = this.idCardHandler.nodeId;
-
-      assert(
-        nodeId !== null,
-        "[CLUSTER] createIdCard() returned without reserving a node id",
-      );
-
-      this.nodeId = nodeId;
-
-      await this.startHeartbeat(); // NOSONAR: TD-26
-      debug("[CLUSTER] Start heartbeat");
-
-      let retried = false;
-      let fullState = null;
-      let nodes;
-
-      debug("[CLUSTER] Start retrieving full state..");
-      do {
-        nodes = await this.idCardHandler.getRemoteIdCards();
-        debug("[CLUSTER] %s remote nodes discovered", nodes.length);
-
-        // No other nodes detected = no handshake required
-        if (nodes.length === 0) {
-          this.trackActivity(this.nodeId, this.ip, nodeActivityEnum.ADDED);
-          return;
-        }
-
-        // Verify that no other node share the same IP address as this one
-        const duplicate = nodes.filter((node) => node.ip === this.ip);
-
-        if (duplicate.length > 0) {
-          this.logger.error(
-            `[CLUSTER] Another node share the same IP address as this one (${this.ip}): ${duplicate[0]?.id}. Shutting down.`,
+          assert(
+            nodeId !== null,
+            "[CLUSTER] createIdCard() returned without reserving a node id",
           );
-          global.kuzzle.shutdown();
-          return;
-        }
 
-        await this.subscribeToNodes(nodes);
+          this.nodeId = nodeId;
 
-        debug("[CLUSTER] Successfully subscribed to nodes");
+          await this.startHeartbeat(); // NOSONAR: TD-26
+          debug("[CLUSTER] Start heartbeat");
 
-        fullState = await this.command.getFullState(nodes);
+          let retried = false;
+          let fullState;
+          let nodes;
 
-        if (fullState === null) {
-          if (!(await this.retryFullState(retried))) {
-            return;
-          }
+          debug("[CLUSTER] Start retrieving full state..");
+          do {
+            nodes = await this.idCardHandler.getRemoteIdCards();
+            debug("[CLUSTER] %s remote nodes discovered", nodes.length);
 
-          retried = true;
-        }
-      } while (fullState === null);
-      debug("[CLUSTER] Fullstate retrieved, loading into node..");
+            // No other nodes detected = no handshake required
+            if (nodes.length === 0) {
+              this.trackActivity(this.nodeId, this.ip, nodeActivityEnum.ADDED);
+              return;
+            }
 
-      await this.fullState.loadFullState(fullState); // NOSONAR: TD-26
-      this.activity = fullState.activity ? fullState.activity : this.activity;
+            // Verify that no other node share the same IP address as this one
+            const duplicate = nodes.filter((node) => node.ip === this.ip);
 
-      debug("[CLUSTER] Fullstate loaded.");
+            if (duplicate.length > 0) {
+              this.logger.error(
+                `[CLUSTER] Another node share the same IP address as this one (${this.ip}): ${duplicate[0]?.id}. Shutting down.`,
+              );
+              global.kuzzle.shutdown();
+              return;
+            }
 
-      const handshakeResponses = await this.command.broadcastHandshake(nodes);
+            await this.subscribeToNodes(nodes);
 
-      debug("[CLUSTER] Successful handshakes with other nodes.");
+            debug("[CLUSTER] Successfully subscribed to nodes");
 
-      await this.syncWithPeers(handshakeResponses, fullState);
+            fullState = await this.command.getFullState(nodes);
 
-      // `createIdCard()` adopts `global.nodeId`, so these are normally the same
-      // string and the line reads as one name (TD-59, #2764). They still differ
-      // in the two cases the adoption cannot cover — a stale IdCard holding the
-      // key, and a Kuzzle running without a Backend — and those are exactly the
-      // cases where a reader needs to be told, so the line says both.
-      this.logger.info(
-        global.nodeId && global.nodeId !== this.nodeId
-          ? `[CLUSTER] Successfully joined the cluster as "${this.nodeId}" (process node id: ${global.nodeId}).`
-          : `[CLUSTER] Successfully joined the cluster as "${this.nodeId}".`,
+            if (fullState === null) {
+              if (!(await this.retryFullState(retried))) {
+                return;
+              }
+
+              retried = true;
+            }
+          } while (fullState === null);
+          debug("[CLUSTER] Fullstate retrieved, loading into node..");
+
+          await this.fullState.loadFullState(fullState); // NOSONAR: TD-26
+          this.activity = fullState.activity ?? this.activity;
+
+          debug("[CLUSTER] Fullstate loaded.");
+
+          const handshakeResponses =
+            await this.command.broadcastHandshake(nodes);
+
+          debug("[CLUSTER] Successful handshakes with other nodes.");
+
+          await this.syncWithPeers(handshakeResponses, fullState);
+
+          // `createIdCard()` adopts `global.nodeId`, so these are normally the same
+          // string and the line reads as one name (TD-59, #2764). They still differ
+          // in the two cases the adoption cannot cover — a stale IdCard holding the
+          // key, and a Kuzzle running without a Backend — and those are exactly the
+          // cases where a reader needs to be told, so the line says both.
+          this.logger.info(
+            global.nodeId && global.nodeId !== this.nodeId
+              ? `[CLUSTER] Successfully joined the cluster as "${this.nodeId}" (process node id: ${global.nodeId}).`
+              : `[CLUSTER] Successfully joined the cluster as "${this.nodeId}".`,
+          );
+          this.trackActivity(this.nodeId, this.ip, nodeActivityEnum.ADDED);
+        },
+        { retryAttempts: Number.POSITIVE_INFINITY },
       );
-      this.trackActivity(this.nodeId, this.ip, nodeActivityEnum.ADDED);
+    } catch (error) {
+      // The handshake cannot be stopped where it is: it may still introduce
+      // this node to the others. Leave the cluster rather than stay in it
+      // half-joined, whatever the application does with the failed startup.
+      if (error instanceof MutexLockLostError) {
+        this.logger.error(
+          "[CLUSTER] Lost the handshake lock while joining the cluster. Shutting down.",
+        );
+        void global.kuzzle.shutdown();
+      }
+
+      throw error;
     } finally {
       clearTimeout(handshakeTimeout);
-      await mutex.unlock();
     }
   }
 

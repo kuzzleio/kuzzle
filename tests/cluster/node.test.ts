@@ -81,10 +81,15 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
   return { ClusterIdCardHandler: IdCardHandlerStub, IdCard: actual.IdCard };
 });
 
-vi.mock("../../lib/util/mutex", async () => {
-  const { MutexStub } = await import("./nodeFixture");
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
+  const { withLock } = await import("./nodeFixture");
 
-  return { Mutex: MutexStub };
+  return {
+    ...(await importOriginal<
+      typeof import("../../lib/util/distributedLock")
+    >()),
+    withLock,
+  };
 });
 
 async function loadSubject() {
@@ -116,7 +121,7 @@ describe("ClusterNode", () => {
   let bus: ReturnType<typeof stubBus>;
   let error: ReturnType<typeof vi.fn>;
   let warn: ReturnType<typeof vi.fn>;
-  let MutexStub: any;
+  let withLock: ReturnType<typeof vi.fn>;
 
   const clusterConfig = () => ({
     activityDepth: 50,
@@ -138,11 +143,13 @@ describe("ClusterNode", () => {
     // A `vi.mock` factory's result is cached per registration, not per module
     // registry, so after `vi.resetModules()` a fresh `import("./nodeFixture")`
     // answers a *second copy* of these classes — one the subject never saw.
-    // Static state set on that copy (the mutex list, the subscription flag)
+    // State set on that copy (the lock stub, the subscription flag)
     // never reaches the code under test, and three tests failed silently that
     // way: an empty list and an unheeded flag both read as "nothing happened".
-    ({ Mutex: MutexStub } = await import("../../lib/util/mutex"));
-    MutexStub.instances.length = 0;
+    withLock = vi.mocked(
+      (await import("../../lib/util/distributedLock")).withLock,
+    );
+    withLock.mockImplementation(async (_resource, callback) => callback());
 
     bus = stubBus();
     error = vi.fn();
@@ -667,16 +674,17 @@ describe("ClusterNode", () => {
     const fullstate = { full: "state", activity: [], nodesState: [] };
 
     it("returns immediately when there is no other node", async () => {
-      kuzzle.config.cluster.joinTimeout = 12345;
       node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
 
       await node.handshake();
 
-      const mutex = MutexStub.instances.at(-1);
-
-      expect(mutex.timeout).toBe(12345);
-      expect(mutex.lock).toHaveBeenCalledTimes(1);
-      expect(mutex.unlock).toHaveBeenCalledTimes(1);
+      expect(withLock.mock.calls).toEqual([
+        [
+          "clusterHandshake",
+          expect.any(Function),
+          { retryAttempts: Number.POSITIVE_INFINITY },
+        ],
+      ]);
 
       expect(node.idCardHandler.createIdCard).toHaveBeenCalledTimes(1);
       expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(1);
@@ -685,6 +693,93 @@ describe("ClusterNode", () => {
       expect(node.fullState.loadFullState).not.toHaveBeenCalled();
       expect(node.heartbeatTimer).not.toBeNull();
       expect(node.idCardHandler.addNode).not.toHaveBeenCalled();
+    });
+
+    /* The ID card is what tells the other nodes this one exists: it must
+     * not be written before this node holds the handshake lock. */
+    it("creates its ID card only once it holds the handshake lock", async () => {
+      node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
+      let locked = false;
+      withLock.mockImplementation(async (_resource, callback) => {
+        locked = true;
+        try {
+          return await callback();
+        } finally {
+          locked = false;
+        }
+      });
+      node.idCardHandler.createIdCard.mockImplementation(async () => {
+        expect(locked).toBe(true);
+      });
+
+      await node.handshake();
+
+      expect(node.idCardHandler.createIdCard).toHaveBeenCalledTimes(1);
+    });
+
+    /* Waiting on the lock has no limit of its own: `joinTimeout` is what
+     * gives up, as it did when `Mutex` waited for that long. */
+    it("shuts down after joinTimeout while still waiting for the lock", async () => {
+      vi.useFakeTimers();
+
+      try {
+        kuzzle.config.cluster.joinTimeout = 12345;
+        withLock.mockImplementation(() => new Promise(() => undefined));
+
+        void node.handshake();
+
+        await vi.advanceTimersByTimeAsync(12344);
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+        expect(error.mock.calls.flat().join("\n")).toMatch(
+          /Failed to join the cluster: timed out \(joinTimeout: 12345ms\)/,
+        );
+        expect(node.idCardHandler.createIdCard).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    /* The handshake keeps running once its lock is lost, and may still
+     * introduce this node to the others: it leaves the cluster. */
+    it("shuts down when it loses the handshake lock", async () => {
+      const { MutexLockLostError } =
+        await import("../../lib/util/distributedLock");
+      const lost = new MutexLockLostError("clusterHandshake");
+      withLock.mockRejectedValue(lost);
+
+      await expect(node.handshake()).rejects.toBe(lost);
+
+      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(error.mock.calls.flat().join("\n")).toMatch(
+        /Lost the handshake lock while joining the cluster/,
+      );
+    });
+
+    it("does not shut down for any other handshake failure", async () => {
+      const failure = new Error("Redis is gone");
+      withLock.mockRejectedValue(failure);
+
+      await expect(node.handshake()).rejects.toBe(failure);
+
+      expect(kuzzle.shutdown).not.toHaveBeenCalled();
+    });
+
+    it("stops the join timer once the handshake is over", async () => {
+      vi.useFakeTimers();
+
+      try {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
+
+        await node.handshake();
+        await vi.advanceTimersByTimeAsync(kuzzle.config.cluster.joinTimeout);
+
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("aborts when another node shares this node's IP", async () => {
