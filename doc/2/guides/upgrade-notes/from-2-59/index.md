@@ -48,6 +48,12 @@ When a collection already exists, Kuzzle compares its `number_of_shards` with th
 
 A real mismatch in development mode now fails with its documented error, [`services.storage.wrong_es_static_settings_for_collection_recreation`](/core/2/api/errors/error-codes/services), instead of `core.fatal.unexpected_error`. In production, it is still only logged as a warning.
 
+### Placeholder index of an empty Kuzzle index
+
+An index created with `index:create` holds a hidden `_kuzzle_keep` collection, backed by its own Elasticsearch index, so that the empty index exists in Elasticsearch. Creating the first real collection was meant to drop it, but it was recreated straight away: every Kuzzle index kept that extra Elasticsearch index. It is now dropped, once the real collection has been created.
+
+Indexes that already hold it keep it until a new collection is created in them; nothing removes it on upgrade. Deleting a collection still recreates it, as before.
+
 ### Logs
 
 - **Errors are logged under `err`.** Kuzzle uses kuzzle-logger 1.5 or later: an error is logged under an `err` field, with its `name`, `message`, `stack`, `cause` and custom properties (such as a `KuzzleError`'s `id` and `status`), instead of having only its enumerable properties spread at the top level of the log entry. The `namespace`, `nodeId` and `requestId` fields are applied to error entries too.
