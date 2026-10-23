@@ -26,7 +26,7 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
-import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
+import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
 
@@ -1408,37 +1408,36 @@ class ClientAdapter {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
-    // incompatible acquisition/TTL formats and must not contend on the same
-    // key — swapping it is a behaviour change, deferred to #2894.
-    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 }); // NOSONAR
+    // Mapping loads run one at a time across the cluster, with no retry
+    // limit (the `Mutex` it replaces waited forever too). The lock is
+    // refreshed while the mappings load; if it is lost, `loadMappings`
+    // rejects with `MutexLockLostError`.
+    await withLock(
+      "loadMappings",
+      async () => {
+        for (const [index, collections] of Object.entries(fixtures)) {
+          if (!isPlainObject(collections)) {
+            throw kerror.get(
+              "api",
+              "assert",
+              "invalid_argument",
+              collections,
+              "object",
+            );
+          }
 
-    await mutex.lock();
-
-    try {
-      for (const [index, collections] of Object.entries(fixtures)) {
-        if (!isPlainObject(collections)) {
-          throw kerror.get(
-            "api",
-            "assert",
-            "invalid_argument",
-            collections,
-            "object",
-          );
+          for (const [collection, mappings] of Object.entries(collections)) {
+            await this._loadCollectionMappings(
+              index,
+              collection,
+              mappings,
+              options,
+            );
+          }
         }
-
-        for (const [collection, mappings] of Object.entries(collections)) {
-          await this._loadCollectionMappings(
-            index,
-            collection,
-            mappings,
-            options,
-          );
-        }
-      }
-    } finally {
-      await mutex.unlock();
-    }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+    );
   }
 
   /**
