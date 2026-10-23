@@ -50,6 +50,7 @@ import * as kerror from "../kerror";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
+import { releaseAllLocksBeforeExit } from "../util/distributedLock";
 import { Mutex } from "../util/mutex";
 import type {
   ImportConfig,
@@ -412,7 +413,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
     // mid-startup is often in the middle of one (F-13).
-    await Mutex.releaseAllBeforeExit(); // NOSONAR: frees locks taken through the deprecated API
+    await Promise.all([
+      releaseAllLocksBeforeExit(),
+      Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
+    ]);
 
     this.log.info("Halted.");
 

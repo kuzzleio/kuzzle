@@ -12,7 +12,13 @@ export * from "./lib/kerror/errors";
 
 export * from "./lib/util/mutex";
 
-export * from "./lib/util/distributedLock";
+// Explicit: `releaseAllLocksBeforeExit` is internal to Kuzzle's shutdown
+export {
+  MutexAcquireError,
+  MutexLockLostError,
+  withLock,
+} from "./lib/util/distributedLock";
+export type { MutexConfig } from "./lib/util/distributedLock";
 
 export * from "./lib/util/Inflector";
 

@@ -21,6 +21,7 @@ describe("#distributedLock", () => {
   let withLock: typeof import("../../lib/util/distributedLock").withLock;
   let MutexAcquireError: typeof import("../../lib/util/distributedLock").MutexAcquireError;
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
+  let releaseAllLocksBeforeExit: typeof import("../../lib/util/distributedLock").releaseAllLocksBeforeExit;
 
   beforeEach(async () => {
     client = new RedisMock();
@@ -33,8 +34,12 @@ describe("#distributedLock", () => {
     // Force lib/util/distributedLock.ts to re-evaluate so its module-level
     // client cache starts fresh for every test.
     vi.resetModules();
-    ({ withLock, MutexAcquireError, MutexLockLostError } =
-      await import("../../lib/util/distributedLock"));
+    ({
+      withLock,
+      MutexAcquireError,
+      MutexLockLostError,
+      releaseAllLocksBeforeExit,
+    } = await import("../../lib/util/distributedLock"));
   });
 
   afterEach(() => {
@@ -286,6 +291,108 @@ describe("#distributedLock", () => {
       } finally {
         process.off("unhandledRejection", unhandled);
       }
+    });
+  });
+  /*
+   * F-13: a node evicted while starting its plugins exited holding a lock,
+   * and another node timed out waiting on it for the lock's TTL.
+   * `process.exit` skips the `finally` that would release it.
+   */
+  describe("#releaseAllLocksBeforeExit", () => {
+    /** Settles to "pending" when `promise` has not settled on its own. */
+    const settled = (promise: Promise<unknown>) =>
+      Promise.race([
+        promise.then(
+          () => "settled",
+          () => "settled",
+        ),
+        new Promise((resolve) => setTimeout(() => resolve("pending"), 50)),
+      ]);
+
+    it("frees every lock still held, and only those", async () => {
+      await other.set("theirs", "node-2", "PX", 10000);
+      await withLock("done", async () => "released already");
+
+      let started = 0;
+      const never = new Promise<void>(() => undefined);
+      const hold = (key: string) =>
+        withLock(key, async () => {
+          started++;
+          await never;
+        });
+
+      void hold("foo");
+      void hold("bar");
+      await vi.waitFor(() => expect(started).toBe(2));
+
+      await releaseAllLocksBeforeExit();
+
+      expect(await other.exists("foo", "bar")).toBe(0);
+      expect(await other.get("theirs")).toBe("node-2");
+    });
+
+    it("frees the other locks when one cannot be freed", async () => {
+      let started = 0;
+      const never = new Promise<void>(() => undefined);
+
+      void withLock("foo", async () => {
+        started++;
+        await never;
+      });
+      void withLock("bar", async () => {
+        started++;
+        await never;
+      });
+      await vi.waitFor(() => expect(started).toBe(2));
+
+      const evalsha = client.evalsha.bind(client);
+      vi.spyOn(client, "evalsha").mockImplementation(((
+        ...args: Parameters<typeof client.evalsha>
+      ) =>
+        args[2] === "foo"
+          ? Promise.reject(new Error("Redis is gone"))
+          : evalsha(...args)) as typeof client.evalsha);
+
+      await expect(releaseAllLocksBeforeExit()).resolves.toBeUndefined();
+      expect(await other.exists("bar")).toBe(0);
+    });
+
+    it("never settles a lock asked for afterwards, and takes nothing", async () => {
+      await releaseAllLocksBeforeExit();
+      const setSpy = vi.spyOn(client, "set");
+      const callback = vi.fn(async () => "never");
+
+      expect(await settled(withLock("foo", callback))).toBe("pending");
+      expect(callback).not.toHaveBeenCalled();
+      expect(setSpy).not.toHaveBeenCalled();
+    });
+
+    it("gives back a lock acquired while it was running", async () => {
+      await other.set("foo", "node-2", "PX", 10000);
+      const setSpy = vi.spyOn(client, "set");
+      const callback = vi.fn(async () => "never");
+
+      const locking = withLock("foo", callback, {
+        retryAttempts: 50,
+        retryDelay: 20,
+      });
+
+      await releaseAllLocksBeforeExit();
+      await other.del("foo");
+
+      // It gets the key on a later attempt, then gives it back: waited for
+      // rather than assumed done within a fixed delay
+      await vi.waitFor(async () => {
+        expect(
+          await Promise.all(setSpy.mock.results.map(({ value }) => value)),
+        ).toContain("OK");
+      });
+      await vi.waitFor(async () => {
+        expect(await other.exists("foo")).toBe(0);
+      });
+
+      expect(await settled(locking)).toBe("pending");
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 });

@@ -117,6 +117,32 @@ const lockContext = new AsyncLocalStorage<Set<string>>();
 
 let clientPromise: Promise<RedisClient> | undefined;
 
+// Every lock this process holds, so that it can give them back before it
+// exits (see `releaseAllLocksBeforeExit`).
+const held = new Set<ResourceMutex>();
+let exiting = false;
+
+/**
+ * Frees every lock taken by `withLock` that this process still holds, and
+ * stops it from taking new ones. Only meant to be called right before
+ * `process.exit`, which skips the `finally` that would release them.
+ *
+ * A process that exits holding a lock leaves it in Redis until its TTL
+ * expires, and every node waiting on it waits that long (step 15, F-13).
+ *
+ * From then on, `withLock` never settles and never runs its callback: the
+ * process is about to exit, and rejecting would send the caller down a path
+ * meant for a lock held by another node.
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export async function releaseAllLocksBeforeExit(): Promise<void> {
+  exiting = true;
+
+  // Best effort: a lock that cannot be freed still expires with its TTL.
+  await Promise.allSettled([...held].map((mutex) => mutex.release()));
+}
+
 /**
  * Lazily fetches and memoizes the internal cache's raw ioredis client.
  * Self-healing: if the very first call happens before the cache engine has
@@ -170,9 +196,13 @@ export async function withLock<T>(
   callback: () => Promise<T>,
   config: MutexConfig = {},
 ): Promise<T> {
-  const held = lockContext.getStore();
+  if (exiting) {
+    return new Promise<never>(() => undefined);
+  }
 
-  if (held?.has(key)) {
+  const ancestors = lockContext.getStore();
+
+  if (ancestors?.has(key)) {
     return callback();
   }
 
@@ -202,8 +232,16 @@ export async function withLock<T>(
     throw new MutexAcquireError(key, retryAttempts + 1);
   }
 
+  held.add(mutex);
+
+  // Acquired while `releaseAllLocksBeforeExit` was running: give it back at once
+  if (exiting) {
+    await releaseQuietly(mutex, key);
+    return new Promise<never>(() => undefined);
+  }
+
   try {
-    const nextHeld = new Set(held);
+    const nextHeld = new Set(ancestors);
     nextHeld.add(key);
 
     const callbackPromise = lockContext.run(nextHeld, () => callback());
@@ -211,10 +249,18 @@ export async function withLock<T>(
     // Settles as soon as the lock is lost, without waiting for the callback
     return await Promise.race([callbackPromise, lockLost]);
   } finally {
-    // A failed release only leaves the key to expire with its TTL: it must
-    // not replace the callback's own outcome
-    await mutex.release().catch((error: unknown) => {
-      debug("Failed to release lock %s: %s", key, error);
-    });
+    await releaseQuietly(mutex, key);
   }
+}
+
+/**
+ * A failed release only leaves the key to expire with its TTL: it must not
+ * replace the callback's own outcome
+ */
+async function releaseQuietly(mutex: ResourceMutex, key: string) {
+  held.delete(mutex);
+
+  await mutex.release().catch((error: unknown) => {
+    debug("Failed to release lock %s: %s", key, error);
+  });
 }

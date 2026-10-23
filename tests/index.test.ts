@@ -18,3 +18,20 @@ describe("index — the SDK re-export", () => {
     );
   });
 });
+
+/**
+ * `releaseAllLocksBeforeExit` lives next to `withLock` because it needs the
+ * locks it holds, but it belongs to Kuzzle's shutdown, not to the package's API.
+ */
+describe("index — the distributed lock", () => {
+  it.each(["withLock", "MutexAcquireError", "MutexLockLostError"])(
+    "exports %s",
+    (name) => {
+      expect(kuzzle).toHaveProperty(name);
+    },
+  );
+
+  it("does not export releaseAllLocksBeforeExit", () => {
+    expect(kuzzle).not.toHaveProperty("releaseAllLocksBeforeExit");
+  });
+});

@@ -10,7 +10,12 @@ import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
-import { lastMutex, MutexStub, resetMutexes } from "./kuzzleFixture";
+import {
+  lastMutex,
+  MutexStub,
+  releaseAllLocksBeforeExit,
+  resetMutexes,
+} from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -35,6 +40,12 @@ vi.mock("../../lib/kuzzle/vault", async () => {
 
 vi.mock("../../lib/util/mutex", async () => ({
   Mutex: (await import("./kuzzleFixture")).MutexStub,
+}));
+
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lib/util/distributedLock")>()),
+  releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
+    .releaseAllLocksBeforeExit,
 }));
 
 /** The five modules `start()` constructs and initialises, in place. */
@@ -478,10 +489,15 @@ describe("#kuzzle/Kuzzle", () => {
 
       await kuzzle.shutdown(1);
 
-      const [release] = MutexStub.releaseAllBeforeExit.mock.invocationCallOrder;
+      for (const releaseAll of [
+        MutexStub.releaseAllBeforeExit,
+        releaseAllLocksBeforeExit,
+      ]) {
+        const [release] = releaseAll.mock.invocationCallOrder;
 
-      expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
-      expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+        expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
+        expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      }
     });
   });
 
