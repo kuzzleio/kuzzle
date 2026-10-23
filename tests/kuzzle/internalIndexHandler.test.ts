@@ -9,15 +9,10 @@ import { restoreKuzzle, stubKuzzle } from "../mocks/kuzzle";
 const INDEX = "%kuzzle";
 
 /**
- * Every mutex the subject and its base class take.
- *
- * ⚠️ Two modules reach for `lib/util/mutex` on this path — the handler, for
- * `InternalIndexBootstrap`, and `Store.init`, for `Store.init(%kuzzle)`. The
- * Mocha spec had to say so twice (`mockrequire` the module, then `reRequire`
- * `core/shared/store` so the base class picked the stub up); `vi.mock`
- * replaces the module for the whole graph, so one declaration covers both.
- * `MutexMock.__getLastMutex()` becomes this list, which says *which* locks
- * were taken rather than only the last one.
+ * Every mutex the base class takes: `Store.init`, for `Store.init(%kuzzle)`.
+ * `vi.mock` replaces the module for the whole graph, so the base class picks
+ * the stub up too. The handler's own `InternalIndexBootstrap` lock goes
+ * through `withLock`, listed in `locks` below.
  */
 const mutexes = vi.hoisted(() => {
   const taken: {
@@ -29,6 +24,37 @@ const mutexes = vi.hoisted(() => {
 
   return { granted: true, taken };
 });
+
+/** Every lock taken through `withLock`, and whether it was given back. */
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: { retryAttempts?: number } | undefined;
+    released: boolean;
+    resource: string;
+  }[] = [];
+
+  return { taken };
+});
+
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lib/util/distributedLock")>()),
+  withLock: vi.fn(
+    async (
+      resource: string,
+      callback: () => Promise<unknown>,
+      config?: { retryAttempts?: number },
+    ) => {
+      const lock = { config, released: false, resource };
+      locks.taken.push(lock);
+
+      try {
+        return await callback();
+      } finally {
+        lock.released = true;
+      }
+    },
+  ),
+}));
 
 vi.mock("../../lib/util/mutex", () => ({
   Mutex: class {
@@ -64,6 +90,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
   beforeEach(() => {
     mutexes.taken.length = 0;
     mutexes.granted = true;
+    locks.taken.length = 0;
     randomBytes.mockClear();
 
     answers = {};
@@ -158,20 +185,20 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(bootstrap).toHaveBeenCalledTimes(1);
 
       /*
-       * Two locks, not one: `Store.init` takes its own before creating the
-       * collections. The Mocha spec read only the last mutex built, so it
-       * could not have said which of the two it was looking at.
+       * Two locks, not one: `Store.init` takes its own (still a `Mutex`)
+       * before creating the collections. The bootstrap one waits with no
+       * retry limit, as the `Mutex` it replaces did.
        */
-      const bootstrapLock = mutexes.taken.find(
-        (mutex) => mutex.resource === "InternalIndexBootstrap",
-      );
-
       expect(mutexes.taken.map((mutex) => mutex.resource)).toEqual([
         `Store.init(${INDEX})`,
-        "InternalIndexBootstrap",
       ]);
-      expect(bootstrapLock?.lock).toHaveBeenCalledTimes(1);
-      expect(bootstrapLock?.unlock).toHaveBeenCalledTimes(1);
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          released: true,
+          resource: "InternalIndexBootstrap",
+        },
+      ]);
 
       expect(asked("core:storage:private:document:create")).toContainEqual([
         INDEX,
@@ -237,11 +264,11 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       await expect(handler.init()).rejects.toThrow("bootstrap failed");
 
-      const bootstrapLock = mutexes.taken.find(
-        (mutex) => mutex.resource === "InternalIndexBootstrap",
+      const bootstrapLock = locks.taken.find(
+        (lock) => lock.resource === "InternalIndexBootstrap",
       );
 
-      expect(bootstrapLock?.unlock).toHaveBeenCalledTimes(1);
+      expect(bootstrapLock?.released).toBe(true);
     });
   });
 

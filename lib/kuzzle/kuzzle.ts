@@ -50,7 +50,11 @@ import * as kerror from "../kerror";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
-import { releaseAllLocksBeforeExit } from "../util/distributedLock";
+import {
+  MutexAcquireError,
+  releaseAllLocksBeforeExit,
+  withLock,
+} from "../util/distributedLock";
 import { Mutex } from "../util/mutex";
 import type {
   ImportConfig,
@@ -447,51 +451,52 @@ class Kuzzle extends KuzzleEventEmitter {
       return;
     }
 
-    const mutex = new Mutex("backend:installations");
-    await mutex.lock();
-
-    try {
-      for (const installation of installations) {
-        const isAlreadyInstalled = await this.ask(
-          "core:storage:private:document:exist",
-          "kuzzle",
-          "installations",
-          installation.id,
-        );
-
-        if (!isAlreadyInstalled) {
-          try {
-            await installation.handler();
-          } catch (error) {
-            throw kerror.get(
-              "plugin",
-              "runtime",
-              "unexpected_installation_error",
-              installation.id,
-              error,
-            );
-          }
-
-          await this.ask(
-            "core:storage:private:document:create",
+    // No retry limit: another node is running the installations, and this
+    // one must not start before they are recorded
+    await withLock(
+      "backend:installations",
+      async () => {
+        for (const installation of installations) {
+          const isAlreadyInstalled = await this.ask(
+            "core:storage:private:document:exist",
             "kuzzle",
             "installations",
-            {
-              description: installation.description,
-              handler: installation.handler.toString(),
-              installedAt: Date.now(),
-            },
-            { id: installation.id },
+            installation.id,
           );
 
-          this.log.info(
-            `[✔] Install code "${installation.id}" successfully executed`,
-          );
+          if (!isAlreadyInstalled) {
+            try {
+              await installation.handler();
+            } catch (error) {
+              throw kerror.get(
+                "plugin",
+                "runtime",
+                "unexpected_installation_error",
+                installation.id,
+                error,
+              );
+            }
+
+            await this.ask(
+              "core:storage:private:document:create",
+              "kuzzle",
+              "installations",
+              {
+                description: installation.description,
+                handler: installation.handler.toString(),
+                installedAt: Date.now(),
+              },
+              { id: installation.id },
+            );
+
+            this.log.info(
+              `[✔] Install code "${installation.id}" successfully executed`,
+            );
+          }
         }
-      }
-    } finally {
-      await mutex.unlock();
-    }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY },
+    );
   }
 
   // For testing purpose
@@ -786,47 +791,43 @@ class Kuzzle extends KuzzleEventEmitter {
       return;
     }
 
-    const lockedMutex = [];
+    const importTypes = Object.entries(this.importTypes);
 
-    try {
-      for (const [type, importMethod] of Object.entries(this.importTypes)) {
-        const importPayload = {};
+    // Imports the types from `index` on. Each type's lock is taken around the
+    // remaining types, so that every lock taken is held until all the imports
+    // are done, including the wait that follows them.
+    const importFrom = async (index: number): Promise<void> => {
+      const next = importTypes[index];
 
-        switch (type) {
-          case "fixtures":
-            _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
-            break;
-          case "mappings":
-            _.set(importPayload, "toSupport.mappings", toSupport.mappings);
-            _.set(importPayload, "toImport.mappings", toImport.mappings);
-            break;
-          case "permissions":
-            _.set(importPayload, "toSupport.securities", toSupport.securities);
-            _.set(importPayload, "toImport.profiles", toImport.profiles);
-            _.set(importPayload, "toImport.roles", toImport.roles);
-            _.set(importPayload, "toImport.users", toImport.users);
-            break;
-        }
+      if (!next) {
+        await this._waitForImportToFinish();
+        return;
+      }
 
-        // `?? ""`: `json-stable-stringify` answers undefined for a value it
-        // cannot serialise, and the payload is built right above.
-        const importPayloadHash = sha256(stringify(importPayload) ?? "");
-        // `timeout: 0` means a single acquisition attempt: exactly one node
-        // runs the import and the others carry on with `locked: false`.
-        // The TTL has to outlive the import itself, because this lock is held
-        // until the `finally` below — across every import type and the wait
-        // that follows. It is still an upper bound rather than a guarantee,
-        // which is why the bookkeeping write below is idempotent (TD-69).
-        // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two
-        // use incompatible acquisition/TTL formats and must not contend on the
-        // same key — every other node still takes this lock with `Mutex`, so
-        // swapping one site would remove the exclusion it exists for. Deferred
-        // to #2894, like the remaining call sites.
-        const lockOptions = { timeout: 0, ttl: 60000 };
-        const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
+      const [type, importMethod] = next;
+      const importPayload = {};
 
-        const locked = await mutex.lock();
+      switch (type) {
+        case "fixtures":
+          _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
+          break;
+        case "mappings":
+          _.set(importPayload, "toSupport.mappings", toSupport.mappings);
+          _.set(importPayload, "toImport.mappings", toImport.mappings);
+          break;
+        case "permissions":
+          _.set(importPayload, "toSupport.securities", toSupport.securities);
+          _.set(importPayload, "toImport.profiles", toImport.profiles);
+          _.set(importPayload, "toImport.roles", toImport.roles);
+          _.set(importPayload, "toImport.users", toImport.users);
+          break;
+      }
 
+      // `?? ""`: `json-stable-stringify` answers undefined for a value it
+      // cannot serialise, and the payload is built right above.
+      const importPayloadHash = sha256(stringify(importPayload) ?? "");
+
+      const importType = async (locked: boolean) => {
         // Read the bookkeeping *after* the lock, never before: a read taken
         // before acquiring it is not protected by it, and the holder that
         // acted on a stale "not initialized" used to create a document the
@@ -870,8 +871,6 @@ class Kuzzle extends KuzzleEventEmitter {
         );
 
         if (locked) {
-          lockedMutex.push(mutex);
-
           await this.persistHashedImport({
             existingESHash,
             existingRedisHash,
@@ -879,14 +878,39 @@ class Kuzzle extends KuzzleEventEmitter {
             type,
           });
         }
+
+        await importFrom(index + 1);
+      };
+
+      // A single acquisition attempt: exactly one node runs the import and
+      // the others carry on with `locked: false`. The lock is refreshed for
+      // as long as it is held; the bookkeeping write stays idempotent all the
+      // same, in case it is lost (TD-69).
+      let acquired = false;
+
+      try {
+        await withLock(
+          `backend:import:${type}`,
+          async () => {
+            acquired = true;
+            await importType(true);
+          },
+          { retryAttempts: 0, ttl: 60000 },
+        );
+      } catch (error) {
+        // Only this lock being taken elsewhere means "not locked": the same
+        // error thrown by an import itself is that import's failure
+        if (acquired || !(error instanceof MutexAcquireError)) {
+          throw error;
+        }
+
+        await importType(false);
       }
+    };
 
-      await this._waitForImportToFinish();
+    await importFrom(0);
 
-      this.log.info("[✔] Import successful");
-    } finally {
-      await Promise.all(lockedMutex.map((mutex) => mutex.unlock()));
-    }
+    this.log.info("[✔] Import successful");
   }
 
   dump(suffix: string) {

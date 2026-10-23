@@ -31,34 +31,14 @@ export function moduleStub(name: string) {
 /** Frees the locks taken through `withLock`; see `MutexStub` for the rest. */
 export const releaseAllLocksBeforeExit = vi.fn(async () => undefined);
 
-const mutexes: MutexStub[] = [];
-
 /**
- * The real `Mutex` talks to the cache; what a spec needs to see is that it was
- * taken, with what TTL, and when relative to the reads it guards.
+ * The real `Mutex` talks to the cache. `Kuzzle` no longer takes one itself:
+ * all it still does is free, on shutdown, those taken through the deprecated
+ * API.
  */
 export class MutexStub {
   static releaseAllBeforeExit = vi.fn(async () => undefined);
-
-  public lock = vi.fn(async () => true);
-  public unlock = vi.fn(async () => undefined);
-  public ttl: number;
-
-  constructor(
-    public id: string,
-    options: { ttl?: number } = {},
-  ) {
-    this.ttl = options.ttl ?? 5000;
-    mutexes.push(this);
-  }
 }
-
-/** The mutex taken last — the one guarding the final import type. */
-export const lastMutex = () => mutexes[mutexes.length - 1];
-
-export const resetMutexes = () => {
-  mutexes.length = 0;
-};
 
 /** Puts every stub back between tests. */
 export function reset(): void {
@@ -70,7 +50,6 @@ export function reset(): void {
     init.mockClear();
   }
 
-  resetMutexes();
   MutexStub.releaseAllBeforeExit.mockClear();
   releaseAllLocksBeforeExit.mockClear();
 }

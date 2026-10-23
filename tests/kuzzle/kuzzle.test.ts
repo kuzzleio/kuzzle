@@ -10,12 +10,8 @@ import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
-import {
-  lastMutex,
-  MutexStub,
-  releaseAllLocksBeforeExit,
-  resetMutexes,
-} from "./kuzzleFixture";
+import { MutexAcquireError, withLock } from "../../lib/util/distributedLock";
+import { MutexStub, releaseAllLocksBeforeExit } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -42,11 +38,51 @@ vi.mock("../../lib/util/mutex", async () => ({
   Mutex: (await import("./kuzzleFixture")).MutexStub,
 }));
 
-vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../lib/util/distributedLock")>()),
-  releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
-    .releaseAllLocksBeforeExit,
-}));
+/**
+ * Every lock taken through `withLock`, in order, with what happened to it.
+ * `refused` lists the resources another node holds: those reject with the
+ * real `MutexAcquireError`, as `withLock` does.
+ */
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: { retryAttempts?: number; ttl?: number } | undefined;
+    resource: string;
+  }[] = [];
+
+  return { events: [] as string[], refused: new Set<string>(), taken };
+});
+
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("../../lib/util/distributedLock")>();
+
+  return {
+    ...original,
+    releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
+      .releaseAllLocksBeforeExit,
+    withLock: vi.fn(
+      async (
+        resource: string,
+        callback: () => Promise<unknown>,
+        config?: { retryAttempts?: number; ttl?: number },
+      ) => {
+        locks.taken.push({ config, resource });
+
+        if (locks.refused.has(resource)) {
+          throw new original.MutexAcquireError(resource, 1);
+        }
+
+        locks.events.push(`lock:${resource}`);
+
+        try {
+          return await callback();
+        } finally {
+          locks.events.push(`unlock:${resource}`);
+        }
+      },
+    ),
+  };
+});
 
 /** The five modules `start()` constructs and initialises, in place. */
 vi.mock("../../lib/core/cache/cacheEngine", async () => {
@@ -81,6 +117,13 @@ vi.mock("../../lib/cluster", async () => {
 
 type Internals = {
   _waitForImportToFinish: () => Promise<unknown>;
+  importTypes: Record<
+    string,
+    (
+      config: unknown,
+      status: { firstCall: boolean; initialized: boolean; locked: boolean },
+    ) => Promise<void>
+  >;
   persistHashedImport: (payload: Record<string, unknown>) => Promise<void>;
 };
 
@@ -184,7 +227,9 @@ describe("#kuzzle/Kuzzle", () => {
     const fixture = await import("./kuzzleFixture");
 
     fixture.reset();
-    resetMutexes();
+    locks.taken.length = 0;
+    locks.events.length = 0;
+    locks.refused.clear();
 
     order = [];
     answers = new Map();
@@ -535,6 +580,25 @@ describe("#kuzzle/Kuzzle", () => {
       expect(kuzzle.log.info).toHaveBeenCalledOnce();
     });
 
+    /* As the `Mutex` it replaces: a node waits for as long as another one
+     * runs the installations. */
+    it("should run the installations under a lock with no retry limit", async () => {
+      answers.set("core:storage:private:document:exist", false);
+
+      await kuzzle.install([{ handler, id: "id" }]);
+
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          resource: "backend:installations",
+        },
+      ]);
+      expect(locks.events).toEqual([
+        "lock:backend:installations",
+        "unlock:backend:installations",
+      ]);
+    });
+
     it("should skip an installation that already ran", async () => {
       answers.set("core:storage:private:document:exist", true);
 
@@ -710,20 +774,83 @@ describe("#kuzzle/Kuzzle", () => {
 
         await kuzzle.loadInitialState(toImport, {});
 
-        const mutex = lastMutex();
-        const locked = mutex.lock.mock.invocationCallOrder[0];
+        const locked = vi.mocked(withLock).mock.invocationCallOrder.at(-1);
         const read = ask.mock.invocationCallOrder.at(-1);
 
         expect(locked).toBeLessThan(read!);
         expect(order.at(-2)).toBe("ask:core:cache:internal:get");
       });
 
-      /* The lock is held until the `finally`, across every import type and the
-       * wait that follows; the 5s default expired under its own holder. */
-      it("should hold the lock for longer than the default TTL", async () => {
+      /* A single attempt per type: exactly one node runs each import. The
+       * lock is refreshed while held; the TTL bounds a node that dies. */
+      it("should try each import lock once", async () => {
         await kuzzle.loadInitialState(toImport, {});
 
-        expect(lastMutex().ttl).toBeGreaterThan(5000);
+        expect(locks.taken).toEqual(
+          ["fixtures", "mappings", "permissions", "userMappings"].map(
+            (type) => ({
+              config: { retryAttempts: 0, ttl: 60000 },
+              resource: `backend:import:${type}`,
+            }),
+          ),
+        );
+      });
+
+      /* Every lock is held until the `finally`, across every import type
+       * and the wait that follows. */
+      it("should hold every import lock until the imports are done", async () => {
+        internalsOf(kuzzle)._waitForImportToFinish = async () => {
+          locks.events.push("wait");
+        };
+
+        await kuzzle.loadInitialState(toImport, {});
+
+        expect(locks.events).toEqual([
+          "lock:backend:import:fixtures",
+          "lock:backend:import:mappings",
+          "lock:backend:import:permissions",
+          "lock:backend:import:userMappings",
+          "wait",
+          "unlock:backend:import:userMappings",
+          "unlock:backend:import:permissions",
+          "unlock:backend:import:mappings",
+          "unlock:backend:import:fixtures",
+        ]);
+      });
+
+      it("should carry on unlocked when another node holds an import lock", async () => {
+        const importMappings = vi.fn(async () => undefined);
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+        locks.refused.add("backend:import:mappings");
+
+        await kuzzle.loadInitialState(toImport, {});
+
+        expect(importMappings).toHaveBeenCalledWith(
+          { toImport, toSupport: {} },
+          { firstCall: false, initialized: false, locked: false },
+        );
+        expect(
+          vi
+            .mocked(internalsOf(kuzzle).persistHashedImport)
+            .mock.calls.map(([hashed]) => hashed.type),
+        ).toEqual(["fixtures", "permissions", "userMappings"]);
+        expect(locks.events).toContain("lock:backend:import:userMappings");
+      });
+
+      /* Only the import's own lock being held means "locked elsewhere": an
+       * import failing the same way must not run a second time, unlocked. */
+      it("should fail on a MutexAcquireError thrown by an import", async () => {
+        const failure = new MutexAcquireError("some other lock", 1);
+        const importMappings = vi.fn(async () => {
+          throw failure;
+        });
+        internalsOf(kuzzle).importTypes.mappings = importMappings;
+
+        await expect(kuzzle.loadInitialState(toImport, {})).rejects.toBe(
+          failure,
+        );
+        expect(importMappings).toHaveBeenCalledOnce();
+        expect(locks.events).toContain("unlock:backend:import:mappings");
       });
     });
 
