@@ -1,6 +1,6 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-10-13",
+  "snapshot": "2026-10-23",
   "latestVersion": "2.59.0",
   "adrs": [
     {
@@ -12,9 +12,7 @@
       "openStep": null,
       "nextAction": null,
       "blockers": [],
-      "openPoints": [
-        "Type debt left over from the migration: #2968 (14 findings, 3 of them deferred to v3)"
-      ]
+      "openPoints": []
     },
     {
       "id": "0002",
