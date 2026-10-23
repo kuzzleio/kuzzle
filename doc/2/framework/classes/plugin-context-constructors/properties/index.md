@@ -95,6 +95,9 @@ const user = await context.accessors.execute(req)
 
 ## `Mutex`
 <SinceBadge version="2.17.0" />
+<DeprecatedBadge version="2.57.0" />
+
+Deprecated: use [withLock](/core/2/framework/functions/with-lock), exported by `kuzzle`, instead.
 
 Instantiates a new mutex, allowing to lock a resource. Works both with single-node and cluster environments.
 

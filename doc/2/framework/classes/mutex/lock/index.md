@@ -9,6 +9,11 @@ description: Mutex class lock() method
 # lock
 
 <SinceBadge version="2.9.0" />
+<DeprecatedBadge version="2.57.0" />
+
+::: warning
+`Mutex` is deprecated since 2.57.0: use [withLock](/core/2/framework/functions/with-lock) instead. Both take the same Redis key, so a `Mutex` and a `withLock` call on the same resource exclude each other, and call sites can be migrated one at a time.
+:::
 
 Tries to lock a resource.
 
