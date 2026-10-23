@@ -174,7 +174,44 @@ vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
 }));
 
+/** Every lock taken through `withLock`, and whether it is still held. */
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: { retryAttempts?: number; ttl?: number } | undefined;
+    held: boolean;
+    resource: string;
+  }[] = [];
+
+  return { taken };
+});
+
+vi.mock("../../../lib/util/distributedLock", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("../../../lib/util/distributedLock")
+  >()),
+  withLock: vi.fn(
+    async (
+      resource: string,
+      callback: () => Promise<unknown>,
+      config?: { retryAttempts?: number; ttl?: number },
+    ) => {
+      const lock = { config, held: true, resource };
+      locks.taken.push(lock);
+
+      try {
+        return await callback();
+      } finally {
+        lock.held = false;
+      }
+    },
+  ),
+}));
+
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import {
+  MutexLockLostError,
+  withLock,
+} from "../../../lib/util/distributedLock";
 import { present } from "../../helpers/present";
 
 describe("#core/storage/ClientAdapter", () => {
@@ -203,6 +240,7 @@ describe("#core/storage/ClientAdapter", () => {
     emitted = [];
     pipes = new Map();
     redis = new Map();
+    locks.taken.length = 0;
 
     const hash = (key: string) => {
       let fields = redis.get(key);
@@ -255,8 +293,7 @@ describe("#core/storage/ClientAdapter", () => {
       onPipe: vi.fn((event: string, handler: () => unknown) => {
         pipes.set(event, handler);
       }),
-      // `loadMappings` takes a Mutex, which reaches the cache through `ask`;
-      // the collection write locks reach Redis through it.
+      // The collection write locks reach Redis through `ask`.
       ask: vi.fn(async (event: string, ...args: unknown[]) =>
         event === "core:cache:internal:execute"
           ? execute(...(args as [string, string, ...string[]]))
@@ -1286,6 +1323,56 @@ describe("#core/storage/ClientAdapter", () => {
         refresh: true,
       });
       expect(client.refreshCollection).not.toHaveBeenCalled();
+    });
+
+    it("loads the mappings under the loadMappings lock, with no retry limit", async () => {
+      const heldDuring: boolean[] = [];
+      vi.spyOn(adapter, "createIndex").mockResolvedValue(undefined);
+      vi.spyOn(adapter, "createCollection").mockImplementation(async () => {
+        heldDuring.push(locks.taken[0]?.held ?? false);
+      });
+
+      await adapter.loadMappings({ i1: { c1: {}, c2: {} } } as never);
+
+      // Waits forever and keeps the 60 s TTL, as the `Mutex` it replaces did.
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+          held: false,
+          resource: "loadMappings",
+        },
+      ]);
+      expect(heldDuring).toEqual([true, true]);
+    });
+
+    it("gives the lock back when a mapping fails to load", async () => {
+      vi.spyOn(adapter, "createIndex").mockRejectedValue(new Error("boom"));
+
+      await expect(
+        adapter.loadMappings({ i1: { c1: {} } } as never),
+      ).rejects.toThrow("boom");
+      expect(locks.taken).toMatchObject([
+        { held: false, resource: "loadMappings" },
+      ]);
+    });
+
+    it("rejects with MutexLockLostError when the lock is lost", async () => {
+      vi.spyOn(adapter, "createIndex").mockResolvedValue(undefined);
+      vi.spyOn(adapter, "createCollection").mockResolvedValue(undefined);
+      vi.mocked(withLock).mockRejectedValueOnce(
+        new MutexLockLostError("loadMappings"),
+      );
+
+      await expect(
+        adapter.loadMappings({ i1: { c1: {} } } as never),
+      ).rejects.toBeInstanceOf(MutexLockLostError);
+    });
+
+    it("rejects a non-object payload before taking the lock", async () => {
+      await expect(adapter.loadMappings("nope" as never)).rejects.toMatchObject(
+        { id: "api.assert.invalid_argument" },
+      );
+      expect(locks.taken).toEqual([]);
     });
 
     it("rejects a non-object payload, at either level", async () => {
