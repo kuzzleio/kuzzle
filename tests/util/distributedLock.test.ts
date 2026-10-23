@@ -120,6 +120,22 @@ describe("#distributedLock", () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
+    /* redis-semaphore waits `retryInterval` after the last failed attempt
+     * too: with no retry, that was a pause before every refusal. */
+    it("does not wait retryDelay before failing with no retry", async () => {
+      await other.set("busy", "node-2", "PX", 10000);
+      const start = Date.now();
+
+      await expect(
+        withLock("busy", async () => "never", {
+          retryAttempts: 0,
+          retryDelay: 60000,
+        }),
+      ).rejects.toBeInstanceOf(MutexAcquireError);
+
+      expect(Date.now() - start).toBeLessThan(1000);
+    });
+
     it("gets the key once another holder's TTL expires", async () => {
       await other.set("expiring", "node-2", "PX", 100);
 

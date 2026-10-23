@@ -140,10 +140,20 @@ class AdminController extends NativeController {
     message: string,
     callback: () => Promise<T>,
   ): Promise<T> {
+    let acquired = false;
+
     try {
-      return await withLock(resource, callback, { retryAttempts: 0 });
+      return await withLock(
+        resource,
+        async () => {
+          acquired = true;
+          return callback();
+        },
+        { retryAttempts: 0 },
+      );
     } catch (error) {
-      if (error instanceof MutexAcquireError) {
+      // The same error thrown from inside the callback is not this lock
+      if (!acquired && error instanceof MutexAcquireError) {
         throw kerror.get("api", "process", "action_locked", message);
       }
 

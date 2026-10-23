@@ -225,7 +225,9 @@ export async function withLock<T>(
     onLockLost: (error) => {
       loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
     },
-    retryInterval: retryDelay,
+    // redis-semaphore waits `retryInterval` after every failed attempt, the
+    // last one included: with no retry, that wait only delays the failure
+    retryInterval: retryAttempts === 0 ? 0 : retryDelay,
   });
 
   if (!(await mutex.tryAcquire())) {

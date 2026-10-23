@@ -5,6 +5,7 @@ import { NativeController } from "../../../lib/api/controllers/baseController";
 import { KuzzleRequest } from "../../../lib/api/request";
 import { NotFoundError } from "../../../lib/kerror/errors/notFoundError";
 import { PreconditionError } from "../../../lib/kerror/errors/preconditionError";
+import { MutexAcquireError } from "../../../lib/util/distributedLock";
 import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
 
 /**
@@ -250,6 +251,16 @@ describe("#api/controllers/AdminController", () => {
         id: "api.process.action_locked",
       });
       expect(lockOn("resetSecurity")?.released).toBe(false);
+    });
+  });
+
+  /* Only the reset's own lock being held means "already underway". */
+  describe("#failIfLocked", () => {
+    it("lets through a MutexAcquireError thrown by the reset itself", async () => {
+      const failure = new MutexAcquireError("some other lock", 1);
+      ask.mockRejectedValue(failure);
+
+      await expect(controller.resetDatabase()).rejects.toBe(failure);
     });
   });
 
