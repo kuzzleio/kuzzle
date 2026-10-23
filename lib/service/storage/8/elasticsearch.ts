@@ -1613,21 +1613,6 @@ export class ES8 {
       );
     }
 
-    // Lock and ES errors alike reach the caller through `formatESError`
-    try {
-      await withLock(
-        `hiddenCollection/create/${index}`,
-        async () => {
-          if (await this._hasHiddenCollection(index)) {
-            await this.deleteCollection(index, HIDDEN_COLLECTION);
-          }
-        },
-        HIDDEN_COLLECTION_LOCK,
-      );
-    } catch (error) {
-      throw this._esWrapper.formatESError(error);
-    }
-
     const esRequest: estypes.IndicesCreateRequest = {
       aliases: {
         [this._getAlias(index, collection)]: {},
@@ -1676,6 +1661,23 @@ export class ES8 {
         return null;
       }
 
+      throw this._esWrapper.formatESError(error);
+    }
+
+    // Only once the real collection exists: dropping the placeholder first
+    // would leave the index with no indice at all if the creation failed.
+    // Lock and ES errors alike reach the caller through `formatESError`
+    try {
+      await withLock(
+        `hiddenCollection/create/${index}`,
+        async () => {
+          if (await this._hasHiddenCollection(index)) {
+            await this.deleteCollection(index, HIDDEN_COLLECTION);
+          }
+        },
+        HIDDEN_COLLECTION_LOCK,
+      );
+    } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
 
