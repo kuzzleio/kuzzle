@@ -205,12 +205,39 @@ export function describeLifecycle(harness: ESHarness) {
     });
 
     /*
-     * The lock waits with no limit, so in practice it fails only when Redis
-     * does or when it is lost. Either way the collection is not created, and
-     * the error goes through the wrapper like an Elasticsearch one.
+     * The case above stubs `deleteCollection`; this one runs it. Deleting the
+     * placeholder must not bring it straight back: once the first real
+     * collection is created, the only indice the client creates is that one.
      */
-    it("creates nothing when the lock fails, and rejects through the wrapper", async () => {
+    it("does not recreate the placeholder it just dropped", async () => {
       arm();
+      const hiddenIndice = `&${index}._kuzzle_keep`;
+      vi.mocked(harness.client.deleteCollection).mockRestore();
+      vi.spyOn(harness.client, "_getIndice").mockResolvedValue(hiddenIndice);
+      vi.spyOn(harness.client, "_checkIfAliasExists").mockResolvedValue(false);
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      harness.clientStub.indices.delete.mockImplementation(async () => {
+        harness.client._hasHiddenCollection.mockResolvedValue(false);
+        return harness.envelope.respond({});
+      });
+
+      await harness.client.createCollection(index, collection, {});
+
+      expect(harness.clientStub.indices.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ index: hiddenIndice }),
+      );
+      expect(createdBody().aliases).toEqual({ [alias]: {} });
+    });
+
+    /*
+     * The lock waits with no limit, so in practice it fails only when Redis
+     * does or when it is lost. It is taken after the indice is created, so the
+     * placeholder stays, and the error goes through the wrapper like an
+     * Elasticsearch one.
+     */
+    it("keeps the placeholder when the lock fails, and rejects through the wrapper", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
       const lockError = new MutexAcquireError(
         `hiddenCollection/create/${index}`,
         1,
@@ -223,7 +250,31 @@ export function describeLifecycle(harness: ESHarness) {
 
       expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(lockError);
       expect(harness.client.deleteCollection).not.toHaveBeenCalled();
-      expect(harness.clientStub.indices.create).not.toHaveBeenCalled();
+    });
+
+    /*
+     * The placeholder is what makes an empty index exist. Dropped before a
+     * creation that then fails, it would leave the index with no indice at
+     * all: gone from Elasticsearch while Kuzzle still lists it.
+     */
+    it("keeps the placeholder when the collection cannot be created", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      const mappings = { dynamik: "strict" };
+
+      await expect(
+        harness.client.createCollection(index, collection, { mappings }),
+      ).rejects.toMatchObject({ id: "services.storage.invalid_mapping" });
+
+      harness.clientStub.indices.create.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.createCollection(index, collection, {}),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.client.deleteCollection).not.toHaveBeenCalled();
     });
 
     it("takes the caller's `dynamic` and `_meta` over the common ones", async () => {
