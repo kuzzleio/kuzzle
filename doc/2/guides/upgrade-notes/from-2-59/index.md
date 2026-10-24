@@ -42,6 +42,17 @@ This changes what you can see while several nodes start together:
 
 A rolling upgrade from v2.59.0 keeps the nodes mutually excluded: a v2.59.0 node takes the same locks, on the same Redis keys, with the deprecated `Mutex`, and a `Mutex` and a `withLock` call exclude each other.
 
+### A failed startup stops the node
+
+When the startup fails (an `app.install` handler that throws, an import that cannot be applied, a lost startup lock…), the node now shuts down gracefully and exits with code `1`, whatever `NODE_ENV` is. It used to depend on `NODE_ENV`:
+
+- in production, the error was only logged and the process stayed alive, half started: nothing listened for requests, but its ID card kept it registered in the cluster, and a restart policy never fired;
+- in development, it shut down but exited with code `0`, so an `on-failure` restart policy did not restart it.
+
+An uncaught exception, `SIGQUIT` and `SIGABRT`, which shut Kuzzle down after an optional dump, now exit with code `1` too, instead of `0`.
+
+**Action:** none. A failed start could not be retried anyway: a second `app.start()` fails on "another one already exists". The error is still returned by `app.start()` before the process exits, so a `catch` that logs it keeps working.
+
 ### Collections with `number_of_replicas` only
 
 When a collection already exists, Kuzzle compares its `number_of_shards` with the configured one, as the shard count of an existing collection cannot change. A collection configured with `number_of_replicas` but no `number_of_shards` failed that check on every start: a warning in production and, in development mode (`NODE_ENV=development`), a startup failure with `core.fatal.unexpected_error`. The check is now skipped when `number_of_shards` is not configured.
@@ -81,4 +92,5 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **New export: [`MutexAcquireError`](/core/2/framework/error-classes/mutex-acquire-error).** [`withLock`](/core/2/framework/functions/with-lock) now rejects with it when it cannot acquire the lock within its attempts, instead of a plain `Error` with the same message. It extends `Error`, so a `catch` that handled the plain `Error` still works; you can now tell a busy lock apart with `instanceof MutexAcquireError`.
 - **New type exports:** `StartOptions`, `InstallationConfig`, `ImportConfig` and `SupportConfig` can be imported from `kuzzle`. They name the options of the server's start and the shapes of `Plugin.imports`.
 - **`withLock` and `Mutex` on the same key.** The previous upgrade notes said not to use both on the same key. They can be: both take the same Redis key with `SET NX`, so they exclude each other, and you can migrate your `Mutex` call sites one at a time. See [Migrating to withLock](/core/2/framework/classes/mutex/constructor#migrating-to-withlock).
+- **A failed `app.start()` ends the process.** An application test that expects `app.start()` to reject now sees the process exit with code `1` right after (see [A failed startup stops the node](#a-failed-startup-stops-the-node)); mock `process.exit` in such a test.
 - **Locks released at shutdown.** A node that stops now releases the locks it took with `withLock` before it exits, as it already did for `Mutex`, so the other nodes no longer wait for them to expire.
