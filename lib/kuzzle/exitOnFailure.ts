@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { inspect } from "util";
+import { inspect } from "node:util";
 
 import type { Kuzzle } from "./kuzzle";
 
