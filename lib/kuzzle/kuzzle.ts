@@ -104,6 +104,10 @@ type ImportStatus = {
 class Kuzzle extends KuzzleEventEmitter {
   public config: IKuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  /** The running shutdown, which later `shutdown()` calls wait for (#3017) */
+  private shutdownPromise: Promise<void> | null = null;
+  /** The highest exit code asked for by the `shutdown()` calls so far */
+  private shutdownExitCode = 0;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
@@ -391,6 +395,16 @@ class Kuzzle extends KuzzleEventEmitter {
    * @returns {Promise}
    */
   async shutdown(exitCode = 0): Promise<void> {
+    // Several sources can ask for it at once (a signal, a cluster eviction,
+    // the `exit` handler that `process.exit` below fires): they share the one
+    // shutdown, and a failure reported by any of them keeps the exit non-zero
+    this.shutdownExitCode = Math.max(this.shutdownExitCode, exitCode);
+    this.shutdownPromise ??= this.runShutdown();
+
+    return this.shutdownPromise;
+  }
+
+  private async runShutdown(): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info("Initiating shutdown...");
@@ -429,7 +443,7 @@ class Kuzzle extends KuzzleEventEmitter {
     // application's buffered logs were dropped on shutdown (TD-51).
     await this?.pluginsManager?.application?.instance?.log?.flush?.();
 
-    process.exit(exitCode);
+    process.exit(this.shutdownExitCode);
   }
 
   /**

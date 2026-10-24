@@ -259,6 +259,33 @@ describe("ClusterIDCardRenewer", () => {
       });
     });
 
+    /* #3017: while redis stalls, the interval keeps queuing renewals, which
+     * all fail together once it answers; each report evicts the node again. */
+    it("should report once when several pending renewals fail together", async () => {
+      vi.mocked(idCardRenewer.dispose).mockImplementation(async () => {
+        idCardRenewer.disposed = true;
+      });
+      let answer: (refreshed: number) => void = () => undefined;
+      const stalled = new Promise<number>((resolve) => {
+        answer = resolve;
+      });
+      redis.commands.pexpire.mockReturnValue(stalled);
+
+      const renewals = [
+        idCardRenewer.renewIDCard(),
+        idCardRenewer.renewIDCard(),
+        idCardRenewer.renewIDCard(),
+      ];
+      answer(0);
+      await Promise.all(renewals);
+
+      expect(idCardRenewer.dispose).toHaveBeenCalledOnce();
+      expect(send).toHaveBeenCalledTimes(2);
+      expect(send).toHaveBeenLastCalledWith({
+        error: "Node too slow: ID card expired",
+      });
+    });
+
     it("should do nothing if already disposed", async () => {
       redis.commands.pexpire.mockClear();
       idCardRenewer.disposed = true;

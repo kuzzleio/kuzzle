@@ -559,6 +559,39 @@ describe("#kuzzle/Kuzzle", () => {
         expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
       }
     });
+
+    /* #3017: `process.exit` fires the `exit` handler, which calls `shutdown()`
+     * again, and a stalled redis made a node evict itself dozens of times. */
+    it("runs once, however many times it is called", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+
+      const first = kuzzle.shutdown();
+      const second = kuzzle.shutdown();
+
+      await Promise.all([first, second]);
+      await kuzzle.shutdown();
+
+      expect(kuzzle.entryPoint.dispatch).toHaveBeenCalledOnce();
+      expect(kuzzle.log.info).toHaveBeenCalledWith("Initiating shutdown...");
+      expect(
+        vi
+          .mocked(kuzzle.log.info)
+          .mock.calls.filter(
+            ([message]) => message === "Initiating shutdown...",
+          ),
+      ).toHaveLength(1);
+      expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("exits non-zero when a call made during the shutdown reports a failure", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+
+      // e.g. a SIGTERM, then a cluster eviction while it runs
+      await Promise.all([kuzzle.shutdown(), kuzzle.shutdown(1)]);
+
+      expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
   });
 
   describe("#install", () => {

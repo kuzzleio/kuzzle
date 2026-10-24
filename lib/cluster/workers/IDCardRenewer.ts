@@ -153,17 +153,27 @@ class IDCardRenewer {
       // Unable to refresh the key in time before it expires
       // => this node is too slow, we need to remove it from the cluster
       if (refreshed === 0) {
-        await this.dispose();
-        process.send?.({
-          error: "Node too slow: ID card expired",
-        });
+        await this.reportFailure("Node too slow: ID card expired");
       }
     } catch (error) {
-      await this.dispose();
-      process.send?.({
-        error: `Failed to refresh ID Card: ${messageOf(error)}`,
-      });
+      await this.reportFailure(
+        `Failed to refresh ID Card: ${messageOf(error)}`,
+      );
     }
+  }
+
+  /**
+   * Disposes the worker and tells the parent why, once: the renewals queued
+   * behind a stalled redis all fail together, and each report evicts the node
+   * again (#3017)
+   */
+  private async reportFailure(error: string): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+
+    await this.dispose();
+    process.send?.({ error });
   }
 
   async dispose(): Promise<void> {
