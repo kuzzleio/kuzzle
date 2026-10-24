@@ -58,6 +58,7 @@ Indexes that already hold it keep it until a new collection is created in them; 
 
 - **Errors are logged under `err`.** Kuzzle uses kuzzle-logger 1.5 or later: an error is logged under an `err` field, with its `name`, `message`, `stack`, `cause` and custom properties (such as a `KuzzleError`'s `id` and `status`), instead of having only its enumerable properties spread at the top level of the log entry. The `namespace`, `nodeId` and `requestId` fields are applied to error entries too.
   **Action:** if a log pipeline, dashboard or alert reads error fields at the top level of Kuzzle's logs, point it to `err`.
+- **One shutdown per node.** A stop no longer logs `Initiating shutdown...` twice, and a node that lost Redis for a while logs `[CLUSTER] Node too slow: ID card expired` and shuts down once, instead of once per missed ID card renewal. A failure reported while the node is already shutting down, such as a cluster eviction during a `SIGTERM` stop, still makes it exit with a non-zero code.
 - The Loki preset now runs on pino-loki 3 (through kuzzle-logger 1.7). The preset keeps the behaviour it had with pino-loki 2: logs are still batched every second by default, and `meta` is not sent as structured metadata unless asked for.
 
 ### HTTP
