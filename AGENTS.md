@@ -23,9 +23,8 @@ Local dev stack (Elasticsearch, Redis, Kuzzle with hot reload):
 ## Tests — always run these before considering a change done
 
 ```bash
-npm run test:lint          # eslint ./lib ./test ./tests ./bin ./features ./features-legacy
+npm run test:lint          # eslint ./lib ./tests ./bin ./features ./features-legacy
 npm run test:unit:vitest   # unit tests under tests/
-npm run test:unit:mocha    # unit tests under test/ (needs `npm run build` first)
 ```
 
 Functional tests (Cucumber) need a running Kuzzle cluster:
@@ -36,8 +35,7 @@ ES_VERSION=8 KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" ./.ci/scripts/r
 **Prefer the Docker-only path** — no local Node/ES/Redis setup needed, see the
 `docker-tests` skill or run directly:
 ```bash
-.ci/scripts/docker-test.sh unit vitest
-.ci/scripts/docker-test.sh unit mocha
+.ci/scripts/docker-test.sh unit
 .ci/scripts/docker-test.sh functional websocket   # or http, legacy:http, legacy:mqtt, legacy:websocket
 ```
 
@@ -70,15 +68,12 @@ most likely to fail on a first push.
 - `docker-compose.yml` + `docker-compose.override.yml` — local dev stack (ES7 vs ES8).
 - `.ci/test-cluster-7.yml` / `.ci/test-cluster-8.yml` — 3-node cluster used by functional tests.
 - `cucumber.config.cjs` — functional test profiles (http/websocket/mqtt, legacy vs current).
-- `vitest.config.ts` / `.mocharc.json` — unit test runners (two suites coexist during migration).
+- `vitest.config.ts` — unit test runner (vitest, `tests/`).
 
 ## Things to know before making changes
 
-- Two unit test frameworks are active side by side (`test/` → mocha,
-  `tests/` → vitest). Check which directory your change belongs to; don't move
-  tests between them as part of an unrelated change.
-- `test:unit:mocha` runs against **compiled** output (`dist/test/**/*.test.js`)
-  — rebuild (`npm run build`) after editing source or tests before running it.
+- Unit tests are vitest only, under `tests/` (the mocha suite under `test/` was
+  retired with ADR-0001).
 - Error codes are documented and checked: `npm run doc-error-codes` and
   `.ci/scripts/check-error-codes-documentation.sh`. New error codes need docs.
 - Don't commit changes to `dist/`, `coverage/`, or `node_modules/`.
