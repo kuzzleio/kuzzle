@@ -51,6 +51,8 @@ When the startup fails (an `app.install` handler that throws, an import that can
 
 An uncaught exception, `SIGQUIT` and `SIGABRT`, which shut Kuzzle down after an optional dump, now exit with code `1` too, instead of `0`.
 
+The entrypoint of the official `kuzzleio/kuzzle` image used to exit at once, before that shutdown could release the node's locks and remove it from the cluster. It now lets the shutdown finish, after a failed startup and when its `--fixtures` cannot be loaded.
+
 **Action:** none. A failed start could not be retried anyway: a second `app.start()` fails on "another one already exists". The error is still returned by `app.start()` before the process exits, so a `catch` that logs it keeps working.
 
 ### Collections with `number_of_replicas` only
