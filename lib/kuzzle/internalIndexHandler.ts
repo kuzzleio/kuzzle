@@ -130,13 +130,12 @@ class InternalIndexHandler extends Store {
             this.timeout,
           );
 
-          await this.create(
-            "config",
-            { timestamp: Date.now() },
-            {
-              id: this._BOOTSTRAP_DONE_ID,
-            },
-          );
+          // A node that stopped while holding the lock may still have its
+          // own bootstrap in flight, and write this marker after the check
+          // above: replacing it keeps this node from failing on it
+          await this.createOrReplace("config", this._BOOTSTRAP_DONE_ID, {
+            timestamp: Date.now(),
+          });
         } catch (error) {
           if (error instanceof Bluebird.TimeoutError) {
             throw kerror.get(
@@ -167,14 +166,12 @@ class InternalIndexHandler extends Store {
     debug("Bootstrapping JWT secret");
     await this._initSecret();
 
-    // Create datamodel version
-    await this.create(
-      "config",
-      { version: dataModelVersion },
-      {
-        id: this._DATAMODEL_VERSION_ID,
-      },
-    );
+    // Replaced rather than created: a bootstrap interrupted after this write
+    // but before the `.done` marker leaves it behind, and the next attempt
+    // must not fail on it (every step above is idempotent too)
+    await this.createOrReplace("config", this._DATAMODEL_VERSION_ID, {
+      version: dataModelVersion,
+    });
   }
 
   /**
@@ -229,11 +226,26 @@ class InternalIndexHandler extends Store {
     if (!configSeed) {
       if (!storedSeed) {
         storedSeed = crypto.randomBytes(512).toString("hex");
-        await this.create(
-          "config",
-          { seed: storedSeed },
-          { id: this._JWT_SECRET_ID },
-        );
+
+        try {
+          await this.create(
+            "config",
+            { seed: storedSeed },
+            { id: this._JWT_SECRET_ID },
+          );
+        } catch (error) {
+          // An interrupted bootstrap stored one in the meantime: it is the
+          // seed other nodes may already sign with, so keep it, and read it
+          // back below
+          const alreadyStored =
+            error instanceof Error &&
+            "id" in error &&
+            error.id === "services.storage.document_already_exists";
+
+          if (!alreadyStored) {
+            throw error;
+          }
+        }
       }
 
       this.logger.warn(
