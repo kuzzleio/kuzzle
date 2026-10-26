@@ -778,6 +778,39 @@ class ClusterNode {
   }
 
   /**
+   * The ID cards of the other nodes, none of which has this node's IP.
+   *
+   * A card with this IP may be the stale one of a previous run of this node
+   * (a process killed, a container restarted at once): it expires within a
+   * TTL, so it is only a real duplicate if it is still there after that.
+   *
+   * @throws {cluster.join.duplicate_ip} if it is
+   */
+  private async discoverNodes(): Promise<IdCard[]> {
+    const nodes = await this.idCardHandler.getRemoteIdCards();
+
+    if (!nodes.some((node) => node.ip === this.ip)) {
+      return nodes;
+    }
+
+    // A heartbeat more than the TTL: the card's last renewal may be in flight
+    const delay = this.idCardHandler.ttl + this.heartbeatDelay;
+    this.logger.warn(
+      `[CLUSTER] Another node has the same IP address as this one (${this.ip}). Waiting ${delay}ms for it to expire, in case it is a stale ID card...`,
+    );
+    await Bluebird.delay(delay);
+
+    const remaining = await this.idCardHandler.getRemoteIdCards();
+    const duplicate = remaining.find((node) => node.ip === this.ip);
+
+    if (duplicate) {
+      throw joinError.get("duplicate_ip", this.ip, duplicate.id);
+    }
+
+    return remaining;
+  }
+
+  /**
    * Discovers other active nodes from the cluster and, if other nodes exist,
    * starts a handshake procedure to sync this node and to make it able to
    * handle new client requests
@@ -831,20 +864,13 @@ class ClusterNode {
 
         debug("[CLUSTER] Start retrieving full state..");
         do {
-          nodes = await this.idCardHandler.getRemoteIdCards();
+          nodes = await this.discoverNodes();
           debug("[CLUSTER] %s remote nodes discovered", nodes.length);
 
           // No other nodes detected = no handshake required
           if (nodes.length === 0) {
             this.trackActivity(this.nodeId, this.ip, nodeActivityEnum.ADDED);
             return;
-          }
-
-          // Verify that no other node share the same IP address as this one
-          const duplicate = nodes.filter((node) => node.ip === this.ip);
-
-          if (duplicate.length > 0) {
-            throw joinError.get("duplicate_ip", this.ip, duplicate[0]?.id);
           }
 
           await this.subscribeToNodes(nodes);

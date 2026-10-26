@@ -817,21 +817,80 @@ describe("ClusterNode", () => {
       }
     });
 
-    it("aborts when another node shares this node's IP", async () => {
-      node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
-      node.ip = "2.3.4.2";
-
-      // Rejects, so that `start()` does not go on starting the node
-      await expect(node.handshake()).rejects.toMatchObject({
-        id: "cluster.join.duplicate_ip",
-        message:
-          "Another node shares the same IP address as this one (2.3.4.2): baz.",
+    describe("when another node has this node's IP", () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+        node.ip = "2.3.4.2";
+        node.heartbeatDelay = 2000;
+        node.idCardHandler.ttl = 4000;
       });
 
-      expect(node.command.getFullState).not.toHaveBeenCalled();
-      expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
-      expect(node.fullState.loadFullState).not.toHaveBeenCalled();
-      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      /* It may be the stale card of a previous run of this node: it is only
+       * a duplicate if it outlives a TTL (and a renewal in flight). */
+      it("aborts if its ID card is still there after a TTL", async () => {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
+
+        const handshake = node.handshake();
+        // Rejects, so that `start()` does not go on starting the node
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.duplicate_ip",
+          message:
+            "Another node shares the same IP address as this one (2.3.4.2): baz.",
+        });
+
+        await vi.advanceTimersByTimeAsync(5999);
+        expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledOnce();
+        expect(warn.mock.calls.flat().join("\n")).toMatch(
+          /same IP address as this one \(2\.3\.4\.2\)\. Waiting 6000ms/,
+        );
+
+        await vi.advanceTimersByTimeAsync(1);
+        await rejection;
+
+        expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(2);
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
+        expect(node.fullState.loadFullState).not.toHaveBeenCalled();
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it("joins the other nodes if its ID card has expired by then", async () => {
+        const alive = idCards().filter(({ id }) => id !== "baz");
+        node.idCardHandler.getRemoteIdCards
+          .mockResolvedValueOnce(idCards())
+          .mockResolvedValue(alive);
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        const handshake = node.handshake();
+        await vi.advanceTimersByTimeAsync(6000);
+        await handshake;
+
+        expect(node.command.getFullState).toHaveBeenCalledExactlyOnceWith(
+          alive,
+        );
+        expect(node.command.broadcastHandshake).toHaveBeenCalledExactlyOnceWith(
+          alive,
+        );
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
+
+      it("joins at once when the stale card was the only one", async () => {
+        node.idCardHandler.getRemoteIdCards
+          .mockResolvedValueOnce([idCard({ id: "baz", ip: "2.3.4.2" })])
+          .mockResolvedValue([]);
+
+        const handshake = node.handshake();
+        await vi.advanceTimersByTimeAsync(6000);
+        await handshake;
+
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
     });
 
     it("connects to the existing nodes and loads their full state", async () => {
