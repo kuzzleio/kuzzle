@@ -1,3 +1,14 @@
+## [2.60.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.3...v2.60.0-beta.4) (2026-10-26)
+
+### Bug Fixes
+
+* **cluster:** do not throw on cluster messages received before the handshake ([37bfd12](https://github.com/kuzzleio/kuzzle/commit/37bfd12be71c8563259f77985da2d901388f9ed0)), closes [#3031](https://github.com/kuzzleio/kuzzle/issues/3031)
+* **mutex:** let unlock() resolve on a lock freed by releaseAllBeforeExit ([7c231be](https://github.com/kuzzleio/kuzzle/commit/7c231be52c0f25bea61c9fce944e45b169934387)), closes [#3030](https://github.com/kuzzleio/kuzzle/issues/3030)
+* **storage:** cache an index a peer created before this node joined ([1d41466](https://github.com/kuzzleio/kuzzle/commit/1d414669b11e9a5726f3acddf063d4f1e1ce89f4)), closes [#3029](https://github.com/kuzzleio/kuzzle/issues/3029)
+* **storage:** give bodyless Elasticsearch errors a usable message ([a5be52a](https://github.com/kuzzleio/kuzzle/commit/a5be52a89ae1f3e5620b10ee70db4a27bd230f02)), closes [#3032](https://github.com/kuzzleio/kuzzle/issues/3032)
+* **storage:** make the internal index bootstrap resumable ([6b0dac2](https://github.com/kuzzleio/kuzzle/commit/6b0dac2ee9c9dc48d3421e74e5b1e37dcd3f296d)), closes [#3028](https://github.com/kuzzleio/kuzzle/issues/3028)
+* **storage:** wait for the shards of a collection another node created ([cdee29c](https://github.com/kuzzleio/kuzzle/commit/cdee29cc6ae278bc728632989cee3e699409bded)), closes [#3033](https://github.com/kuzzleio/kuzzle/issues/3033)
+
 ## [2.60.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.2...v2.60.0-beta.3) (2026-10-26)
 
 ### Bug Fixes
