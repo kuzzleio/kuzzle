@@ -732,7 +732,7 @@ describe("ClusterNode", () => {
         expect(kuzzle.shutdown).not.toHaveBeenCalled();
 
         await vi.advanceTimersByTimeAsync(1);
-        expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
         expect(error.mock.calls.flat().join("\n")).toMatch(
           /Failed to join the cluster: timed out \(joinTimeout: 12345ms\)/,
         );
@@ -752,7 +752,7 @@ describe("ClusterNode", () => {
 
       await expect(node.handshake()).rejects.toBe(lost);
 
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
       expect(error.mock.calls.flat().join("\n")).toMatch(
         /Lost the handshake lock while joining the cluster/,
       );
@@ -794,7 +794,7 @@ describe("ClusterNode", () => {
       expect(error.mock.calls.flat().join("\n")).toMatch(
         /Another node share the same IP address as this one \(2\.3\.4\.2\): baz/,
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
 
     it("connects to the existing nodes and loads their full state", async () => {
@@ -911,7 +911,7 @@ describe("ClusterNode", () => {
       expect(error.mock.calls.flat().join("\n")).toMatch(
         /network split detected/,
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
 
     it("syncs with the nodes that answered and discards the rest", async () => {
@@ -961,7 +961,7 @@ describe("ClusterNode", () => {
       await vi.waitFor(() =>
         expect(error.mock.calls.flat().join("\n")).toMatch(/timed out/),
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
 
@@ -1254,7 +1254,7 @@ describe("ClusterNode", () => {
       expect(error.mock.calls.flat().join("\n")).toMatch(
         /Network split detected/,
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     };
 
     it("does nothing when the cluster is consistent", async () => {
@@ -1420,6 +1420,19 @@ describe("ClusterNode", () => {
       await node.enforceClusterConsistency();
 
       expect(kuzzle.shutdown).not.toHaveBeenCalled();
+    });
+
+    it("shuts down with exit code 1 when the check itself fails", async () => {
+      node.idCardHandler.getRemoteIdCards.mockRejectedValue(
+        new Error("redis is gone"),
+      );
+
+      await expect(node.enforceClusterConsistency()).resolves.toBeUndefined();
+
+      expect(error.mock.calls.flat().join("\n")).toMatch(
+        /Unexpected exception caught during a cluster consistency check/,
+      );
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
 });

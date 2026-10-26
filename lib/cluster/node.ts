@@ -569,7 +569,8 @@ class ClusterNode {
         this.logger.error(
           "[CLUSTER] Network split detected. This node is outside the cluster: shutting down.",
         );
-        global.kuzzle.shutdown();
+        // A failure, like `evictSelf`'s: exit non-zero (#2785)
+        global.kuzzle.shutdown(1);
         return;
       }
     } catch (err) {
@@ -577,7 +578,7 @@ class ClusterNode {
         "[CLUSTER] Unexpected exception caught during a cluster consistency check. Shutting down...",
       );
       this.logger.error(err instanceof Error ? err.stack : inspect(err));
-      global.kuzzle.shutdown();
+      global.kuzzle.shutdown(1);
     }
   }
 
@@ -758,7 +759,7 @@ class ClusterNode {
       this.logger.error(
         "[CLUSTER] Could not connect to discovered cluster nodes (network split detected). Shutting down.",
       );
-      global.kuzzle.shutdown();
+      global.kuzzle.shutdown(1);
       return false;
     }
 
@@ -790,7 +791,7 @@ class ClusterNode {
       this.logger.error(
         `[CLUSTER] Failed to join the cluster: timed out (joinTimeout: ${this.config.joinTimeout}ms)`,
       );
-      global.kuzzle.shutdown();
+      global.kuzzle.shutdown(1);
     }, this.config.joinTimeout);
 
     // No retry limit: the handshakes are taken one at a time, and the
@@ -840,7 +841,7 @@ class ClusterNode {
               this.logger.error(
                 `[CLUSTER] Another node share the same IP address as this one (${this.ip}): ${duplicate[0]?.id}. Shutting down.`,
               );
-              global.kuzzle.shutdown();
+              global.kuzzle.shutdown(1);
               return;
             }
 
@@ -894,7 +895,7 @@ class ClusterNode {
         this.logger.error(
           "[CLUSTER] Lost the handshake lock while joining the cluster. Shutting down.",
         );
-        void global.kuzzle.shutdown();
+        void global.kuzzle.shutdown(1);
       }
 
       throw error;
