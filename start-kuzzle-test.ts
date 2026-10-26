@@ -6,6 +6,7 @@ import YAML from "yaml";
 import functionalFixtures from "./features/fixtures/imports.json";
 import type { Request, KuzzleRequest } from "./index";
 import { Controller, Backend, HttpStream, Mutex } from "./index";
+import { exitOnFailure } from "./lib/kuzzle/exitOnFailure";
 import type { HttpMessage } from "./lib/types/HttpMessage";
 import type { EventGenericDocumentInjectMetadata } from "./lib/types/events/EventGenericDocument";
 
@@ -567,5 +568,5 @@ loadAdditionalPlugins()
   })
   .catch((error) => {
     app.log.error(error.message);
-    process.exit(1);
+    exitOnFailure();
   });

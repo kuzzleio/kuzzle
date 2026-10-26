@@ -30,6 +30,10 @@ vi.mock("../../index", () => ({
   },
 }));
 
+const exitOnFailure = vi.hoisted(() => vi.fn(async () => {}));
+
+vi.mock("../../lib/kuzzle/exitOnFailure", () => ({ exitOnFailure }));
+
 const originalArgv = process.argv;
 
 function startWith(...args: string[]): Promise<unknown> {
@@ -40,12 +44,13 @@ function startWith(...args: string[]): Promise<unknown> {
 
 describe("start-kuzzle-server", () => {
   let exit: ReturnType<typeof vi.spyOn>;
+  let consoleError: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
     exit = vi.spyOn(process, "exit").mockImplementation((() => {}) as never);
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -93,6 +98,33 @@ describe("start-kuzzle-server", () => {
         manifest: expect.objectContaining({ name: "functional-test-plugin" }),
         name: "functional-test-plugin",
       });
+    });
+  });
+
+  /* #3022: `process.exit(1)` cut the graceful shutdown of the node short,
+   * leaving its locks and ID card in Redis. */
+  describe("on failure", () => {
+    it("leaves the exit to Kuzzle when the start fails", async () => {
+      app.start.mockRejectedValueOnce(new Error("install failed"));
+
+      await startWith();
+
+      await vi.waitFor(() => expect(exitOnFailure).toHaveBeenCalledOnce());
+      expect(exit).not.toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(
+        expect.stringMatching(/^\[x\] \[ERROR\] Error: install failed/),
+      );
+    });
+
+    it("leaves the exit to Kuzzle when a step after the start fails", async () => {
+      app.sdk.security.searchUsers.mockRejectedValueOnce(
+        new Error("search failed"),
+      );
+
+      await startWith();
+
+      await vi.waitFor(() => expect(exitOnFailure).toHaveBeenCalledOnce());
+      expect(exit).not.toHaveBeenCalled();
     });
   });
 
