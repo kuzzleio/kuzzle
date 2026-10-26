@@ -208,6 +208,7 @@ vi.mock("../../../lib/util/distributedLock", async (importOriginal) => ({
 }));
 
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import * as kerror from "../../../lib/kerror";
 import {
   MutexLockLostError,
   withLock,
@@ -333,6 +334,29 @@ describe("#core/storage/ClientAdapter", () => {
       await pipes.get("kuzzle:state:live")?.();
 
       expect(loadLocks).toHaveBeenCalledOnce();
+    });
+
+    /* kuzzle#3029: a peer created it, then stopped before this node joined. */
+    it("caches an index created by a peer once the cluster is joined", async () => {
+      (
+        globalThis as {
+          kuzzle: {
+            config: {
+              services: { storageEngine: { generateMissingAliases: boolean } };
+            };
+          };
+        }
+      ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
+      client.getSchema.mockResolvedValue({ peer: ["c"] });
+      cache.addIndex.mockClear();
+      cache.addCollection.mockClear();
+
+      await pipes.get("kuzzle:state:live")?.();
+
+      expect(cache.addIndex).toHaveBeenCalledWith("peer");
+      expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
+      // Aliases were generated at init: joining the cluster writes nothing.
+      expect(client.generateMissingAliases).not.toHaveBeenCalled();
     });
 
     it("namespaces every event with the adapter's scope", () => {
@@ -848,6 +872,36 @@ describe("#core/storage/ClientAdapter", () => {
         id: "services.storage.index_already_exists",
       });
       expect(client.createIndex).not.toHaveBeenCalled();
+    });
+
+    /* kuzzle#3029: a peer created it, and its cache broadcast never came. */
+    it("caches an index that already exists in storage, then rejects", async () => {
+      const error = kerror.get(
+        "services",
+        "storage",
+        "index_already_exists",
+        "public",
+        "i",
+      );
+      cache.hasIndex.mockReturnValue(false);
+      client.createIndex.mockRejectedValueOnce(error);
+
+      await expect(adapter.createIndex("i")).rejects.toBe(error);
+
+      expect(cache.addIndex).toHaveBeenCalledWith("i");
+      expect(emitted).toHaveLength(0);
+    });
+
+    it("does not cache the index on any other storage error", async () => {
+      const error = new Error("boom");
+      cache.hasIndex.mockReturnValue(false);
+      cache.addIndex.mockClear();
+      client.createIndex.mockRejectedValueOnce(error);
+
+      await expect(adapter.createIndex("i")).rejects.toBe(error);
+
+      expect(cache.addIndex).not.toHaveBeenCalled();
+      expect(emitted).toHaveLength(0);
     });
 
     it("skips the storage write with indexCacheOnly", async () => {
