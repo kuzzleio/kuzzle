@@ -1,3 +1,17 @@
+## [2.60.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.2...v2.60.0-beta.3) (2026-10-26)
+
+### Bug Fixes
+
+* **auth:** a strategy failing with null info rejects with missing_user ([2a96a8a](https://github.com/kuzzleio/kuzzle/commit/2a96a8a5e508263f31adfdf9d0a908e626ca9906))
+* **bin:** start scripts let Kuzzle's shutdown finish on failure ([#3022](https://github.com/kuzzleio/kuzzle/issues/3022)) ([df39402](https://github.com/kuzzleio/kuzzle/commit/df39402da38e769f1c4911fb206ccdbb8c5fe946))
+* **cluster:** a node deletes its ID card when it shuts down ([573995c](https://github.com/kuzzleio/kuzzle/commit/573995c63dd33cf196776ce9222fd8d5e6078ed6))
+* **cluster:** a node that cannot join fails its startup ([3145e75](https://github.com/kuzzleio/kuzzle/commit/3145e759c3bdbfd6f6a613309a7f055cf729de60))
+* **cluster:** leave the cluster with exit code 1 on a failure ([44347b5](https://github.com/kuzzleio/kuzzle/commit/44347b50732d74f0c7d60ff8e18dec2790f4af6e))
+* **cluster:** wait for a same-IP ID card to expire before failing ([6078a46](https://github.com/kuzzleio/kuzzle/commit/6078a46c051dc89c393cddd566def7fe2d3f2530))
+* **kuzzle:** a failed start shuts the node down with exit code 1 ([#3020](https://github.com/kuzzleio/kuzzle/issues/3020)) ([323e551](https://github.com/kuzzleio/kuzzle/commit/323e55107374b78795fc6890a6aa03e142439465))
+* **kuzzle:** bound a failure's shutdown to 30 seconds ([64d46bd](https://github.com/kuzzleio/kuzzle/commit/64d46bd3b35911a5bbe32f80f9848fc9bcfb021b))
+* **kuzzle:** run the shutdown once, and report a lost ID card once ([#3017](https://github.com/kuzzleio/kuzzle/issues/3017)) ([5708fd2](https://github.com/kuzzleio/kuzzle/commit/5708fd26ee4ceca989c9aec9b2c6e0b34ba2ea1f))
+
 ## [2.60.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.1...v2.60.0-beta.2) (2026-10-23)
 
 ### Features
