@@ -59,7 +59,20 @@ The entrypoint of the official `kuzzleio/kuzzle` image used to exit at once, bef
 
 A shutdown caused by a failure is bounded: if it has not finished after 30 seconds (for instance, a `kuzzle:shutdown` pipe that never returns), Kuzzle logs `[shutdown] Not finished after 30000ms: exiting now` and exits with code `1` anyway. A requested shutdown (`SIGTERM`, `SIGINT`, `admin:shutdown`) still waits for the requests in progress, however long they take.
 
+A requested shutdown exits with code `0`. During the betas of 2.60, it could exit with code `1` when a plugin unlocked a [`Mutex`](/core/2/framework/classes/mutex) that the shutdown had already released; unlocking it there now does nothing.
+
 **Action:** none. A failed start could not be retried anyway: a second `app.start()` fails on "another one already exists". The error is still returned by `app.start()` before the process exits, so a `catch` that logs it keeps working.
+
+### A node that stops during a cluster startup
+
+These cases appear when a node stops (`SIGTERM`, `SIGKILL`, a crash) while the cluster starts, and another node takes over its work:
+
+- **The internal index bootstrap can be resumed.** If a node stopped after it recorded the data model version of the internal index but before it marked the bootstrap as done, every later start failed with "Document already exists": if that node never came back, the whole cluster could stay in a restart loop. The next node now finishes that bootstrap. It keeps the secret seed the first node already stored, since other nodes may sign tokens with it.
+- **Nodes wait for the shards of an existing collection.** A node that finds a collection already created by another node now waits for its primary shards to be active (Elasticsearch `yellow` status) before it uses it. Right after the creating node stopped, a node could reach a shard that was still initializing and fail its startup with a `503`. The same wait applies to `collection:create` on a collection that already exists. The wait lasts up to 30 seconds, a fixed value: a collection whose primary shards are still not active after that (a `red` index) fails the startup or the request with `services.storage.unexpected_error`, as it would have failed on its first request before. A collection whose shards are active is not delayed.
+- **Indexes created by another node are known.** A node now reloads the list of indexes and collections from Elasticsearch when it has joined the cluster. An index created by a node that stopped before this node joined used to stay unknown to it: requests to it failed with `services.storage.unknown_index`, and an `index:create` on it failed with `index_already_exists` without fixing that.
+- **Cluster messages received before the handshake.** A node restarted on the IP address of a node that just stopped can get messages meant for that previous node before it has joined. It used to throw `[CLUSTER] No node id yet` and, for an eviction message, restart again. It now refuses those requests, and the node that sent them asks another node.
+
+A rolling upgrade from v2.59.0 is not affected: a v2.59.0 node that gets one of these refusals handles it as before.
 
 ### Collections with `number_of_replicas` only
 
@@ -77,6 +90,7 @@ Indexes that already hold it keep it until a new collection is created in them; 
 
 - **Errors are logged under `err`.** Kuzzle uses kuzzle-logger 1.5 or later: an error is logged under an `err` field, with its `name`, `message`, `stack`, `cause` and custom properties (such as a `KuzzleError`'s `id` and `status`), instead of having only its enumerable properties spread at the top level of the log entry. The `namespace`, `nodeId` and `requestId` fields are applied to error entries too.
   **Action:** if a log pipeline, dashboard or alert reads error fields at the top level of Kuzzle's logs, point it to `err`.
+- **Elasticsearch errors without a body.** When Elasticsearch answers an error with no body (a `503` while shards initialize, for instance), the `services.storage.unexpected_error` error used to have an empty message (ES 8) or `Response Error` (ES 7). Its message now gives the HTTP status, for instance `ResponseError: Elasticsearch responded 503 (no body)`.
 - **One shutdown per node.** A stop no longer logs `Initiating shutdown...` twice, and a node that lost Redis for a while logs `[CLUSTER] Node too slow: ID card expired` and shuts down once, instead of once per missed ID card renewal. A failure reported while the node is already shutting down, such as a cluster eviction during a `SIGTERM` stop, still makes it exit with a non-zero code.
 - The Loki preset now runs on pino-loki 3 (through kuzzle-logger 1.7). The preset keeps the behaviour it had with pino-loki 2: logs are still batched every second by default, and `meta` is not sent as structured metadata unless asked for.
 
