@@ -26,7 +26,7 @@ import type {
   ControllerRight,
   ControllerRights,
 } from "../../types/controllers/ControllerRights";
-import type { KuzzleRequest } from "../../../index";
+import type { KuzzleRequest } from "../../api/request";
 import type { OptimizedPolicyRestrictions } from "../../types/PolicyRestrictions";
 
 const assertionError = kerror.wrap("api", "assert");
