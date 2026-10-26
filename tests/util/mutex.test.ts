@@ -205,6 +205,8 @@ describe("#util/Mutex", () => {
     it("refuses to unlock a resource it does not hold", async () => {
       const mutex = new Mutex("foo", { timeout: 0 });
 
+      // Never locked, outside of an exit: still a programming error
+
       await expect(mutex.unlock()).rejects.toBeInstanceOf(KuzzleInternalError);
       await expect(mutex.unlock()).rejects.toMatchObject({
         id: "core.fatal.assertion_failed",
@@ -311,6 +313,17 @@ describe("#util/Mutex", () => {
 
       expect(await settled(mutex.lock())).toBe("pending");
       expect(asked("core:cache:internal:store")).toEqual([]);
+    });
+
+    it("lets the holder unlock a lock it already freed", async () => {
+      const mutex = new Mutex("foo", { timeout: 0 });
+
+      await mutex.lock();
+      await Mutex.releaseAllBeforeExit();
+      ask.mockClear();
+
+      await expect(mutex.unlock()).resolves.toBeUndefined();
+      expect(asked("core:cache:internal:script:execute")).toEqual([]);
     });
 
     it("gives back a lock acquired while it was running", async () => {
