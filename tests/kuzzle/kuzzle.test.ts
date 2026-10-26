@@ -434,6 +434,112 @@ describe("#kuzzle/Kuzzle", () => {
 
       expect(moduleInits.get("cluster")).toHaveBeenCalled();
     });
+
+    /* #3020: a failed start left a node with no listener, still renewing its
+     * ID card, alive forever in production. */
+    describe("when it fails", () => {
+      let exit: ReturnType<typeof vi.spyOn>;
+      let events: string[];
+
+      beforeEach(() => {
+        events = [];
+        exit = vi.spyOn(process, "exit").mockImplementation(((code: number) => {
+          events.push(`exit:${code}`);
+        }) as never);
+        funnelOf(kuzzle).remainingRequests = 0;
+        kuzzle.install = vi.fn(async () => {
+          throw new Error("install failed");
+        });
+      });
+
+      it("hands the error to the caller, then shuts down with exit code 1", async () => {
+        await kuzzle.start(application).catch((error: Error) => {
+          events.push(`caught:${error.message}`);
+        });
+
+        await vi.waitFor(() => expect(exit).toHaveBeenCalled());
+
+        expect(events).toEqual(["caught:install failed", "exit:1"]);
+        expect(kuzzle.log.error).toHaveBeenCalledExactlyOnceWith(
+          expect.stringMatching(
+            /^\[X\] Cannot start Kuzzle .*: install failed$/,
+          ),
+        );
+        expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
+      });
+
+      it("still exits when that shutdown fails", async () => {
+        vi.mocked(kuzzle.pipe).mockImplementation(async (event: string) => {
+          if (event === "kuzzle:shutdown") {
+            throw new Error("redis is gone");
+          }
+
+          return undefined;
+        });
+
+        await expect(kuzzle.start(application)).rejects.toThrow(
+          "install failed",
+        );
+
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
+        expect(kuzzle.log.error).toHaveBeenCalledWith(
+          "Unable to shut down after a failed start: redis is gone",
+        );
+      });
+    });
+  });
+
+  describe("#dumpAndExit", () => {
+    let exit: ReturnType<typeof vi.spyOn>;
+    let dump: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      exit = vi.spyOn(process, "exit").mockImplementation((() => {}) as never);
+      dump = invalid<{ dumpGenerator: { dump: ReturnType<typeof vi.fn> } }>(
+        kuzzle,
+      ).dumpGenerator.dump;
+      funnelOf(kuzzle).remainingRequests = 0;
+    });
+
+    /* #3020: it exited 0, so an `on-failure` restart policy left the node down. */
+    it("exits with code 1", async () => {
+      kuzzle.config.dump.enabled = false;
+
+      await kuzzle.dumpAndExit("uncaught-exception");
+
+      expect(dump).not.toHaveBeenCalled();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
+    it("dumps first when dumps are enabled", async () => {
+      kuzzle.config.dump.enabled = true;
+
+      await kuzzle.dumpAndExit("uncaught-exception");
+
+      expect(dump).toHaveBeenCalledExactlyOnceWith("uncaught-exception");
+      expect(dump.mock.invocationCallOrder[0]).toBeLessThan(
+        exit.mock.invocationCallOrder[0],
+      );
+      expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
+    it.each(["uncaughtException", "SIGQUIT", "SIGABRT"])(
+      "is what a %s leads to",
+      async (event) => {
+        const on = vi.spyOn(process, "on").mockReturnValue(process);
+        vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+        kuzzle.config.dump.enabled = false;
+
+        kuzzle.registerSignalHandlers();
+
+        const handler = on.mock.calls.find(([name]) => name === event);
+
+        present(handler, `the ${event} handler`);
+        (handler[1] as (error?: Error) => void)(new Error("boom"));
+
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
+      },
+    );
   });
 
   describe("#dump", () => {

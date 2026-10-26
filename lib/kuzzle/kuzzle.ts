@@ -366,6 +366,21 @@ class Kuzzle extends KuzzleEventEmitter {
         }`,
       );
 
+      // A failed start cannot be retried (a second Kuzzle instance cannot be
+      // built), and what it did start keeps the process alive: in production,
+      // a node with no listener and an ID card still renewed (#3020). Not
+      // awaited, so the caller still gets the error before the process exits.
+      this.shutdown(1).catch((shutdownError: unknown) => {
+        this.log.error(
+          `Unable to shut down after a failed start: ${
+            shutdownError instanceof Error
+              ? shutdownError.message
+              : inspect(shutdownError)
+          }`,
+        );
+        process.exit(1);
+      });
+
       throw error;
     }
   }
@@ -970,7 +985,9 @@ class Kuzzle extends KuzzleEventEmitter {
       }
     }
 
-    await this.shutdown();
+    // Only abnormal terminations get here: exit non-zero, so that an
+    // `on-failure` restart policy brings the node back (#3020)
+    await this.shutdown(1);
   }
 }
 
