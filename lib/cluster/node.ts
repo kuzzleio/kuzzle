@@ -854,7 +854,8 @@ class ClusterNode {
           fullState = await this.command.getFullState(nodes);
 
           if (fullState === null) {
-            await this.retryFullState(retried);
+            // Sequential by design: the retry waits for a heartbeat round
+            await this.retryFullState(retried); // NOSONAR
             retried = true;
           }
         } while (fullState === null);
