@@ -698,6 +698,68 @@ describe("#kuzzle/Kuzzle", () => {
 
       expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     });
+
+    describe("when it does not finish", () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+        funnelOf(kuzzle).remainingRequests = 0;
+        // e.g. a plugin's `kuzzle:shutdown` pipe that never settles
+        vi.spyOn(kuzzle, "pipe").mockReturnValue(new Promise(() => undefined));
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("exits anyway after 30s when it was caused by a failure", async () => {
+        void kuzzle.shutdown(1);
+
+        await vi.advanceTimersByTimeAsync(29999);
+        expect(exit).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+        expect(kuzzle.log.error).toHaveBeenCalledWith(
+          "[shutdown] Not finished after 30000ms: exiting now",
+        );
+      });
+
+      it("keeps waiting when it was requested", async () => {
+        void kuzzle.shutdown();
+
+        await vi.advanceTimersByTimeAsync(60000);
+
+        expect(exit).not.toHaveBeenCalled();
+      });
+
+      it("starts the delay at the first failure reported during a requested one", async () => {
+        void kuzzle.shutdown();
+        await vi.advanceTimersByTimeAsync(10000);
+        void kuzzle.shutdown(1);
+
+        await vi.advanceTimersByTimeAsync(29999);
+        expect(exit).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+      });
+    });
+
+    it("does not leave the delay running once it has finished", async () => {
+      vi.useFakeTimers();
+
+      try {
+        funnelOf(kuzzle).remainingRequests = 0;
+
+        await kuzzle.shutdown(1);
+        expect(exit).toHaveBeenCalledOnce();
+
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(exit).toHaveBeenCalledOnce();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   describe("#install", () => {
