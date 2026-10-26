@@ -85,6 +85,10 @@ const HIDDEN_COLLECTION = "_kuzzle_keep";
 // one leaves it for at most `ttl` (30 s).
 const HIDDEN_COLLECTION_LOCK = { retryAttempts: Number.POSITIVE_INFINITY };
 
+// How long `waitForCollectionShards` lets Elasticsearch wait for a
+// collection's primary shards, which is also Elasticsearch's own default
+const COLLECTION_SHARDS_TIMEOUT = "30s";
+
 const ALIAS_PREFIX = "@"; // @todo next major release: Add ALIAS_PREFIX in FORBIDDEN_CHARS
 const PRIVATE_PREFIX = "%";
 const PUBLIC_PREFIX = "&";
@@ -1627,6 +1631,9 @@ export class ES8 {
 
     const exists = await this.hasCollection(index, collection);
     if (exists) {
+      // Another node created it, maybe so recently that its primary shards
+      // are still initializing
+      await this.waitForCollectionShards(index, collection);
       return this.updateCollection(index, collection, { mappings, settings });
     }
 
@@ -1657,7 +1664,9 @@ export class ES8 {
         "resource_already_exists_exception"
       ) {
         // race condition: the indice has been created between the "exists"
-        // check above and this "create" attempt
+        // check above and this "create" attempt, by a request that may not
+        // have waited for its shards yet
+        await this.waitForCollectionShards(index, collection);
         return null;
       }
 
@@ -1682,6 +1691,33 @@ export class ES8 {
     }
 
     return null;
+  }
+
+  /**
+   * Waits until the primary shards of a collection are active, for at most
+   * `timeout`, and rejects if they are not by then.
+   *
+   * A collection another node has just created is in the cluster state, so
+   * it exists, before its primary shard is active: until then, Elasticsearch
+   * answers 503 to any document request on it. The node that creates a
+   * collection waits for its shards (`wait_for_active_shards`); a node that
+   * finds it already there calls this instead. It answers at once when the
+   * shards are already active.
+   */
+  async waitForCollectionShards(
+    index: string,
+    collection: string,
+    timeout: string = COLLECTION_SHARDS_TIMEOUT,
+  ): Promise<void> {
+    try {
+      await this._client.cluster.health({
+        index: this._getAlias(index, collection),
+        timeout,
+        wait_for_status: "yellow",
+      });
+    } catch (error) {
+      throw this._esWrapper.formatESError(error);
+    }
   }
 
   /**

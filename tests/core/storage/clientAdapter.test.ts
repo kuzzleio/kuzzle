@@ -45,6 +45,7 @@ const CLIENT_METHODS = [
   "updateCollection",
   "updateMapping",
   "upsert",
+  "waitForCollectionShards",
 ] as const;
 
 const CACHE_METHODS = [
@@ -113,6 +114,7 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "updateCollection",
       "updateMapping",
       "upsert",
+      "waitForCollectionShards",
     ];
     const cacheMethods = [
       "addCollection",
@@ -324,7 +326,7 @@ describe("#core/storage/ClientAdapter", () => {
       expect(adapter.es.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
-      expect(handlers.size).toBe(56);
+      expect(handlers.size).toBe(57);
     });
 
     it("reloads the collection write locks once the cluster is joined", async () => {
@@ -378,6 +380,13 @@ describe("#core/storage/ClientAdapter", () => {
         "getSettings",
         [IDX, COL],
         true,
+      ],
+      [
+        "collection:shards:wait",
+        [IDX, COL],
+        "client",
+        "waitForCollectionShards",
+        [IDX, COL],
       ],
       ["collection:exist", [IDX, COL], "cache", "hasCollection", [IDX, COL]],
       ["collection:list", [IDX], "cache", "listCollections", [IDX]],

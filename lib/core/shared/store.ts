@@ -226,6 +226,15 @@ export class Store {
         );
 
         if (exist) {
+          // Another node created it, maybe so recently that its primary
+          // shards are still initializing: a document request on it would
+          // get a 503 until they are active
+          await global.kuzzle.ask(
+            `core:storage:${this.scope}:collection:shards:wait`,
+            this.index,
+            collection,
+          );
+
           // @deprecated
           const dynamicSettings = isConfigDeprecated
             ? null

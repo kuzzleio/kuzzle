@@ -455,6 +455,18 @@ class ClientAdapter {
     );
 
     /**
+     * Wait, for a bounded time, until the primary shards of a collection
+     * another node has just created are active
+     * @param {string} index
+     * @param {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:shards:wait`,
+      (index: string, collection: string) =>
+        this.client.waitForCollectionShards(index, collection),
+    );
+
+    /**
      * Check a collection existence
      * @param {string} index
      * @param {string} collection
