@@ -242,8 +242,14 @@ class ClusterNode {
    * The id of the ID card this node reserved during `handshake()`.
    *
    * Null until the handshake gets that far, and read as a `string` at
-   * seventeen sites here plus `subscriber.ts` and `command.ts` — all of which
-   * run after it. The accessor says once where that can fail.
+   * seventeen sites here plus `subscriber.ts` and `command.ts`. The accessor
+   * says once where that can fail: an internal read before the handshake is a
+   * bug, and it throws.
+   *
+   * Network input is not internal: the command socket is bound before the
+   * handshake, and a node restarted on the IP of a dead one can be reached by
+   * peers still talking to that dead node (#3031). The paths network input
+   * reaches check `hasNodeId` first.
    */
   public get nodeId(): string {
     if (this._nodeId === null) {
@@ -251,6 +257,14 @@ class ClusterNode {
     }
 
     return this._nodeId;
+  }
+
+  /**
+   * Whether the handshake has set this node's id yet: the non-throwing check
+   * for the paths network input reaches before it has (#3031).
+   */
+  public get hasNodeId(): boolean {
+    return this._nodeId !== null;
   }
 
   public set nodeId(id: string) {
@@ -525,8 +539,11 @@ class ClusterNode {
     this.fullState.removeNode(nodeId);
     subscriber.dispose();
 
-    if (broadcast) {
-      this.publisher.sendNodeEvicted(this.nodeId, nodeId, reason);
+    // A subscriber can evict its remote node (heartbeat lost, gap, invalid
+    // message) before this node's handshake: there is no evictor id to
+    // broadcast then, and the eviction stays local (#3031).
+    if (broadcast && this._nodeId !== null) {
+      this.publisher.sendNodeEvicted(this._nodeId, nodeId, reason);
     }
 
     if (this.countActiveNodes() < this.config.minimumNodes) {

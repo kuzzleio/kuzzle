@@ -48,6 +48,7 @@ const stubLocalNode = () => ({
   >(async () => undefined),
   evictSelf: vi.fn<(reason: string) => Promise<void>>(async () => undefined),
   nodeId: "knode-local-1",
+  hasNodeId: true,
   fullState: {
     addRealtimeRoom: vi.fn(),
     addRealtimeSubscription: vi.fn(),
@@ -810,6 +811,60 @@ describe("ClusterSubscriber", () => {
           ],
         ]);
         expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
+
+      describe("before the handshake has set this node's id (#3031)", () => {
+        beforeEach(() => {
+          // The real getter throws until the handshake: reading it is what
+          // shut a restarted node down, so the stub throws the same way.
+          const unidentified = {
+            ...localNode,
+            hasNodeId: false,
+            get nodeId(): string {
+              throw new Error(
+                "[CLUSTER] No node id yet: the handshake has not run",
+              );
+            },
+          };
+
+          subscriber = new ClusterSubscriber(
+            unidentified,
+            remoteNodeId,
+            remoteNodeIP,
+          );
+        });
+
+        it("ignores the message", async () => {
+          await expect(
+            subscriber.handleNodeEviction(message()),
+          ).resolves.toBeUndefined();
+
+          expect(localNode.evictNode).not.toHaveBeenCalled();
+          expect(kuzzle.shutdown).not.toHaveBeenCalled();
+        });
+
+        it("does not evict itself when the message comes off the wire", async () => {
+          subscriber.protoroot = await protobuf.load(
+            `${process.cwd()}/lib/cluster/protobuf/sync.proto`,
+          );
+          subscriber.validateMessage = vi.fn(async () => true);
+
+          const encoder = subscriber.protoroot.lookupType("NodeEvicted");
+          const data = Buffer.from(
+            encoder
+              .encode(
+                encoder.create({ ...message(), messageId: Long.fromNumber(2) }),
+              )
+              .finish(),
+          );
+
+          await subscriber.processData("NodeEvicted", data);
+
+          // A throwing handler is what `processData` answers with evictSelf.
+          expect(localNode.evictSelf).not.toHaveBeenCalled();
+          expect(localNode.evictNode).not.toHaveBeenCalled();
+          expect(kuzzle.shutdown).not.toHaveBeenCalled();
+        });
       });
     });
 
