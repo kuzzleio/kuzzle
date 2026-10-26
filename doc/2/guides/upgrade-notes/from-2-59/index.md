@@ -51,6 +51,8 @@ When the startup fails (an `app.install` handler that throws, an import that can
 
 An uncaught exception, `SIGQUIT` and `SIGABRT`, which shut Kuzzle down after an optional dump, now exit with code `1` too, instead of `0`. So does a node that leaves the cluster because of a failure: it did not join within `cluster.joinTimeout`, another node has its IP address, it cannot reach the nodes it discovered (network split), it finds itself outside the cluster, or its cluster consistency check fails. A cluster-wide shutdown requested through the API still exits with code `0`.
 
+A node that cannot join the cluster now fails its startup: `app.start()` rejects with [`cluster.join.duplicate_ip`, `cluster.join.full_state_unavailable` or `cluster.join.timeout`](/core/2/api/errors/error-codes/cluster). It used to begin shutting down while it went on starting in the background: running its imports and installations, opening its ports and logging that it was ready, until the shutdown ended the process.
+
 The entrypoint of the official `kuzzleio/kuzzle` image used to exit at once, before that shutdown could release the node's locks and remove it from the cluster. It now lets the shutdown finish, after a failed startup and when its `--fixtures` cannot be loaded.
 
 A shutdown caused by a failure is bounded: if it has not finished after 30 seconds (for instance, a `kuzzle:shutdown` pipe that never returns), Kuzzle logs `[shutdown] Not finished after 30000ms: exiting now` and exits with code `1` anyway. A requested shutdown (`SIGTERM`, `SIGINT`, `admin:shutdown`) still waits for the requests in progress, however long they take.

@@ -726,16 +726,51 @@ describe("ClusterNode", () => {
         kuzzle.config.cluster.joinTimeout = 12345;
         withLock.mockImplementation(() => new Promise(() => undefined));
 
-        void node.handshake();
+        const handshake = node.handshake();
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.timeout",
+          message:
+            "Failed to join the cluster: timed out (joinTimeout: 12345ms).",
+        });
 
         await vi.advanceTimersByTimeAsync(12344);
         expect(kuzzle.shutdown).not.toHaveBeenCalled();
 
         await vi.advanceTimersByTimeAsync(1);
+        await rejection;
         expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
-        expect(error.mock.calls.flat().join("\n")).toMatch(
-          /Failed to join the cluster: timed out \(joinTimeout: 12345ms\)/,
+        expect(node.idCardHandler.createIdCard).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    /* `start()` carries on as soon as `handshake()` settles: a lock obtained
+     * once it has timed out must not introduce the node to the others. */
+    it("does not join when it gets the lock after joinTimeout", async () => {
+      vi.useFakeTimers();
+
+      try {
+        kuzzle.config.cluster.joinTimeout = 100;
+        let acquired: () => void = () => undefined;
+        withLock.mockImplementation(
+          (_resource, callback) =>
+            new Promise((resolve) => {
+              acquired = () => resolve(callback());
+            }),
         );
+
+        const handshake = node.handshake();
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.timeout",
+        });
+
+        await vi.advanceTimersByTimeAsync(100);
+        await rejection;
+
+        acquired();
+        await vi.advanceTimersByTimeAsync(0);
+
         expect(node.idCardHandler.createIdCard).not.toHaveBeenCalled();
       } finally {
         vi.useRealTimers();
@@ -786,14 +821,16 @@ describe("ClusterNode", () => {
       node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
       node.ip = "2.3.4.2";
 
-      await node.handshake();
+      // Rejects, so that `start()` does not go on starting the node
+      await expect(node.handshake()).rejects.toMatchObject({
+        id: "cluster.join.duplicate_ip",
+        message:
+          "Another node shares the same IP address as this one (2.3.4.2): baz.",
+      });
 
       expect(node.command.getFullState).not.toHaveBeenCalled();
       expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
       expect(node.fullState.loadFullState).not.toHaveBeenCalled();
-      expect(error.mock.calls.flat().join("\n")).toMatch(
-        /Another node share the same IP address as this one \(2\.3\.4\.2\): baz/,
-      );
       expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
 
@@ -900,7 +937,9 @@ describe("ClusterNode", () => {
       node.command.getFullState.mockResolvedValue(null);
       node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
 
-      await node.handshake();
+      await expect(node.handshake()).rejects.toMatchObject({
+        id: "cluster.join.full_state_unavailable",
+      });
 
       expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(2);
       expect(node.idCardHandler.addNode).not.toHaveBeenCalled();
@@ -908,9 +947,6 @@ describe("ClusterNode", () => {
       expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
       expect(node.fullState.loadFullState).not.toHaveBeenCalled();
       expect(warn.mock.calls.flat().join("\n")).toMatch(/Retrying/);
-      expect(error.mock.calls.flat().join("\n")).toMatch(
-        /network split detected/,
-      );
       expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
 
@@ -956,11 +992,9 @@ describe("ClusterNode", () => {
         () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
-      node.handshake();
-
-      await vi.waitFor(() =>
-        expect(error.mock.calls.flat().join("\n")).toMatch(/timed out/),
-      );
+      await expect(node.handshake()).rejects.toMatchObject({
+        id: "cluster.join.timeout",
+      });
       expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
