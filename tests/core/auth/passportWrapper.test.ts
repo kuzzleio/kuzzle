@@ -159,6 +159,18 @@ describe("#core/auth/PassportWrapper", () => {
       await expect(rejection).rejects.toMatchObject({ message: "foobar" });
     });
 
+    // `typeof null` is "object": reading `message` off it was a TypeError
+    it.each([null, undefined, "a challenge"])(
+      "rejects with an UnauthorizedError when it refuses them with %j as info",
+      async (info) => {
+        const name = register(failsWith(info));
+
+        await expect(wrapper.authenticate({}, name)).rejects.toMatchObject({
+          id: "plugin.strategy.missing_user",
+        });
+      },
+    );
+
     it("forwards a KuzzleError the strategy raised", async () => {
       const error = new ForbiddenError("foobar");
       const name = register(errorsWith(error));

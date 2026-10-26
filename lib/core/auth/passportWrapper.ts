@@ -85,7 +85,8 @@ export default class PassportWrapper {
           fail(err);
         } else if (!user) {
           const message =
-            typeof info === "object" && "message" in info
+            // `typeof null` is "object" too: a strategy may fail with no info
+            typeof info === "object" && info !== null && "message" in info
               ? info.message
               : undefined;
 
