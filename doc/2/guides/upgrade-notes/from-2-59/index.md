@@ -42,6 +42,25 @@ This changes what you can see while several nodes start together:
 
 A rolling upgrade from v2.59.0 keeps the nodes mutually excluded: a v2.59.0 node takes the same locks, on the same Redis keys, with the deprecated `Mutex`, and a `Mutex` and a `withLock` call exclude each other.
 
+### A failed startup stops the node
+
+When the startup fails (an `app.install` handler that throws, an import that cannot be applied, a lost startup lock…), the node now shuts down gracefully and exits with code `1`, whatever `NODE_ENV` is. It used to depend on `NODE_ENV`:
+
+- in production, the error was only logged and the process stayed alive, half started: nothing listened for requests, but its ID card kept it registered in the cluster, and a restart policy never fired;
+- in development, it shut down but exited with code `0`, so an `on-failure` restart policy did not restart it.
+
+An uncaught exception, `SIGQUIT` and `SIGABRT`, which shut Kuzzle down after an optional dump, now exit with code `1` too, instead of `0`. So does a node that leaves the cluster because of a failure: it did not join within `cluster.joinTimeout`, another node has its IP address, it cannot reach the nodes it discovered (network split), it finds itself outside the cluster, or its cluster consistency check fails. A cluster-wide shutdown requested through the API still exits with code `0`.
+
+A node restarted at once on the same IP address (a container restarted by its restart policy, a process killed) used to find the ID card of its previous run, still in Redis for a few seconds, take it for another node with its IP, and stop again, leaving its own card behind: it could loop like this. Now a node deletes its ID card when it shuts down instead of leaving it to expire, and a joining node that finds a card with its IP waits for that card to expire (`cluster.heartbeat` × 3, 6 seconds by default) before it concludes that another node really has its IP.
+
+A node that cannot join the cluster now fails its startup: `app.start()` rejects with [`cluster.join.duplicate_ip`, `cluster.join.full_state_unavailable` or `cluster.join.timeout`](/core/2/api/errors/error-codes/cluster). It used to begin shutting down while it went on starting in the background: running its imports and installations, opening its ports and logging that it was ready, until the shutdown ended the process.
+
+The entrypoint of the official `kuzzleio/kuzzle` image used to exit at once, before that shutdown could release the node's locks and remove it from the cluster. It now lets the shutdown finish, after a failed startup and when its `--fixtures` cannot be loaded.
+
+A shutdown caused by a failure is bounded: if it has not finished after 30 seconds (for instance, a `kuzzle:shutdown` pipe that never returns), Kuzzle logs `[shutdown] Not finished after 30000ms: exiting now` and exits with code `1` anyway. A requested shutdown (`SIGTERM`, `SIGINT`, `admin:shutdown`) still waits for the requests in progress, however long they take.
+
+**Action:** none. A failed start could not be retried anyway: a second `app.start()` fails on "another one already exists". The error is still returned by `app.start()` before the process exits, so a `catch` that logs it keeps working.
+
 ### Collections with `number_of_replicas` only
 
 When a collection already exists, Kuzzle compares its `number_of_shards` with the configured one, as the shard count of an existing collection cannot change. A collection configured with `number_of_replicas` but no `number_of_shards` failed that check on every start: a warning in production and, in development mode (`NODE_ENV=development`), a startup failure with `core.fatal.unexpected_error`. The check is now skipped when `number_of_shards` is not configured.
@@ -58,6 +77,7 @@ Indexes that already hold it keep it until a new collection is created in them; 
 
 - **Errors are logged under `err`.** Kuzzle uses kuzzle-logger 1.5 or later: an error is logged under an `err` field, with its `name`, `message`, `stack`, `cause` and custom properties (such as a `KuzzleError`'s `id` and `status`), instead of having only its enumerable properties spread at the top level of the log entry. The `namespace`, `nodeId` and `requestId` fields are applied to error entries too.
   **Action:** if a log pipeline, dashboard or alert reads error fields at the top level of Kuzzle's logs, point it to `err`.
+- **One shutdown per node.** A stop no longer logs `Initiating shutdown...` twice, and a node that lost Redis for a while logs `[CLUSTER] Node too slow: ID card expired` and shuts down once, instead of once per missed ID card renewal. A failure reported while the node is already shutting down, such as a cluster eviction during a `SIGTERM` stop, still makes it exit with a non-zero code.
 - The Loki preset now runs on pino-loki 3 (through kuzzle-logger 1.7). The preset keeps the behaviour it had with pino-loki 2: logs are still batched every second by default, and `meta` is not sent as structured metadata unless asked for.
 
 ### HTTP
@@ -80,4 +100,5 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **New export: [`MutexAcquireError`](/core/2/framework/error-classes/mutex-acquire-error).** [`withLock`](/core/2/framework/functions/with-lock) now rejects with it when it cannot acquire the lock within its attempts, instead of a plain `Error` with the same message. It extends `Error`, so a `catch` that handled the plain `Error` still works; you can now tell a busy lock apart with `instanceof MutexAcquireError`.
 - **New type exports:** `StartOptions`, `InstallationConfig`, `ImportConfig` and `SupportConfig` can be imported from `kuzzle`. They name the options of the server's start and the shapes of `Plugin.imports`.
 - **`withLock` and `Mutex` on the same key.** The previous upgrade notes said not to use both on the same key. They can be: both take the same Redis key with `SET NX`, so they exclude each other, and you can migrate your `Mutex` call sites one at a time. See [Migrating to withLock](/core/2/framework/classes/mutex/constructor#migrating-to-withlock).
+- **A failed `app.start()` ends the process.** An application test that expects `app.start()` to reject now sees the process exit with code `1` right after (see [A failed startup stops the node](#a-failed-startup-stops-the-node)); mock `process.exit` in such a test.
 - **Locks released at shutdown.** A node that stops now releases the locks it took with `withLock` before it exits, as it already did for `Mutex`, so the other nodes no longer wait for them to expire.

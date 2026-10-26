@@ -158,6 +158,13 @@ export class ClusterIdCardHandler {
   }
 
   /**
+   * How long an ID card outlives the last renewal of its node, in ms
+   */
+  get ttl(): number {
+    return this.refreshDelay * this.refreshMultiplier;
+  }
+
+  /**
    * Generates and reserves a unique ID for this node instance.
    * Makes sure that the ID is not already taken by another node instance.
    *
@@ -210,7 +217,8 @@ export class ClusterIdCardHandler {
     this.refreshWorker = refreshWorker;
 
     refreshWorker.on("message", async (message: JSONObject) => {
-      if (message.error) {
+      // A renewal racing the disposal finds the card deleted: not a failure
+      if (message.error && !this.disposed) {
         await this.node.evictSelf(message.error);
       }
     });
@@ -312,6 +320,30 @@ export class ClusterIdCardHandler {
         this.refreshWorker.send({ action: "dispose" });
       } catch {
         // It could happens that the worker has been killed before the dispose causing send to fail
+      }
+    }
+
+    clearInterval(this.refreshTimer ?? undefined);
+    this.refreshTimer = null;
+
+    // The worker deletes the card too, but nothing waits for it: the process
+    // usually exits first, and the card then outlives it by a TTL, long
+    // enough for a node restarted on this IP to take it for a live duplicate
+    if (this.nodeIdKey !== null) {
+      try {
+        await global.kuzzle.ask("core:cache:internal:del", this.nodeIdKey);
+        await global.kuzzle.ask(
+          "core:cache:internal:execute",
+          "srem",
+          REDIS_ID_CARDS_INDEX,
+          this.nodeIdKey,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Could not delete the ID card ${this.nodeIdKey}: it expires in ${this.ttl}ms (${
+            error instanceof Error ? error.message : String(error)
+          })`,
+        );
       }
     }
   }
@@ -431,7 +463,7 @@ export class ClusterIdCardHandler {
       "core:cache:internal:store",
       this.nodeIdKey,
       JSON.stringify(this.idCard.serialize()),
-      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier },
+      { onlyIfNew: creation, ttl: this.ttl },
     );
   }
 }

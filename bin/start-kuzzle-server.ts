@@ -39,6 +39,7 @@ import { hideBin } from "yargs/helpers";
  */
 import { Backend } from "../index";
 import type { DefaultMappings } from "../lib/core/backend/backendImport";
+import { exitOnFailure } from "../lib/kuzzle/exitOnFailure";
 
 type ServerOptions = {
   enablePlugins?: string;
@@ -254,7 +255,7 @@ const run = async (): Promise<void> => {
     console.error(
       `[x] [ERROR] ${error instanceof Error ? error.stack : String(error)}`,
     );
-    process.exit(1);
+    await exitOnFailure();
   }
 };
 

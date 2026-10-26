@@ -68,6 +68,13 @@ import { NameGenerator } from "../util/name-generator";
 
 let _kuzzle: Kuzzle | null = null;
 
+/**
+ * How long a shutdown caused by a failure may run before the process exits
+ * anyway: a `kuzzle:shutdown` pipe or a lock release that never settles must
+ * not keep a failed node alive, which a bare `process.exit(1)` never did
+ */
+const FAILURE_SHUTDOWN_TIMEOUT = 30000;
+
 Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
   enumerable: false,
@@ -104,6 +111,12 @@ type ImportStatus = {
 class Kuzzle extends KuzzleEventEmitter {
   public config: IKuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  /** The running shutdown, which later `shutdown()` calls wait for (#3017) */
+  private shutdownPromise: Promise<void> | null = null;
+  /** The highest exit code asked for by the `shutdown()` calls so far */
+  private shutdownExitCode = 0;
+  /** Ends a failure's shutdown that does not finish in time */
+  private shutdownWatchdog: NodeJS.Timeout | null = null;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
@@ -362,6 +375,21 @@ class Kuzzle extends KuzzleEventEmitter {
         }`,
       );
 
+      // A failed start cannot be retried (a second Kuzzle instance cannot be
+      // built), and what it did start keeps the process alive: in production,
+      // a node with no listener and an ID card still renewed (#3020). Not
+      // awaited, so the caller still gets the error before the process exits.
+      this.shutdown(1).catch((shutdownError: unknown) => {
+        this.log.error(
+          `Unable to shut down after a failed start: ${
+            shutdownError instanceof Error
+              ? shutdownError.message
+              : inspect(shutdownError)
+          }`,
+        );
+        process.exit(1);
+      });
+
       throw error;
     }
   }
@@ -391,6 +419,28 @@ class Kuzzle extends KuzzleEventEmitter {
    * @returns {Promise}
    */
   async shutdown(exitCode = 0): Promise<void> {
+    // Several sources can ask for it at once (a signal, a cluster eviction,
+    // the `exit` handler that `process.exit` below fires): they share the one
+    // shutdown, and a failure reported by any of them keeps the exit non-zero
+    this.shutdownExitCode = Math.max(this.shutdownExitCode, exitCode);
+
+    // Not for a requested shutdown: it waits for the requests still running,
+    // however long they take
+    if (exitCode !== 0) {
+      this.shutdownWatchdog ??= setTimeout(() => {
+        this.log.error(
+          `[shutdown] Not finished after ${FAILURE_SHUTDOWN_TIMEOUT}ms: exiting now`,
+        );
+        process.exit(this.shutdownExitCode);
+      }, FAILURE_SHUTDOWN_TIMEOUT);
+    }
+
+    this.shutdownPromise ??= this.runShutdown();
+
+    return this.shutdownPromise;
+  }
+
+  private async runShutdown(): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info("Initiating shutdown...");
@@ -429,7 +479,11 @@ class Kuzzle extends KuzzleEventEmitter {
     // application's buffered logs were dropped on shutdown (TD-51).
     await this?.pluginsManager?.application?.instance?.log?.flush?.();
 
-    process.exit(exitCode);
+    if (this.shutdownWatchdog !== null) {
+      clearTimeout(this.shutdownWatchdog);
+    }
+
+    process.exit(this.shutdownExitCode);
   }
 
   /**
@@ -956,7 +1010,9 @@ class Kuzzle extends KuzzleEventEmitter {
       }
     }
 
-    await this.shutdown();
+    // Only abnormal terminations get here: exit non-zero, so that an
+    // `on-failure` restart policy brings the node back (#3020)
+    await this.shutdown(1);
   }
 }
 

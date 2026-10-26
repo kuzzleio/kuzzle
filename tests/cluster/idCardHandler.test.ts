@@ -28,6 +28,7 @@ class WorkerStub extends EventEmitter {
 type Internals = {
   constructWorker: (path: string) => WorkerStub;
   disposed: boolean;
+  logger: { warn: ReturnType<typeof vi.fn> };
   nodeIdKey: string | null;
   refreshDelay: number;
   refreshTimer: NodeJS.Timeout | null;
@@ -59,6 +60,8 @@ describe("#cluster/ClusterIdCardHandler", () => {
         case "core:cache:internal:store":
           return reserved.length > 0 ? reserved.shift() : true;
         case "core:cache:internal:pexpire":
+          return 1;
+        case "core:cache:internal:del":
           return 1;
         case "core:cache:internal:mget":
           return cards;
@@ -241,6 +244,18 @@ describe("#cluster/ClusterIdCardHandler", () => {
       );
       expect(internals.disposed).toBe(true);
     });
+
+    /* A renewal racing the disposal finds the card it renews deleted. */
+    it("should not evict the node for an error reported once disposed", async () => {
+      await handler.createIdCard();
+      await handler.dispose();
+
+      internals.refreshWorker?.emit("message", {
+        error: "Node too slow: ID card expired",
+      });
+
+      expect(evictSelf).not.toHaveBeenCalled();
+    });
   });
 
   describe("#dispose", () => {
@@ -267,6 +282,53 @@ describe("#cluster/ClusterIdCardHandler", () => {
 
       expect(worker.send).toHaveBeenCalledOnce();
       expect(internals.disposed).toBe(true);
+    });
+
+    /* The worker deletes it too, but the process usually exits before it
+     * does: a node restarted on this IP then found a "duplicate". */
+    it("should delete its ID card and remove it from the index", async () => {
+      await handler.createIdCard();
+      const key = `{cluster/node}/${handler.nodeId}`;
+
+      await handler.dispose();
+
+      expect(bus.ask).toHaveBeenCalledWith("core:cache:internal:del", key);
+      expect(bus.ask).toHaveBeenCalledWith(
+        "core:cache:internal:execute",
+        "srem",
+        "{cluster/node}/id-cards-index",
+        key,
+      );
+    });
+
+    it("should stop refreshing the card before the worker has started", async () => {
+      await handler.createIdCard();
+      expect(internals.refreshTimer).not.toBeNull();
+
+      await handler.dispose();
+
+      expect(internals.refreshTimer).toBeNull();
+    });
+
+    it("should only warn when the card cannot be deleted: it expires anyway", async () => {
+      await handler.createIdCard();
+      bus.ask.mockImplementation(async (event: string) => {
+        if (event === "core:cache:internal:del") {
+          throw new Error("redis is gone");
+        }
+      });
+
+      await expect(handler.dispose()).resolves.toBeUndefined();
+
+      expect(internals.logger.warn).toHaveBeenCalledWith(
+        `Could not delete the ID card {cluster/node}/${handler.nodeId}: it expires in ${refreshDelay * 2}ms (redis is gone)`,
+      );
+    });
+
+    it("should have nothing to delete before the card was created", async () => {
+      await handler.dispose();
+
+      expect(bus.ask).not.toHaveBeenCalled();
     });
   });
 
