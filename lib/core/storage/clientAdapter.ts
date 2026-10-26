@@ -26,6 +26,7 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
+import { KuzzleError } from "../../kerror/errors/kuzzleError";
 import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
@@ -99,10 +100,11 @@ class ClientAdapter {
     this.registerCacheEvents();
     this.registerLockEvents();
 
-    // The locks were first loaded with the cache, before this node joined the
-    // cluster: one taken in between was broadcast before this node could hear
-    // it. Reading them again once the cluster is joined closes that gap.
-    global.kuzzle.onPipe("kuzzle:state:live", () => this.loadLocks());
+    // The cache and the locks were first loaded before this node joined the
+    // cluster: an index, a collection or a lock a peer added in between was
+    // broadcast before this node could hear it. Reading them again once the
+    // cluster is joined closes that gap.
+    global.kuzzle.onPipe("kuzzle:state:live", () => this.reloadCache());
 
     // Global store events registration
 
@@ -142,7 +144,22 @@ class ClientAdapter {
     }
 
     if (!indexCacheOnly) {
-      await this.client.createIndex(index);
+      try {
+        await this.client.createIndex(index);
+      } catch (error) {
+        // The index exists in storage but not in this node's cache: a peer
+        // created it and its cache broadcast never reached this node (e.g. the
+        // peer stopped before this node joined the cluster). Cache it so that
+        // the next request to that index finds it, then report the conflict.
+        if (
+          error instanceof KuzzleError &&
+          error.id === "services.storage.index_already_exists"
+        ) {
+          this.cache.addIndex(index);
+        }
+
+        throw error;
+      }
     }
 
     this.cache.addIndex(index);
@@ -238,6 +255,15 @@ class ClientAdapter {
       await this.client.generateMissingAliases();
     }
 
+    await this.reloadCache();
+  }
+
+  /**
+   * Adds the indexes and collections found in storage to the index cache,
+   * then reloads the collection write locks. Unlike `populateCache`, it never
+   * writes to storage.
+   */
+  async reloadCache(): Promise<void> {
     // `client` is untyped (see the field's comment), so the schema shape is
     // stated here: index name -> its collection names.
     const schema: Record<string, string[]> = await this.client.getSchema();
