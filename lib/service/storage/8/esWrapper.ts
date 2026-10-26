@@ -54,6 +54,44 @@ function isResponseError(error: ThrownESError): error is ThrownESResponseError {
   return Boolean(error.meta);
 }
 
+/**
+ * What the client puts in `message` when the response carried nothing it could
+ * read: this placeholder, or an empty string for a bodyless response.
+ */
+const CLIENT_PLACEHOLDER_MESSAGE = "Response Error";
+
+function isUsableMessage(message: unknown): message is string {
+  return (
+    typeof message === "string" &&
+    message.trim() !== "" &&
+    message !== CLIENT_PLACEHOLDER_MESSAGE
+  );
+}
+
+/**
+ * A message for an error that came with none worth keeping (typically a 503
+ * with no body while shards initialize), built from what the error still
+ * carries: the client's error name, the HTTP status and the response body.
+ */
+function describeUnreadableError(error: ThrownESError): string {
+  const statusCode = error.meta?.statusCode;
+  const body = error.meta?.body;
+  const hasBody = body !== undefined && body !== null && body !== "";
+
+  let description =
+    statusCode === undefined
+      ? "Elasticsearch request failed"
+      : `Elasticsearch responded ${statusCode}`;
+
+  description += hasBody
+    ? `: ${inspect(body, { breakLength: Infinity, depth: 3 })}`
+    : " (no body)";
+
+  return error.name && error.name !== "Error"
+    ? `${error.name}: ${description}`
+    : description;
+}
+
 interface ESErrorMapping {
   regex: RegExp;
   /**
@@ -360,11 +398,14 @@ class ESWrapper {
   _handleUnknownError(error: ThrownESError, message: string): KuzzleError {
     debug(
       "unhandled elasticsearch error (unhandled type: %s): %o",
-      get(error, "error.meta.statusCode", "<no status code>"),
+      get(error, "meta.statusCode", "<no status code>"),
       error,
     );
 
-    return kerror.get("unexpected_error", message);
+    return kerror.get(
+      "unexpected_error",
+      isUsableMessage(message) ? message : describeUnreadableError(error),
+    );
   }
 }
 
