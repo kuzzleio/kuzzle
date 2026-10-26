@@ -173,11 +173,13 @@ describe("#kuzzle/InternalIndexHandler", () => {
         },
       ]);
 
-      expect(asked("core:storage:private:document:create")).toContainEqual([
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).toContainEqual([
         INDEX,
         "config",
+        `${INDEX}.done`,
         { timestamp: expect.any(Number) },
-        { id: `${INDEX}.done` },
       ]);
     });
 
@@ -192,9 +194,9 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       expect(initSecret).toHaveBeenCalledTimes(1);
       expect(bootstrap).not.toHaveBeenCalled();
-      expect(asked("core:storage:private:document:create")).not.toContainEqual(
-        expect.arrayContaining([{ id: `${INDEX}.done` }]),
-      );
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).not.toContainEqual(expect.arrayContaining([`${INDEX}.done`]));
     });
 
     it("does not record a bootstrap that failed", async () => {
@@ -205,9 +207,9 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       await expect(handler.init()).rejects.toBe(failure);
 
-      expect(asked("core:storage:private:document:create")).not.toContainEqual(
-        expect.arrayContaining([{ id: `${INDEX}.done` }]),
-      );
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).not.toContainEqual(expect.arrayContaining([`${INDEX}.done`]));
     });
 
     it("reports a bootstrap that timed out as a Kuzzle error", async () => {
@@ -222,6 +224,66 @@ describe("#kuzzle/InternalIndexHandler", () => {
       await expect(rejection).rejects.toMatchObject({
         id: "services.storage.bootstrap_timeout",
       });
+    });
+
+    /*
+     * #3028: a node stopped while bootstrapping, after the data model version
+     * was written but before the `.done` marker was. The next lock holder
+     * runs the whole sequence again, on an index that already holds some of
+     * its documents, and must not fail on any of them. The documents live in
+     * a map here, and `create` refuses an id that is already there, as
+     * Elasticsearch does.
+     */
+    it("resumes a bootstrap interrupted before the marker document", async () => {
+      const documents = new Map<string, unknown>([
+        ["config/internalIndex.dataModelVersion", { version: "2.0.0" }],
+        ["config/security.jwt.secret", { seed: "the-stored-seed" }],
+        ["roles/admin", {}],
+      ]);
+
+      ask.mockImplementation(async (event: string, ...args: unknown[]) => {
+        const [, collection, third, fourth] = args as [
+          string,
+          string,
+          unknown,
+          unknown,
+        ];
+
+        switch (event) {
+          case "core:storage:private:document:exist":
+            return documents.has(`${collection}/${String(third)}`);
+          case "core:storage:private:document:get":
+            return { _source: documents.get(`${collection}/${String(third)}`) };
+          case "core:storage:private:document:create": {
+            const key = `${collection}/${(fourth as { id: string }).id}`;
+
+            if (documents.has(key)) {
+              throw Object.assign(new Error("Document already exists."), {
+                id: "services.storage.document_already_exists",
+              });
+            }
+
+            documents.set(key, third);
+            return undefined;
+          }
+          case "core:storage:private:document:createOrReplace":
+            documents.set(`${collection}/${String(third)}`, fourth);
+            return undefined;
+          default:
+            return undefined;
+        }
+      });
+
+      await handler.init();
+
+      expect(documents.get(`config/${INDEX}.done`)).toEqual({
+        timestamp: expect.any(Number),
+      });
+      expect(documents.get("config/internalIndex.dataModelVersion")).toEqual({
+        version: "2.0.0",
+      });
+      expect(global.kuzzle.secret).toBe("the-stored-seed");
+      expect(randomBytes).not.toHaveBeenCalled();
     });
 
     /*
@@ -262,11 +324,13 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(securities).toHaveBeenCalledTimes(1);
       expect(validations).toHaveBeenCalledTimes(1);
       expect(initSecret).toHaveBeenCalledTimes(1);
-      expect(asked("core:storage:private:document:create")).toContainEqual([
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).toContainEqual([
         INDEX,
         "config",
+        "internalIndex.dataModelVersion",
         { version: expect.any(String) },
-        { id: "internalIndex.dataModelVersion" },
       ]);
     });
   });
@@ -429,6 +493,32 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(randomBytes).not.toHaveBeenCalled();
       expect(asked("core:storage:private:document:create")).toEqual([]);
       expect(global.kuzzle.secret).toBe("the-stored-seed");
+    });
+
+    /*
+     * #3028: an interrupted bootstrap may store a seed between the check and
+     * the creation. That seed is the one other nodes may already sign with,
+     * so it is the one kept, rather than this node's own.
+     */
+    it("keeps a seed stored between its check and its creation", async () => {
+      answers["core:storage:private:document:exist"] = false;
+      answers["core:storage:private:document:get"] = {
+        _source: { seed: "the-other-seed" },
+      };
+
+      ask.mockImplementation(async (event: string) => {
+        if (event === "core:storage:private:document:create") {
+          throw Object.assign(new Error("Document already exists."), {
+            id: "services.storage.document_already_exists",
+          });
+        }
+
+        return answers[event];
+      });
+
+      await handler._initSecret();
+
+      expect(global.kuzzle.secret).toBe("the-other-seed");
     });
 
     it("forwards a rejection from the document creation", async () => {
