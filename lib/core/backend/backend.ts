@@ -25,8 +25,8 @@ import type { JSONObject } from "../../types/JSONObject";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import type { EventDefinition } from "../../../index";
-import { NameGenerator } from "../../../index";
+import type { EventDefinition } from "../../types/EventHandler";
+import { NameGenerator } from "../../util/name-generator";
 import {
   BackendCluster,
   BackendConfig,

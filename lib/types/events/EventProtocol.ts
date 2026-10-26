@@ -1,5 +1,5 @@
 import type { JSONObject } from "../JSONObject";
-import type { PipeEventHandler } from "../../../index";
+import type { PipeEventHandler } from "../EventHandler";
 import type { ClientConnection } from "../ClientConnection";
 import type { HttpMessage } from "../HttpMessage";
 
