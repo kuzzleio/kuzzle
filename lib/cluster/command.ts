@@ -210,49 +210,62 @@ class ClusterCommand {
       try {
         const [type, data] = await this.server.receive();
 
-        // The socket is bound before the handshake sets this node's id, and a
-        // peer still talking to a dead node on this IP can reach it (#3031).
-        // A node with no id yet has no state to serve and cannot take a peer
-        // in: every request is answered DISCARDED, which the requester treats
-        // as no answer.
-        if (!this.node.hasNodeId) {
-          await this.server.send([commandTopic.DISCARDED, null]);
-          continue;
-        }
-
-        // A REQ frame carries a topic and, for a handshake, a payload. A
-        // request missing either is answered with DISCARDED, which is what
-        // this socket owes every REQ — the two frames were read unchecked.
-        switch (type?.toString()) {
-          case commandTopic.FULLSTATE:
-            await this.sendFullState();
-            break;
-          case commandTopic.HANDSHAKE:
-            if (data === undefined) {
-              await this.server.send([commandTopic.DISCARDED, null]);
-              break;
-            }
-
-            await this.handleHandshake(data);
-            break;
-          case commandTopic.RETRANSMIT:
-            if (data === undefined) {
-              await this.server.send([commandTopic.DISCARDED, null]);
-              break;
-            }
-
-            await this.handleRetransmit(data);
-            break;
-          default:
-            // REP/REQ sockets expect a reply to each request made, so we have
-            // to send some kind of response on an invalid request received
-            await this.server.send([commandTopic.DISCARDED, null]);
-        }
+        // NOSONAR (S9382): a REP socket strictly alternates receive and send,
+        // so a request must be answered before the next one can be read.
+        await this.answer(type, data); // NOSONAR
       } catch (e) {
         if (this.state !== stateEnum.CLOSED) {
           throw e;
         }
       }
+    }
+  }
+
+  /**
+   * Answers one request. Every request gets exactly one reply: REP/REQ
+   * requires it, and a request left unanswered wedges the peer's socket.
+   */
+  private async answer(
+    type: Buffer | undefined,
+    data: Buffer | undefined,
+  ): Promise<void> {
+    // The socket is bound before the handshake sets this node's id, and a
+    // peer still talking to a dead node on this IP can reach it (#3031). A
+    // node with no id yet has no state to serve and cannot take a peer in:
+    // every request is answered DISCARDED, which the requester treats as no
+    // answer.
+    if (!this.node.hasNodeId) {
+      await this.server.send([commandTopic.DISCARDED, null]);
+      return;
+    }
+
+    // A REQ frame carries a topic and, for a handshake, a payload. A request
+    // missing either is answered with DISCARDED, which is what this socket
+    // owes every REQ — the two frames were read unchecked.
+    switch (type?.toString()) {
+      case commandTopic.FULLSTATE:
+        await this.sendFullState();
+        break;
+      case commandTopic.HANDSHAKE:
+        if (data === undefined) {
+          await this.server.send([commandTopic.DISCARDED, null]);
+          break;
+        }
+
+        await this.handleHandshake(data);
+        break;
+      case commandTopic.RETRANSMIT:
+        if (data === undefined) {
+          await this.server.send([commandTopic.DISCARDED, null]);
+          break;
+        }
+
+        await this.handleRetransmit(data);
+        break;
+      default:
+        // REP/REQ sockets expect a reply to each request made, so we have
+        // to send some kind of response on an invalid request received
+        await this.server.send([commandTopic.DISCARDED, null]);
     }
   }
 
@@ -455,7 +468,9 @@ class ClusterCommand {
       await req.send([commandTopic.FULLSTATE, null]);
 
       try {
-        const [topic, payload] = await req.receive();
+        // NOSONAR (S9382): one node at a time by design, the loop stops at
+        // the first one that serves a full state.
+        const [topic, payload] = await req.receive(); // NOSONAR
 
         // DISCARDED carries an empty frame, which would decode as an empty
         // full state: a node that cannot serve one (#3031) is skipped like
