@@ -121,6 +121,8 @@ type SubscribingNode = {
   config: IKuzzleConfiguration["cluster"];
   heartbeatDelay: number;
   nodeId: string;
+  /** Whether `nodeId` can be read: false until the handshake sets it. */
+  hasNodeId: boolean;
   fullState: State;
   eventEmitter: { emit(event: string, payload: unknown): void };
   evictNode(
@@ -537,6 +539,17 @@ class ClusterSubscriber {
    * @param message - decoded NodeEvicted protobuf message
    */
   async handleNodeEviction(message: NodeEvictedMessage): Promise<void> {
+    // Before the handshake this node has no id to compare, and is not part of
+    // the cluster the eviction is about: the message is ignored (#3031).
+    if (!this.localNode.hasNodeId) {
+      debug(
+        "[CLUSTER] Eviction of node %s by %s ignored: the handshake has not run",
+        message.nodeId,
+        message.evictor,
+      );
+      return;
+    }
+
     if (message.nodeId === this.localNode.nodeId) {
       this.logger.error(
         `[CLUSTER] Node evicted by ${message.evictor}. Reason: ${message.reason}`,

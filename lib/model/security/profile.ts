@@ -31,7 +31,7 @@ import type {
   OptimizedPolicyRestrictions,
 } from "../../types/index";
 import type { Role } from "./role";
-import type { KuzzleRequest } from "../../../index";
+import type { KuzzleRequest } from "../../api/request";
 
 const assertionError = kerror.wrap("api", "assert");
 

@@ -187,6 +187,12 @@ export class Mutex {
    * @return {Promise}
    */
   async unlock(): Promise<void> {
+    // `releaseAllBeforeExit` already gave this lock back: its holder is only
+    // catching up, and throwing would turn a requested shutdown into a crash.
+    if (!this._locked && exiting) {
+      return;
+    }
+
     if (!this._locked) {
       throw fatal.get(
         "assertion_failed",
@@ -266,7 +272,8 @@ export class Mutex {
    *
    * From then on, `lock()` never resolves: the process is about to exit, and
    * answering `false` would send its caller down a path meant for a lock
-   * held by another node.
+   * held by another node. And `unlock()` on a lock it already freed resolves
+   * without doing anything, since its holder may still try to give it back.
    */
   static async releaseAllBeforeExit(): Promise<void> {
     exiting = true;

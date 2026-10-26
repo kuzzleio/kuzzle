@@ -23,7 +23,7 @@ import Bluebird from "bluebird";
 import { omit } from "lodash";
 
 import type { JSONObject } from "../../types/JSONObject";
-import type { OptimizedPolicy, Policy } from "../../../index";
+import type { OptimizedPolicy, Policy } from "../../types/Policy";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";
 import { ObjectRepository } from "../shared/ObjectRepository";

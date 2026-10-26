@@ -1265,6 +1265,22 @@ describe("ClusterNode", () => {
     });
   });
 
+  describe("#nodeId / #hasNodeId", () => {
+    it("throws on a read before the handshake, and says so without throwing", () => {
+      expect(node.hasNodeId).toBe(false);
+      expect(() => node.nodeId).toThrow(
+        "[CLUSTER] No node id yet: the handshake has not run",
+      );
+    });
+
+    it("returns the id once the handshake has set it", () => {
+      node.nodeId = "thisnode";
+
+      expect(node.hasNodeId).toBe(true);
+      expect(node.nodeId).toBe("thisnode");
+    });
+  });
+
   describe("#evictNode", () => {
     let subscriber: { dispose: ReturnType<typeof vi.fn>; remoteNodeIP: string };
 
@@ -1301,6 +1317,19 @@ describe("ClusterNode", () => {
       ]);
       expect(subscriber.dispose).toHaveBeenCalledTimes(1);
       expect(kuzzle.state).toBe(kuzzleStateEnum.RUNNING);
+    });
+
+    it("evicts without broadcasting before the handshake (#3031)", async () => {
+      // A subscriber can evict its remote node before this node has an id:
+      // there is no evictor to name, and the getter would throw.
+      node._nodeId = null;
+
+      await expect(
+        node.evictNode("bar", { broadcast: true, reason: "because" }),
+      ).resolves.toBeUndefined();
+
+      expectEvicted();
+      expect(node.publisher.sendNodeEvicted).not.toHaveBeenCalled();
     });
 
     it("evicts without broadcasting by default", async () => {

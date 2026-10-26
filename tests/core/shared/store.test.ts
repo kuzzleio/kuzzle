@@ -155,6 +155,9 @@ describe("#core/shared/Store", () => {
       expect(asked("collection:exist")).toEqual([
         { args: [INDEX, "foo"], underLock: true },
       ]);
+      expect(asked("collection:shards:wait")).toEqual([
+        { args: [INDEX, "foo"], underLock: true },
+      ]);
       expect(asked("collection:settings:get")).toEqual([
         { args: [INDEX, "foo"], underLock: true },
       ]);
@@ -172,6 +175,52 @@ describe("#core/shared/Store", () => {
           underLock: true,
         },
       ]);
+    });
+
+    /*
+     * #3033: the node that created a collection asked Elasticsearch to wait
+     * for its shards. One that finds it already there may have taken the lock
+     * right after its creator stopped, before the primary shard was active,
+     * and a document request would then get a 503. So it waits for them
+     * before anything else touches the collection.
+     */
+    it("waits for an existing collection's shards before reading it", async () => {
+      answers["core:storage:public:collection:exist"] = true;
+      answers["core:storage:public:collection:settings:get"] = {
+        number_of_shards: "1",
+      };
+
+      await store.init({ foo: collections.foo });
+
+      const events = asks.map(({ event }) => event);
+
+      expect(events.indexOf("core:storage:public:collection:shards:wait")).toBe(
+        events.indexOf("core:storage:public:collection:exist") + 1,
+      );
+    });
+
+    it("does not wait for the shards of a collection it creates", async () => {
+      await store.init(collections);
+
+      expect(asked("collection:shards:wait")).toEqual([]);
+    });
+
+    it("rejects, and creates nothing, when the shards never become active", async () => {
+      const timeout = new Error("timed out");
+      answers["core:storage:public:collection:exist"] = true;
+      ask.mockImplementation(async (event: string, ...args: unknown[]) => {
+        asks.push({ args, event, underLock: true });
+
+        if (event === "core:storage:public:collection:shards:wait") {
+          throw timeout;
+        }
+
+        return answers[event];
+      });
+
+      await expect(store.init({ foo: collections.foo })).rejects.toBe(timeout);
+
+      expect(asked("collection:create")).toEqual([]);
     });
 
     it("rejects with MutexLockLostError when the lock is lost", async () => {

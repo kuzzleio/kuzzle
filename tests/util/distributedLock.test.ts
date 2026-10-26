@@ -373,6 +373,27 @@ describe("#distributedLock", () => {
       expect(await other.exists("bar")).toBe(0);
     });
 
+    it("lets a callback that finishes afterwards settle with its own outcome", async () => {
+      let finish: () => void = () => undefined;
+      let started = false;
+
+      const locking = withLock("foo", async () => {
+        started = true;
+        await new Promise<void>((resolve) => {
+          finish = resolve;
+        });
+        return "done";
+      });
+      await vi.waitFor(() => expect(started).toBe(true));
+
+      await releaseAllLocksBeforeExit();
+      expect(await other.exists("foo")).toBe(0);
+
+      // Its own release, on a lock already given back, must not reject
+      finish();
+      await expect(locking).resolves.toBe("done");
+    });
+
     it("never settles a lock asked for afterwards, and takes nothing", async () => {
       await releaseAllLocksBeforeExit();
       const setSpy = vi.spyOn(client, "set");

@@ -171,6 +171,93 @@ export function describeESWrapper(
         },
       );
 
+      /*
+       * Issue #3032: a bodyless answer (a 503 while shards initialize) gave
+       * the client nothing to put in `message` — "" on ES 8, the "Response
+       * Error" placeholder on ES 7 — so `unexpected_error` said nothing, and
+       * the status code was lost. Same id and class, a message that says why.
+       */
+      describe("an unexpected error with no usable message", () => {
+        it.each([undefined, ""])(
+          "names the status of a bodyless response (body: %j)",
+          (body) => {
+            const error = new ResponseError({
+              body,
+              headers: {},
+              meta: {},
+              statusCode: 503,
+              warnings: null,
+            });
+
+            const formatted = wrapper.formatESError(error);
+
+            expect(formatted).toBeInstanceOf(ExternalServiceError);
+            expect(formatted).toMatchObject({
+              id: "services.storage.unexpected_error",
+              message: "ResponseError: Elasticsearch responded 503 (no body)",
+              status: 500,
+            });
+          },
+        );
+
+        it("shows a body the client could not turn into a message", () => {
+          const formatted = wrapper.formatESError(
+            withMeta("Response Error", {
+              body: { status: "unavailable" },
+              statusCode: 503,
+            }),
+          );
+
+          expect(formatted).toMatchObject({
+            id: "services.storage.unexpected_error",
+            message: "Elasticsearch responded 503: { status: 'unavailable' }",
+          });
+        });
+
+        it("says so when there is no status either", () => {
+          expect(wrapper.formatESError(new Error(""))).toMatchObject({
+            id: "services.storage.unexpected_error",
+            message: "Elasticsearch request failed (no body)",
+          });
+        });
+
+        it.each([
+          [
+            "the error's own message",
+            withMeta("test", { statusCode: 420 }),
+            "test",
+          ],
+          [
+            "the reason ES gave",
+            withMeta("", {
+              body: { error: { reason: "shards unavailable" } },
+              statusCode: 503,
+            }),
+            "shards unavailable",
+          ],
+        ])("keeps %s unchanged", (_, error, message) => {
+          expect(wrapper.formatESError(error)).toMatchObject({
+            id: "services.storage.unexpected_error",
+            message,
+          });
+        });
+
+        it("keeps the reason of the client's own ResponseError", () => {
+          const error = new ResponseError({
+            body: { error: { reason: "something unmapped", type: "x" } },
+            headers: {},
+            meta: {},
+            statusCode: 503,
+            warnings: null,
+          });
+
+          expect(wrapper.formatESError(error)).toMatchObject({
+            id: "services.storage.unexpected_error",
+            message: "something unmapped",
+          });
+        });
+      });
+
       it("falls back when a not-found carries no index", () => {
         const error = withMeta("test", { statusCode: 404 });
         error.body = {
