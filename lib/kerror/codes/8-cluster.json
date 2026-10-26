@@ -11,6 +11,29 @@
           "class": "InternalError"
         }
       }
+    },
+    "join": {
+      "code": 1,
+      "errors": {
+        "duplicate_ip": {
+          "description": "Another node of the cluster has the same IP address as the one joining it. The joining node does not start.",
+          "code": 1,
+          "message": "Another node shares the same IP address as this one (%s): %s.",
+          "class": "InternalError"
+        },
+        "full_state_unavailable": {
+          "description": "None of the cluster nodes discovered could give the joining node the cluster state, twice in a row (network split). The joining node does not start.",
+          "code": 2,
+          "message": "Could not connect to the discovered cluster nodes (network split detected).",
+          "class": "InternalError"
+        },
+        "timeout": {
+          "description": "The node did not join the cluster within the configured cluster.joinTimeout. It does not start.",
+          "code": 3,
+          "message": "Failed to join the cluster: timed out (joinTimeout: %sms).",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
