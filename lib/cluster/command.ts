@@ -73,6 +73,8 @@ type CommandingNode = {
   };
   ip: string;
   nodeId: string;
+  /** Whether `nodeId` can be read: false until the handshake sets it. */
+  hasNodeId: boolean;
   activity: Activity[];
   /** Only `serialize()`: the command layer never mutates the state. */
   fullState: { serialize(): SerializedState };
@@ -207,6 +209,16 @@ class ClusterCommand {
     while (this.state === stateEnum.RUNNING) {
       try {
         const [type, data] = await this.server.receive();
+
+        // The socket is bound before the handshake sets this node's id, and a
+        // peer still talking to a dead node on this IP can reach it (#3031).
+        // A node with no id yet has no state to serve and cannot take a peer
+        // in: every request is answered DISCARDED, which the requester treats
+        // as no answer.
+        if (!this.node.hasNodeId) {
+          await this.server.send([commandTopic.DISCARDED, null]);
+          continue;
+        }
 
         // A REQ frame carries a topic and, for a handshake, a payload. A
         // request missing either is answered with DISCARDED, which is what
@@ -443,7 +455,19 @@ class ClusterCommand {
       await req.send([commandTopic.FULLSTATE, null]);
 
       try {
-        [, fullState = null] = await req.receive();
+        const [topic, payload] = await req.receive();
+
+        // DISCARDED carries an empty frame, which would decode as an empty
+        // full state: a node that cannot serve one (#3031) is skipped like
+        // one that does not answer.
+        if (topic?.toString() === commandTopic.FULLSTATE && payload) {
+          fullState = payload;
+        } else {
+          this.logger.warn(
+            `Unable to fetch a full state from node ${id} (request discarded)`,
+          );
+          idx = (idx + 1) % nodes.length;
+        }
       } catch {
         // no response from the remote node in a timely fashion... retrying
         // with another one
@@ -537,7 +561,18 @@ class ClusterCommand {
     let response: Buffer | null = null;
 
     try {
-      [, response = null] = await req.receive();
+      const [topic, answer] = await req.receive();
+
+      // DISCARDED carries an empty frame, which would decode as a handshake
+      // answer with nothing in it: a node that refused the handshake (#3031)
+      // is one that did not answer.
+      if (topic?.toString() === commandTopic.HANDSHAKE && answer) {
+        response = answer;
+      } else {
+        this.logger.warn(
+          `Couldn't complete handshake with node ${id}: request discarded`,
+        );
+      }
     } catch {
       this.logger.warn(
         `Couldn't complete handshake with node ${id}: no response received`,
