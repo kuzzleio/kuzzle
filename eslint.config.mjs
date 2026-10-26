@@ -3,13 +3,70 @@
 // per-directory `.eslintrc.json` files (features, features-legacy — and, until
 // step 13's L7 deleted the Mocha suite, test) and `.eslintignore` are folded in
 // here — flat config is one file, top to bottom, last block wins.
-import { basename } from "node:path";
+import { basename, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import kuzzle from "eslint-plugin-kuzzle";
+
+// The package's root barrel, `index.ts`, with and without extension; the
+// directory itself resolves to it too.
+const rootDir = dirname(fileURLToPath(import.meta.url));
+const rootBarrel = new Set(
+  ["", "index", "index.ts", "index.js"].map((f) => resolve(rootDir, f)),
+);
 
 // Rules local to this repository, too small to be worth a plugin package.
 const local = {
   rules: {
+    // ADR-0001, TD-49 (kuzzle#3012): the root barrel re-exports most of lib/,
+    // so a module of lib/ importing it drags the whole backend into its import
+    // graph, in a cycle. The specifier is resolved against the importing file:
+    // a pattern cannot tell `../../../index` (the root) from `../index`.
+    "no-root-barrel-import": {
+      meta: {
+        type: "problem",
+        schema: [],
+        messages: {
+          rootBarrel:
+            '"{{source}}" is the package\'s root index.ts: import the module that defines the symbol instead. (ADR-0001, TD-49)',
+        },
+      },
+      create(context) {
+        const dir = dirname(context.filename);
+
+        function check(source) {
+          if (
+            source?.type === "Literal" &&
+            typeof source.value === "string" &&
+            source.value.startsWith(".") &&
+            rootBarrel.has(resolve(dir, source.value))
+          ) {
+            context.report({
+              data: { source: source.value },
+              messageId: "rootBarrel",
+              node: source,
+            });
+          }
+        }
+
+        return {
+          CallExpression(node) {
+            if (
+              node.callee.type === "Identifier" &&
+              node.callee.name === "require"
+            ) {
+              check(node.arguments[0]);
+            }
+          },
+          ExportAllDeclaration: (node) => check(node.source),
+          ExportNamedDeclaration: (node) => check(node.source),
+          ImportDeclaration: (node) => check(node.source),
+          ImportExpression: (node) => check(node.source),
+          TSExternalModuleReference: (node) => check(node.expression),
+        };
+      },
+    },
+
     // ADR-0001, TD-08: `lib/types/` mixed `foo.type.ts` and `Foo.ts`. A file
     // there is named after the type it declares, in PascalCase.
     "types-file-name": {
@@ -128,6 +185,13 @@ export default [
     ],
     plugins: { local },
     rules: { "local/types-file-name": "error" },
+  },
+
+  // Entry points outside lib/ (bin/, the tests) may import the root barrel.
+  {
+    files: ["lib/**"],
+    plugins: { local },
+    rules: { "local/no-root-barrel-import": "error" },
   },
 
   {
