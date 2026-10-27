@@ -1631,30 +1631,37 @@ export class ES8 {
 
     const exists = await this.hasCollection(index, collection);
     if (exists) {
-      // Another node created it, maybe so recently that its primary shards
-      // are still initializing
-      await this.waitForCollectionShards(index, collection);
-      return this.updateCollection(index, collection, { mappings, settings });
+      return this._updateConcurrentlyCreatedCollection(
+        index,
+        collection,
+        mappings,
+        settings,
+      );
     }
 
     this._checkMappings(mappings);
 
+    // Copies, not in-place changes: the race branch below must hand the
+    // caller's own mappings and settings to `updateCollection`
     esRequest.mappings = {
       _meta: mappings._meta || this._config.commonMapping._meta,
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
+        {},
         mappings.properties,
         this._config.commonMapping.properties,
       ),
     };
 
-    settings.number_of_replicas =
-      settings.number_of_replicas ||
-      this._config.defaultSettings.number_of_replicas;
-
-    settings.number_of_shards =
-      settings.number_of_shards ||
-      this._config.defaultSettings.number_of_shards;
+    esRequest.settings = {
+      ...settings,
+      number_of_replicas:
+        settings.number_of_replicas ||
+        this._config.defaultSettings.number_of_replicas,
+      number_of_shards:
+        settings.number_of_shards ||
+        this._config.defaultSettings.number_of_shards,
+    };
 
     try {
       await this._client.indices.create(esRequest);
@@ -1665,9 +1672,14 @@ export class ES8 {
       ) {
         // race condition: the indice has been created between the "exists"
         // check above and this "create" attempt, by a request that may not
-        // have waited for its shards yet
-        await this.waitForCollectionShards(index, collection);
-        return null;
+        // have waited for its shards yet. This request's mappings and
+        // settings must still be applied, as if it had seen it exist
+        return this._updateConcurrentlyCreatedCollection(
+          index,
+          collection,
+          mappings,
+          settings,
+        );
       }
 
       throw this._esWrapper.formatESError(error);
@@ -1691,6 +1703,21 @@ export class ES8 {
     }
 
     return null;
+  }
+
+  /**
+   * Applies the mappings and settings of a `createCollection` call to a
+   * collection that already exists because another request created it,
+   * maybe so recently that its primary shards are still initializing.
+   */
+  private async _updateConcurrentlyCreatedCollection(
+    index: string,
+    collection: string,
+    mappings: estypes.MappingTypeMapping,
+    settings: estypes.IndicesIndexSettings,
+  ) {
+    await this.waitForCollectionShards(index, collection);
+    return this.updateCollection(index, collection, { mappings, settings });
   }
 
   /**

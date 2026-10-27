@@ -547,28 +547,93 @@ export function describeLifecycle(harness: ESHarness) {
 
     /*
      * `hasCollection` said no and `indices.create` says it exists: another
-     * node created it in between. Swallowed, because the caller asked for the
-     * collection to exist and it does.
+     * node created it in between. The caller asked for the collection to
+     * exist with its own mappings and settings, so this goes on as if the
+     * collection had been there all along: wait for its shards, then update.
      */
-    it("survives a race with another node creating the same collection", async () => {
-      arm();
-      const raced: Error & { meta?: unknown } = new Error("foo");
+    describe("when another node creates the same collection first", () => {
+      const armRace = () => {
+        arm();
+        const raced: Error & { meta?: unknown } = new Error("foo");
 
-      raced.meta = {
-        body: { error: { type: "resource_already_exists_exception" } },
+        raced.meta = {
+          body: { error: { type: "resource_already_exists_exception" } },
+        };
+        harness.clientStub.indices.create.mockRejectedValue(raced);
+
+        return vi
+          .spyOn(harness.client, "updateCollection")
+          .mockImplementation(async () => {
+            // #3033: the winner may not have waited for its shards yet
+            expect(harness.clientStub.cluster.health).toHaveBeenCalled();
+            return null;
+          });
       };
-      harness.clientStub.indices.create.mockRejectedValue(raced);
 
-      await expect(
-        harness.client.createCollection(index, collection, {
+      /*
+       * #3043: these were dropped, so a field only this request declared was
+       * missing, and a `strict` collection refused it on the next write.
+       */
+      it("applies this request's mappings and settings to it", async () => {
+        const update = armRace();
+
+        await expect(
+          harness.client.createCollection(index, collection, {
+            mappings: { properties: { city: { type: "keyword" } } },
+            settings: { index: { blocks: { write: true } } },
+          }),
+        ).resolves.toBeNull();
+
+        expect(harness.esWrapper.formatESError).not.toHaveBeenCalled();
+        expect(harness.sent(harness.clientStub.cluster.health)).toEqual({
+          index: alias,
+          timeout: "30s",
+          wait_for_status: "yellow",
+        });
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledWith(index, collection, {
           mappings: { properties: { city: { type: "keyword" } } },
-        }),
-      ).resolves.toBeNull();
+          settings: { index: { blocks: { write: true } } },
+        });
+      });
 
-      expect(harness.esWrapper.formatESError).not.toHaveBeenCalled();
-      expect(harness.sent(harness.clientStub.cluster.health)).toMatchObject({
-        index: alias,
-        wait_for_status: "yellow",
+      /*
+       * The failed `indices.create` carried the common mapping and the
+       * default shard and replica counts. None of that may reach the update:
+       * `number_of_shards` cannot change on an existing indice, and an empty
+       * `settings` spares it a close and reopen.
+       */
+      it("hands the update the caller's own objects, not the ones it sent to create", async () => {
+        const update = armRace();
+        harness.config.defaultSettings = {
+          number_of_replicas: 42,
+          number_of_shards: 66,
+        };
+
+        await harness.client.createCollection(index, collection, {
+          mappings: { properties: { city: { type: "keyword" } } },
+        });
+
+        expect(createdBody().settings).toEqual({
+          number_of_replicas: 42,
+          number_of_shards: 66,
+        });
+        expect(update).toHaveBeenCalledWith(index, collection, {
+          mappings: { properties: { city: { type: "keyword" } } },
+          settings: {},
+        });
+      });
+
+      it("rejects when the update does", async () => {
+        const update = armRace();
+        const error = new Error("strict mapping conflict");
+        update.mockRejectedValue(error);
+
+        await expect(
+          harness.client.createCollection(index, collection, {
+            mappings: { properties: { city: { type: "keyword" } } },
+          }),
+        ).rejects.toBe(error);
       });
     });
 

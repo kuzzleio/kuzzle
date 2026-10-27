@@ -67,6 +67,30 @@ Then(
   },
 );
 
+/**
+ * Sends one `collection:create` per row, all at once, so that they race to
+ * create the collection: every one of them must still apply its mappings.
+ */
+Then(
+  "I create the collection {string}:{string} concurrently with these mappings:",
+  async function (this: KuzzleWorld, index, collection, dataTable) {
+    await Promise.all(
+      this.parseObjectArray(dataTable).map(({ mappings }) =>
+        this.sdk.query({
+          action: "create",
+          body: { mappings },
+          collection,
+          controller: "collection",
+          index,
+        }),
+      ),
+    );
+
+    this.props.index = index;
+    this.props.collection = collection;
+  },
+);
+
 Then(
   "I list {string} collections in index {string}",
   async function (this: KuzzleWorld, expectedType, index) {
