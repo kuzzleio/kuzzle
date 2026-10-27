@@ -135,7 +135,7 @@ function buildErrorCodes (name) {
       buffer.writeUInt32BE(
         domain.code << 24 | subdomain.code << 16 | error.code,
         0);
-      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/errors/error-codes#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
+      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/errors/types#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
     }
     doc += '\n---\n';
     if (subdomain.deprecated) {
