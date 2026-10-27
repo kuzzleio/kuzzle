@@ -40,26 +40,28 @@ Everything marked deprecated in this documentation (look for the deprecated badg
 
 ### Plugins and applications
 
-| Deprecated in Kuzzle 2                                                               | Use instead                                                            |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `Mutex`, `context.constructors.Mutex`                                                | [`withLock`](/core/2/framework/functions/with-lock)                    |
-| `Kuzzle`, `WebSocket`, `Http`, `KuzzleAbstractProtocol` imported from `kuzzle`       | Import them from `kuzzle-sdk`; on the server, use `app.sdk`            |
-| `KuzzleDocument` type                                                                | `KDocument`                                                            |
-| `Document`, `DocumentContent`, `DocumentMetadata`, `DocumentHit` types               | `KDocument`, `KDocumentContent`…                                       |
-| `EventHandler` type                                                                  | `HookEventHandler`, `PipeEventHandler`, `ClusterEventHandler`          |
-| A hook or pipe handler given as a method name (a string)                             | A function                                                             |
-| `request.setResult()`                                                                | `request.response.configure({ result })`                               |
-| `request.getArrayLegacy()`                                                           | `request.getArrayOrCsv()`                                              |
-| `request.input.resource`, `request.input.headers`                                    | `request.input.args`, `request.context.connection.misc.headers`        |
-| `request.context.connectionId`, `request.context.protocol`                           | `request.context.connection.id`, `request.context.connection.protocol` |
-| `context.accessors.execute`                                                          | `context.accessors.sdk`                                                |
-| `context.constructors.Koncorde`, `RequestContext`, `RequestInput`                    | Import them from `kuzzle`                                              |
-| `context.errors`, `context.errorsManager`, `context.log`                             | `context.kerror`, `context.logger`                                     |
-| Plugin `controllers` and `routes` objects, `route.url`, the `/_plugin/<name>/…` URLs | The plugin `api` object, `route.path`                                  |
-| `app.config.set()`, `app.config.merge()`                                             | `app.config.content`                                                   |
-| `logger.verbose()`, `logger.silly()`                                                 | Another log level                                                      |
-| `app.sdk.auth.login()`                                                               | Impersonation (`app.sdk.as(user)`)                                     |
-| `Protocol.init(name, entryPoint)`                                                    | `name` in the constructor, `init(entryPoint)`                          |
+| Deprecated in Kuzzle 2                                                               | Use instead                                                                   |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `Mutex`, `context.constructors.Mutex`                                                | [`withLock`](/core/2/framework/functions/with-lock)                           |
+| `Kuzzle`, `WebSocket`, `Http`, `KuzzleAbstractProtocol` imported from `kuzzle`       | Import them from `kuzzle-sdk`; on the server, use `app.sdk`                   |
+| `KuzzleDocument` type                                                                | `KDocument`                                                                   |
+| `Document`, `DocumentContent`, `DocumentMetadata`, `DocumentHit` types               | `KDocument`, `KDocumentContent`…                                              |
+| `EventHandler` type                                                                  | `HookEventHandler`, `PipeEventHandler`, `ClusterEventHandler`                 |
+| A hook or pipe handler given as a method name (a string)                             | A function                                                                    |
+| `request.setResult()`                                                                | `request.response.configure({ result })`                                      |
+| `request.getArrayLegacy()`                                                           | `request.getArrayOrCsv()`                                                     |
+| `request.input.resource`, `request.input.headers`                                    | `request.input.args`, `request.context.connection.misc.headers`               |
+| `request.context.connectionId`, `request.context.protocol`                           | `request.context.connection.id`, `request.context.connection.protocol`        |
+| `context.accessors.execute`                                                          | `context.accessors.sdk`                                                       |
+| `context.constructors.Koncorde`, `RequestContext`, `RequestInput`                    | Import them from `kuzzle`                                                     |
+| `context.errors`, `context.errorsManager`, `context.log`                             | `context.kerror`, `context.logger`                                            |
+| Plugin `controllers` and `routes` objects, `route.url`, the `/_plugin/<name>/…` URLs | The plugin `api` object, `route.path`                                         |
+| `app.config.set()`, `app.config.merge()`                                             | `app.config.content`                                                          |
+| `logger.verbose()`, `logger.silly()`                                                 | Another log level                                                             |
+| `InternalLogger`                                                                     | `Logger` (`app.log`, `context.logger`)                                        |
+| The `Koncorde` class exported by `kuzzle` (Koncorde 3 interface)                     | The [`koncorde`](https://www.npmjs.com/package/koncorde) package (Koncorde 4) |
+| `app.sdk.auth.login()`                                                               | Impersonation (`app.sdk.as(user)`)                                            |
+| `Protocol.init(name, entryPoint)`                                                    | `name` in the constructor, `init(entryPoint)`                                 |
 
 ### API clients
 
