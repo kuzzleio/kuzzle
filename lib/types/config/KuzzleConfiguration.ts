@@ -201,6 +201,14 @@ export interface IKuzzleConfiguration {
      * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
      */
     allowAllOrigins?: boolean;
+
+    /**
+     * Derived at startup: the deprecated configuration keys the user set
+     * (today, those of "security.jwt"), logged as a warning.
+     *
+     * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
+     */
+    deprecatedSettings?: string[];
   };
 
   /**

@@ -111,13 +111,16 @@ The `security.authToken` section configures the authentication tokens:
 | `algorithm` | `HS256` | Signing algorithm |
 | `expiresIn` | `1h` | Default token time to live |
 | `maxTTL` | `-1` | Maximum time to live a user can ask for at login, in milliseconds (`-1`: no limit) |
+| `gracePeriod` | `1000` | Duration in milliseconds during which a refreshed token is still accepted |
 
 ```bash
 export kuzzle_security__authToken__secret="<a long random secret>"
 ```
 
 ::: warning
-`security.jwt` is the deprecated name of this section: use `security.authToken`. As `security.authToken` has default values, a key set under `security.jwt` is only read when the same key has no value under `security.authToken` (e.g. `secret`).
+`security.jwt` is the deprecated name of this section: use `security.authToken`. A key set under `security.jwt` still applies when `security.authToken` does not set it, and Kuzzle logs a deprecation warning at startup. <SinceBadge version="2.61.0"/>
+
+Before Kuzzle 2.61, `security.authToken.gracePeriod` was ignored, and `security.jwt.algorithm`, `expiresIn` and `maxTTL` were ignored too. To keep existing configurations working, a `gracePeriod` set under both names is still read from `security.jwt`.
 :::
 
 ## Use Backend.config property
