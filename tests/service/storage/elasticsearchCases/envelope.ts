@@ -22,7 +22,7 @@
  * | delete-by-query limit | `size` | `max_docs` |
  * | a query failure | `{ shardId, reason }` | `{ id, cause: { reason } }` |
  * | a scrolled batch | a callback the client calls back | a promise |
- * | one active shard | `"1"` | `1` |
+ * | an active shard count | `"1"` | `1` |
  *
  * ## Why it is a table rather than a helper
  *
@@ -111,6 +111,13 @@ export interface ESEnvelope {
   readonly singleShard: "1" | 1;
 
   /**
+   * `wait_for_active_shards` for any other count, in the same two types:
+   * `waitForCollectionShards` asks for as many as the collection has
+   * primaries (#3074).
+   */
+  activeShards(count: number): string | number;
+
+  /**
    * Arms a scroll-driving command to answer `payload`.
    *
    * ⚠️ The one entry here that is a **calling convention** rather than a
@@ -132,6 +139,7 @@ export const ES7_ENVELOPE: ESEnvelope = {
   bulkOperations: "body",
   deleteLimit: "size",
   singleShard: "1",
+  activeShards: (count) => String(count),
   queryFailure: { shardId: 42, reason: "error", foo: "bar" },
   reportedFailure: { shardId: 42, reason: "error" },
   answerScroll: (stub, payload) =>
@@ -150,6 +158,7 @@ export const ES8_ENVELOPE: ESEnvelope = {
   bulkOperations: "operations",
   deleteLimit: "max_docs",
   singleShard: 1,
+  activeShards: (count) => count,
   queryFailure: { id: "_id2", cause: { reason: "error" }, foo: "bar" },
   reportedFailure: { id: "_id2", reason: "error" },
   answerScroll: (stub, payload) => stub.mockResolvedValue(payload),
