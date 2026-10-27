@@ -909,12 +909,21 @@ class Funnel {
         error = e;
         debug("Error processing request %s: %a", request.id, error);
       } finally {
-        global.kuzzle.pipe("request:afterExecution", {
-          error: error,
-          request: request,
-          result: res,
-          success: error === undefined,
-        });
+        // Not awaited, as it always was: the caller's result does not depend
+        // on it. Its rejection is logged instead of left unhandled.
+        global.kuzzle
+          .pipe("request:afterExecution", {
+            error: error,
+            request: request,
+            result: res,
+            success: error === undefined,
+          })
+          ?.catch((pipeError: unknown) => {
+            this.logger.error(
+              pipeError,
+              `request:afterExecution pipe failed for plugin request ${request.id}`,
+            );
+          });
       }
     }
     try {

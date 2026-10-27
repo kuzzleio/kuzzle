@@ -200,4 +200,31 @@ describe("#api/funnel.executePluginRequest", () => {
     expect(events).toContain("testme:errorFail");
     expect(events).not.toContain("testme:afterFail");
   });
+
+  it("logs a rejection of the request:afterExecution pipe", async () => {
+    const pipeError = new Error("afterExecution failed");
+    pipe.mockImplementation(async (event, payload) => {
+      if (event === "request:afterExecution") {
+        throw pipeError;
+      }
+      return payload;
+    });
+    const logged = vi.spyOn(funnel.logger, "error");
+    const request = new KuzzleRequest({
+      action: "succeed",
+      controller: "testme",
+      triggerEvents: true,
+    });
+
+    // the caller's result does not depend on the pipe
+    expect(await funnel.executePluginRequest(request)).toMatchObject({
+      id: request.id,
+    });
+    await afterImmediate();
+
+    expect(logged).toHaveBeenCalledWith(
+      pipeError,
+      `request:afterExecution pipe failed for plugin request ${request.id}`,
+    );
+  });
 });
