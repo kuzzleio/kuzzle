@@ -22,8 +22,8 @@ The changelog is generated from the commits and says what was done. This page sa
 
 ### Configuration and HTTP
 
-- **Multipart uploads are now size-limited.** `limits.maxFormFileSize` (default 1 MB) was never enforced; now it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised.
-  **Action:** if you accept larger uploads, raise `limits.maxFormFileSize` too.
+- **Multipart uploads are now size-limited.** `server.protocols.http.maxFormFileSize` (default 1 MB) was never enforced; now it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised.
+  **Action:** if you accept larger uploads, raise `server.protocols.http.maxFormFileSize` too.
 - **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads, and the `combined` access-log format fills its referer and user-agent fields (they were always `-`). The `logstash` access-log format keeps the v2.56.0 shape: the request headers — `authorization` and `cookie` included — are logged once, under `extra.headers`, as in v2.56.0, and the `connection` objects of an entry carry no `headers` field (v2.56.0 logged an empty `{}` there).
   **Action:** if your `connection:*` hooks forward their payload somewhere `Authorization` or cookie values must not go, filter them there.
 - **Node identity.** Each node now has a name (`knode-…` unless your `Backend` names it). It appears in the Redis client name (`CLIENT LIST`), the cluster ID card, the `node` field of realtime notifications **and of every API response**, and the `X-Kuzzle-Node` HTTP header (which read the literal string `"undefined"`).

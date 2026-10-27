@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & test type-check, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified.
+description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & test type-check, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified. Also before a release PR (2-dev → beta, beta → master): it writes the plain-language changelog page, the upgrade notes and the Towards Kuzzle 3 page (section 5b).
 ---
 
 # Wrapup
@@ -75,6 +75,15 @@ Never commit if tests fail. If something is skipped, say so.
   (`output.summary` of that check-run lists the failed gate conditions, e.g. "1 New Minor Issue".)
 - **Gotcha — reformatting expands "new code":** touching a file (a repo-wide Prettier pass, a rename) marks its lines as *new code* for Sonar, so pre-existing smells/duplication in it are re-evaluated against the strict new-code gate. Expect and fix these, or scope the reformat to avoid dragging legacy in.
 - Fix, re-validate (step 2), commit, push, and **go back to step 4**. Repeat until the SonarCloud check is green. Wrapup is not done until it is.
+
+## 5b. Release wrapup (2-dev → beta, and beta → master)
+
+When the change being landed is a **release PR** (2-dev → beta for a new beta, beta → master for a stable), the public docs must tell users what the release changes *before* the PR is opened. Last tag: `git describe --tags --abbrev=0 origin/beta` (or `origin/master` for a stable); changes: `git log --no-merges <last-tag>..origin/2-dev`, keeping `feat` / `fix` / `perf` and dropping what users never see (CI, tests, refactors, ADRs, skills, lint, ratchets).
+
+1. **Changelog page** `doc/2/guides/changelog/<major>-<minor>/index.md` (e.g. `2-60`): create it on the first beta of a minor, update it on each later beta. Plain words, written for an operator or a plugin developer, never commit titles. Fixed sections: *In short* (2–3 sentences), *What you need to do* (or "Nothing."), *What's new*, *What's fixed* (grouped by theme), *Under the hood* (dependencies) if any. First line: `**Status:** in beta since <date of beta.1>` on a beta, `**Released:** <date>` + GitHub release link on the stable. Sidebar `order` = `(100 - minor) * 10`, so the newest minor comes first, and the branch `index.md` redirects to the newest page. Link to the upgrade notes for the details, and to the reference pages of new APIs.
+2. **Upgrade notes** `doc/2/guides/upgrade-notes/from-<previous minor>/`: every user-visible change since the last tag has its paragraph (what you can observe, **Action** when there is one). The changelog says *what* changed; the upgrade notes say *what to check*. Both must agree.
+3. **Towards Kuzzle 3** `doc/2/guides/kuzzle-3/index.md`: `git diff <last-tag> origin/2-dev -- docs/v3-breaking-changes.md`; every row added with a user-facing replacement gets its line in the matching table there (deprecated thing → what to use instead). Candidates stay under "Still under discussion".
+4. Run `pr-preflight`, open the docs PR to `2-dev`, merge it **before** the release PR so the release carries its own notes.
 
 ## 6. Report honestly
 

@@ -14,7 +14,7 @@
   - **Deprecated**: `@deprecated`, or a runtime deprecation warning, with no removal plan written down.
   - **Candidate**: a compatibility shim, a typed lie or a "breaking" `@todo`. Needs a decision before v3.
 
-Each v3 item also needs a migration note for the v3 release notes, and the deprecated doc pages listed [at the end](#user-documentation) need their pages removed or rewritten.
+A row whose item has a user-facing replacement also gets its line on the public page [Towards Kuzzle 3](../doc/2/guides/kuzzle-3/index.md), in the same PR. Each v3 item also needs a migration note for the v3 release notes, and the deprecated doc pages listed [at the end](#user-documentation) need their pages removed or rewritten.
 
 ---
 
