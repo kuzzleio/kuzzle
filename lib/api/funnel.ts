@@ -908,13 +908,27 @@ class Funnel {
       } catch (e) {
         error = e;
         debug("Error processing request %s: %a", request.id, error);
+        // processRequest does not dump: do it as the event-less path does.
+        // Rethrown, never falling through to the event-less execution below,
+        // which ran a failed (or pipe-rejected) request a second time.
+        this.handleErrorDump(causeOf(e));
+        throw e;
       } finally {
-        global.kuzzle.pipe("request:afterExecution", {
-          error: error,
-          request: request,
-          result: res,
-          success: error === undefined,
-        });
+        // Not awaited, as it always was: the caller's result does not depend
+        // on it. Its rejection is logged instead of left unhandled.
+        global.kuzzle
+          .pipe("request:afterExecution", {
+            error: error,
+            request: request,
+            result: res,
+            success: error === undefined,
+          })
+          ?.catch((pipeError: unknown) => {
+            this.logger.error(
+              pipeError,
+              `request:afterExecution pipe failed for plugin request ${request.id}`,
+            );
+          });
       }
     }
     try {

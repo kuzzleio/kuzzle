@@ -283,6 +283,12 @@ describe("#core/network/Router", () => {
               path: "foo/bar/baz",
               verb: "get",
             },
+            {
+              action: "qux",
+              controller: "foo",
+              path: "foo/qux",
+              verb: "POST",
+            },
           ],
         },
         state: "running",
@@ -363,6 +369,49 @@ describe("#core/network/Router", () => {
       expect(request.input.controller).toBe("foo");
       expect(request.input.action).toBe("bar");
       expect(request.response.status).toBe(1234);
+    });
+
+    it("triggers http:<verb> lowercased, then the declared-case event", async () => {
+      const message = new HttpMessage(
+        connection as never,
+        httpRequest("post", "/foo/qux") as never,
+      );
+
+      const request = await route(message);
+
+      expect(request.input.action).toBe("qux");
+      expect(request.response.status).toBe(1234);
+      expect(pipe.mock.calls.map(([event]) => event)).toEqual([
+        "http:post",
+        "http:POST",
+      ]);
+      // the declared-case event receives what the documented one piped
+      expect(pipe.mock.calls[1][1]).toBe(pipe.mock.calls[0][1]);
+    });
+
+    it("answers the error of the declared-case event pipe", async () => {
+      pipe.mockImplementation(
+        (
+          event: string,
+          payload: unknown,
+          callback?: (error: Error | null, payload: unknown) => void,
+        ) => {
+          callback?.(
+            event === "http:POST" ? new Error("rejected by pipe") : null,
+            payload,
+          );
+          return undefined;
+        },
+      );
+      const message = new HttpMessage(
+        connection as never,
+        httpRequest("post", "/foo/qux") as never,
+      );
+
+      const request = await route(message);
+
+      expect(global.kuzzle.funnel.execute).not.toHaveBeenCalled();
+      expect(request.error?.message).toBe("rejected by pipe");
     });
 
     it("answers 404 for a route that does not exist", async () => {

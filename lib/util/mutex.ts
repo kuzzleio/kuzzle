@@ -240,7 +240,7 @@ export class Mutex {
   async wait({
     attemptDelay = this.attemptDelay,
     timeout = this.timeout,
-  }): Promise<boolean> {
+  }: { attemptDelay?: number; timeout?: number } = {}): Promise<boolean> {
     let duration = 0;
 
     let isLocked;

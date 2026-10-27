@@ -191,13 +191,78 @@ describe("#api/funnel.executePluginRequest", () => {
       triggerEvents: true,
     });
 
-    await expect(funnel.executePluginRequest(request)).rejects.toMatchObject({
-      message: "rejected action",
-    });
+    await expect(funnel.executePluginRequest(request)).rejects.toBe(
+      controller.failResult,
+    );
 
     const events = pipe.mock.calls.map(([event]) => event);
     expect(events).toContain("testme:beforeFail");
     expect(events).toContain("testme:errorFail");
     expect(events).not.toContain("testme:afterFail");
+    expect(events).toContain("request:afterExecution");
+    // the failure is reported, not retried without events
+    expect(controller.fail).toHaveBeenCalledTimes(1);
+  });
+
+  it("never reaches the controller when a pipe rejects the request", async () => {
+    const pipeError = new NotFoundError("rejected by a pipe");
+    pipe.mockImplementation(async (event, payload) => {
+      if (event === "testme:beforeSucceed") {
+        throw pipeError;
+      }
+      return payload;
+    });
+    const request = new KuzzleRequest({
+      action: "succeed",
+      controller: "testme",
+      triggerEvents: true,
+    });
+
+    await expect(funnel.executePluginRequest(request)).rejects.toBe(pipeError);
+
+    expect(controller.succeed).not.toHaveBeenCalled();
+  });
+
+  it("dumps once on a whitelisted error when triggerEvents is set", async () => {
+    global.kuzzle.config.dump.enabled = true;
+    const request = new KuzzleRequest({
+      action: "fail",
+      controller: "testme",
+      triggerEvents: true,
+    });
+
+    await expect(funnel.executePluginRequest(request)).rejects.toBe(
+      controller.failResult,
+    );
+    await afterImmediate();
+
+    expect(dump).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs a rejection of the request:afterExecution pipe", async () => {
+    const pipeError = new Error("afterExecution failed");
+    pipe.mockImplementation(async (event, payload) => {
+      if (event === "request:afterExecution") {
+        throw pipeError;
+      }
+      return payload;
+    });
+    const logged = vi.spyOn(funnel.logger, "error");
+    const request = new KuzzleRequest({
+      action: "succeed",
+      controller: "testme",
+      triggerEvents: true,
+    });
+
+    // the caller's result does not depend on the pipe
+    expect(await funnel.executePluginRequest(request)).toMatchObject({
+      id: request.id,
+    });
+    await afterImmediate();
+
+    expect(logged).toHaveBeenCalledWith(
+      pipeError,
+      `request:afterExecution pipe failed for plugin request ${request.id}`,
+    );
   });
 });
