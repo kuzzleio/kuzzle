@@ -166,7 +166,7 @@ Indexes not following this naming policy cannot be accessed by Kuzzle's API.
     
 ### Remove the CLI
 
-The CLI is now independant from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/
+The CLI is now independent from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/ (this repository is archived: use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI, instead)
 
 To start Kuzzle, you can run the script `bin/start-kuzzle-server`.  
 It accepts the same arguments as the `kuzzle start` command from the CLI.

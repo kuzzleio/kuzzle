@@ -7,7 +7,7 @@ meta:
   - name: description
     content: Securely store your application secrets
   - name: keywords
-    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, d-shrinkwrap This version of npm is compatible with lockfileVersion@1, but package-lock.json was generated for lockfileVersion@2. I'll try to do my best with it!
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, secrets, vault
 ---
 # Secrets Vault
 
@@ -83,7 +83,7 @@ You can see the complete list of Kuzzle Vault related commands in Kourou on [Git
 ## Load encrypted secrets at startup
 
 Kuzzle will try to decrypt the provided file using the following locations, in that order of priority:
-  - in the [app.vault.file](/core/2/framework/classes/backend-vault/properties) property: `app.vault.file = './secrets.env.json';`
+  - in the [app.vault.file](/core/2/framework/classes/backend-vault/properties) property: `app.vault.file = './secrets.enc.json';`
   - in an environment variable `export KUZZLE_SECRETS_FILE=/var/secrets.enc.json`
   - the default one present at the location `<kuzzle dir>/config/secrets.enc.json`
 

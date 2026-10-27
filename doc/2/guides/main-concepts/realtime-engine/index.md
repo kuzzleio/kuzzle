@@ -234,7 +234,7 @@ Clients subscribing to changes in this collection will receive the following not
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/payloads/notifications#documents-changes-messages)
+More information about the [Document Notification format](/core/2/api/payloads/notifications#document-notification)
 
 ## Subscription Filters
 
@@ -246,7 +246,7 @@ These filters are specified only on the client side and do not require server-si
 They are sent in the body of the request [realtime:subscribe](/core/2/api/controllers/realtime/subscribe)
 :::
 
-A filter is composed of [clauses](core/2/api/koncorde-filters-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filters-syntax/operators).
+A filter is composed of [clauses](/core/2/api/koncorde-filters-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filters-syntax/operators).
 
 For example if I want to receive only drivers with the `B` license:
 
@@ -508,7 +508,7 @@ The [Backend.subscription.add](/core/2/framework/classes/backend-subscription/ad
 **Example: _Subscribe to a room from a custom API action_**
 
 ```js
-async customSubscribe (request: Kuzzle Request) {
+async customSubscribe (request: KuzzleRequest) {
   const { roomId, channel } = await app.subscription.add(
     request.context.connection,
     "lamaral",

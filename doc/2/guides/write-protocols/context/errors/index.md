@@ -141,18 +141,6 @@ const err = new context.errors.NotFoundError('error message');
 
 ---
 
-### Status Code
-
-`400`
-
-### Example
-
-```js
-const err = new context.errors.ParseError('error message');
-```
-
----
-
 ## PartialError
 
 
@@ -255,6 +243,24 @@ KuzzleRequest exceeds the maximum limits.
 
 ```js
 const err = new context.errors.SizeLimitError('error message');
+```
+
+---
+
+## TooManyRequestsError
+
+
+
+Too many requests: a rate limit was reached.
+
+### Status Code
+
+`429`
+
+### Example
+
+```js
+const err = new context.errors.TooManyRequestsError('error message');
 ```
 
 ---

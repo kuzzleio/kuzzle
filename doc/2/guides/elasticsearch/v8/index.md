@@ -5,7 +5,7 @@ order: 100
 title: Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
-    content: Migrate your Kuzzle project from Elasticsearch 7 to Elasticsearch 8
+    content: Configure Kuzzle to use Elasticsearch 8
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
@@ -34,7 +34,7 @@ The new configuration key to change the version supported is available under:
 {
   "services": {
     "storageEngine": {
-      "majorVersion": 8
+      "majorVersion": "8"
     }
   }
 }
@@ -47,6 +47,8 @@ You can not set the `majorVersion` key to 8 if you are using a version of Kuzzle
 :::info
 Kuzzle cannot connect to both Elasticsearch 7 and Elasticsearch 8 at the same time.
 :::
+
+The value is a string (`"7"` or `"8"`): any other value, including the number `8`, makes Kuzzle fail at startup. With an environment variable, use `kuzzle_services__storageEngine__majorVersion=8`.
 
 Once the version is set to 8, Kuzzle will use the Elasticsearch 8 API to communicate with the database.
 
@@ -63,11 +65,10 @@ services:
         condition: service_healthy
     ports:
       - "7512:7512"
-      - "7511:7511"
-      - "7510:7510"
       - "9229:9229"
       - "1883:1883"
     environment:
+      - kuzzle_services__storageEngine__majorVersion=8
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__storageEngine__commonMapping__dynamic=true
       - kuzzle_services__internalCache__node__host=redis
@@ -115,7 +116,7 @@ services:
 
 Or you can run `kourou app:scaffold sandbox` to create a new Kuzzle project with a `docker-compose.yml` file that uses Elasticsearch 8.
 
-## Inside a Kuberenetes cluster
+## Inside a Kubernetes cluster
 
 > Note: This is a configuration used by the [bitnami](https://artifacthub.io/packages/helm/bitnami/elasticsearch) image of Elasticsearch  
 > The version used is [**21.4.4**](https://artifacthub.io/packages/helm/bitnami/elasticsearch/21.4.4)
