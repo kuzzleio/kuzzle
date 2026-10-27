@@ -12,17 +12,18 @@ description: KuzzleRequest class getBody() method
 
 Returns the provided request's body.
 
+Throws an `api.assert.body_required` error if the request has no body and no default value is provided.
+
 ### Arguments
 
 ```ts
-getBody (def: JSONObject = null): JSONObject
+getBody (def?: JSONObject): JSONObject
 ```
 
 </br>
 
 | Name   | Type              | Description    |
 |--------|-------------------|----------------|
-| `name` | <pre>string</pre> | Parameter name |
 | `def` | <pre>JSONObject</pre> | Default value to return if the body is not set |
 
 

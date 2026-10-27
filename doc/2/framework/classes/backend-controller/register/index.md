@@ -25,7 +25,7 @@ register(name: string, definition: ControllerDefinition): void
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `name` | <pre>string</pre> | Controller name |
-| `handler` | <pre>[ControllerDefinition](/core/2/framework/types/controller-definition)</pre> | Controller actions definition |
+| `definition` | <pre>[ControllerDefinition](/core/2/framework/types/controller-definition)</pre> | Controller actions definition |
 
 ## Usage
 

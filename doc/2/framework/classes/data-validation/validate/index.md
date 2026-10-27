@@ -12,24 +12,22 @@ Validates the content of a request body (mutates the request).
 
 ### Arguments
 
-```js
-validate(request: KuzzleRequest, verbose: boolean): Promise<any>;
+```ts
+validate(request: KuzzleRequest, verbose?: boolean): Promise<KuzzleRequest | { errorMessages: JSONObject, valid: boolean }>;
 ```
 
 <br/>
 
 | Arguments | Type                                                           | Description                                                                                         |
 | --------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `request` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | KuzzleRequest object with a non-empty body content                                                        |
-| `verbose` | <pre>boolean</pre>                                             | If true, returns an exhaustive validation report, instead of failing at the first encountered error |
+| `request` | <pre>[KuzzleRequest](/core/2/framework/classes/kuzzle-request)</pre> | KuzzleRequest object with a non-empty body content                                                        |
+| `verbose` | <pre>boolean</pre>                                             | Optional, default `false`. If true, returns an exhaustive validation report, instead of failing at the first encountered error |
 
 ### Return
 
-The `validate` function returns a promise, and if relevant, default values are applied to the provided request.
+The behavior depends on the `verbose` parameter:
 
-If a validation error occurs, the behavior depends on the `validation` optional parameter:
-
-- `false` (default): the promise is rejected with the first encountered error
-- `true`: the promise is resolved even if the validation fails. The promise resolves a validation status report, containing the following properties:
-  - `validation`: {boolean} validation state
-  - `errorMessages`: {array} the exhaustive list of encountered errors
+- `false` (default): if the validation succeeds, the promise resolves to the request itself, with the default values of the specifications applied to its body. Otherwise, the promise is rejected with the first encountered error.
+- `true`: the promise is resolved even if the validation fails, and the request is left unchanged. The promise resolves to a validation report, containing the following properties:
+  - `valid`: {boolean} validation state
+  - `errorMessages`: {object} the exhaustive list of encountered errors

@@ -33,7 +33,13 @@ The `options` argument accepts the following parameters:
 
 ### Return
 
-The `update` function returns a promise , resolving to the document update result.
+The `update` function returns a promise, resolving to the document update result, with the following properties:
+
+| Field      | Type                  | Description |
+|------------|-----------------------|-------------|
+| `_id`      | <pre>string</pre>     | Document unique identifier |
+| `_version` | <pre>integer</pre>    | Document version |
+| `_source`  | <pre>JSONObject</pre> | Whole updated document, including the `_kuzzle_info` metadata |
 
 ### Example
 
@@ -46,15 +52,17 @@ const content = {
 
 const result = await repository.update(content);
 /*
-  * { _index: '%<plugin name>',
-  *   _type: '<collection>',
-  *   _id: '<a unique id>',
-  *   _version: 1,
-  *   result: 'updated',
-  *   _shards: { total: 2, successful: 1, failed: 0 },
+  * { _id: '<unique id>',
+  *   _version: 2,
   *   _source: {
   *     someField: 'some content',
-  *     anotherField: 'another content'
+  *     anotherField: 'another content',
+  *     _kuzzle_info: {
+  *       author: null,
+  *       createdAt: 1700000000000,
+  *       updatedAt: 1700000000000,
+  *       updater: null
+  *     }
   *   }
   * }
   */

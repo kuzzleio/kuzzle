@@ -33,31 +33,36 @@ Contains informations about identity (`token`, `user`) and origin (`connection`)
 |-----------|-------------------|--------------|-----------|
 | `path`    | <pre>string</pre> | HTTP path    | get       |
 | `verb`    | <pre>string</pre> | HTTP verb    | get       |
-| `headers` | <pre>string</pre> | HTTP headers | get       |
+| `headers` | <pre>JSONObject</pre> | HTTP headers | get       |
 
 ## `token`
 
 | Type             | Description           | get / set |
 |------------------|-----------------------|-----------|
-| <pre>Token</pre> | Authentication token | get       |
+| <pre>[KuzzleToken](/core/2/framework/types/kuzzle-token)</pre> | Authentication token, or `null` if the request is not authenticated | get / set |
 
 ### Token properties
 
 | Name           | Type              | Description | get / set |
 |----------------|-------------------|-------------|-----------|
 | `_id`          | <pre>string</pre> | Unique ID   | get       |
-| `expiresAt`    | <pre>number</pre> | Expiration date in Epoch-micro   | get       |
-| `ttl`          | <pre>number</pre> | Time-to-live   | get       |
+| `expiresAt`    | <pre>number</pre> | Expiration date, in milliseconds since Epoch (`-1` if the token never expires) | get       |
+| `ttl`          | <pre>number</pre> | Time-to-live, in milliseconds (`-1` if the token never expires) | get       |
 | `userId`       | <pre>string</pre> | Associated user ID   | get       |
-| `connectionId` | <pre>string</pre> | Associated connection ID   | get       |
 | `jwt`          | <pre>string</pre> | JWT token   | get       |
 | `refreshed`    | <pre>boolean</pre> | True if the token has been refreshed with the current request   | get       |
+| `singleUse`    | <pre>boolean</pre> | True if the token can only be used once | get       |
+| `type`         | <pre>'apiKey' &#124; 'authToken'</pre> | `apiKey` for an [API key](/core/2/guides/advanced/api-keys), `authToken` otherwise | get       |
+
+::: info
+The token does not hold the ID of the connection it is used on: use [connection.id](#connection-properties) instead.
+:::
 
 ## `user`
 
 | Type             | Description           | get / set |
 |------------------|-----------------------|-----------|
-| <pre>User</pre> | Associated user | get       |
+| <pre>[KuzzleUser](/core/2/framework/types/kuzzle-user)</pre> | Associated user, or `null` | get / set |
 
 ### User properties
 

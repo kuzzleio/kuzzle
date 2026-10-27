@@ -20,7 +20,7 @@ the argument will be parsed and returned if it's an array, otherwise an error wi
 ### Arguments
 
 ```ts
-getArray (name: string, def: [] = null): any[]
+getArray (name: string, def?: []): any[]
 ```
 
 </br>

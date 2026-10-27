@@ -21,15 +21,15 @@ This behavior can be used for a Remote Procedure Call (RPC) system between plugi
 ## Arguments
 
 ```ts
-trigger(eventName: string, ...any): Promise<any>;
+trigger(eventName: string, payload?: any): Promise<any>;
 ```
 
 <br/>
 
-| Arguments | Type              | Description       |
-| --------- | ----------------- | ----------------- |
-| `event`   | <pre>string</pre> | Custom event name |
-| `payload` | <pre>object</pre> | Event payload     |
+| Arguments   | Type              | Description       |
+| ----------- | ----------------- | ----------------- |
+| `eventName` | <pre>string</pre> | Custom event name |
+| `payload`   | <pre>any</pre>    | Event payload. Only one payload is passed to the listeners: extra arguments are ignored |
 
 **Note:** the triggered event is renamed by the following format:<br/>`plugin-<plugin name>:<event>`.
 

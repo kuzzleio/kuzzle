@@ -8,7 +8,7 @@ description: HttpStream class constructor() method
 
 # constructor
 
-Constructor method of the `HttpStream` class. It must be called with a [stream.Readable](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable).
+Constructor method of the `HttpStream` class. It must be called with a [stream.Readable](https://nodejs.org/api/stream.html#class-streamreadable).
 
 ## Arguments
 
@@ -20,7 +20,7 @@ constructor (stream: stream.Readable, { totalBytes = -1 });
 
 | Argument | Type                                                                                                            | Description                                                                                                   |
 | -------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `stream` | <pre>[stream.Readable](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable)</pre> | [stream.Readable](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable) instance |
+| `stream` | <pre>[stream.Readable](https://nodejs.org/api/stream.html#class-streamreadable)</pre> | [stream.Readable](https://nodejs.org/api/stream.html#class-streamreadable) instance |
 
 <br/>
 

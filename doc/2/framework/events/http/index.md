@@ -9,6 +9,8 @@ order: 100
 
 # HTTP Events
 
+The `http:<verb>` events are triggered before the request is executed. Their name uses the verb as the route declares it: routes declared by an application or a plugin with an uppercase verb (for instance `verb: 'GET'`) trigger `http:GET` instead of `http:get`.
+
 ## http:delete
 
 | Arguments | Type                                                                                     | Description                |
@@ -45,7 +47,7 @@ Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
 | Arguments | Type                                                                                    | Description                |
 | --------- | --------------------------------------------------------------------------------------- | -------------------------- |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/roperties>KuzzleRequest</a></pre> | The normalized API request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP PATCH methods.
 
@@ -67,12 +69,38 @@ Triggered whenever a request has been submitted through HTTP PUT methods.
 
 ## protocol:http:beforeParsingPayload
 
-| Arguments | Type              | Description                |
-| --------- | ----------------- | -------------------------- |
-| `payload` | <pre>string</pre> | The payload of the request |
+<SinceBadge version="2.19.12" />
+
+| Arguments | Type              | Description                      |
+| --------- | ----------------- | -------------------------------- |
+| `event`   | <pre>object</pre> | HTTP message and its raw payload |
+
+Triggered when an HTTP request body has been received, before it is parsed.
+
+The `event` object has the following properties:
+
+| Properties | Type              | Description                                            |
+| ---------- | ----------------- | ------------------------------------------------------ |
+| `message`  | <pre>object</pre> | The incoming HTTP message (URL, method, headers…)      |
+| `payload`  | <pre>Buffer</pre> | The raw request body, already decompressed if needed   |
+
+Pipes must resolve to an object of the same shape: its `payload` is the body that Kuzzle parses.
 
 ## protocol:http:afterParsingPayload
 
-| Arguments | Type                  | Description                        |
-| --------- | --------------------- | ---------------------------------- |
-| `payload` | <pre>JSONObject</pre> | The decoded payload of the request |
+<SinceBadge version="2.19.12" />
+
+| Arguments | Type              | Description                          |
+| --------- | ----------------- | ------------------------------------ |
+| `event`   | <pre>object</pre> | HTTP message and its decoded payload |
+
+Triggered once a JSON request body has been parsed. Bodies sent as `multipart/form-data` or `application/x-www-form-urlencoded` do not trigger this event.
+
+The `event` object has the following properties:
+
+| Properties | Type                  | Description                                       |
+| ---------- | --------------------- | ------------------------------------------------- |
+| `message`  | <pre>object</pre>     | The incoming HTTP message (URL, method, headers…) |
+| `payload`  | <pre>JSONObject</pre> | The decoded request body                          |
+
+Pipes must resolve to an object of the same shape: its `payload` becomes the request body.

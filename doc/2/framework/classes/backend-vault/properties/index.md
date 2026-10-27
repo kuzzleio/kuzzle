@@ -12,7 +12,7 @@ description: BackendVault class properties
 
 The `BackendVault` class handles the secrets vault.  
 
-It is accessible from the [Backend.config](/core/2/framework/classes/backend/properties#config) property.
+It is accessible from the [Backend.vault](/core/2/framework/classes/backend/properties#vault) property.
 
 See the [Secrets Vault](/core/2/guides/advanced/secrets-vault) guide.
 

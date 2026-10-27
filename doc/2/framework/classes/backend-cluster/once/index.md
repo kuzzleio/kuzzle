@@ -14,6 +14,10 @@ Listens to an event emitted with [BackendCluster.broadcast](/core/2/framework/cl
 
 The registered listener will be called exactly once, after which it will be removed from the listeners list.
 
+::: info
+This method can only be used once the application is started.
+:::
+
 ```ts
 once (event: string, listener: ClusterEventHandler): Promise<void>
 ```
@@ -28,7 +32,7 @@ once (event: string, listener: ClusterEventHandler): Promise<void>
 ## Usage
 
 ```js
-app.cluster.once('some:event', payload => {
+await app.cluster.once('some:event', payload => {
   // ...listener code...
-})
+});
 ```

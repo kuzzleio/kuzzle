@@ -61,15 +61,71 @@ TooManyRequestsError
 UnauthorizedError
 ```
 
+## `config`
+
+A frozen copy of the whole Kuzzle configuration.
+
+| Type                  | Description                    |
+|-----------------------|--------------------------------|
+| <pre>JSONObject</pre> | Kuzzle configuration (read-only) |
+
+## `errorsManager`
+
+<DeprecatedBadge version="2.8.0"/>
+
+Alias of [kerror](#kerror). Use `kerror` instead.
+
+## `kerror`
+
+Errors manager bound to the `plugin` domain and to a subdomain named after the plugin. It creates the errors declared in the `errors` section of the plugin's `manifest.json`.
+
+| Type           | Description    |
+|----------------|----------------|
+| <pre>any</pre> | Errors manager |
+
+It exposes the following methods:
+
+| Method | Description |
+|--------|-------------|
+| `get(name: string, ...placeholders): KuzzleError` | Returns the error defined under `name` |
+| `getFrom(source: Error, name: string, ...placeholders): KuzzleError` | Same as `get`, keeping the stack trace of `source` |
+| `reject(name: string, ...placeholders): Promise<never>` | Returns a promise rejected with the error |
+
+### Usage
+
+```js
+throw context.kerror.get('some_error', 'placeholder value');
+```
+
 ## `log`
 
-This property is an instance of the [InternalLogger](/core/2/framework/classes/internal-logger) and allows to log messages.
+<DeprecatedBadge version="2.48.0"/>
 
-| Type                                                                 | Description            |
-|----------------------------------------------------------------------|------------------------|
-| <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | PluginContextConstructors instance |
+Kept for backward compatibility only: use [logger](#logger) instead.
 
-See also the [Internal Logger](/core/2/guides/advanced/internal-logger) guide.
+A plain object with the `debug`, `error`, `info`, `silly`, `verbose` and `warn` methods. Each one takes a single `message` and forwards it to [logger](#logger), prefixed with `[<plugin name>]`. `silly` and `verbose` log with the `trace` level.
+
+| Type                  | Description                         |
+|-----------------------|-------------------------------------|
+| <pre>JSONObject</pre> | Backward-compatible logging methods |
+
+## `logger`
+
+<SinceBadge version="2.48.0"/>
+
+A child of the Kuzzle logger, with the plugin name as namespace.
+
+It has the [trace](/core/2/framework/classes/logger/trace), [debug](/core/2/framework/classes/logger/debug), [info](/core/2/framework/classes/logger/info), [warn](/core/2/framework/classes/logger/warn), [error](/core/2/framework/classes/logger/error), [fatal](/core/2/framework/classes/logger/fatal), [flush](/core/2/framework/classes/logger/flush) and [child](/core/2/framework/classes/logger/child) methods, and the [level](/core/2/framework/classes/logger/properties#level) property, of the [Logger](/core/2/framework/classes/logger) class. It does not have `getLevel`, `setLevel`, `silly` or `verbose`.
+
+| Type                    | Description                                  |
+|-------------------------|----------------------------------------------|
+| <pre>KuzzleLogger</pre> | Plugin logger (`KuzzleLogger` from the `kuzzle-logger` package) |
+
+### Usage
+
+```js
+context.logger.info('Plugin initialized');
+```
 
 ## `secrets`
 

@@ -18,12 +18,16 @@ description: Mutex class constructor
 Instantiates a new mutex, allowing to lock a resource.  
 Works both with single-node and cluster environments.
 
+::: info
+The constructor reads the node identifier: instantiate a `Mutex` once Kuzzle is running, from a plugin's `init` method onward, or in an application once `app.start()` has resolved. Before that, it throws a `TypeError`.
+:::
+
 ---
 
 ## Constructor
 
-```js
-new Mutex(resource, [options]);
+```ts
+new Mutex(resource: string, options?: MutexOptions);
 ```
 
 <br/>
@@ -31,11 +35,11 @@ new Mutex(resource, [options]);
 | Arguments           | Type              | Description                                                                                                                     |
 | ------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
 | `resource`          | <pre>string</pre> | Resource identifier to be locked (must be identical across all nodes for the same resource)  |
-| `options`           | <pre>object</pre> | (optional) Mutex options (see below) |
+| `options`           | <pre>MutexOptions</pre> | (optional) Mutex options (see below) |
 
 #### options
 
-The `options` object is used to configure the mutex behavior. The following properties can be provided:
+The `options` object is used to configure the mutex behavior. Its type, `MutexOptions`, can be imported from `kuzzle`. The following properties can be provided:
 
 | Option         | Type              | Description                                                                                                      |
 | -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -77,7 +81,7 @@ async function DoNotRepeatProcess () {
   const locked = await mutex.lock();
 
   if (!locked) {
-    throw TooManyRequestsError('That task is already ongoing');
+    throw new TooManyRequestsError('That task is already ongoing');
   }
 
   try {

@@ -14,6 +14,10 @@ Broadcasts an event and its payload to other cluster nodes.
 
 This function returns once the event has been emitted.
 
+::: info
+This method can only be used once the application is started.
+:::
+
 ```ts
 broadcast (event: string, payload: JSONObject): Promise<void>
 ```

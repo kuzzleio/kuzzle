@@ -9,11 +9,16 @@ order: 100
 
 # Plugin Events
 
-# API Events
+## API Events
 
 Plugins can [add new controllers](/core/2/guides/write-plugins/plugins-features#api) to the Kuzzle API.
 
 These new controllers and actions behave exactly like [native API actions](/core/2/framework/events/api).
+
+Controllers declared with the `api` property of a plugin trigger the same events as native controllers, named after the controller: `<controller>:before<Action>`, `<controller>:after<Action>` and `<controller>:error<Action>`.
+
+The naming templates below, prefixed with the plugin name, only apply to controllers declared with the legacy `controllers` property.
+
 All calls to plugins API actions trigger two of these three events:
 
 - before the action starts
@@ -34,7 +39,7 @@ A `before` event is triggered before a plugin API request starts.
 
 The `before` event name is built using the following template:
 
-`<plugin name>/<controller>:before<Action>`
+`<plugin name>/<controller>:before<Action>` (legacy `controllers` property)
 
 - `plugin name`: the plugin's name defined in the [manifest file](/core/2/guides/write-plugins/start-writing-plugins#manifest-json)
 - `controller`: API controller name
@@ -42,7 +47,7 @@ The `before` event name is built using the following template:
 
 #### Example
 
-| Plugin name | API controller | Action   | After event name                 |
+| Plugin name | API controller | Action   | Before event name                |
 |-------------|----------------|----------|----------------------------------|
 | `plugin`    | `controller`   | `action` | `plugin/controller:beforeAction` |
 
@@ -60,7 +65,7 @@ An `after` event is triggered after a plugin API request succeeds.
 
 The `after` event name is built using the following template:
 
-`<plugin name>/<controller>:after<Action>`
+`<plugin name>/<controller>:after<Action>` (legacy `controllers` property)
 
 - `plugin name`: the plugin's name defined in the [manifest file](/core/2/guides/write-plugins/start-writing-plugins#manifest-json)
 - `controller`: API controller name
@@ -86,7 +91,7 @@ An `error` event is triggered after a plugin API request fails.
 
 The `error` event name is built using the following template:
 
-`<plugin name>/<controller>:error<Action>`
+`<plugin name>/<controller>:error<Action>` (legacy `controllers` property)
 
 - `plugin name`: the plugin's name defined in the [manifest file](/core/2/guides/write-plugins/start-writing-plugins#manifest-json)
 - `controller`: API controller name
@@ -94,6 +99,6 @@ The `error` event name is built using the following template:
 
 #### Example
 
-| Plugin name | API controller | Action   | After event name                |
+| Plugin name | API controller | Action   | Error event name                |
 |-------------|----------------|----------|---------------------------------|
 | `plugin`    | `controller`   | `action` | `plugin/controller:errorAction` |
