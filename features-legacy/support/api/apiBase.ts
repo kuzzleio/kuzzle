@@ -1307,13 +1307,6 @@ export default abstract class ApiBase {
     });
   }
 
-  resetKuzzleData() {
-    return this.send({
-      action: "resetKuzzleData",
-      controller: "admin",
-    });
-  }
-
   resetSecurity() {
     return this.send({
       action: "resetSecurity",

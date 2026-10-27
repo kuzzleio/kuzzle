@@ -381,5 +381,32 @@ describe("#core/network/Router", () => {
         "API URL not found: /a/b/c/d.",
       );
     });
+
+    /*
+     * Routes to actions that no longer exist were removed from the table.
+     * They could only fail; now they fail before the funnel, and no other
+     * route (`POST /:index/:collection`, `GET /ms/:_id`...) picks them up.
+     */
+    it.each([
+      ["post", "/admin/_resetKuzzleData"],
+      ["get", "/nyc-open-data/_autoRefresh"],
+      ["post", "/ms/_bgsave"],
+      ["post", "/ms/_bgrewriteaof"],
+    ] as const)(
+      "answers 404 for %s %s, a route to a removed action",
+      async (verb, url) => {
+        const message = new HttpMessage(
+          connection as never,
+          httpRequest(verb, url) as never,
+        );
+
+        const result = await route(message);
+
+        expect(result.response.status).toBe(404);
+        present(result.response.error, "the response error");
+        expect(result.response.error.id).toBe("network.http.url_not_found");
+        expect(pipe).not.toHaveBeenCalled();
+      },
+    );
   });
 });
