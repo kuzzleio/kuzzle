@@ -224,12 +224,46 @@ class Router {
    * Transmit HTTP requests to the funnel controller and forward its response
    * back to the client
    *
+   * Triggers the `http:<verb>` pipe with the verb lowercased, as documented.
+   * A route declared with another case (e.g. `verb: 'GET'`) also triggers the
+   * event under the declared case (`http:GET`), which is the one it used to
+   * trigger: see docs/v3-breaking-changes.md.
+   *
+   * @param verb - the route's HTTP verb, as declared
    * @param request - includes URL and POST query data
    * @param cb - callback to invoke with the result
    */
   _executeFromHttp(verb: string, request: Request, cb: RouteCallback): void {
+    const event = `http:${verb.toLowerCase()}`;
+    const declaredEvent = `http:${verb}`;
+
+    this._pipeHttpEvent(event, request, cb, (pipedRequest) => {
+      if (declaredEvent === event) {
+        this._executeInFunnel(pipedRequest, request, cb);
+        return;
+      }
+
+      // @deprecated - declared-case event, to drop in v3
+      this._pipeHttpEvent(declaredEvent, pipedRequest, cb, (legacyRequest) => {
+        this._executeInFunnel(legacyRequest, request, cb);
+      });
+    });
+  }
+
+  /**
+   * Triggers an `http:<verb>` pipe, and answers its error through `cb` or
+   * hands the piped request over to `next`.
+   *
+   * Callbacks rather than promises: this runs before the funnel.
+   */
+  private _pipeHttpEvent(
+    event: string,
+    request: Request,
+    cb: RouteCallback,
+    next: (pipedRequest: Request) => void,
+  ): void {
     global.kuzzle.pipe(
-      `http:${verb}`,
+      event,
       request,
       (error: Error | null, mutatedRequest: Request) => {
         if (error) {
@@ -238,20 +272,32 @@ class Router {
           return;
         }
 
-        global.kuzzle.funnel.execute(
-          mutatedRequest,
-          (err: Error | null, result: Request) => {
-            const _res = result || request;
+        next(mutatedRequest);
+      },
+    );
+  }
 
-            if (err && !_res.error) {
-              _res.setError(err);
-            }
+  /**
+   * Executes the piped request in the funnel and answers its result through
+   * `cb`, falling back on the original request when there is none.
+   */
+  private _executeInFunnel(
+    pipedRequest: Request,
+    request: Request,
+    cb: RouteCallback,
+  ): void {
+    global.kuzzle.funnel.execute(
+      pipedRequest,
+      (err: Error | null, result: Request) => {
+        const _res = result || request;
 
-            // no sanitisation here: `_res` is a KuzzleRequest, and the stack
-            // is stripped by the protocols, on the serialized response
-            cb(_res);
-          },
-        );
+        if (err && !_res.error) {
+          _res.setError(err);
+        }
+
+        // no sanitisation here: `_res` is a KuzzleRequest, and the stack
+        // is stripped by the protocols, on the serialized response
+        cb(_res);
       },
     );
   }
