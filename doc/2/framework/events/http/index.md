@@ -9,7 +9,11 @@ order: 100
 
 # HTTP Events
 
-The `http:<verb>` events are triggered before the request is executed. Their name uses the verb as the route declares it: routes declared by an application or a plugin with an uppercase verb (for instance `verb: 'GET'`) trigger `http:GET` instead of `http:get`.
+The `http:<verb>` events are triggered before the request is executed. Their name always uses the lowercase verb (`http:get`), whatever the case the route declares.
+
+::: info
+Before 2.60.0, a route declared by an application or a plugin with an uppercase verb (for instance `verb: 'GET'`) triggered `http:GET` instead of `http:get`. For compatibility, such a route still triggers `http:GET` too, after `http:get`: this second event is deprecated and will be removed in Kuzzle 3. A `http:*` wildcard listener is therefore called twice for these routes.
+:::
 
 ## http:delete
 

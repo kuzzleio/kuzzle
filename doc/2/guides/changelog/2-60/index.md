@@ -24,13 +24,15 @@ The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list eve
 
 - **Use Node.js 22.12 or later.** Node.js 20 is no longer supported. Check the base image of your `Dockerfile`.
 - **Check your log pipeline if it reads error fields.** Errors are now logged under an `err` field.
+- **Check your token settings if you still use `security.jwt`.** Its `algorithm`, `expiresIn` and `maxTTL` were silently ignored since 2.16.8; they now apply. Move them to `security.authToken`.
 
-Nothing else changes in the API, the configuration or the TypeScript types.
+Nothing else changes in the API or the TypeScript types.
 
 ## What's new
 
 - **`withLock` everywhere.** Every cluster-wide lock Kuzzle takes now lasts as long as the work it protects. Some used to expire after 5 seconds, which let another node start the same work in parallel.
 - **`MutexAcquireError`.** [`withLock`](/core/2/framework/functions/with-lock) now rejects with [this error](/core/2/framework/error-classes/mutex-acquire-error) when it cannot get the lock, so you can tell a busy lock apart.
+- **Delete your own API key by key or fingerprint over HTTP**, with the new `DELETE /api-keys` route.
 - **New type exports.** `StartOptions`, `InstallationConfig`, `ImportConfig` and `SupportConfig` name the options of the startup and of the plugin imports.
 
 ## What's fixed
@@ -58,6 +60,18 @@ Nothing else changes in the API, the configuration or the TypeScript types.
 - A collection configured with `number_of_replicas` but no `number_of_shards` no longer fails the startup in development mode.
 - An HTTP request with an empty body and large headers is now answered, instead of hanging until a proxy returns a `502`.
 - An Elasticsearch error without a body now has a useful message, such as `Elasticsearch responded 503 (no body)`.
+- `security.authToken.gracePeriod` is no longer ignored, and Kuzzle warns at startup when the deprecated `security.jwt` section is used.
+- Installed with npm, Kuzzle finds your project's secrets file again (`config/secrets.enc.json`).
+- `admin:loadFixtures` answers `{ acknowledge: true }` again, and a second `admin:shutdown` is refused while the node already shuts down.
+- Four HTTP routes that pointed to long-removed actions are gone.
+
+### For plugin and application developers
+
+- A plugin request with `triggerEvents` that failed was run a second time, without events. It now fails once.
+- `http:<verb>` events always use the lowercase verb (`http:get`), even for a route declared as `GET`.
+- `request.getDate()` with a custom format and `request.getTimestamp()` with an integer string now work. A date string given to `getTimestamp()` is now rejected, instead of being cut to its first number.
+- `Mutex.wait()` works without argument, `Logger.child()` returns a full `Logger`, and `Location` / `Last-Modified` response headers are replaced instead of concatenated.
+- `InternalLogger` and the `Koncorde` class exported by Kuzzle are deprecated (see [Towards Kuzzle 3](/core/2/guides/kuzzle-3)).
 
 ## Under the hood
 

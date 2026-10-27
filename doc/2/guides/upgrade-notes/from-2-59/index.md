@@ -75,6 +75,18 @@ These cases appear when a node stops (`SIGTERM`, `SIGKILL`, a crash) while the c
 
 A rolling upgrade from v2.59.0 is not affected: a v2.59.0 node that gets one of these refusals handles it as before.
 
+### Authentication token settings
+
+Since 2.16.8, the settings of the deprecated `security.jwt` section were ignored, except `secret`: `security.authToken` has default values, and they always won. `security.authToken.gracePeriod` was ignored the other way round: only `security.jwt.gracePeriod` was read.
+
+Now, a value you set applies: the one under `security.authToken` first, then the one under `security.jwt`, then the default. Kuzzle logs a deprecation warning at startup listing the `security.jwt` keys it applied. When `gracePeriod` is set under both names, the `security.jwt` one still wins, as before.
+
+**Action:** if your configuration still sets `security.jwt.algorithm`, `expiresIn` or `maxTTL`, these values now apply, where the defaults (`HS256`, `1h`, `-1`) applied before: check that they are the ones you want, then move them to `security.authToken`.
+
+### Secrets file of an npm install
+
+When Kuzzle is installed with npm and `KUZZLE_SECRETS_FILE` is not set, it looks for the [secrets file](/core/2/guides/advanced/secrets-vault) in the `config/secrets.enc.json` file of your project again. Since 2.50.0, it looked for it inside `node_modules/kuzzle/dist/config/`. The official Docker image is not affected.
+
 ### Collections with `number_of_replicas` only
 
 When a collection already exists, Kuzzle compares its `number_of_shards` with the configured one, as the shard count of an existing collection cannot change. A collection configured with `number_of_replicas` but no `number_of_shards` failed that check on every start: a warning in production and, in development mode (`NODE_ENV=development`), a startup failure with `core.fatal.unexpected_error`. The check is now skipped when `number_of_shards` is not configured.
@@ -103,6 +115,10 @@ Indexes that already hold it keep it until a new collection is created in them; 
 
 - A request with an empty body (`Content-Length: 0`) whose headers span several TCP packets is now answered. It used to hang until the idle timeout, which a reverse proxy forwarding large headers turned into a `502`.
 
+### Removed routes
+
+Four HTTP routes pointed to API actions removed long ago and could never succeed: `POST /admin/_resetKuzzleData`, `GET /:index/_autoRefresh`, `POST /ms/_bgsave` and `POST /ms/_bgrewriteaof`. They are removed: a request to one of them now gets `404 network.http.url_not_found` instead of `404 api.process.action_not_found`, and they are no longer listed by `server:openapi`.
+
 ### Dependencies
 
 These dependencies changed major version. Each was pinned to its previous behaviour, and nothing changes in what you configure:
@@ -114,6 +130,12 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **redis-semaphore 6** (the lock library behind `withLock`) only changes its packaging.
 - The unused `inquirer` dependency is removed: production installs carry 23 fewer packages.
 
+## API clients
+
+- **New route `DELETE /api-keys`.** [`auth:deleteApiKey`](/core/2/api/controllers/auth/delete-api-key) can delete one's own API key by `key` or `fingerprint` over HTTP too, as `security:deleteApiKey` already could. Mind that it puts the clear-text key in the URL.
+- **`admin:loadFixtures`** answers `{ acknowledge: true }` again, as documented. Since 2.17.6 it answered `null`.
+- **`admin:shutdown`** called while the node is already shutting down now gets `412 api.process.action_locked`, as documented. The guard never fired before.
+
 ## Application and plugin developers
 
 - **New export: [`MutexAcquireError`](/core/2/framework/error-classes/mutex-acquire-error).** [`withLock`](/core/2/framework/functions/with-lock) now rejects with it when it cannot acquire the lock within its attempts, instead of a plain `Error` with the same message. It extends `Error`, so a `catch` that handled the plain `Error` still works; you can now tell a busy lock apart with `instanceof MutexAcquireError`.
@@ -121,3 +143,11 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **`withLock` and `Mutex` on the same key.** The previous upgrade notes said not to use both on the same key. They can be: both take the same Redis key with `SET NX`, so they exclude each other, and you can migrate your `Mutex` call sites one at a time. See [Migrating to withLock](/core/2/framework/classes/mutex/constructor#migrating-to-withlock).
 - **A failed `app.start()` ends the process.** An application test that expects `app.start()` to reject now sees the process exit with code `1` right after (see [A failed startup stops the node](#a-failed-startup-stops-the-node)); mock `process.exit` in such a test.
 - **Locks released at shutdown.** A node that stops now releases the locks it took with `withLock` before it exits, as it already did for `Mutex`, so the other nodes no longer wait for them to expire.
+- **Plugin requests with `triggerEvents`.** When such a request failed, the action was run a second time, without events: a request rejected by a pipe could still be executed. It now fails once, with its error. An error that is not a `KuzzleError`, thrown by the action, now arrives wrapped in `plugin.runtime.unexpected_error`, as for an API request; it used to arrive as is, from the second run. A rejection of the `request:afterExecution` pipe for these requests is logged, instead of being left unhandled.
+- **`http:<verb>` events** are always triggered with the lowercase verb (`http:get`). A route declared with an uppercase verb (`verb: 'GET'`) used to trigger only `http:GET`: it now triggers `http:get`, then `http:GET` for compatibility (deprecated, removed in Kuzzle 3). A `http:*` listener is called twice for such a route.
+- **`request.getDate(name, format)`**: a custom `format` replaces the ISO 8601 check. It was checked on top of it, so a format such as `DD/MM/YYYY` rejected every value.
+- **`request.getTimestamp(name)`** accepts integer strings (HTTP query strings), and rejects date strings: `"2026-10-27"` used to return `2026`.
+- **`Mutex.wait()`** can be called without argument; it threw a `TypeError`.
+- **`Logger.child()`** returns a full `Logger`: `getLevel`, `setLevel`, `silly` and `verbose` were missing.
+- **Response headers:** setting `Location` or `Last-Modified` replaces the previous value, instead of appending to it.
+- **Deprecated:** [`InternalLogger`](/core/2/framework/classes/internal-logger) (use `Logger`, which `app.log` and `context.logger` are) and the `Koncorde` class exported by Kuzzle (use the [`koncorde`](https://www.npmjs.com/package/koncorde) package). Both keep working in Kuzzle 2; see [Towards Kuzzle 3](/core/2/guides/kuzzle-3).

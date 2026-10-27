@@ -75,20 +75,22 @@ Everything marked deprecated in this documentation (look for the deprecated badg
 | The `roles` body property of `security:searchProfiles`                    | `query`                                                  |
 | The `ids` in the `document:deleteByQuery` response                        | Its `documents` array                                    |
 | The `memoryStorage` alias in role rights                                  | `ms`                                                     |
+| `realtime:validate`                                                       | `document:validate`                                      |
 
 Kuzzle 3 also plans to make multi-document actions (`document:mCreate`, `mUpdate`, `mDelete`, `bulk:import`…) fail when none of the documents could be written, and to forbid `@` at the start of index and collection names.
 
 ### Events
 
-| Deprecated in Kuzzle 2                  | Use instead                                  |
-| --------------------------------------- | -------------------------------------------- |
-| The pipe `notify:dispatch`              | `core:realtime:notification:dispatch:before` |
-| `core:hotelClerk:addSubscription`       | `core:realtime:user:subscribe:after`         |
-| `core:hotelClerk:removeRoomForCustomer` | `core:realtime:user:unsubscribe:after`       |
-| `room:new`                              | `core:realtime:room:create:after`            |
-| `room:remove`                           | `core:realtime:room:remove:before`           |
-| `kuzzle:start`, `core:kuzzleStart`      | `kuzzle:state:ready`                         |
-| `core:shutdown`                         | `kuzzle:shutdown`                            |
+| Deprecated in Kuzzle 2                                            | Use instead                                  |
+| ----------------------------------------------------------------- | -------------------------------------------- |
+| The pipe `notify:dispatch`                                        | `core:realtime:notification:dispatch:before` |
+| `core:hotelClerk:addSubscription`                                 | `core:realtime:user:subscribe:after`         |
+| `core:hotelClerk:removeRoomForCustomer`                           | `core:realtime:user:unsubscribe:after`       |
+| `room:new`                                                        | `core:realtime:room:create:after`            |
+| `room:remove`                                                     | `core:realtime:room:remove:before`           |
+| `kuzzle:start`, `core:kuzzleStart`                                | `kuzzle:state:ready`                         |
+| `core:shutdown`                                                   | `kuzzle:shutdown`                            |
+| `http:GET` (the event of a route declared with an uppercase verb) | `http:get`                                   |
 
 ### Configuration
 
@@ -105,4 +107,4 @@ Kuzzle 3 also plans to make multi-document actions (`document:mCreate`, `mUpdate
 
 ## Still under discussion
 
-Some other changes are being considered for Kuzzle 3 and are not decided yet: the true nullability of a few public TypeScript signatures, the default of `vault.newAlgorithm`, the response shape of a few `security` actions, and the Redis and MQTT connection defaults of the new library versions. This page will say so once they are decided.
+Some other changes are being considered for Kuzzle 3 and are not decided yet: the true nullability of a few public TypeScript signatures, the default of `vault.newAlgorithm`, `security.authToken.gracePeriod` taking precedence over `security.jwt.gracePeriod`, a few public exports that were never documented (`ObjectRepository`, `Store`, `Connection`…) becoming internal, the response shape of a few `security` actions, and the Redis and MQTT connection defaults of the new library versions. This page will say so once they are decided.
