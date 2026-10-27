@@ -22,7 +22,7 @@ Kuzzle is now written entirely in TypeScript, in `strict` mode. The rewrite was 
 
 ## What you need to do
 
-- **Raise `limits.maxFormFileSize` if you accept large uploads.** This limit (1 MB by default) was never enforced; now it is.
+- **Raise `server.protocols.http.maxFormFileSize` if you accept large uploads.** This limit (1 MB by default) was never enforced; now it is.
 - **Update the clients that switch on a few error ids.** Some situations used to answer a generic or wrong error id: a disconnected Redis, an overloaded Elasticsearch, a write without a body… See the table in [Upgrading from 2.56](/core/2/guides/upgrade-notes/from-2-56#api-clients).
 - **Import `Kuzzle`, `WebSocket`, `Http` and `KuzzleAbstractProtocol` from `kuzzle-sdk`.** Kuzzle still re-exports them, but they are deprecated.
 
