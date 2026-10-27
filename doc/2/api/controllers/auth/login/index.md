@@ -29,6 +29,13 @@ Body:
 }
 ```
 
+The action can also be called with the `GET` verb, for redirect-based authentication strategies such as OAuth2 or CAS, whose provider calls this URL back (the strategy reads its parameters from the query string):
+
+```http
+URL: http://kuzzle:7512/_login/<strategy>[?expiresIn=<expiresIn>]
+Method: GET
+```
+
 ### Other protocols
 
 ```js

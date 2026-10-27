@@ -94,6 +94,7 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 | `admin:resetCache` accepts only `memoryStorage` (drop `internalCache`)                                                                                                                         | `@todo`                                                           | Candidate  | `lib/api/controllers/adminController.ts`                           |
 | `auth:login` stops re-sending the same token for API keys / infinite tokens                                                                                                                    | "to avoid breaking changes"                                       | Candidate  | `lib/api/controllers/authController.ts`                            |
 | Remove the `strategy !== "local"` special case of `auth:refreshToken`, together with the bundled `kuzzle-plugin-auth-passport-local`                                                           | TODO; the plugin is a core dependency                             | Candidate  | `lib/api/controllers/authController.ts`; `package.json`            |
+| Remove the `realtime:validate` action (use `document:validate`)                                                                                                                                | Doc-only deprecation (1.5.0), still served                        | Deprecated | `lib/api/controllers/realtimeController.ts`                        |
 
 ## Errors
 
@@ -147,11 +148,12 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 
 ## User documentation
 
-44 pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
+These pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
 
 - **API:**
   - `auth/*`: 9 pages, legacy routes.
-  - `server/get-{stats,all-stats,last-stats}`.
+  - `server/get-{stats,all-stats,last-stats}`, `server/public-api`.
+  - `realtime/validate`.
   - `collection/{update-mapping,create,list}`.
   - `document/{update,upsert,m-update,delete-by-query}`.
   - `security/search-profiles`.
