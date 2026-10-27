@@ -93,6 +93,7 @@ Feature: Admin Controller
 
   # admin:loadFixtures =========================================================
 
+  @mappings
   Scenario: Load fixtures and receive an acknowledgement
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I successfully execute the action "admin":"loadFixtures" with body:
