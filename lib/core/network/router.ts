@@ -262,7 +262,8 @@ class Router {
     cb: RouteCallback,
     next: (pipedRequest: Request) => void,
   ): void {
-    global.kuzzle.pipe(
+    // callback form: the outcome, error included, goes through the callback
+    void global.kuzzle.pipe(
       event,
       request,
       (error: Error | null, mutatedRequest: Request) => {
