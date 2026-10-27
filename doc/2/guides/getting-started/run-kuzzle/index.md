@@ -18,6 +18,16 @@ It only requires two services: [Elasticsearch](https://www.elastic.co/what-is/el
 
 In this guide we will use Docker and Docker Compose to run those services.
 
+### Supported versions
+
+| Service | Supported | Tested by Kuzzle's CI |
+|---|---|---|
+| Node.js | 22.12 or later, up to 24 | 22 and 24 |
+| Elasticsearch | 7 (default) and 8 | 7.17 (`kuzzleio/elasticsearch:7` image) and 8.17 |
+| Redis | 8 | 8 |
+
+Kuzzle uses Elasticsearch 7 by default. To use Elasticsearch 8, see [Elasticsearch 8](/core/2/guides/elasticsearch/v8).
+
 ### Prerequisites
 
 ::: info
@@ -25,7 +35,7 @@ It is recommended to use Node Version Manager to avoid rights problems when usin
 You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
 :::
 
-- [Node.js >= 16](https://nodejs.org/en/download/)
+- [Node.js](https://nodejs.org/en/download/) 22.12 or later (Node.js 22 and 24 are supported, Node.js 25 and later are not)
 - [Docker](https://docs.docker.com/engine/install/)
 - [Kourou](https://github.com/kuzzleio/kourou)
 
@@ -35,8 +45,9 @@ Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/
 You can install Kourou globally by using NPM: `npm install -g kourou`
 
 ::: warning
-Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.
-For the sake of simplicity we will use a Docker and Docker Compose throughout this guide.
+Kuzzle uses native (C++) dependencies. They ship prebuilt for Linux x64 and arm64 (glibc 2.31 or later, e.g. Debian bullseye and later) and for macOS, so `npm install kuzzle` needs no compiler there.
+On Alpine Linux (musl) or other architectures, they are compiled at install time, so a compile toolchain (a C++ compiler like g++ or clang, make and python) is still necessary.
+For the sake of simplicity we will use Docker and Docker Compose throughout this guide.
 :::
 
 ::: info
@@ -125,7 +136,7 @@ The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/S
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
-First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follows:
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](https://console.kuzzle.io) in your browser and then fill the form as follows:
 
 ![Admin Console create connection form](./admin-console-create-connection.png)
 
