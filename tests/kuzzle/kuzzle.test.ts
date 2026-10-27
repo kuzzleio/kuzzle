@@ -316,6 +316,8 @@ describe("#kuzzle/Kuzzle", () => {
       expect(order).toEqual([
         "pipe:kuzzle:state:start",
         "internalIndex.init",
+        "ask:core:storage:public:cache:reload",
+        "ask:core:storage:private:cache:reload",
         "validation.init",
         "tokenManager.init",
         "funnel.init",
@@ -425,6 +427,8 @@ describe("#kuzzle/Kuzzle", () => {
       await kuzzle.start(application, {});
 
       expect(moduleInits.get("cluster")).not.toHaveBeenCalled();
+      expect(order).not.toContain("ask:core:storage:public:cache:reload");
+      expect(order).not.toContain("ask:core:storage:private:cache:reload");
     });
 
     it("should initialise the cluster when it is enabled", async () => {
@@ -433,6 +437,29 @@ describe("#kuzzle/Kuzzle", () => {
       await kuzzle.start(application, {});
 
       expect(moduleInits.get("cluster")).toHaveBeenCalled();
+    });
+
+    /* #3044: a node that joins late must see what a peer created in storage
+     * before its plugins' `init()` runs. */
+    it("should reload the storage caches after the cluster join, before the plugins init", async () => {
+      kuzzle.config.cluster.enabled = true;
+      moduleInits.get("cluster")?.mockImplementationOnce(async () => {
+        order.push("cluster.init");
+      });
+
+      await kuzzle.start(application, {});
+
+      const join = order.indexOf("cluster.init");
+      const plugins = order.indexOf("pluginsManager.init");
+
+      for (const scope of ["public", "private"]) {
+        const reload = order.indexOf(`ask:core:storage:${scope}:cache:reload`);
+
+        expect(reload, scope).toBeGreaterThan(join);
+        expect(reload, scope).toBeLessThan(plugins);
+      }
+
+      expect(join).toBeGreaterThan(-1);
     });
 
     /* #3020: a failed start left a node with no listener, still renewing its

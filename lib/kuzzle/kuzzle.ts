@@ -404,6 +404,14 @@ class Kuzzle extends KuzzleEventEmitter {
       await new Cluster().init();
 
       this.log.info("[✔] Cluster initialized");
+
+      // The storage caches were loaded before the join: what a peer created
+      // in between was broadcast before this node could hear it. Read them
+      // again before the plugins' `init()` relies on them (#3044).
+      await Promise.all([
+        this.ask("core:storage:public:cache:reload"),
+        this.ask("core:storage:private:cache:reload"),
+      ]);
     } else {
       this.log.info("[X] Cluster disabled: single node mode.");
     }
