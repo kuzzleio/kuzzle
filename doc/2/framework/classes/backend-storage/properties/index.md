@@ -34,7 +34,7 @@ const esRequest =  {
   op_type: 'create'
 }
 
-await app.storage.client.index(esRequest)
+await app.storage.storageClient.index(esRequest)
 ```
 
 ## `StorageClient`
@@ -61,6 +61,6 @@ const esRequest =  {
 }
 
 // Instantiate and use a new client
-const storageClient = new app.storage.Client()
+const storageClient = new app.storage.StorageClient()
 await storageClient.index(esRequest)
 ```

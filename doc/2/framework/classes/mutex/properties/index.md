@@ -26,8 +26,14 @@ description: Mutex class properties
 
 | Type               | Description                       |
 |--------------------|-----------------------------------|
-| <pre>boolean</pre> | Indicates whether the resource is locked or not |
+| <pre>boolean (readonly)</pre> | Indicates whether this mutex instance holds the lock |
 
+
+## `mutexId`
+
+| Type               | Description                       |
+|--------------------|-----------------------------------|
+| <pre>string (readonly)</pre> | Unique identifier of this mutex instance (`<node id>/<random hex string>`). It is the value stored in the lock, so that only this instance can free it |
 
 ## `resource`
 

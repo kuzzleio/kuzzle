@@ -27,4 +27,8 @@ unlock(): Promise<void>
 
 Returns a promise, resolved once the mutex has been unlocked.
 
-This method never throws.
+## Throws
+
+Throws a [core.fatal.assertion_failed](/core/2/api/errors/error-codes/core#subdomain-0x0000-fatal) error if this mutex instance does not hold the lock.
+
+Once the node is shutting down, Kuzzle frees every lock still held before it exits: `unlock()` on such a lock resolves without doing anything.

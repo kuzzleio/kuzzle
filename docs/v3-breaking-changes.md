@@ -147,7 +147,7 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 
 ## User documentation
 
-44 pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
+48 pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
 
 - **API:**
   - `auth/*`: 9 pages, legacy routes.
@@ -158,9 +158,9 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
   - `errors/error-codes/*`.
 - **Framework:**
   - `abstract-classes/plugin/properties`.
-  - `backend-config/{set,merge}`, `internal-logger/verbose`, `kuzzle-request/set-result`.
-  - `plugin-context-accessors/execute`, `plugin-context-constructors/{execute,properties}`, `plugin-context/properties`.
-  - `request-input/properties`.
+  - `backend-config/{set,merge}`, `internal-logger/verbose`, `logger/{silly,verbose}`, `kuzzle-request/{set-result,get-array-legacy}`.
+  - `plugin-context-accessors/execute`, `plugin-context-constructors/properties`, `plugin-context/properties`, `embedded-sdk/properties`.
+  - `request-input/properties`, `types/event-handler`.
   - `events/{core,kuzzle,realtime}`.
 - **Guides:**
   - `advanced/cluster-scalability`.

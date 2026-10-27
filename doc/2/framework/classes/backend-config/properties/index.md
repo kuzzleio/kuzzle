@@ -18,9 +18,9 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide.
 
 ## `content`
 
-| Type                           | Description                  |
-|--------------------------------|------------------------------|
-| <pre>KuzzleConfiguration</pre> | Current Kuzzle configuration |
+| Type                                                                        | Description                  | get / set |
+| --------------------------------------------------------------------------- | ---------------------------- | --------- |
+| <pre>[IKuzzleConfiguration](/core/2/framework/types/kuzzle-configuration)</pre> | Current Kuzzle configuration | get / set |
 
 **Example: modify a configuration value**
 

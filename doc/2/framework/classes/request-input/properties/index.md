@@ -20,38 +20,44 @@ _`_id`, `index`, `collection`, `refresh`, `onExistingUser`, `foobar`, etc._
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | API action name | get |
+| <pre>string</pre> | API action name (`null` if not set). Can only be set once | get / set |
 
 ## `args`
 
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | KuzzleRequest arguments (except `body`) | get |
+| <pre>JSONObject</pre> | KuzzleRequest arguments (except `body`) | get / set |
 
 ## `body`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | KuzzleRequest body | get |
+| <pre>JSONObject</pre> | KuzzleRequest body (`null` if not set) | get / set |
 
 ## `controller`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | API controller name | get |
+| <pre>string</pre> | API controller name (`null` if not set). Can only be set once | get / set |
 
 ## `headers`
 
+<DeprecatedBadge version="2.16.3" />
+
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | KuzzleRequest headers (Http only) | get |
+| <pre>JSONObject</pre> | KuzzleRequest headers (Http only) | get / set |
+
+::: warning
+Use [request.context.connection.misc.headers](/core/2/framework/classes/request-context/properties#contextmisc-http-informations) instead.
+:::
 
 ## `jwt`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | Authentication token | get |
+| <pre>string</pre> | Authentication token (`null` if not set) | get / set |
 
 ## `resource`
 
@@ -69,8 +75,18 @@ _`_id`, `index`, `collection`, `refresh`, `onExistingUser`, `foobar`, etc._
 | `resource.index` | <pre>string</pre> | Index name | get |
 | `resource.collection` | <pre>string</pre> | Collection name | get |
 
+## `triggerEvents`
+
+<SinceBadge version="2.31.0" />
+
+| Type                  | Description       | get / set |
+|-----------------------|-------------------|-----------|
+| <pre>boolean</pre> | `true` if a request executed with the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) triggers the API events (`undefined` otherwise) | get / set |
+
+See [Trigger events](/core/2/guides/develop-on-kuzzle/event-system#trigger-events).
+
 ## `volatile`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | API action name | get |
+| <pre>JSONObject</pre> | [Volatile data](/core/2/guides/main-concepts/api#volatile-data) sent with the request (`null` if not set) | get / set |

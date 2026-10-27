@@ -15,7 +15,7 @@ Removes a realtime subscription on the specified connection.
 This method is a backend version of the [realtime:unsubscribe](/core/2/api/controllers/realtime/unsubscribe) API action.
 
 ::: info
-This method can only be used before the application is started.
+This method can only be used once the application is started.
 :::
 
 ```ts

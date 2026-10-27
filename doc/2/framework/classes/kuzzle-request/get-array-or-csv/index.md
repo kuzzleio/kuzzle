@@ -8,7 +8,7 @@ description: KuzzleRequest class getArrayOrCsv() method
 
 # getArrayOrCsv
 
-<SinceBadge version="auto" />
+<SinceBadge version="2.57.0" />
 
 Gets a parameter from the request arguments as an array, also accepting a comma-separated string.
 
@@ -22,7 +22,7 @@ Unlike [getArray](/core/2/framework/classes/kuzzle-request/get-array), a single 
 ### Arguments
 
 ```ts
-getArrayOrCsv (name: string, def: [] = null): any[]
+getArrayOrCsv (name: string, def?: []): unknown[]
 ```
 
 </br>
@@ -31,6 +31,8 @@ getArrayOrCsv (name: string, def: [] = null): any[]
 |--------|-------------------|----------------|
 | `name` | <pre>string</pre> | Parameter name |
 | `def` | <pre>array</pre> | Default value to return if the parameter is not set |
+
+Throws an `api.assert.missing_argument` error if the parameter is not set and no default value is provided, and an `api.assert.invalid_type` error if it is neither an array nor a string.
 
 
 ### Example

@@ -9,11 +9,21 @@ order: 100
 
 # API Events
 
-All API actions, without exception, trigger two of these three events:
+Executed API actions trigger two of these three events:
 
 - before the action starts
 - after it succeeds
 - after it fails
+
+::: info
+Requests rejected before reaching their action (failed rights check, rate limit, overload protection) trigger none of these events. See [request:afterExecution](/core/2/framework/events/request#request-afterexecution) to observe every request.
+
+Requests executed with the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) only trigger these events when the [triggerEvents](/core/2/guides/develop-on-kuzzle/event-system#trigger-events) option is set.
+:::
+
+::: info
+For the `memoryStorage` controller, event names use the `ms` prefix instead of the controller name: for instance, `ms:beforeGet` and `ms:afterGet`.
+:::
 
 ---
 
@@ -38,7 +48,7 @@ The `before` event name is built using the following template:
 
 | API action                                                                                   | Before event name                 |
 | -------------------------------------------------------------------------------------------- | -------------------------------- |
-| [auth:login](/core/2/api/controllers/auth/login)                               | auth:beforeLogin`               |
+| [auth:login](/core/2/api/controllers/auth/login)                               | `auth:beforeLogin`               |
 | [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) | `document:beforeCreateOrReplace` |
 
 ---
@@ -88,7 +98,7 @@ The `error` event name is built using the following template:
 
 #### Example
 
-| API action                                                                                   | After event name                |
+| API action                                                                                   | Error event name                |
 | -------------------------------------------------------------------------------------------- | ------------------------------- |
 | [auth:login](/core/2/api/controllers/auth/login)                               | `auth:errorLogin`               |
 | [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) | `document:errorCreateOrReplace` |
