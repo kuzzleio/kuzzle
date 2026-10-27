@@ -40,9 +40,13 @@ Once done, Kuzzle v2 can be started.
 
 ## Upgrade script
 
-Kuzzle v2 comes with an upgrade script, making it easier to migrate from the previous version.
+::: warning
+The upgrade script was removed in Kuzzle 2.32.0: it was last shipped with Kuzzle 2.31. To migrate from Kuzzle v1, run the script of [Kuzzle 2.31](https://github.com/kuzzleio/kuzzle/tree/v2.31.0/bin) first, then upgrade to the latest Kuzzle v2 version. You can also [export your data](/core/2/guides/advanced/export-import-data) from Kuzzle v1 and import it into a new Kuzzle v2 stack.
+:::
 
-To start the script, launch `bin/upgrade --help` and follow the instructions.
+Kuzzle v2, up to version 2.31, comes with an upgrade script, making it easier to migrate from the previous version.
+
+To start the script, launch `bin/upgrade --help` from a Kuzzle 2.31 installation and follow the instructions.
 
 The script is idempotent: it can be restarted any number of times, without any danger to your data storage.
 

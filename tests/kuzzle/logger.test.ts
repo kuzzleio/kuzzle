@@ -73,4 +73,38 @@ describe("Logger", () => {
       namespace: "app:browser",
     });
   });
+
+  it("returns children that are full Loggers, at any depth", () => {
+    const parent = createLogger();
+    const child = parent.child("browser");
+    const grandChild = child.child("tab");
+
+    expect(child).toBeInstanceOf(Logger);
+    expect(grandChild).toBeInstanceOf(Logger);
+
+    // the level follows the parent's until it is set on the child
+    parent.setLevel("debug");
+    expect(child.getLevel()).toBe("debug");
+    expect(grandChild.getLevel()).toBe("debug");
+
+    child.setLevel("trace");
+    expect(child.getLevel()).toBe("trace");
+    expect(parent.getLevel()).toBe("debug");
+
+    child.verbose("verbose message");
+    grandChild.silly("silly message");
+
+    expect(lines.map(({ msg, namespace }) => ({ msg, namespace }))).toEqual([
+      {
+        msg: expect.stringContaining("Logger.verbose is deprecated"),
+        namespace: "app:browser",
+      },
+      { msg: "verbose message", namespace: "app:browser" },
+      {
+        msg: expect.stringContaining("Logger.silly is deprecated"),
+        namespace: "app:browser:tab",
+      },
+      { msg: "silly message", namespace: "app:browser:tab" },
+    ]);
+  });
 });

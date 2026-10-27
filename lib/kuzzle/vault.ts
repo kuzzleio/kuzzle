@@ -35,23 +35,44 @@ import isEmpty from "lodash/isEmpty";
 // (TD-57, #2760).
 let ENV_VAULT_KEY: string | undefined;
 
+/**
+ * The default secrets file, `config/secrets.enc.json` at the project root.
+ *
+ * Installed as an npm package (KaaF), Kuzzle lives under `node_modules/kuzzle`
+ * and the project root is above it: from `node_modules/kuzzle/dist/lib/kuzzle`
+ * since the build outputs to `dist/` (2.50.0), from
+ * `node_modules/kuzzle/lib/kuzzle` before. Anywhere else (a Kuzzle checkout),
+ * the file is the checkout's own `config/secrets.enc.json`.
+ *
+ * @param dirname - the directory of this module
+ */
+function defaultSecretsFile(dirname: string): string {
+  const dir = dirname.split(path.sep).join("/");
+
+  for (const installed of [
+    "/node_modules/kuzzle/dist/lib/kuzzle",
+    "/node_modules/kuzzle/lib/kuzzle",
+  ]) {
+    if (dir.endsWith(installed)) {
+      return path.resolve(
+        dirname.slice(0, dirname.length - installed.length + 1),
+        "config/secrets.enc.json",
+      );
+    }
+  }
+
+  return path.resolve(dirname, "../../config/secrets.enc.json");
+}
+
 function load(
   vaultKey?: string,
   secretsFile?: string,
   useNewAlgorithm: boolean = false,
 ): Vault {
-  // Using KaaF kuzzle is an npm package and is located under node_modules folder
-  // We need to get back to root folder of the project to get the secret file
-  const defaultEncryptedSecretsFile = __dirname.endsWith(
-    "/node_modules/kuzzle/lib/kuzzle",
-  )
-    ? path.resolve(`${__dirname}/../../../../config/secrets.enc.json`)
-    : path.resolve(`${__dirname}/../../config/secrets.enc.json`);
-
   const encryptedSecretsFile =
     secretsFile ||
     process.env.KUZZLE_SECRETS_FILE ||
-    defaultEncryptedSecretsFile;
+    defaultSecretsFile(__dirname);
 
   let key = vaultKey;
   if (
@@ -98,4 +119,4 @@ function load(
   return vault;
 }
 
-export = { load };
+export = { defaultSecretsFile, load };

@@ -12,6 +12,10 @@ description: BackendCluster.on method
 
 Listens to event emitted with [BackendCluster.broadcast](/core/2/framework/classes/backend-cluster/broadcast).
 
+::: info
+This method can only be used once the application is started.
+:::
+
 ```ts
 on (event: string, listener: ClusterEventHandler): Promise<void>
 ```
@@ -26,7 +30,7 @@ on (event: string, listener: ClusterEventHandler): Promise<void>
 ## Usage
 
 ```js
-app.cluster.on('some:event', payload => {
+await app.cluster.on('some:event', payload => {
   // ...listener code...
-})
+});
 ```

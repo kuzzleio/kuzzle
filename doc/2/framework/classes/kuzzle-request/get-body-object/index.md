@@ -16,7 +16,7 @@ We also support lodash syntax. [(`relations.lebron[0]`)](https://lodash.com/docs
 ### Arguments
 
 ```ts
-getBodyObject (name: string, def: JSONObject = null): JSONObject
+getBodyObject (name: string, def?: JSONObject): JSONObject
 ```
 
 </br>

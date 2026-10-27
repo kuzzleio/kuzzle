@@ -8,6 +8,8 @@ description: InternalLogger.error method
 
 # `error()`
 
+<DeprecatedBadge version="2.60.0" />
+
 Logs an error message.
 
 ::: info

@@ -327,10 +327,10 @@ describe("#core/storage/ClientAdapter", () => {
       expect(adapter.es.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
-      expect(handlers.size).toBe(57);
+      expect(handlers.size).toBe(58);
     });
 
-    it("reloads the collection write locks once the cluster is joined", async () => {
+    it("reloads the collection write locks once the node goes live", async () => {
       const loadLocks = vi.spyOn(adapter, "loadLocks");
 
       await pipes.get("kuzzle:state:live")?.();
@@ -338,28 +338,39 @@ describe("#core/storage/ClientAdapter", () => {
       expect(loadLocks).toHaveBeenCalledOnce();
     });
 
-    /* kuzzle#3029: a peer created it, then stopped before this node joined. */
-    it("caches an index created by a peer once the cluster is joined", async () => {
-      (
-        globalThis as {
-          kuzzle: {
-            config: {
-              services: { storageEngine: { generateMissingAliases: boolean } };
+    /* kuzzle#3029: a peer created them, then stopped before this node joined.
+     * kuzzle#3044: `Kuzzle.start()` asks for `cache:reload` right after the
+     * cluster join, before the plugins' `init()`. */
+    it.each(["cache:reload", "kuzzle:state:live"])(
+      "caches the indexes and collections a peer created, on %s",
+      async (trigger) => {
+        (
+          globalThis as {
+            kuzzle: {
+              config: {
+                services: {
+                  storageEngine: { generateMissingAliases: boolean };
+                };
+              };
             };
-          };
-        }
-      ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
-      client.getSchema.mockResolvedValue({ peer: ["c"] });
-      cache.addIndex.mockClear();
-      cache.addCollection.mockClear();
+          }
+        ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
+        client.getSchema.mockResolvedValue({ peer: ["c"] });
+        cache.addIndex.mockClear();
+        cache.addCollection.mockClear();
+        const loadLocks = vi.spyOn(adapter, "loadLocks");
 
-      await pipes.get("kuzzle:state:live")?.();
+        await (trigger === "cache:reload"
+          ? ask("cache:reload")
+          : pipes.get(trigger)?.());
 
-      expect(cache.addIndex).toHaveBeenCalledWith("peer");
-      expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
-      // Aliases were generated at init: joining the cluster writes nothing.
-      expect(client.generateMissingAliases).not.toHaveBeenCalled();
-    });
+        expect(cache.addIndex).toHaveBeenCalledWith("peer");
+        expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
+        expect(loadLocks).toHaveBeenCalledOnce();
+        // Aliases were generated at init: a reload writes nothing.
+        expect(client.generateMissingAliases).not.toHaveBeenCalled();
+      },
+    );
 
     it("namespaces every event with the adapter's scope", () => {
       for (const event of handlers.keys()) {
@@ -732,6 +743,7 @@ describe("#core/storage/ClientAdapter", () => {
       // covered by one of the dedicated blocks below.
       const dedicated = [
         "cache:refresh",
+        "cache:reload",
         "collection:create",
         "collection:delete",
         "index:create",
@@ -814,6 +826,7 @@ describe("#core/storage/ClientAdapter", () => {
     it("dispatches to the matching method", async () => {
       const spies = {
         "cache:refresh": vi.spyOn(adapter, "populateCache"),
+        "cache:reload": vi.spyOn(adapter, "reloadCache"),
         "collection:create": vi.spyOn(adapter, "createCollection"),
         "collection:delete": vi.spyOn(adapter, "deleteCollection"),
         "index:create": vi.spyOn(adapter, "createIndex"),
@@ -830,6 +843,7 @@ describe("#core/storage/ClientAdapter", () => {
       }
 
       await ask("cache:refresh");
+      await ask("cache:reload");
       await ask("collection:create", "i", "c", { o: 1 }, { p: 1 });
       await ask("collection:delete", "i", "c");
       await ask("index:create", "i", { o: 1 });

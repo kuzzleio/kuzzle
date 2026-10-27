@@ -21,7 +21,7 @@ the argument will be parsed and returned if it's an oject, otherwise an error wi
 ### Arguments
 
 ```ts
-getObject (name: string, def: JSONObject = null): JSONObject
+getObject (name: string, def?: JSONObject): JSONObject
 ```
 
 </br>

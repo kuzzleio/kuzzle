@@ -16,7 +16,7 @@ We also support lodash syntax. [(`relations.lebron[0]`)](https://lodash.com/docs
 ### Arguments
 
 ```ts
-getBodyInteger (name: string, def: number = null): number
+getBodyInteger (name: string, def?: number): number
 ```
 
 </br>

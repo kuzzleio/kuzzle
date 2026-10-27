@@ -49,3 +49,10 @@ Returns a confirmation that the command is being executed.
   "result": { "acknowledge": true }
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [PreconditionError](/core/2/api/errors/types#preconditionerror): a database reset is already running (`api.process.action_locked`)

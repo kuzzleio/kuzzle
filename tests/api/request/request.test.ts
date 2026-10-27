@@ -1006,6 +1006,15 @@ describe("#api/request/KuzzleRequest", () => {
           );
         });
 
+        it("accepts a custom format that is not ISO 8601", () => {
+          request.input.args.frenchDay = "11/04/2022";
+
+          expect(request.getDate("frenchDay", "DD/MM/YYYY")).toBe("11/04/2022");
+          throws(() => request.getDate("birthDateDay", "DD/MM/YYYY"), {
+            id: "api.assert.invalid_type",
+          });
+        });
+
         it("should throw if the parameter is invalid date regarding custom date", () => {
           throws(() => request.getDate("birthDate", "YYYY-MM-DD"), {
             id: "api.assert.invalid_type",
@@ -1029,6 +1038,35 @@ describe("#api/request/KuzzleRequest", () => {
         it("extracts the birthdate in timestamp format", () => {
           expect(request.getTimestamp("birthDateTime")).toBe(1649635200000);
         });
+
+        it("accepts an integer string, such as an HTTP query string value", () => {
+          request.input.args.since = "1649635200000";
+          request.input.args.before = "-1000";
+
+          expect(request.getTimestamp("since")).toBe(1649635200000);
+          expect(request.getTimestamp("before")).toBe(-1000);
+        });
+
+        it.each([
+          "2026-10-27",
+          "2026-10-27T10:00:00Z",
+          "1649635200000.5",
+          "12abc",
+          "",
+          12.5,
+          true,
+          null,
+          {},
+        ])(
+          "should throw if the parameter is not an integer timestamp (%j)",
+          (value) => {
+            request.input.args.invalidTimestamp = value;
+
+            throws(() => request.getTimestamp("invalidTimestamp"), {
+              id: "api.assert.invalid_type",
+            });
+          },
+        );
 
         it("should throw if the parameter is missing", () => {
           throws(() => request.getTimestamp("anotherDate"), {

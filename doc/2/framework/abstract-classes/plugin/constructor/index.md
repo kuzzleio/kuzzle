@@ -23,7 +23,7 @@ constructor (manifest: PluginManifest);
 | `manifest` | <pre>[PluginManifest](/core/2/framework/types/plugin-manifest)</pre> | [PluginManifest](/core/2/framework/types/plugin-manifest) instance |
 
 The manifest contains the following properties:
- - `kuzzleVersion`: a non-empty string describing a [semver range](https://www.npmjs.com/package/semver#ranges), limiting the range of Kuzzle versions supported by this plugin. If not set, a warning is displayed on the console, and Kuzzle assumes that the plugin is only compatible with Kuzzle v2.x
+ - `kuzzleVersion`: a non-empty string describing a [semver range](https://www.npmjs.com/package/semver#ranges), limiting the range of Kuzzle versions supported by this plugin. It is required: the constructor throws a `plugin.manifest.missing_version` error if the property is missing.
 
 ## Usage
 

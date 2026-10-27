@@ -6,6 +6,8 @@ title: validate | API | Core
 
 # validate
 
+<DeprecatedBadge version="1.5.0"/>
+
 This API action is deprecated and should not be used. Instead, use [document:validate](/core/2/api/controllers/document/validate).
 
 Validates data against existing validation rules.
@@ -18,17 +20,7 @@ Messages are always valid if no validation rules are defined on the provided ind
 
 ### HTTP
 
-```http
-URL: http://kuzzle:7512/<index>/<collection>/_validate
-Method: POST
-Body:
-```
-
-```js
-{
-  // data to validate
-}
-```
+This action has no HTTP route: `POST /<index>/<collection>/_validate` runs [document:validate](/core/2/api/controllers/document/validate).
 
 ### Other protocols
 

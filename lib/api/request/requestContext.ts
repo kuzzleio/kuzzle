@@ -48,7 +48,7 @@ export type ContextMisc = {
    */
   path?: string;
   /**
-   * HTTP headers
+   * HTTP method, uppercase (e.g. `GET`)
    */
   verb?: string;
   /**

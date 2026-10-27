@@ -184,13 +184,14 @@ export class Backend {
   public plugin: BackendPlugin;
 
   /**
-   * InternalLogger
+   * Application logger
    *
+   * @method trace
    * @method debug
    * @method info
    * @method warn
    * @method error
-   * @method verbose
+   * @method fatal
    */
   public log: Logger;
 

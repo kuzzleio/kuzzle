@@ -26,6 +26,12 @@ import { ApplicationManager } from "./index";
 type LogLevel =
   "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "verbose";
 
+/**
+ * Kuzzle no longer creates instances of this class: `Backend.log` is a
+ * `Logger` since 2.45.0.
+ *
+ * @deprecated Use `Logger` (`app.log`) instead.
+ */
 export class InternalLogger extends ApplicationManager {
   /**
    * Logs a trace message

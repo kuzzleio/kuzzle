@@ -8,12 +8,14 @@ description: Koncorde.test method
 
 # `test()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Tests data and returns the matching filter identifiers.
 
 ### Arguments
 
 ```js
-test(index: string, collection: string, data: any, documentId?: string): string[];
+test(index: string, collection: string, data: JSONObject, id?: string): string[];
 ```
 
 <br/>
@@ -23,7 +25,7 @@ test(index: string, collection: string, data: any, documentId?: string): string[
 | `index`      | <pre>string</pre> | Index name                 |
 | `collection` | <pre>string</pre> | Collection name            |
 | `data`       | <pre>any</pre>    | Data to test               |
-| `documentId` | <pre>string</pre> | Document unique identifier |
+| `id`         | <pre>string</pre> | Optional document unique identifier |
 
 ### Return
 

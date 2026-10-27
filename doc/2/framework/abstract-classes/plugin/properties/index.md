@@ -36,6 +36,34 @@ type PluginApiDefinition = {
 }
 ```
 
+## `authenticators`
+
+::: info
+This property allows to define plugin features.
+:::
+
+| Type                   | Description |
+|------------------------|-------------|
+| <pre>JSONObject</pre> | Authenticator classes, by name |
+
+Each key is an authenticator name, and each value is a class (a constructor) implementing a [Passport](http://www.passportjs.org/) strategy. The [strategies](#strategies) of the plugin refer to them by name, in their `config.authenticator` property.
+
+Kuzzle throws a `plugin.authenticators.not_an_object` error if the property is not an object, and a `plugin.authenticators.invalid_authenticator` error if one of its values is not a constructor.
+
+See also the [Integrate an Authentication Strategy](/core/2/guides/write-plugins/integrate-authentication-strategy#exposing-authenticators) guide.
+
+```js
+const LocalStrategy = require('passport-local').Strategy;
+
+class MyPlugin extends Plugin {
+  constructor () {
+    super({ kuzzleVersion: '>=2.8.0 <3' });
+
+    this.authenticators = { Local: LocalStrategy };
+  }
+}
+```
+
 ## `config`
 
 | Type                                                                   | Description             |
@@ -69,6 +97,42 @@ export type PluginHookDefinition = {
 }
 ```
 
+::: warning
+<DeprecatedBadge version="2.8.0"/>
+
+A hook handler can also be given as the **name** of one of the plugin's methods (a string). This form is deprecated, and Kuzzle prints a deprecation warning when it registers the handler: pass the function instead.
+:::
+
+## `imports`
+
+<SinceBadge version="2.20.2"/>
+
+::: info
+This property allows to define plugin features.
+:::
+
+| Type                   | Description |
+|------------------------|-------------|
+| <pre>[ImportConfig](/core/2/framework/types/import-config)</pre> | Mappings, roles, profiles and users to import when Kuzzle starts |
+
+Kuzzle merges the `imports` of every plugin, then merges the application imports (set with [BackendImport](/core/2/framework/classes/backend-import)) over them, and imports the result at startup.
+
+```js
+class MyPlugin extends Plugin {
+  constructor () {
+    super({ kuzzleVersion: '>=2.8.0 <3' });
+
+    this.imports = {
+      roles: {
+        mailer: {
+          controllers: { 'my-plugin/mail': { actions: { send: true } } },
+        },
+      },
+    };
+  }
+}
+```
+
 ## `pipes`
 
 ::: info
@@ -77,7 +141,7 @@ This property allows to define plugin features.
 
 | Type                                                                   | Description             |
 |------------------------------------------------------------------------|-------------------------|
-| <pre>`PluginPipeDefinition`</pre> | Allows to define pipess on events |
+| <pre>`PluginPipeDefinition`</pre> | Allows to define pipes on events |
 
 The `PluginPipeDefinition` type is an object with each key as an event name and the value is a valid [PipeEventHandler](/core/2/framework/types/event-handler).
 
@@ -89,6 +153,12 @@ export type PluginPipeDefinition = {
   [event: string]: PipeEventHandler | PipeEventHandler[]
 }
 ```
+
+::: warning
+<DeprecatedBadge version="2.8.0"/>
+
+A pipe handler can also be given as the **name** of one of the plugin's methods (a string). This form is deprecated, and Kuzzle prints a deprecation warning when it registers the handler: pass the function instead.
+:::
 
 ## `strategies`
 

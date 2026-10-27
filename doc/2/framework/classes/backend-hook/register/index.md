@@ -17,7 +17,10 @@ This method can only be used before the application is started.
 :::
 
 ```ts
-register(event: string, handler: ClusterEventHandler): void
+register<TEventDefinition extends EventDefinition = EventDefinition>(
+  event: TEventDefinition["name"],
+  handler: HookEventHandler<TEventDefinition>
+): void
 ```
 
 <br/>
@@ -25,13 +28,13 @@ register(event: string, handler: ClusterEventHandler): void
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `handler` | <pre>[ClusterEventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
+| `handler` | <pre>[HookEventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
 
 ## Usage
 
 ```js
 app.hook.register('request:onError', (request: KuzzleRequest) => {
-  app.log.error(error)
+  app.log.error(request.error);
 });
 ```
 

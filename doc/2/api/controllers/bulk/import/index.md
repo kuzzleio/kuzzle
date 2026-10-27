@@ -20,7 +20,7 @@ This is a low level route intended to bypass Kuzzle actions on document, notably
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_bulk
+URL: http://kuzzle:7512/<index>/<collection>/_bulk[?refresh=wait_for][&strict]
 Method: POST
 Body:
 ```
@@ -76,6 +76,7 @@ Body:
 
 ### Optional:
 
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the imported documents are indexed
 - `strict`: if set, an error will occur if at least one document has not been created/updated/deleted <SinceBadge version="2.11.0" />
 
 ---

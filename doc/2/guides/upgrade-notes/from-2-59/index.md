@@ -69,16 +69,33 @@ These cases appear when a node stops (`SIGTERM`, `SIGKILL`, a crash) while the c
 
 - **The internal index bootstrap can be resumed.** If a node stopped after it recorded the data model version of the internal index but before it marked the bootstrap as done, every later start failed with "Document already exists": if that node never came back, the whole cluster could stay in a restart loop. The next node now finishes that bootstrap. It keeps the secret seed the first node already stored, since other nodes may sign tokens with it.
 - **Nodes wait for the shards of an existing collection.** A node that finds a collection already created by another node now waits for its primary shards to be active (Elasticsearch `yellow` status) before it uses it. Right after the creating node stopped, a node could reach a shard that was still initializing and fail its startup with a `503`. The same wait applies to `collection:create` on a collection that already exists. The wait lasts up to 30 seconds, a fixed value: a collection whose primary shards are still not active after that (a `red` index) fails the startup or the request with `services.storage.unexpected_error`, as it would have failed on its first request before. A collection whose shards are active is not delayed.
-- **Indexes created by another node are known.** A node now reloads the list of indexes and collections from Elasticsearch when it has joined the cluster. An index created by a node that stopped before this node joined used to stay unknown to it: requests to it failed with `services.storage.unknown_index`, and an `index:create` on it failed with `index_already_exists` without fixing that.
+- **Indexes created by another node are known.** A node now reloads the list of indexes and collections from Elasticsearch right after it has joined the cluster, before the plugins' `init()` runs, and again once it is ready. An index or a collection created by another node before this node joined used to stay unknown to it: requests to it failed with `services.storage.unknown_index` or `services.storage.unknown_collection`, `index:exists` answered `false`, and an `index:create` on it failed with `index_already_exists` without fixing that. A plugin that creates its index and collections in its `init()` could fail its startup this way on a node that joined late.
+- **A node stopped while it starts stops starting.** A node that received `SIGTERM` during its startup used to keep starting while it shut down: it could take the installations lock and begin running `app.install` handlers. If it was then killed, the other nodes waited for that lock to expire (30 seconds) before running the installations. The startup now stops at its next step, logging `[ℹ] Startup stopped: Kuzzle is shutting down` instead of `Cannot start Kuzzle`, and the node exits with code `0`. A lock for the imports or the installations granted after the shutdown began is released at once, with nothing run under it.
 - **Cluster messages received before the handshake.** A node restarted on the IP address of a node that just stopped can get messages meant for that previous node before it has joined. It used to throw `[CLUSTER] No node id yet` and, for an eviction message, restart again. It now refuses those requests, and the node that sent them asks another node.
 
 A rolling upgrade from v2.59.0 is not affected: a v2.59.0 node that gets one of these refusals handles it as before.
+
+### Authentication token settings
+
+Since 2.16.8, the settings of the deprecated `security.jwt` section were ignored, except `secret`: `security.authToken` has default values, and they always won. `security.authToken.gracePeriod` was ignored the other way round: only `security.jwt.gracePeriod` was read.
+
+Now, a value you set applies: the one under `security.authToken` first, then the one under `security.jwt`, then the default. Kuzzle logs a deprecation warning at startup listing the `security.jwt` keys it applied. When `gracePeriod` is set under both names, the `security.jwt` one still wins, as before.
+
+**Action:** if your configuration still sets `security.jwt.algorithm`, `expiresIn` or `maxTTL`, these values now apply, where the defaults (`HS256`, `1h`, `-1`) applied before: check that they are the ones you want, then move them to `security.authToken`.
+
+### Secrets file of an npm install
+
+When Kuzzle is installed with npm and `KUZZLE_SECRETS_FILE` is not set, it looks for the [secrets file](/core/2/guides/advanced/secrets-vault) in the `config/secrets.enc.json` file of your project again. Since 2.50.0, it looked for it inside `node_modules/kuzzle/dist/config/`. The official Docker image is not affected.
 
 ### Collections with `number_of_replicas` only
 
 When a collection already exists, Kuzzle compares its `number_of_shards` with the configured one, as the shard count of an existing collection cannot change. A collection configured with `number_of_replicas` but no `number_of_shards` failed that check on every start: a warning in production and, in development mode (`NODE_ENV=development`), a startup failure with `core.fatal.unexpected_error`. The check is now skipped when `number_of_shards` is not configured.
 
 A real mismatch in development mode now fails with its documented error, [`services.storage.wrong_es_static_settings_for_collection_recreation`](/core/2/api/errors/error-codes/services), instead of `core.fatal.unexpected_error`. In production, it is still only logged as a warning.
+
+### Creating the same collection concurrently
+
+When two `collection:create` requests for a collection that does not exist yet ran at the same time, only the mappings and settings of the request that created it were applied: the other one answered with success, but its mappings were dropped. With `dynamic: "strict"`, writing one of the dropped fields then failed with `services.storage.strict_mapping_rejection`. This happened, for instance, when plugins on several nodes each added their own field to a shared collection during a cluster startup. The request that finds the collection already created now applies its mappings and settings to it, as it does when the collection existed before the request.
 
 ### Placeholder index of an empty Kuzzle index
 
@@ -98,6 +115,10 @@ Indexes that already hold it keep it until a new collection is created in them; 
 
 - A request with an empty body (`Content-Length: 0`) whose headers span several TCP packets is now answered. It used to hang until the idle timeout, which a reverse proxy forwarding large headers turned into a `502`.
 
+### Removed routes
+
+Four HTTP routes pointed to API actions removed long ago and could never succeed: `POST /admin/_resetKuzzleData`, `GET /:index/_autoRefresh`, `POST /ms/_bgsave` and `POST /ms/_bgrewriteaof`. They are removed: a request to one of them now gets `404 network.http.url_not_found` instead of `404 api.process.action_not_found`, and they are no longer listed by `server:openapi`.
+
 ### Dependencies
 
 These dependencies changed major version. Each was pinned to its previous behaviour, and nothing changes in what you configure:
@@ -109,6 +130,12 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **redis-semaphore 6** (the lock library behind `withLock`) only changes its packaging.
 - The unused `inquirer` dependency is removed: production installs carry 23 fewer packages.
 
+## API clients
+
+- **New route `DELETE /api-keys`.** [`auth:deleteApiKey`](/core/2/api/controllers/auth/delete-api-key) can delete one's own API key by `key` or `fingerprint` over HTTP too, as `security:deleteApiKey` already could. Mind that it puts the clear-text key in the URL.
+- **`admin:loadFixtures`** answers `{ acknowledge: true }` again, as documented. Since 2.17.6 it answered `null`.
+- **`admin:shutdown`** called while the node is already shutting down now gets `412 api.process.action_locked`, as documented. The guard never fired before.
+
 ## Application and plugin developers
 
 - **New export: [`MutexAcquireError`](/core/2/framework/error-classes/mutex-acquire-error).** [`withLock`](/core/2/framework/functions/with-lock) now rejects with it when it cannot acquire the lock within its attempts, instead of a plain `Error` with the same message. It extends `Error`, so a `catch` that handled the plain `Error` still works; you can now tell a busy lock apart with `instanceof MutexAcquireError`.
@@ -116,3 +143,11 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **`withLock` and `Mutex` on the same key.** The previous upgrade notes said not to use both on the same key. They can be: both take the same Redis key with `SET NX`, so they exclude each other, and you can migrate your `Mutex` call sites one at a time. See [Migrating to withLock](/core/2/framework/classes/mutex/constructor#migrating-to-withlock).
 - **A failed `app.start()` ends the process.** An application test that expects `app.start()` to reject now sees the process exit with code `1` right after (see [A failed startup stops the node](#a-failed-startup-stops-the-node)); mock `process.exit` in such a test.
 - **Locks released at shutdown.** A node that stops now releases the locks it took with `withLock` before it exits, as it already did for `Mutex`, so the other nodes no longer wait for them to expire.
+- **Plugin requests with `triggerEvents`.** When such a request failed, the action was run a second time, without events: a request rejected by a pipe could still be executed. It now fails once, with its error. An error that is not a `KuzzleError`, thrown by the action, now arrives wrapped in `plugin.runtime.unexpected_error`, as for an API request; it used to arrive as is, from the second run. A rejection of the `request:afterExecution` pipe for these requests is logged, instead of being left unhandled.
+- **`http:<verb>` events** are always triggered with the lowercase verb (`http:get`). A route declared with an uppercase verb (`verb: 'GET'`) used to trigger only `http:GET`: it now triggers `http:get`, then `http:GET` for compatibility (deprecated, removed in Kuzzle 3). A `http:*` listener is called twice for such a route.
+- **`request.getDate(name, format)`**: a custom `format` replaces the ISO 8601 check. It was checked on top of it, so a format such as `DD/MM/YYYY` rejected every value.
+- **`request.getTimestamp(name)`** accepts integer strings (HTTP query strings), and rejects date strings: `"2026-10-27"` used to return `2026`.
+- **`Mutex.wait()`** can be called without argument; it threw a `TypeError`.
+- **`Logger.child()`** returns a full `Logger`: `getLevel`, `setLevel`, `silly` and `verbose` were missing.
+- **Response headers:** setting `Location` or `Last-Modified` replaces the previous value, instead of appending to it.
+- **Deprecated:** [`InternalLogger`](/core/2/framework/classes/internal-logger) (use `Logger`, which `app.log` and `context.logger` are) and the `Koncorde` class exported by Kuzzle (use the [`koncorde`](https://www.npmjs.com/package/koncorde) package). Both keep working in Kuzzle 2; see [Towards Kuzzle 3](/core/2/guides/kuzzle-3).

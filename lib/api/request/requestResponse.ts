@@ -125,7 +125,8 @@ export class Headers {
       case "host":
       case "if-modified-since":
       case "if-unmodified-since":
-      case "last-modified, location":
+      case "last-modified":
+      case "location":
       case "max-forwards":
       case "proxy-authorization":
       case "referer":

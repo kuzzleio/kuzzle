@@ -10,21 +10,21 @@ description: BackendConfig.merge method
 
 <DeprecatedBadge version="2.17.0"/>
 
-Sets a configuration value.
+Merges a configuration object into the current configuration.
 
 ::: info
 This method can only be used before the application is started.
 :::
 
 ```ts
-merge(config: JSONObject): void
+merge(config: KuzzleConfigurationOverrides): void
 ```
 
 <br/>
 
-| Argument | Type                  | Description                   |
-|----------|-----------------------|-------------------------------|
-| `config` | <pre>JSONObject</pre> | Configuration object to merge |
+| Argument | Type                                                                                       | Description                   |
+| -------- | ------------------------------------------------------------------------------------------ | ----------------------------- |
+| `config` | <pre>[KuzzleConfigurationOverrides](/core/2/framework/types/kuzzle-configuration)</pre> | Configuration object to merge |
 
 ## Usage
 

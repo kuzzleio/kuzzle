@@ -21,25 +21,26 @@ The `execute` function main usage is to forward users API requests to Kuzzle.
 ## Arguments
 
 ```js
-execute(request, [callback]);
+execute(connection, request, callback);
 ```
 
 <br/>
 
 | Arguments  | Type                                                             | Description                                                                                              |
 | ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `request`  | <pre>[KuzzleRequest](/core/2/guides/write-protocols/context/request)</pre> | Standardized API request |
-| `callback(result)` | <pre>function</pre> | Callback receiving the response |
+| `connection` | <pre>[ClientConnection](/core/2/guides/write-protocols/context/clientconnection)</pre> | Connection the request comes from, previously registered with [newConnection](/core/2/guides/write-protocols/entrypoint/newconnection) |
+| `request`  | <pre>[Request](/core/2/guides/write-protocols/context/request)</pre> | Standardized API request |
+| `callback(result)` | <pre>function</pre> | **Required**. Callback receiving the response |
 
 ---
 
 ## Return
 
-The `execute` function resolves to a serialized Kuzzle response JSON object.
+The `execute` function does not return a value: it calls `callback` with a serialized Kuzzle response JSON object.
 
-This resulting object contains the following properties:
+This object contains the following properties:
 
-* `raw` (boolean, default `false`): if `false`, the response content is a JSON object following the [Kuzzle standard response format](core/1/api/essentials/kuzzle-response). Otherwise, the content can be anything, depending on the executed API action.
+* `raw` (boolean, default `false`): if `false`, the response content is a JSON object following the [Kuzzle standard response format](/core/2/api/payloads/response). Otherwise, the content can be anything, depending on the executed API action.
 * `status` (integer, default `200`): request status, following the standard [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
 * `requestId` (string, nullable): request identifier set by clients, and used to link asynchronous responses to emitted requests.
 * `content`: the response itself, this is the payload that should be sent to the requesting client following the implemented protocol format. This property type partly depends on the value of the `raw` flag (if `false`, then the content is always a JSON object).
@@ -50,12 +51,12 @@ This resulting object contains the following properties:
 ## Example
 
 ```js
-const request = new context.KuzzleRequest({
+const request = new context.Request({
   controller: 'server',
   action: 'now'
-});
+}, { connection });
 
-context.accessors.execute(request, result => {
+entryPoint.execute(connection, request, result => {
   // Content example for the result object:
   // 
   // { 

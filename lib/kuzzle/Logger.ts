@@ -174,8 +174,15 @@ export class Logger extends KuzzleLogger {
     this.level = level;
   }
 
+  /**
+   * Creates a child logger with the given namespace, appended to the parent's
+   * one. Its level follows the parent's until it is set on the child.
+   */
   child(namespace: string): Logger {
-    // TODO, this is fishy we will probably need to properly remove the "as Logger"
-    return super.child(namespace) as Logger;
+    // kuzzle-logger builds the child as a plain KuzzleLogger (no getLevel,
+    // setLevel, silly, verbose): give it this class's prototype so it is the
+    // Logger it is declared to be. Its state is all KuzzleLogger's, and the
+    // deprecation flags start unset, as on a new Logger.
+    return Object.setPrototypeOf(super.child(namespace), Logger.prototype);
   }
 }

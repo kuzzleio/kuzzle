@@ -25,7 +25,7 @@ All generic events cited before share the same payload signature, and pipes plug
 
 ::: info
 
-"before" actions are only triggered on queries asking for specific documents. API action such as `document:search`, `document:deleteByQuery` or `document:updateByQuery` cannot trigger "before" events, they only trigger "after" ones.
+"before" actions are only triggered on queries asking for specific documents. API actions such as `document:search`, `document:export`, `document:deleteByQuery` or `document:updateByQuery` cannot trigger "before" events, they only trigger "after" ones.
 
 :::
 
@@ -118,6 +118,9 @@ class PipePlugin {
 
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
+- [document:exists](/core/2/api/controllers/document/exists)
+- [document:mExists](/core/2/api/controllers/document/m-exists)
+- [document:export](/core/2/api/controllers/document/export)
 - [document:search](/core/2/api/controllers/document/search)
 
 ---
@@ -163,6 +166,8 @@ class PipePlugin {
 - [document:update](/core/2/api/controllers/document/update)
 - [document:upsert](/core/2/api/controllers/document/upsert)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
+- [document:mUpsert](/core/2/api/controllers/document/m-upsert)
+- [document:deleteFields](/core/2/api/controllers/document/delete-fields)
 - [document:updateByQuery](/core/2/api/controllers/document/update-by-query)
 
 ---
@@ -305,6 +310,8 @@ class PipePlugin {
 
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
+- [document:exists](/core/2/api/controllers/document/exists)
+- [document:mExists](/core/2/api/controllers/document/m-exists)
 
 ---
 
@@ -349,6 +356,8 @@ class PipePlugin {
 - [document:update](/core/2/api/controllers/document/update)
 - [document:upsert](/core/2/api/controllers/document/upsert)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
+- [document:mUpsert](/core/2/api/controllers/document/m-upsert)
+- [document:deleteFields](/core/2/api/controllers/document/delete-fields)
 
 ---
 

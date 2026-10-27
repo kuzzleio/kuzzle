@@ -23,6 +23,7 @@ import crypto from "node:crypto";
 
 import Bluebird from "bluebird";
 
+import { authTokenSetting } from "../core/security/authTokenSettings";
 import { Store } from "../core/shared/store";
 import type { StorageEngineElasticsearch } from "../types";
 import { storeScopeEnum } from "../core/storage/storeScopeEnum";
@@ -215,11 +216,9 @@ class InternalIndexHandler extends Store {
   }
 
   async _initSecret(): Promise<void> {
-    // NOSONAR: `jwt` is the deprecated spelling of `authToken`, read second so
-    // an existing configuration keeps working. Dropping it is a breaking change
-    // for anyone who has not migrated, not a conversion's to make.
-    const { authToken, jwt } = global.kuzzle.config.security; // NOSONAR
-    const configSeed = authToken?.secret ?? jwt?.secret; // NOSONAR
+    // `jwt` is the deprecated spelling of `authToken`, read second so an
+    // existing configuration keeps working (see authTokenSetting).
+    const configSeed = authTokenSetting("secret");
 
     let storedSeed = await this.exists("config", this._JWT_SECRET_ID);
 

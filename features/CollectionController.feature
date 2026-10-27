@@ -123,6 +123,20 @@ Feature: Collection Controller
       | dynamic    | "strict"                                                        |
       | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
 
+  # #3043: the request that lost the creation race used to drop its mappings
+  Scenario: Concurrently create a collection with different mappings
+    Given an index "nyc-open-data"
+    When I create the collection "nyc-open-data":"green-taxi" concurrently with these mappings:
+      | mappings                                                                 |
+      | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
+      | { "dynamic": "strict", "properties": { "age": { "type": "integer" } } }  |
+    Then I get mappings of collection "nyc-open-data":"green-taxi"
+    And I should receive a result matching:
+      | dynamic    | "strict"                                                        |
+      | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
+    And I can create the following document:
+      | body | { "name": "Gordon", "age": 27 } |
+
   Scenario: Create a new collection with incorrect mappings
     Given an index "nyc-open-data"
     When I "create" the collection "nyc-open-data":"green-taxi" with:

@@ -69,14 +69,14 @@ export class NormalizedFilterV3 {
   }
 }
 
-/*
-  @deprecated
-
-  Exposes Koncorde v4 through an interface emulating Koncorde v3, to prevent
-  breaking changes in Kuzzle.
-
-  This class should either be removed entirely in the next major version, or
-  perhaps proposed in a compatibility mode to help clients migrate smoothly.
+/**
+ * Exposes Koncorde v4 through an interface emulating Koncorde v3, to prevent
+ * breaking changes in Kuzzle.
+ *
+ * This class should either be removed entirely in the next major version, or
+ * perhaps proposed in a compatibility mode to help clients migrate smoothly.
+ *
+ * @deprecated Use the `koncorde` package (v4) directly.
  */
 export class Koncorde {
   private filterIdIndexMap;

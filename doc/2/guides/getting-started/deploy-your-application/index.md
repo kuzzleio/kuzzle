@@ -14,7 +14,9 @@ meta:
 
 Kuzzle is just a Node.js application that also needs [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction) to run.  
 
-The only specifity is that **Kuzzle needs to compile C and C++ dependencies** so a successful `npm install` execution needs the `python` and `make` packages, as well as C and C++ compilers (in the following examples we'll use `g++`).   
+Kuzzle uses native (C++) dependencies. They ship prebuilt for Linux x64 and arm64 (glibc 2.31 or later, e.g. Debian bullseye and later) and for macOS, so `npm install` needs no compiler there. On Alpine Linux (musl) or other architectures, they are compiled at install time, which needs `python3`, `make` and a C++ compiler such as `g++`.
+
+Kuzzle is tested with Elasticsearch 7.17 and 8.17, and with Redis 8 (see [Supported versions](/core/2/guides/getting-started/run-kuzzle#supported-versions)).
 
 At Kuzzle we like to use Docker and Docker Compose to quickly deploy applications.  
 In this guide we will see how to deploy a Kuzzle application on a remote server.
@@ -49,25 +51,17 @@ A production deployment must include a reverse proxy to securize the connection 
 :::
 
 ::: warning
-# Authentication Security in Production
-
-## ⚠️ Important Security Requirement
+**Authentication security in production**
 
 You must set the `kuzzle_security__authToken__secret` environment variable before deploying Kuzzle to production. This secret is used to sign and verify JSON Web Tokens (JWTs) for user authentication.
 
-## Why This Matters
-- Prevents tokens from being stored in Elasticsearch
-- Improves overall security
-- Gives you direct control over token management
+Without it, Kuzzle generates a random signing seed and stores it in its internal index in Elasticsearch: anyone who can read that index can forge authentication tokens. Setting the secret yourself keeps it out of the database and gives you direct control over it.
 
-## Security Notes
-1. **Fallback Warning**: If you don't set this variable, Kuzzle will use a less secure fallback method (not recommended for production)
-2. **Token Invalidation**: Changing the secret value will immediately invalidate all existing authentication tokens
-3. **User Impact**: Users will need to log in again if the secret changes
+Changing the secret immediately invalidates all existing authentication tokens: users have to log in again.
 
-## Additional Resources
 For other configuration options, see the [sample configuration file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
 :::
+
 ## Prepare our Docker Compose deployment
 
 We are going to write a `docker-compose.yml` file that describes our services.  
@@ -78,8 +72,6 @@ Then create the `deployment/docker-compose.yml` file and paste the following con
 
 ```yaml
 ---
-version: "3"
-
 services:
   kuzzle:
     build:
@@ -98,6 +90,7 @@ services:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_security__authToken__secret=<a long random secret>
       - NODE_ENV=production
 
   redis:
@@ -124,9 +117,7 @@ volumes:
 
 This configuration allows to run a Kuzzle application with Node.js alongside Elasticsearch and Redis.
 
-Kuzzle needs compiled dependencies for the cluster and the realtime engine.  
-
-We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the dependencies and then use the [node:24](https://hub.docker.com/_/node) image (Kuzzle needs Node.js 22.12 or later) to run the application.
+We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the application and then use the [node:24](https://hub.docker.com/_/node) image (Kuzzle needs Node.js 22.12 or later) to run the application.
 
 Create the `deployment/kuzzle.dockerfile` file with the following content:
 
@@ -134,19 +125,14 @@ Create the `deployment/kuzzle.dockerfile` file with the following content:
 # builder image
 FROM node:24 AS builder
 
-RUN  set -x \
-  && apt-get update && apt-get install -y \
-       curl \
-       python3 \
-       make \
-       g++ \
-       libzmq3-dev
+# node:24 is a Debian (glibc) image: Kuzzle's native dependencies are
+# prebuilt for it, so there is nothing to compile
 
 ADD . /var/app
 
 WORKDIR /var/app
 
-RUN  npm ci && npm run build && npm prune --production
+RUN  npm ci && npm run build && npm prune --omit=dev
 
 # run image
 FROM node:24

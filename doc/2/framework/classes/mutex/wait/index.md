@@ -17,17 +17,17 @@ description: Mutex class wait() method
 
 `withLock` has no `wait` counterpart: have every node run the initialization under `withLock`, and skip it when it finds the work already done.
 
-```js
-async wait ({ attemptDelay = this.attemptDelay, timeout = this.timeout }): Promise<boolean> {
+```ts
+wait(options?: { attemptDelay?: number, timeout?: number }): Promise<boolean>
 ```
 
-Wait for the ressource specified in the promise to be unlocked. 
+Waits for the resource to be unlocked, without locking it.
 
 <br/>
 
 | Arguments           | Type              | Description                                                                                                                     |
 | ------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| `options`           | <pre>object</pre> | (optional) Mutex override options (see below) |
+| `options`           | <pre>object</pre> | Optional mutex override options (see below). Without it, the mutex settings apply. Before 2.60.0, the object was required: `wait()` without argument threw a `TypeError` |
 
 ### options
 
@@ -35,39 +35,38 @@ The `options` object is used to override some mutex properties for this function
 
 | Option         | Type              | Description                                                                                                      |
 | -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `attemptDelay` | <pre>number</pre>          | (default: `this.attemptDelay`) Delay in milliseconds between resource check attempts |
-| `timeout`      | <pre>number</pre>          | (default: `this.timeout`) Mutex check attempt timeout, in milliseconds. If set to 0, wait will return immediately, whether it the resource is locked within the 1st attempt. If set to -1, the mutex will wait for the resource to be free indefinitely |
+| `attemptDelay` | <pre>number</pre>          | (default: `this.attemptDelay`) Delay in milliseconds between two checks of the resource |
+| `timeout`      | <pre>number</pre>          | (default: `this.timeout`) Wait timeout, in milliseconds. If set to 0, the resource is checked once. If set to -1, the mutex waits for the resource to be free indefinitely |
 
 <br/>
 
 ## Returns
 
-True if the ressource has been unlocked before the `timeout`
+Returns a promise, resolving to `true` if the resource was unlocked before the `timeout`, and `false` otherwise.
 
 ---
 
 ## Usage
 
-Waiting indefinitely until a resource is available:
+Initializing a shared resource once, while the other nodes wait for it to be ready:
 
 ```ts
 import { Mutex } from 'kuzzle';
 
-async function ConcurrentAccessMethod () {
-  const mutex = new Mutex(
-    'concurrentAccessMethodResource', { timeout: 0 });
+async function initSharedStuff () {
+  const mutex = new Mutex('initSharedStuff', { timeout: 0 });
 
-  if (await mutex.lock())) {
-      try {
-        // Initialize shared stuff
-      }
-      finally {
-        await mutex.unlock();
-      }
+  if (await mutex.lock()) {
+    try {
+      // Initialize shared stuff
+    }
+    finally {
+      await mutex.unlock();
     }
   }
   else {
-    mutex.wait({ timeout: -1 });   // Wait for shared stuff to be initialized
+    // Wait for shared stuff to be initialized
+    await mutex.wait({ timeout: -1 });
   }
 }
 ```

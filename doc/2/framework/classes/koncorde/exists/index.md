@@ -8,6 +8,8 @@ description: Koncorde.exists method
 
 # `exists()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Returns a boolean telling whether filters exist for an index-collection pair.
 
 ### Arguments

@@ -56,11 +56,11 @@ The authentication token is only sent by Kuzzle **once**. If you lose it, you'll
 | Property      | Description                                                                      |
 | ------------- | -------------------------------------------------------------------------------- |
 | `description` | Description                                                                      |
-| `expiresAt`   | Expiration date in UNIX micro-timestamp format (`-1` if the token never expires) |
+| `expiresAt`   | Expiration date, as a UNIX timestamp in milliseconds (`-1` if the token never expires) |
 | `fingerprint` | SHA256 hash of the authentication token                                          |
 | `token`       | Authentication token associated with this API key                                |
 | `ttl`         | Original TTL                                                                     |
-| `userId`      | User [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier)  |
+| `userId`      | User [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)  |
 
 ## Search for API Keys
 
@@ -91,6 +91,40 @@ kourou api-key:delete ricky 7ef0022d-a5e2-429b-ab8f-5b6065d345e7
 ```
 
 ![api-key](../../../screenshots/api-key-delete.png)
+
+### Delete an API Key by its key or fingerprint
+
+<SinceBadge version="2.57.0" />
+
+Administrators do not always know the ID of an API key, for instance when a key leaked and only its value is known. The [security:deleteApiKey](/core/2/api/controllers/security/delete-api-key) action can also identify the API key with exactly one of:
+
+- `key`: the clear-text API key (the authentication token returned at creation),
+- `fingerprint`: the SHA256 hash of the API key, as returned by the search actions.
+
+**Example: _Delete an API key of the user "ricky" from its fingerprint_**
+
+```bash
+curl -X DELETE \
+  -H "Authorization: Bearer <admin token>" \
+  "http://localhost:7512/users/ricky/api-keys?fingerprint=<fingerprint>"
+```
+
+With other protocols, pass `key` or `fingerprint` instead of `_id`:
+
+```js
+{
+  "controller": "security",
+  "action": "deleteApiKey",
+  "userId": "ricky",
+  "fingerprint": "<fingerprint>"
+}
+```
+
+::: warning
+With HTTP, the `key` parameter puts the clear-text API key in the URL, where it can end up in access logs, proxy logs or browser history. Prefer the `fingerprint`, or send `key` through a protocol that carries it in the request payload, such as WebSocket.
+:::
+
+The [auth:deleteApiKey](/core/2/api/controllers/auth/delete-api-key) action only takes the API key ID.
 
 
 ## Check API Key

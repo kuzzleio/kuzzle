@@ -20,10 +20,15 @@ Disabling this route for the anonymous user may limit SDKs features.
 
 ### HTTP
 
+<DeprecatedBadge version="2.5.0">
+
 ```http
 URL: http://kuzzle:7512/_publicApi
 Method: GET
 ```
+
+This HTTP route is deprecated: use [server:openapi](/core/2/api/controllers/server/openapi) (`GET /_openapi`) instead.
+</DeprecatedBadge>
 
 ### Other protocols
 

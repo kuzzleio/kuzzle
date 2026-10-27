@@ -37,6 +37,20 @@ static generateRandomName(opts?: GenerateRandomNameOpts): string
 
 <br/>
 
+| Argument | Type              | Description                    |
+| -------- | ----------------- | ------------------------------ |
+| `opts`   | <pre>object</pre> | (optional) Name format options |
+
+### opts
+
+| Property           | Type                                                       | Default                  | Description                                                                                                  |
+| ------------------ | ---------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `prefix`           | <pre>string</pre>                                          | none                     | Prefix put before the adjective                                                                              |
+| `separator`        | <pre>string</pre>                                          | `-`                      | Separator put between the parts of the name                                                                  |
+| `postfixRandRange` | <pre>{ min?: number, max: number } &#124; false</pre>       | `{ min: 0, max: 100000 }` | Range of the random number put at the end of the name: `min` is inclusive (default `0`), `max` is exclusive. `false` puts no number |
+
+The `GenerateRandomNameOpts` type of this argument is not exported by `kuzzle`.
+
 ## Returns
 
 Returns a random formatted name

@@ -48,6 +48,16 @@ This property is an instance of the [BackendController](/core/2/framework/classe
 
 See also the [API Controllers](/core/2/guides/develop-on-kuzzle/api-controllers) guide.
 
+## `errors`
+
+<SinceBadge version="2.17.1" />
+
+This property is an instance of the [BackendErrors](/core/2/framework/classes/backend-errors) class that allows to register and throw standardized errors.
+
+| Type                                                                 | Description            |
+| -------------------------------------------------------------------- | ---------------------- |
+| <pre>[BackendErrors](/core/2/framework/classes/backend-errors)</pre> | BackendErrors instance |
+
 ## `hook`
 
 This property is an instance of the [BackendHook](/core/2/framework/classes/backend-hook) class that allows to register hooks.
@@ -56,7 +66,7 @@ This property is an instance of the [BackendHook](/core/2/framework/classes/back
 | ---------------------------------------------------------------- | -------------------- |
 | <pre>[BackendHook](/core/2/framework/classes/backend-hook)</pre> | BackendHook instance |
 
-See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#hook) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#hooks) guide.
 
 ## `import`
 
@@ -75,11 +85,15 @@ This property is an instance of the [BackendImport](/core/2/framework/classes/ba
 
 ## `log`
 
-This property is an instance of the [InternalLogger](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.
+This property is an instance of the [Logger](/core/2/framework/classes/logger) class that allows to log messages using Kuzzle's logger.
 
-| Type                                                                   | Description             |
-| ---------------------------------------------------------------------- | ----------------------- |
-| <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | InternalLogger instance |
+| Type                                                 | Description     |
+| ---------------------------------------------------- | --------------- |
+| <pre>[Logger](/core/2/framework/classes/logger)</pre> | Logger instance |
+
+::: info
+Since Kuzzle 2.45.0, this property is a `Logger` and no longer an [InternalLogger](/core/2/framework/classes/internal-logger).
+:::
 
 See also the [Internal Logger](/core/2/guides/advanced/internal-logger) guide.
 
@@ -99,13 +113,20 @@ Cluster node identifier.
 | ----------------- | ----------------------- |
 | <pre>string</pre> | Cluster node identifier |
 
+::: info
+This property only exists at runtime: it is `private` in the TypeScript declaration.
+The constructor also exposes it as the read-only global variable `nodeId`, which is the way to read it from TypeScript (`global.nodeId`).
+:::
+
 ## `openApi`
 
 This property is an instance of the [BackendOpenApi](/core/2/framework/classes/backend-openapi) class that allows to modify OpenAPI definition.
 
-| Type                  | Description                |
-| --------------------- | -------------------------- |
-| <pre>JSONObject</pre> | OpenAPI default definition |
+| Type                                                                   | Description             |
+| ---------------------------------------------------------------------- | ----------------------- |
+| <pre>[BackendOpenApi](/core/2/framework/classes/backend-openapi)</pre> | BackendOpenApi instance |
+
+The OpenAPI definition itself is available in [app.openApi.definition](/core/2/framework/classes/backend-openapi/properties#definition).
 
 ## `pipe`
 
@@ -136,6 +157,14 @@ This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embe
 | <pre>[EmbeddedSDK](/core/2/framework/classes/embedded-sdk)</pre> | EmbeddedSDK instance |
 
 See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide.
+
+## `started`
+
+| Type               | Description                                    | get / set |
+| ------------------ | ---------------------------------------------- | --------- |
+| <pre>boolean</pre> | `true` once the application has started        | get       |
+
+It becomes `true` when Kuzzle reaches the `kuzzle:state:ready` state, so it is already `true` in the handlers of that event.
 
 ## `storage`
 

@@ -15,8 +15,8 @@ Creates a Kuzzle administrator account, only if none exist.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_createFirstAdmin/<kuid>[?reset]
-URL(2): http://kuzzle:7512/_createFirstAdmin[?reset]
+URL: http://kuzzle:7512/_createFirstAdmin/<kuid>[?reset][&refresh=wait_for]
+URL(2): http://kuzzle:7512/_createFirstAdmin[?reset][&refresh=wait_for]
 Method: POST
 Body:
 ```
@@ -56,6 +56,7 @@ Body:
   },
   // optional
   "reset": <boolean>,
+  "refresh": "wait_for",
   "_id": "<kuid>",
   "kuid": "human"
 }
@@ -69,6 +70,7 @@ Body:
 
 - `_id`: specify the administror [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid), instead of letting Kuzzle generate a random identifier.
 - `reset` (boolean): if true, restricted rights are applied to the `anonymous` and `default` roles (by default, these roles don't have any restriction). This is the same as calling [`restrictDefaultRights`](/core/2/api/controllers/security/restrict-default-rights) after this call.
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the new administrator is indexed (default: `"wait_for"`)
 - `kuid`: if set to `human`, Kuzzle will generate a human readable id, otherwise if set to `uuid` Kuzzle will generate a standard uuid (default: `"human"`)
 
 ---
@@ -106,3 +108,11 @@ Returns information about the newly created administrator:
   }
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [PreconditionError](/core/2/api/errors/types#preconditionerror): an administrator already exists (`api.process.admin_exists`)
+- [BadRequestError](/core/2/api/errors/types#badrequesterror): for instance, `body.content.profileIds` is set (`api.assert.forbidden_argument`)

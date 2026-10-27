@@ -33,9 +33,14 @@ The following constructors are available directly in the `kuzzle` package:
   - [ForbiddenError](/core/2/api/errors/types)
   - [ExternalServiceError](/core/2/api/errors/types)
   - [BadRequestError](/core/2/api/errors/types)
+  - [MultipleErrorsError](/core/2/api/errors/types#multipleerrorserror)
 
 ::: info
 If a non-standard error is thrown, Kuzzle will instead return a standard `PluginImplementationError` error, embedding the thrown error.
+:::
+
+::: info
+The `kuzzle` package also exports [MutexAcquireError](/core/2/framework/error-classes/mutex-acquire-error) and [MutexLockLostError](/core/2/framework/error-classes/mutex-lock-lost-error). They are not API errors: [withLock](/core/2/framework/functions/with-lock) rejects with them when a cluster-wide lock cannot be acquired or is lost. Catch them to handle these cases, for instance by throwing a `TooManyRequestsError` when a task is already running.
 :::
 
 **Example:** _Throw a PreconditionError when an action parameter is missing_

@@ -3,6 +3,14 @@ import fs from "fs";
 import stripJson from "strip-json-comments";
 import { describe, expect, it } from "vitest";
 
+import defaultConfig from "../../lib/config/default.config";
+
+function loadSample() {
+  const content = fs.readFileSync(`${__dirname}/../../.kuzzlerc.sample.jsonc`);
+
+  return JSON.parse(stripJson(content.toString()));
+}
+
 describe(".kuzzlerc.sample.jsonc", () => {
   // The Mocha spec asserted nothing: it parsed the file and let a throw fail
   // the test, which works but says "this test has no expectation" to anything
@@ -22,5 +30,29 @@ describe(".kuzzlerc.sample.jsonc", () => {
     // A sample that parses to `{}` would pass the line above and tell the
     // reader nothing: the file exists to document the configuration.
     expect(Object.keys(parsed).length).toBeGreaterThan(0);
+  });
+
+  // The sample is read as the reference of the defaults; it had drifted from
+  // them (`concurrentRequests: 50` against 100, no `authToken` section). The
+  // sections below are the ones whose values are the defaults, not examples.
+  it.each(["limits", "security.authToken"])(
+    "documents the code defaults of %s",
+    (section) => {
+      const pick = (config: Record<string, unknown>) =>
+        section
+          .split(".")
+          .reduce<unknown>(
+            (node, key) => (node as Record<string, unknown>)[key],
+            config,
+          );
+
+      expect(pick(loadSample())).toEqual(pick(defaultConfig));
+    },
+  );
+
+  // A `jwt` section copied from the sample would log a deprecation warning
+  // at every startup: the sample shows it commented out.
+  it("leaves the deprecated security.jwt section out", () => {
+    expect(loadSample().security).not.toHaveProperty("jwt");
   });
 });

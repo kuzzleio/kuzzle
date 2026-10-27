@@ -102,8 +102,16 @@ class ClientAdapter {
 
     // The cache and the locks were first loaded before this node joined the
     // cluster: an index, a collection or a lock a peer added in between was
-    // broadcast before this node could hear it. Reading them again once the
-    // cluster is joined closes that gap.
+    // broadcast before this node could hear it. `Kuzzle.start()` asks for this
+    // reload right after the cluster is joined, before the plugins' `init()`
+    // runs (#3044).
+    global.kuzzle.onAsk(`core:storage:${this.scope}:cache:reload`, () =>
+      this.reloadCache(),
+    );
+
+    // Read again once the node goes live: a peer that joined after this node
+    // may have created indexes or collections before its own join (e.g. its
+    // internal index), and that broadcast reached no one.
     global.kuzzle.onPipe("kuzzle:state:live", () => this.reloadCache());
 
     // Global store events registration

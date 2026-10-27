@@ -8,7 +8,7 @@ description: PluginContextConstructors class properties
 
 # PluginContextConstructors
 
-The `PluginContextConstructors` instance is available through the [PluginContext.constructors](/core/2/framework/classes/plugin-context#constructors) property.
+The `PluginContextConstructors` instance is available through the [PluginContext.constructors](/core/2/framework/classes/plugin-context/properties#constructors) property.
 
 It contains various classes thats allows to interact with Kuzzle.
 
@@ -16,7 +16,7 @@ It contains various classes thats allows to interact with Kuzzle.
 
 Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/advanced/data-validation) module.
 
-## `StorageClient`
+## `ESClient`
 
 This constructor instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in Kuzzle configuration.  
 
@@ -41,8 +41,8 @@ const esRequest =  {
 }
 
 // Instantiate and use a new client
-const storageClient = new app.storage.Client()
-await storageClient.index(esRequest)
+const esClient = new context.constructors.ESClient()
+await esClient.index(esRequest)
 ```
 
 ## `Koncorde`
@@ -52,10 +52,10 @@ await storageClient.index(esRequest)
 Instantiates a new [Koncorde](/core/2/framework/classes/koncorde) engine.
 
 ::: info
-The `Koncorde` class should be imported from the `kuzzle` package.
+The `Koncorde` class exported by the `kuzzle` package is itself deprecated since 2.14.0: use the [koncorde](https://www.npmjs.com/package/koncorde) package (v4) directly.
 
 ```js
-import { Koncorde } from 'kuzzle';
+import { Koncorde } from 'koncorde';
 ```
 :::
 
@@ -63,35 +63,65 @@ import { Koncorde } from 'kuzzle';
 
 Instantiates a new [Repository](/core/2/framework/classes/repository).
 
-## `KuzzleRequest`
+## `Request`
 
-Modified [KuzzleRequest](/core/2/framework/classes/kuzzle-request) constructor that allows to instantiate a new `KuzzleRequest` with the context (user, jwt, connection) of another one.
+Modified [KuzzleRequest](/core/2/framework/classes/kuzzle-request) constructor. It can instantiate a new `KuzzleRequest` with the context (user, jwt, connection) of another one, or from raw data.
 
 ### Arguments
 
 ```ts
-KuzzleRequest(originalRequest: KuzzleRequest, requestPayload: RequestPayload, options: JSONObject): KuzzleRequest
+new Request(originalRequest: KuzzleRequest, requestPayload?: RequestPayload, options?: JSONObject): KuzzleRequest
+new Request(requestPayload: RequestPayload, options?: JSONObject): KuzzleRequest
 ```
 
 <br/>
 
 | Arguments | Type              | Description                                     |
 | --------- | ----------------- | ----------------------------------------------- |
-| `originalRequest` | <pre>KuzzleRequest</pre> | Original request of which we will use the context |
+| `originalRequest` | <pre>KuzzleRequest</pre> | Original request of which we will use the context. The new request also inherits its `_id`, `index`, `collection` and other arguments, its `jwt` and its volatile data, unless `requestPayload` sets them |
 | `requestPayload` | <pre>[RequestPayload](/core/2/framework/types/request-payload)</pre> | New request payload |
 | `options` | <pre>JSONObject</pre> | Additional options passed to the [RequestContext](/core/2/framework/classes/request-context) constructor |
 
+The constructor throws a `plugin.context.missing_request_data` error if its first argument is missing.
 
 ### Usage
 
 ```js
-const req = new context.constructors.KuzzleRequest(request, {
+const req = new context.constructors.Request(request, {
   controller: 'auth',
   action: 'getCurrentUser'
 })
 
 const user = await context.accessors.execute(req) 
 ```
+
+## `RequestContext`
+
+<DeprecatedBadge version="2.8.0" />
+
+The [RequestContext](/core/2/framework/classes/request-context) class.
+
+::: info
+The `RequestContext` class should be imported from the `kuzzle` package.
+
+```js
+import { RequestContext } from 'kuzzle';
+```
+:::
+
+## `RequestInput`
+
+<DeprecatedBadge version="2.8.0" />
+
+The [RequestInput](/core/2/framework/classes/request-input) class.
+
+::: info
+The `RequestInput` class should be imported from the `kuzzle` package.
+
+```js
+import { RequestInput } from 'kuzzle';
+```
+:::
 
 ## `Mutex`
 <SinceBadge version="2.17.0" />

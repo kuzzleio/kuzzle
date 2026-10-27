@@ -35,7 +35,7 @@ This is for example the `kuid` found in the [Kuzzle Metadata](/core/2/guides/mai
   "name": "jenow",
   "age": 32,
   "_kuzzle_info": {
-    "creator": "c2eaced2-c388-455a-b018-940b68cbb5a2",
+    "author": "c2eaced2-c388-455a-b018-940b68cbb5a2",
     "createdAt": 1605018219330,
     "updater": "940b940b6-c388-554a-018b-ced28cbb5a2",
     "updatedAt": 1705018219330
@@ -112,8 +112,9 @@ When authentication is successful, **Kuzzle returns an authentication token**. T
 
 ::: info
 It is possible to request an authentication token valid for more than 1 hours with the argument `expiresIn`.  
-The default validity period is configurable under the key `security.jwt.expiresIn`.  
-It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
+The default validity period is configurable under the key `security.authToken.expiresIn`.  
+It is also possible to set a maximum validity period for a token (in milliseconds) under the key `security.authToken.maxTTL`.  
+(`security.jwt` is the deprecated name of the `security.authToken` section.)
 Possible values: 
   - `<= -1`: disable the use of maxTTL
   - `>= 0`: enable maxTTL with setted value (`0` will invalid all your authentication tokens at their creation)
@@ -181,7 +182,7 @@ kourou auth:login -a strategy=local --body '{
 
 When you're sending HTTP requests from a browser you can instruct Kuzzle
 to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
-This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
+This is possible thanks to the option [cookieAuth](/core/2/api/controllers/auth/login#arguments) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
 
 You can disable the cookie authentication by setting `http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 
@@ -264,7 +265,7 @@ _Admin users passwords must either be 24 or more chars long, or include a lower 
   "passwordPolicies": [
     {
       "appliesTo": "*",
-      "forbidLoginPassword": true,
+      "forbidLoginInPassword": true,
       "passwordRegex": ".{6,}"
     },
     {

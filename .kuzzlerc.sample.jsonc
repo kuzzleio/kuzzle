@@ -84,7 +84,7 @@
     //      /!\ Setting the property to 0 will lead to a memory leak if
     //      /!\ documents enter a real-time subscription scope and never exit
     //      /!\ that scope.
-    "concurrentRequests": 50,
+    "concurrentRequests": 100,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
     "loginsPerSecond": 1,
@@ -214,8 +214,8 @@
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"
     "restrictedProfileIds": ["default"],
-    // [jwt]
-    // configuration for the npm package jsonwebtoken
+    // [authToken]
+    // Authentication tokens, signed with the npm package jsonwebtoken
     // (see https://github.com/auth0/node-jsonwebtoken)
     //
     //   * algorithm:
@@ -223,9 +223,6 @@
     //   * expiresIn:
     //      Token default expiration time
     //      (interpreted by https://www.npmjs.com/package/ms)
-    //   * gracePeriod:
-    //      Duration in ms during which a renewed jwt is still
-    //      considered valid
     //   * maxTTL:
     //      Maximum duration in milliseconds a token can be requested
     //      to be valid.
@@ -233,15 +230,29 @@
     //   * secret:
     //      String or buffer data containing either the secret for HMAC
     //      algorithms, or the PEM encoded private key for RSA and ECDSA.
-    //      If left to null (default), Kuzzle will autogenerate a random
-    //      seed (can only be used with HMAC algorithms).
-    "jwt": {
+    //      If left to null (default), Kuzzle generates a random seed and
+    //      stores it in its internal index (can only be used with HMAC
+    //      algorithms). Set it in production, e.g. with the
+    //      kuzzle_security__authToken__secret environment variable.
+    //   * gracePeriod:
+    //      Duration in ms during which a renewed token is still considered
+    //      valid
+    "authToken": {
       "algorithm": "HS256",
       "expiresIn": "1h",
       "gracePeriod": 1000,
       "maxTTL": -1,
       "secret": null
     },
+    // [jwt]
+    // DEPRECATED: use "authToken" instead, which takes the same settings.
+    // A setting made here still applies when "authToken" does not set it,
+    // and Kuzzle logs a deprecation warning at startup. Exception kept for
+    // compatibility: a "gracePeriod" set in both sections is read from here.
+    //
+    // "jwt": {
+    //   "expiresIn": "1h"
+    // },
     // [apiKey]
     // API Keys configuration
     //

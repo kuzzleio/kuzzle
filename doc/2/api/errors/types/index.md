@@ -79,7 +79,21 @@ A `PluginImplementationError` error is a generic error thrown by Kuzzle on a plu
 
 **status**: 503
 
-A `ServiceUnavailableError` error can be sent by Kuzzle if it overloaded and cannot temporarily accept new requests, or if the requested Kuzzle instance is shutting down.
+A `ServiceUnavailableError` error can be sent by Kuzzle if it is overloaded and cannot temporarily accept new requests, if the requested Kuzzle instance is shutting down, or if the cluster does not have enough nodes connected.
+
+<SinceBadge version="2.59.0"/>
+
+Write actions (document and bulk writes, `collection:update`, `collection:updateMapping`, `collection:truncate`, `collection:delete`, `index:delete`, `index:mDelete`, ...) also return this error, with the id `services.storage.collection_locked`, when the targeted collection is temporarily locked against writes by a maintenance operation such as a mapping migration. Reads are still served: retry the write once the lock is released.
+
+---
+
+## TooManyRequestsError
+
+
+
+**status**: 429
+
+A `TooManyRequestsError` error is thrown if a rate limit is exceeded: the requests rate limit of the user's profiles (see [Permissions](/core/2/guides/main-concepts/permissions#rate-limit)), the `limits.loginsPerSecond` limit on login attempts, or the `server.protocols.websocket.rateLimit` limit on messages per second and per WebSocket connection.
 
 ---
 

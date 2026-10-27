@@ -10,14 +10,26 @@ description: Services events list
 
 ## services:storage:error
 
-Triggered when the storage engine encounter an error.
+Triggered when the storage engine encounters an error.
 
 ::: info
 Specific to Elasticsearch storage service
 :::
 
-| Arguments | Type              | Description                                 |
-|-----------|-------------------|---------------------------------------------|
-| `message` | <pre>string</pre> | Error message                               |
-| `meta`    | <pre>object</pre> | Elasticsearch client error meta information |
-| `stack`   | <pre>string</pre> | Error stacktrace                            |
+| Arguments | Type              | Description                   |
+|-----------|-------------------|-------------------------------|
+| `error`   | <pre>object</pre> | Error information, see below  |
+
+:::info
+Pipes cannot listen to that event, only hooks can.
+:::
+
+### error
+
+The provided `error` object has the following properties:
+
+| Properties | Type              | Description                                                   |
+|------------|-------------------|---------------------------------------------------------------|
+| `message`  | <pre>string</pre> | Error message                                                 |
+| `meta`     | <pre>object</pre> | Elasticsearch client error meta information, or `null`        |
+| `stack`    | <pre>string</pre> | Error stacktrace                                              |

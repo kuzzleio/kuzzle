@@ -5,19 +5,19 @@ order: 200
 title: Migrate to Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
-    content: Configure Kuzzle to use Elasticsearch 8
+    content: Migrate your Kuzzle project data from Elasticsearch 7 to Elasticsearch 8
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
 
-# Elasticsearch 8
+# Migrate data from Elasticsearch 7 to 8
 
 <SinceBadge version="2.30.0"/>
 
 
 ## Migrating production data from Elasticsearch 7 to 8
 
-Is this section, we will see how to migrate a production environnement data from Elasticsearch 7.x to Elasticsearch 8.x
+In this section, we will see how to migrate the data of a production environment from Elasticsearch 7.x to Elasticsearch 8.x
 
 ### Prerequisites
 
@@ -57,7 +57,18 @@ There are multiple strategies to upgrade Elasticsearch in a production environme
 * Step 4: Repeat for each node in the cluster.
 
 
-#### After you have migrated your data:
+### Switch Kuzzle to Elasticsearch 8
+
+Once the data is in the Elasticsearch 8 cluster, configure Kuzzle to use it: set `services.storageEngine.majorVersion` to `"8"` (a string) and point `services.storageEngine.client.node` to the new cluster. See [Elasticsearch 8](/core/2/guides/elasticsearch/v8).
+
+```bash
+export kuzzle_services__storageEngine__majorVersion=8
+export kuzzle_services__storageEngine__client__node=http://<elasticsearch-8-host>:9200
+```
+
+Kuzzle's API does not change, but code that uses the Elasticsearch client directly, in your application ([Backend.storage](/core/2/framework/classes/backend-storage)) or in plugins (`context.constructors.ESClient`, since Kuzzle 2.57.0), now gets an Elasticsearch 8 client: adapt it to the [Elasticsearch 8 JavaScript client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/changelog-client.html). Most notably, responses are no longer wrapped in a `body` property, and request bodies are passed as top-level parameters (e.g. `document`, `query`) instead of `body`.
+
+### After you have migrated your data
 
 1. Post Upgrade Checks
 	* Run the health and stats APIs to ensure the health of your newly upgraded cluster.

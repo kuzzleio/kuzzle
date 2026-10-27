@@ -8,6 +8,8 @@ description: InternalLogger.warn method
 
 # `warn()`
 
+<DeprecatedBadge version="2.60.0" />
+
 Logs a info message.
 
 ::: info

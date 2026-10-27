@@ -20,7 +20,7 @@ Plugins have access to an instance of the [EmbeddedSDK](/core/2/guides/develop-o
 Plugins can declare new controllers and actions through the [Plugin.api](/core/2/framework/abstract-classes/plugin/properties#api) property.
 
 ::: info
-API definition must be done in the constructor or in the plugin [init](doc/2/guides/write-plugins/start-writing-plugins#init-method) method.
+API definition must be done in the constructor or in the plugin [init](/core/2/guides/write-plugins/start-writing-plugins#init-method) method.
 :::
 
 The `PluginApiDefinition` is an object which each key is a controller name and each value is a [ControllerDefinition](/core/2/framework/types/controller-definition)

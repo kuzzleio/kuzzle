@@ -8,6 +8,8 @@ description: Koncorde.normalize method
 
 # `normalize()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Normalizes filters without storing them.
 
 The result can be directly used with the [Koncorde.store](/core/2/framework/classes/koncorde/store) function.
@@ -15,7 +17,7 @@ The result can be directly used with the [Koncorde.store](/core/2/framework/clas
 ### Arguments
 
 ```js
-normalize(index: string, collection: string, filters: JSONObject): { collection: string, id: string, index: string, normalized: JSONObject[]};
+normalize(index: string, collection: string, filters: JSONObject): Promise<NormalizedFilterV3>;
 ```
 
 <br/>
@@ -28,11 +30,11 @@ normalize(index: string, collection: string, filters: JSONObject): { collection:
 
 ### Return
 
-The `normalize` function returns a promise resolving to an object with the following properties:
+The `normalize` function returns a promise resolving to a `NormalizedFilterV3` object, with the following properties:
 
 | Field        | Type                | Description                                          |
 | ------------ | ------------------- | ---------------------------------------------------- |
 | `collection` | <pre>string</pre>   | Collection name                                      |
 | `id`         | <pre>string</pre>   | The filter unique identifier                         |
 | `index`      | <pre>string</pre>   | Index name                                           |
-| `normalized` | <pre>JSONObject[]</pre> | Normalized/optimized version of the supplied filters |
+| `normalized` | <pre>JSONObject[][]</pre> | Normalized/optimized version of the supplied filters |

@@ -16,9 +16,9 @@ One common requirement when you are managing data is to perform **data validatio
 
 A common example is **email validation**. Let's say you have developed a registration page where you request a user's name and email and you want to ensure that the email they provide is valid.
 
-With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation patterns](/core/2/guides/advanced/data-validation). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/2/guides/advanced/configuration).
+With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation types](#validation-types). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/2/guides/advanced/configuration).
 
-For a detailed look at data validation, please refer to our [Data Validation Reference](/core/2/guides/advanced/data-validation).
+For a detailed look at the available properties and types, please refer to the [Validation Reference](#validation-reference) at the end of this page.
 
 ::: info
 You can bypass data validation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
@@ -28,7 +28,7 @@ You can bypass data validation by using [bulk:write](/core/2/api/controllers/bul
 
 ## Basic Validation
 
-A validation schema is defined using a [hierarchical](/core/2/guides/advanced/data-validation) structure that contains a set of rules within an index, collection, and document field.
+A validation schema is defined using a [hierarchical](#collection-properties) structure that contains a set of rules within an index, collection, and document field.
 
 For example, below is a validation schema for the `onlineshop` index and `products` collection that defines the validation pattern for field `price` and field `productDescription`:
 
@@ -39,7 +39,7 @@ For example, below is a validation schema for the `onlineshop` index and `produc
       "products": {
         "fields": {
           "price": {
-            "type": "number",
+            "type": "numeric",
             "mandatory": true
           },
           "productDescription": {
@@ -56,10 +56,10 @@ For example, below is a validation schema for the `onlineshop` index and `produc
 Let's take a look at what this validation schema does:
 
 - It defines a set of rules for documents in the `products` collection of the `onlineshop` index.
-- It ensures that `price` exists and is a `Number`.
+- It ensures that `price` exists and is a number.
 - It ensures that `productDescription` is a `String` and has a value when none is provided.
 
-For a complete list of validation patterns please refer to our [Validation Patterns Reference](/core/2/guides/advanced/data-validation).
+For a complete list of validation types please refer to the [Validation Types](#validation-types) reference.
 
 ---
 
@@ -76,7 +76,7 @@ Below is an example of how the `range` type option is used to ensure that the fi
       "products": {
         "fields": {
           "price": {
-            "type": "number",
+            "type": "numeric",
             "mandatory": true,
             "typeOptions": {
               "range": {
@@ -95,7 +95,7 @@ Below is an example of how the `range` type option is used to ensure that the fi
 }
 ```
 
-For more information regarding Type Options, please refer to [this](/core/2/guides/advanced/data-validation) section of the Data Validation Reference.
+For more information regarding Type Options, please refer to the [Validation Types](#validation-types) reference.
 
 ---
 
@@ -116,7 +116,7 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
       "products": {
         "fields": {
           "price": {
-            "type": "number",
+            "type": "numeric",
             "typeOptions": {
               "range": {
                 "min": 0
@@ -124,7 +124,7 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
             }
           },
           "vatPrice": {
-            "type": "number",
+            "type": "numeric",
             "typeOptions": {
               "range": {
                 "min": 0
@@ -160,3 +160,48 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
 ```
 
 In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/2/api/koncorde-filters-syntax/clauses#exists).
+
+---
+
+## Validation Reference
+
+### Collection properties
+
+The validation schema of a collection, under `validation.<index>.<collection>`, accepts these properties:
+
+| Property | Description |
+|---|---|
+| `fields` | The validation rules of each document field (see below). Nested fields are declared with their path, using `/` as separator (e.g. `address/city`) |
+| `strict` | If `true`, documents cannot contain fields that are not declared in `fields` (default: `false`) |
+| `validators` | An array of [Koncorde filters](/core/2/api/koncorde-filters-syntax) that documents must match (see [Advanced Validation](#advanced-validation)) |
+
+### Field properties
+
+| Property | Description |
+|---|---|
+| `type` | **Required**. The [validation type](#validation-types) of the field |
+| `mandatory` | If `true`, the field must be present (default: `false`) |
+| `defaultValue` | Value given to the field when the document does not provide one |
+| `description` | Free text describing the field |
+| `multivalued` | `{ "value": true, "minCount": <n>, "maxCount": <n> }` to accept an array of values (`minCount` and `maxCount` are optional) |
+| `typeOptions` | Options specific to the field type (see below) |
+
+### Validation types
+
+| Type | Accepts | `typeOptions` |
+|---|---|---|
+| `anything` | Any value | none |
+| `boolean` | A boolean | none |
+| `date` | A date | `formats`: list of accepted [date formats](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/mapping-date-format.html) (default: `["epoch_millis"]`); `range`: `{ "min": <date>, "max": <date> }` (`"NOW"` is accepted as a bound) |
+| `email` | An email address | `notEmpty`: if `true`, the empty string is refused |
+| `enum` | One of a list of strings | `values`: the list of accepted strings (required) |
+| `geo_point` | A geographical point | none |
+| `geo_shape` | A geographical shape | `shapeTypes`: list of accepted shape types (`point`, `linestring`, `polygon`, `multipoint`, `multilinestring`, `multipolygon`, `geometrycollection`, `envelope`, `circle`) |
+| `integer` | An integer | `range`: `{ "min": <number>, "max": <number> }` |
+| `ip_address` | An IPv4 or IPv6 address | `notEmpty`: if `true`, the empty string is refused |
+| `numeric` | A number | `range`: `{ "min": <number>, "max": <number> }` |
+| `object` | An object | `strict`: if `true`, the object cannot contain sub-fields that are not declared (default: the strictness of the parent) |
+| `string` | A string | `length`: `{ "min": <number>, "max": <number> }` |
+| `url` | A URL | `notEmpty`: if `true`, the empty string is refused |
+
+Plugins can add their own types with [DataValidation.addType](/core/2/framework/classes/data-validation/addType), available as `context.accessors.validation.addType`.

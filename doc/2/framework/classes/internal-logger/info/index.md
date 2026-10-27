@@ -8,6 +8,8 @@ description: InternalLogger.info method
 
 # `info()`
 
+<DeprecatedBadge version="2.60.0" />
+
 Logs an info message.
 
 ::: info
