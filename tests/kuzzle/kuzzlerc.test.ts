@@ -35,7 +35,7 @@ describe(".kuzzlerc.sample.jsonc", () => {
   // The sample is read as the reference of the defaults; it had drifted from
   // them (`concurrentRequests: 50` against 100, no `authToken` section). The
   // sections below are the ones whose values are the defaults, not examples.
-  it.each(["limits", "security.authToken", "security.jwt"])(
+  it.each(["limits", "security.authToken"])(
     "documents the code defaults of %s",
     (section) => {
       const pick = (config: Record<string, unknown>) =>
@@ -49,4 +49,10 @@ describe(".kuzzlerc.sample.jsonc", () => {
       expect(pick(loadSample())).toEqual(pick(defaultConfig));
     },
   );
+
+  // A `jwt` section copied from the sample would log a deprecation warning
+  // at every startup: the sample shows it commented out.
+  it("leaves the deprecated security.jwt section out", () => {
+    expect(loadSample().security).not.toHaveProperty("jwt");
+  });
 });

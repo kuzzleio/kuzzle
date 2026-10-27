@@ -1,6 +1,9 @@
 import should from "should";
 import _ from "lodash";
-import { Given } from "@cucumber/cucumber";
+import { createHash } from "node:crypto";
+
+import requestPromise from "request-promise";
+import { Given, When } from "@cucumber/cucumber";
 
 import { isApiError } from "../support/errors";
 import type KuzzleWorld from "../support/world";
@@ -69,5 +72,34 @@ Given(
         throw error;
       }
     }
+  },
+);
+
+/**
+ * `DELETE /api-keys?key=...` or `?fingerprint=...`, authenticated as the
+ * current user: the route itself, not the SDK's choice of one.
+ */
+When(
+  /I delete the saved API key over HTTP by its (key|fingerprint)/,
+  async function (this: KuzzleWorld, by: "key" | "fingerprint") {
+    const token: string = this.props.token;
+
+    should(token).not.be.undefined();
+
+    const value =
+      by === "key" ? token : createHash("sha256").update(token).digest("hex");
+
+    const response = await requestPromise({
+      headers: { authorization: `Bearer ${this.sdk.jwt}` },
+      json: true,
+      method: "DELETE",
+      resolveWithFullResponse: true,
+      simple: false,
+      uri: `http://${this.host}:${this.port}/api-keys?${by}=${encodeURIComponent(value)}&refresh=wait_for`,
+    });
+
+    should(response.statusCode).be.eql(200, JSON.stringify(response.body));
+
+    this.props.result = response.body.result;
   },
 );

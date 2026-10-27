@@ -61,17 +61,17 @@ Body:
 
 ### Optional:
 
-* `refresh`: default value is `wait_for` and Kuzzle will not respond until the fixtures are loaded and indexed
+* `refresh`: default value is `wait_for` and Kuzzle will not respond until the fixtures are loaded and indexed. With `false`, Kuzzle still responds once the fixtures are loaded, and reports a failure, but does not wait for them to be indexed: they may not show up in searches right away
 
 ::: info
-Set the `refresh` value to `false` in you want to load the fixtures faster between steps of functional tests for example.
+Set the `refresh` value to `false` if you want to load the fixtures faster between steps of functional tests for example.
 :::
 
 ---
 
 ## Response
 
-Returns a confirmation that the command is being executed.
+Returns a confirmation, once the fixtures are loaded.
 
 ```js
 {

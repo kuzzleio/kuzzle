@@ -187,18 +187,26 @@ class AdminController extends NativeController {
       );
     }
 
+    this.shuttingDown = true;
     global.kuzzle.shutdown();
 
     return { acknowledge: true };
   }
 
-  loadFixtures(request: KuzzleRequest) {
+  /**
+   * Always waits for the import, so that a failure is reported to the caller:
+   * `refresh=false` only skips waiting for the documents to be indexed.
+   */
+  async loadFixtures(request: KuzzleRequest) {
     const fixtures = request.getBody();
     const refresh = request.getRefresh("wait_for");
 
-    return global.kuzzle.ask("core:storage:public:document:import", fixtures, {
+    await global.kuzzle.ask("core:storage:public:document:import", fixtures, {
       refresh,
     });
+
+    // The documented answer. 2.17.6 to 2.59 answered `null` instead.
+    return { acknowledge: true };
   }
 
   loadMappings(request: KuzzleRequest) {

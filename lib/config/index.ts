@@ -26,6 +26,8 @@ import type { JSONObject } from "../types/JSONObject";
 
 import rc from "rc";
 import defaultConfig from "./default.config";
+import { LEGACY_FIRST } from "../core/security/authTokenSettings";
+import type { SecurityConfiguration } from "../types/config/SecurityConfiguration";
 import type {
   IKuzzleConfiguration,
   PackagedKuzzleConfiguration,
@@ -58,10 +60,10 @@ const wrapped = wrap("core", "configuration");
 type RawConfig = JSONObject;
 
 export function loadConfig(): IKuzzleConfiguration {
-  let loaded: PackagedKuzzleConfiguration;
+  let raw: ReturnType<typeof withoutTokenDefaults>;
 
   try {
-    loaded = rc("kuzzle", defaultConfig);
+    raw = rc("kuzzle", withoutTokenDefaults(defaultConfig));
   } catch (e) {
     throw wrapped.get(
       "cannot_parse",
@@ -70,7 +72,15 @@ export function loadConfig(): IKuzzleConfiguration {
   }
 
   // In place: what `unstringify` answers is the object it was given.
-  unstringify(loaded);
+  unstringify(raw);
+
+  const { authToken, deprecatedSettings, jwt } = resolveTokenSettings(
+    raw.security,
+  );
+  const loaded: PackagedKuzzleConfiguration = {
+    ...raw,
+    security: { ...raw.security, authToken, jwt },
+  };
 
   checkLimitsConfig(loaded);
   checkHttpOptions(loaded);
@@ -86,6 +96,7 @@ export function loadConfig(): IKuzzleConfiguration {
       hash: {
         seed: Buffer.from("^m&mOISKBvb1xpl1mRsrylaQXpjb&IJX"),
       },
+      deprecatedSettings,
       notifiableProtocols: [],
     },
     version: packageJson.version,
@@ -97,6 +108,67 @@ export function loadConfig(): IKuzzleConfiguration {
   preprocessRedisOptions(config.services.memoryStorage);
 
   return config;
+}
+
+/**
+ * The packaged defaults, minus the values of `security.authToken` and of its
+ * deprecated spelling `security.jwt`: both sections ship the same non-null
+ * defaults, so once `rc` has merged them nothing tells a user's
+ * `jwt.expiresIn` from the packaged one. Left empty here, they hold only what
+ * the user set, and {@link resolveTokenSettings} applies the defaults after.
+ *
+ * A shallow copy: the other sections stay the packaged objects `rc` merges
+ * into, as before.
+ */
+function withoutTokenDefaults(defaults: PackagedKuzzleConfiguration) {
+  const authToken: JSONObject = {};
+  const jwt: JSONObject = {};
+
+  return { ...defaults, security: { ...defaults.security, authToken, jwt } };
+}
+
+/**
+ * Resolves the authentication token settings: for each one, the value set
+ * under `security.authToken` wins, then the one set under the deprecated
+ * `security.jwt`, then the packaged default. A `null` counts as unset, as the
+ * readers' `authToken.x ?? jwt.x` always did. Exception: `gracePeriod` set in
+ * both sections keeps the `jwt` one, as it always did (see
+ * {@link LEGACY_FIRST}).
+ *
+ * Both sections get the resolved values, so a reader of either — a plugin
+ * may still read `jwt` — sees the settings in effect. `deprecatedSettings`
+ * lists the `security.jwt.*` keys the user set, for the deprecation warning.
+ */
+function resolveTokenSettings(security: { authToken: unknown; jwt: unknown }): {
+  authToken: SecurityConfiguration["authToken"];
+  deprecatedSettings: string[];
+  jwt: JSONObject;
+} {
+  const packaged = defaultConfig.security.authToken;
+  const fromPackage: JSONObject = packaged;
+  const fromAuthToken = isPlainObject(security.authToken)
+    ? security.authToken
+    : {};
+  const fromJwt = isPlainObject(security.jwt) ? security.jwt : {};
+  const resolved: JSONObject = {};
+
+  for (const key of new Set([
+    ...Object.keys(packaged),
+    ...Object.keys(fromJwt),
+    ...Object.keys(fromAuthToken),
+  ])) {
+    resolved[key] = LEGACY_FIRST.has(key)
+      ? (fromJwt[key] ?? fromAuthToken[key] ?? fromPackage[key])
+      : (fromAuthToken[key] ?? fromJwt[key] ?? fromPackage[key]);
+  }
+
+  return {
+    authToken: { ...packaged, ...resolved },
+    deprecatedSettings: Object.keys(fromJwt).map(
+      (key) => `security.jwt.${key}`,
+    ),
+    jwt: { ...resolved },
+  };
 }
 
 /**

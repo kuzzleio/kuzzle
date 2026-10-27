@@ -1568,7 +1568,7 @@ const routes: KuzzleHttpRoute[] = [
     action: "deleteApiKey",
     openapi: {
       description:
-        "Deletes a user API key, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. Exactly one of `key` or `fingerprint` must be provided. If you are looking to manage your own API keys, use the `auth` controller instead.",
+        "Deletes a user API key, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. One of them must be provided; if several are given, `_id` is used first, then `key`, then `fingerprint`, and the others are ignored. A `key` in the query string is a secret written in the URL: prefer the `fingerprint`. If you are looking to manage your own API keys, use the `auth` controller instead.",
       parameters: [
         {
           in: "path",
@@ -1626,6 +1626,59 @@ const routes: KuzzleHttpRoute[] = [
     path: "/api-keys/:_id",
     controller: "auth",
     action: "deleteApiKey",
+  },
+  {
+    verb: "delete",
+    path: "/api-keys",
+    controller: "auth",
+    action: "deleteApiKey",
+    openapi: {
+      description:
+        "Deletes an API key of the current user, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. One of them must be provided; if several are given, `_id` is used first, then `key`, then `fingerprint`, and the others are ignored. A `key` in the query string is a secret written in the URL: prefer the `fingerprint`.",
+      parameters: [
+        {
+          in: "query",
+          name: "key",
+          schema: { type: "string" },
+          required: false,
+          description: "Clear-text API key to delete",
+        },
+        {
+          in: "query",
+          name: "fingerprint",
+          schema: { type: "string" },
+          required: false,
+          description: "SHA256 fingerprint of the API key to delete",
+        },
+        {
+          in: "query",
+          name: "refresh",
+          schema: {
+            type: "string",
+            enum: ["wait_for", "false"],
+            default: "wait_for",
+          },
+          required: false,
+          description:
+            "If set to `wait_for`, waits for the deletion to be indexed before responding",
+        },
+      ],
+      responses: {
+        200: {
+          description: "The deleted API key ID",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  _id: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 
   // PUT (idempotent)

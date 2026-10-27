@@ -358,6 +358,25 @@ describe("#core/network/Router", () => {
       );
     });
 
+    // Only `DELETE /api-keys/:_id` existed: over HTTP, one's own API key
+    // could not be deleted by key or fingerprint, unlike security:deleteApiKey.
+    it.each(["key", "fingerprint"])(
+      "routes DELETE /api-keys?%s= to auth:deleteApiKey",
+      async (by) => {
+        const message = new HttpMessage(
+          connection as never,
+          httpRequest("delete", "/api-keys", `${by}=abc`) as never,
+        );
+
+        const request = await route(message);
+
+        expect(request.input.controller).toBe("auth");
+        expect(request.input.action).toBe("deleteApiKey");
+        expect(request.input.args[by]).toBe("abc");
+        expect(request.response.status).toBe(1234);
+      },
+    );
+
     it("routes a plugin's own HTTP route", async () => {
       const message = new HttpMessage(
         connection as never,
