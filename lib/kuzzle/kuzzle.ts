@@ -439,13 +439,15 @@ class Kuzzle extends KuzzleEventEmitter {
    * resolving would tell it that Kuzzle is running.
    */
   private leaveStartupToShutdown(error: unknown): Promise<never> {
-    this.log.info(
-      error instanceof StartupInterruptedError
-        ? "[ℹ] Startup stopped: Kuzzle is shutting down"
-        : `[ℹ] Startup stopped: Kuzzle is shutting down (${
-            error instanceof Error ? error.message : inspect(error)
-          })`,
-    );
+    let message = "[ℹ] Startup stopped: Kuzzle is shutting down";
+
+    // A step that failed because of the shutdown, rather than stopped by it
+    if (!(error instanceof StartupInterruptedError)) {
+      const reason = error instanceof Error ? error.message : inspect(error);
+      message += ` (${reason})`;
+    }
+
+    this.log.info(message);
 
     return new Promise<never>(() => undefined);
   }
