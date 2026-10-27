@@ -113,3 +113,10 @@ Returns a confirmation that the command is being executed.
   "result": { "acknowledge": true }
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [BadRequestError](/core/2/api/errors/types#badrequesterror): for instance, a user already exists and `onExistingUsers` is `fail` (`security.user.prevent_overwrite`), or `onExistingUsers` has an unexpected value

@@ -43,18 +43,14 @@ The listening port can be modified under the `server.port` section of the [confi
         // If a client socket is inactive for too long, the server will send
         // a PING request before closing the socket.
         // Minimum value: 1000 (but it's strongly advised to not set a value
-        // this low to forcibly close idle client sockets)
-        "idleTimeout": 0,
+        // this low to forcibly close idle client sockets).
+        // Idle timeouts cannot be disabled: 0, or any value lower than 1000,
+        // is replaced by the default value (60000), with a warning.
+        "idleTimeout": 60000,
 
-        // @Deprecated
-        // The time, in milliseconds, between the server's PING requests to
-        // clients, to make sure they are still active.
-        // Setting this value to 0 disables PING requests from the server
-        // (it will still respond with a PONG to PING requests from clients).
-        // If heartbeat is deactivated, then setting a non-zero value to
-        // idleTimeout is strongly recommended to detect and remove
-        // dead sockets.
-        "heartbeat": 60000,
+        // Note: the former "heartbeat" option is deprecated and ignored
+        // (Kuzzle logs a warning if it is set): configure "idleTimeout"
+        // instead.
 
         // Enable/Disable per message compression
         "compression": false,

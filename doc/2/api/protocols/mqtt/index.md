@@ -47,7 +47,11 @@ The protocol can be configured via the [kuzzlerc configuration file](/core/2/gui
         // See aedes documentation for further reference: https://github.com/moscajs/aedes
         "server": {
           "port": 1883
-        }
+        },
+
+        // Set to "true" to enable realtime notifications like "TokenExpired"
+        // notifications
+        "realtimeNotifications": true
       }
 ```
 

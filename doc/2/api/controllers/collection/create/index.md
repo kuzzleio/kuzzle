@@ -16,7 +16,12 @@ Collection names must meet the following criteria:
 
 You can also provide an optional body with a [collection mapping](/core/2/guides/main-concepts/data-storage#collection-mappings) allowing you to exploit the full capabilities of our persistent data storage layer.
 
-This method will only update the mapping when the collection already exists.
+When the collection already exists, its settings and then its mappings are updated with the ones provided, as with [collection:update](/core/2/api/controllers/collection/update).
+
+<SinceBadge version="2.60.0"/>
+
+Before updating an existing collection, Kuzzle waits for its primary shards to be active, for up to 30 seconds: a collection just created by another request (or another node) may not be ready yet. If the shards are still not active after that delay, the request fails with a `services.storage.unexpected_error` error.
+The same applies when two requests create the same collection concurrently: the one that loses the race updates the collection instead, so the mappings and settings of both requests are applied.
 
 You can define the collection [dynamic mapping policy](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy) by setting the `dynamic` field to the desired value.
 
@@ -197,7 +202,7 @@ Body:
 
 ## Response
 
-Returns a confirmation that the collection is being created:
+Returns a confirmation that the collection has been created (or updated):
 
 ```js
 {
@@ -220,4 +225,5 @@ Returns a confirmation that the collection is being created:
 
 - [Common errors](/core/2/api/errors/types#common-errors)
 - [PreconditionError](/core/2/api/errors/types#preconditionerror)
+- [ExternalServiceError](/core/2/api/errors/types#externalserviceerror): the primary shards of an existing collection are still not active after 30 seconds (`services.storage.unexpected_error`)
 

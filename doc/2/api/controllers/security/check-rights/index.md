@@ -17,7 +17,7 @@ Checks if the provided API request can be executed by a user.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_checkRights/<_id>
+URL: http://kuzzle:7512/_checkRights/<userId>
 Method: POST
 Body:
 ```
@@ -40,9 +40,9 @@ Body:
 
 ```js
 {
-  "controller": "auth",
+  "controller": "security",
   "action": "checkRights",
-  "_id": "<kuid>",
+  "userId": "<kuid>",
   "body": {
     // RequestPayload
     "controller": "document",
@@ -60,7 +60,7 @@ Body:
 
 ## Arguments
 
-- `_id`: user unique [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
+- `userId`: user unique [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
 ---
 
