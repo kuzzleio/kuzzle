@@ -75,6 +75,18 @@ let _kuzzle: Kuzzle | null = null;
  */
 const FAILURE_SHUTDOWN_TIMEOUT = 30000;
 
+/**
+ * Stops the startup sequence once a shutdown has begun (#3045): `start()`
+ * catches it and leaves the shutdown to end the process. Internal: never
+ * handed to the caller of `start()`.
+ */
+class StartupInterruptedError extends Error {
+  constructor() {
+    super("Kuzzle is shutting down");
+    this.name = "StartupInterruptedError";
+  }
+}
+
 Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
   enumerable: false,
@@ -295,11 +307,13 @@ class Kuzzle extends KuzzleEventEmitter {
       await new CacheEngine().init();
       await new StorageEngine().init();
       await new RealtimeModule().init();
+      this.stopIfShuttingDown();
       await this.internalIndex.init();
 
       await new SecurityModule().init();
 
       // This will init the cluster module if enabled
+      this.stopIfShuttingDown();
       await this.initKuzzleNode();
 
       this.vault = vault.load(
@@ -324,6 +338,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.debugger.init();
 
+      this.stopIfShuttingDown();
       this.pluginsManager.application = application;
       const pluginImports = await this.pluginsManager.init(options?.plugins);
 
@@ -331,6 +346,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
+      this.stopIfShuttingDown();
       await this.loadInitialState(imports, options?.support);
 
       await this.ask("core:security:verify");
@@ -339,6 +355,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.log.info("[✔] Core components loaded");
 
+      this.stopIfShuttingDown();
       await this.install(options?.installations);
 
       // `application` is the very wrapper handed to the plugins manager six
@@ -350,6 +367,8 @@ class Kuzzle extends KuzzleEventEmitter {
         this.config.http.routes,
         this.pluginsManager.routes,
       );
+
+      this.stopIfShuttingDown();
 
       // @deprecated
       await this.pipe("kuzzle:start");
@@ -369,6 +388,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
+      if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+        return this.leaveStartupToShutdown(error);
+      }
+
       this.log.error(
         `[X] Cannot start Kuzzle ${this.version}: ${
           error instanceof Error ? error.message : inspect(error)
@@ -392,6 +415,39 @@ class Kuzzle extends KuzzleEventEmitter {
 
       throw error;
     }
+  }
+
+  /**
+   * A node asked to stop while it starts must not go on taking cluster-wide
+   * locks or running the application's installations: if it is killed before
+   * its shutdown releases them, the other nodes wait for their TTL (#3045).
+   */
+  private stopIfShuttingDown(): void {
+    if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+      throw new StartupInterruptedError();
+    }
+  }
+
+  /**
+   * The shutdown began during the startup, which stopped (or failed because
+   * of it): no "Cannot start" error and no second shutdown, the one running
+   * keeps its exit code and ends the process.
+   *
+   * The returned promise never settles, as `withLock` once the process is
+   * exiting: rejecting would send the caller down its failed-start path
+   * (often a `process.exit(1)`, which would cut the shutdown short), and
+   * resolving would tell it that Kuzzle is running.
+   */
+  private leaveStartupToShutdown(error: unknown): Promise<never> {
+    this.log.info(
+      error instanceof StartupInterruptedError
+        ? "[ℹ] Startup stopped: Kuzzle is shutting down"
+        : `[ℹ] Startup stopped: Kuzzle is shutting down (${
+            error instanceof Error ? error.message : inspect(error)
+          })`,
+    );
+
+    return new Promise<never>(() => undefined);
   }
 
   /**
@@ -506,6 +562,10 @@ class Kuzzle extends KuzzleEventEmitter {
       "backend:installations",
       async () => {
         for (const installation of installations) {
+          // The lock may come long after it was asked for, once the node
+          // holding it is done: by then, this one may be shutting down
+          this.stopIfShuttingDown();
+
           const isAlreadyInstalled = await this.ask(
             "core:storage:private:document:exist",
             "kuzzle",
@@ -820,6 +880,9 @@ class Kuzzle extends KuzzleEventEmitter {
       const importPayloadHash = sha256(stringify(importPayload) ?? "");
 
       const importType = async () => {
+        // Same as for the installations: the lock may come after a SIGTERM
+        this.stopIfShuttingDown();
+
         // Read the bookkeeping *after* the lock, never before: a read taken
         // before acquiring it is not protected by it, and the holder that
         // acted on a stale "not initialized" used to create a document the
