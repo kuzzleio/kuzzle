@@ -1710,16 +1710,32 @@ export class ES7 {
    * collection waits for its shards (`wait_for_active_shards`); a node that
    * finds it already there calls this instead. It answers at once when the
    * shards are already active.
+   *
+   * A `yellow` status alone does not wait: Elasticsearch reports a new index
+   * whose primaries are still initializing as `yellow` (#3074). Asking for as
+   * many active shard copies as the index has primaries does, and, unlike
+   * `wait_for_no_initializing_shards`, does not also wait for replicas that
+   * are recovering, which a collection with data may take longer to do.
    */
   async waitForCollectionShards(
     index: string,
     collection: string,
     timeout: string = COLLECTION_SHARDS_TIMEOUT,
   ): Promise<void> {
+    const alias = this._getAlias(index, collection);
+
     try {
+      const { body } = await this._client.indices.getSettings({
+        index: alias,
+        name: "index.number_of_shards",
+      });
+      const primaries =
+        Object.values<JSONObject>(body)[0]?.settings?.index?.number_of_shards;
+
       await this._client.cluster.health({
-        index: this._getAlias(index, collection),
+        index: alias,
         timeout,
+        wait_for_active_shards: String(primaries ?? 1),
         wait_for_status: "yellow",
       });
     } catch (error) {
