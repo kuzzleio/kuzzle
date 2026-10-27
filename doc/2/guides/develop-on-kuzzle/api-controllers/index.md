@@ -68,7 +68,7 @@ The controller name will be inferred from the class name (unless the `name` prop
 :::
 
 ```js
-import { Controller, KuzzleRequest } from 'kuzzle';
+import { Backend, Controller, KuzzleRequest } from 'kuzzle';
 
 class GreetingController extends Controller {
   constructor (app: Backend) {
@@ -164,7 +164,7 @@ When defining a controller action, it is also possible to **specify one or more 
 This property is at the same level as `handler` and **represents an array of routes**.
 Each route is an object containing a `verb` and a `path` property.
 
-The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
+The following HTTP verbs are available: `get`, `post`, `put`, `patch`, `delete`, `head`, `options` (case-insensitive).
 
 ::: info
 When the `path` property starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
@@ -192,7 +192,7 @@ app.controller.register('greeting', {
 It is recommended to let Kuzzle prefix the routes with `/_/` in order to avoid conflict with the existing routes of the standard API.
 :::
 
-It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [KuzzleRequest Input](/core/2/guides/develop-on-kuzzle/api-controllers#request-input).
+It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [KuzzleRequest Input](/core/2/guides/develop-on-kuzzle/api-controllers#kuzzlerequest-input).
 
 ```js
 app.controller.register('greeting', {
@@ -388,7 +388,7 @@ app.controller.register('greeting', {
         // equivalent to
         assert(request.getId() === 'JkkZN62jLSA');
         assert(request.getString('name') === 'aschen');
-        assert(request.getInteger('age') === '27');
+        assert(request.getInteger('age') === 27);
         assert(request.getBodyString('city') === 'Antalya');
       },
       http: [
@@ -433,12 +433,12 @@ app.controller.register('greeting', {
       handler: async (request: KuzzleRequest) => {
         assert(request.input.args._id === 'JkkZN62jLSA');
         assert(request.input.args.name === 'aschen');
-        assert(request.input.args.age === '27');
+        assert(request.input.args.age === 27);
         assert(request.input.body.city === 'Antalya');
         // equivalent to
         assert(request.getId() === 'JkkZN62jLSA');
         assert(request.getString('name') === 'aschen');
-        assert(request.getInteger('age') === '27');
+        assert(request.getInteger('age') === 27);
         assert(request.getBodyString('city') === 'Antalya');
       },
     }
@@ -632,13 +632,14 @@ Sending too many small chunks instead of bigger chunks will increase the number 
 
 **Usage:**
 
-All you need to send a stream from any controller's actions is to wrap any [Readable Stream](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable)
+All you need to send a stream from any controller's actions is to wrap any [Readable Stream](https://nodejs.org/api/stream.html#class-streamreadable)
 from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
 
 **Example: Read a file from the disk and send it.**
 
 ```js
-const fs = require('fs');
+import fs from 'fs';
+import { HttpStream, KuzzleRequest } from 'kuzzle';
 
 app.controller.register('myController', {
   actions: {
@@ -712,7 +713,7 @@ More info about [Kourou](https://github.com/kuzzleio/kourou).
 
 ### SDK
 
-From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [KuzzleRequest Payload](/core/2/guides/main-concepts/api#others-protocol) as a parameter.
+From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [KuzzleRequest Payload](/core/2/guides/main-concepts/api#other-protocols) as a parameter.
 
 :::: tabs
 ::: tab Javascript

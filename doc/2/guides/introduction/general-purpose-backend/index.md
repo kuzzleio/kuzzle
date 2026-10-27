@@ -151,6 +151,26 @@ Whether in the backend or in the frontend, **developers use the same interface t
 
 The Javascript SDK is of course used by frontend applications but also in the backend, so developers can capitalize on their experience to **allow isomorphic backend / frontend development**.
 
+### Shared API types
+
+The types describing the Kuzzle API (documents and their metadata, request and response payloads, notifications, mappings, roles and profiles, API keys...) live in the [kuzzle-types](https://github.com/kuzzleio/types) package, shared by Kuzzle and the Javascript SDK. Kuzzle re-exports them, so a backend application imports them from `kuzzle`:
+
+```ts
+import { KuzzleRequest, KuzzleUser } from 'kuzzle';
+
+app.pipe.register('generic:document:beforeWrite', async (documents, request: KuzzleRequest) => {
+  const user: KuzzleUser = request.getUser();
+  // ...
+  return documents;
+});
+```
+
+Kuzzle also exports the server-side models a request carries: `KuzzleUser` (the type of `request.context.user`) and `KuzzleToken` (the type of `request.context.token`). The `User` export is the SDK's client-side user, as returned by `app.sdk.security.*`.
+
+::: warning
+The SDK client classes re-exported by Kuzzle (`Kuzzle`, `Http`, `WebSocket` and `KuzzleAbstractProtocol`) are deprecated since Kuzzle 2.57.0. In a backend application, [app.sdk](/core/2/guides/develop-on-kuzzle/embedded-sdk) is already an SDK instance; to open a client connection, import these classes from `kuzzle-sdk`.
+:::
+
 ## Realtime Notifications
 
 Kuzzle has its own [high-performance realtime engine](/core/2/guides/main-concepts/realtime-engine).  

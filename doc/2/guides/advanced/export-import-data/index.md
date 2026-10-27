@@ -112,8 +112,12 @@ kourou index:import ./nyc-open-data
 To export all internal data, you can use [Elasticdump](https://www.npmjs.com/package/elasticdump#multielasticdump) and export all internal collections.  
 
 This will export:
- - data from the internal collections: `roles`, `profiles`, `users`, `api-keys`, `validations` and `config`.
+ - data from the internal collections: `roles`, `profiles`, `users`, `api-keys`, `validations`, `config`, `installations` and `imports`.
  - plugin collections
+
+::: info
+The `installations` and `imports` collections record which [app.install](/core/2/framework/classes/backend/install) handlers and startup imports have already run. Restoring a dump without them makes every installation and import run again at the next start.
+:::
 
 ::: warning
 It is necessary to export the plugin collections if you want to keep the user authentication information because they are stored in the internal storage space of each plugin.  
@@ -121,7 +125,7 @@ It is necessary to export the plugin collections if you want to keep the user au
 
 ```bash
 # Export all internal collections
-$ multielasticdump --direction dump --input http://localhost:9200 --output ./dump --match '%'.
+$ multielasticdump --direction dump --input http://localhost:9200 --output ./dump --match '%'
 ```
 
 ::: info

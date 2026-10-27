@@ -135,7 +135,7 @@ kourou security:createRole '{
  [✔] Successfully executed "security:createRole"
 ```
 
-You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
+You should see your newly created role in the `Security > Roles` section of the [Admin Console](https://console.kuzzle.io)
 
 ![Admin Console roles display screenshot](./admin-console-roles.png)
 
@@ -234,7 +234,7 @@ kourou security:createProfile '{
 
 Now we have a `dummyProfile` profile which gives access to the API actions allowed by the `dummyRole` role.
 
-You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://next-console.kuzzle.io)
+You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](https://console.kuzzle.io)
 
 ![Admin Console profiles display screenshot](./admin-console-profiles.png)
 
@@ -326,7 +326,7 @@ kourou security:createUser '{
  [✔] Successfully executed "security:createUser"
 ```
 
-You should see your newly created role in the `Security > Users` section of the [Admin Console](http://next-console.kuzzle.io)
+You should see your newly created role in the `Security > Users` section of the [Admin Console](https://console.kuzzle.io)
 
 ![Admin Console users display screenshot](./admin-console-users.png)
 

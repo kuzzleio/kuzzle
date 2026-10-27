@@ -97,7 +97,7 @@ Returns an object with the following properties:
     - `ttl`: original ttl
     - `description`: description
     - `fingerprint`: SHA256 hash of the authentication token
-- `total`: total number of API keys found. Depending on pagination options, this can be greater than the actual number of API keys in a single result page
+- `total`: number of API keys returned in this result page (the length of `hits`). It is not the total number of matching API keys: to browse all of them, use `from` and `size` until a page returns fewer than `size` hits
 
 ```js
 {
@@ -120,8 +120,8 @@ Returns an object with the following properties:
         }
       },
       {
-        "_id": "api-key-1",
-        "_source" {
+        "_id": "api-key-2",
+        "_source": {
           // API key content
         }
       }

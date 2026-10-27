@@ -67,7 +67,7 @@ For example:
 
 <DeprecatedBadge version="2.8.0">
 
-Plugins are subdirectories that must be put at the following location: `<kuzzle_install_dir>/plugins/enabled`.
+Plugins are subdirectories that must be put at the following location: `<kuzzle_install_dir>/plugins/enabled`, where `<kuzzle_install_dir>` is the directory that holds Kuzzle's compiled `lib/` (`/var/app` in the official Docker image, `node_modules/kuzzle/dist` in an npm install).
 
 The recommended way to install a plugin is to put it in `plugins/available`, and then link it to the `plugins/enabled` directory.
 

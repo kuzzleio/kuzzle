@@ -41,8 +41,8 @@ kourou document:get <index> <collection> <id>
 
 ## Arguments
 
+- `_id`: document unique identifier
 - `collection`: collection name
-- `documentId`: document unique identifier
 - `index`: index name
 
 ---

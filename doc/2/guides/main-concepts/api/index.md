@@ -118,7 +118,7 @@ It returns a `503` status code if:
   - Node starting procedure has not finished yet.
   - Node is shutting down.
   - The cluster does not have enough nodes to be considered as healthy.
-- The Kuzzle server is overloaded (meaning the number of requests in the queue is above the [configured threshold](https://github.com/kuzzleio/kuzzle/blob/c33f0dcb904b01941c0967450dc52848ba3456d7/.kuzzlerc.sample.jsonc#L92)).
+- The Kuzzle server is overloaded, meaning that all the request slots set by `limits.concurrentRequests` are in use and new requests are being queued (see [Concurrent Requests](#concurrent-requests)).
 
 This is useful when Kuzzle is deployed inside a Kubernetes cluster and you want to configure a [`readinessProbe`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes) to check the Kuzzle server is ready to accept new incoming requests.
 
@@ -195,7 +195,7 @@ A Kuzzle Response is a **JSON object** with the following format:
 | `collection`   | Collection name, or `null` if no collection was involved                                            |
 | `controller`   | API controller                                                                                      |
 | `deprecations` | If any, array of deprecation messages related to this action (only if NODE_ENV=development)         |
-| `error`        | [KuzzleError](/core/2/guides/main-concepts#handling-errors) object, or `null` if there was no error |
+| `error`        | [KuzzleError](/core/2/guides/main-concepts/api#handling-errors) object, or `null` if there was no error |
 | `index`        | Index name, or `null` if no index was involved                                                      |
 | `node`         | Unique identifier of the node who processed the request                                             |
 | `requestId`    | KuzzleRequest unique identifier                                                                     |
@@ -482,9 +482,9 @@ Kuzzle has a limited number of requests that can be processed in parallel.
 Once this number of requests is reached, new requests are stored in a queue before they can be processed when a slot becomes available.
 
 **Associated configuration keys:**
- - `limits.concurrentRequests` (`50`): number of requests Kuzzle processes simultaneously
+ - `limits.concurrentRequests` (`100`): number of requests Kuzzle processes simultaneously
  - `limits.requestsBufferSize` (`50000`): maximum number of requests that can be buffered
- - `limits.requestsBufferWarningThreshold` (`5000`):number of buffered requests after which Kuzzle will throw [core:overload](/core/2/framework/events/core) events
+ - `limits.requestsBufferWarningThreshold` (`5000`): number of buffered requests after which Kuzzle will throw [core:overload](/core/2/framework/events/core) events
 
 ### Documents Limits
 
@@ -503,12 +503,13 @@ You may also change the value of the `server.maxRequestSize` limit to make Kuzzl
 Kuzzle also makes it possible to control the use of the Realtime Engine.
 
 **Associated configuration keys:**
-  - `limits.subscriptionConditionsCount` (`16`): maximum number of conditions a subscription filter can contain
+  - `limits.subscriptionConditionsCount` (`100`): maximum number of conditions a subscription filter can contain
   - `limits.subscriptionMinterms` (`0`): maximum number of minterms (AND) clauses after the filters are transformed in their Canonical Disjunctive Normal Form
   - `limits.subscriptionRooms` (`1000000`): maximum number of different subscription rooms
-  - `limits.subscriptionDocumentTTL` (`259200`): maximum time (in seconds) a document will be kept in cache for realtime subscriptions
+  - `limits.subscriptionDocumentTTL` (`259200000`): maximum time (in milliseconds) a document will be kept in cache for realtime subscriptions
 
 ### Other Limits
 
  - `server.maxRequestSize` (`1mb`): maximum size of an incoming request (e.g. "42mb")
+ - `server.protocols.http.maxFormFileSize` (`1mb`): maximum size of each part (file or field) of a `multipart/form-data` HTTP request. Since Kuzzle 2.57.0, a larger part is rejected with a `413` [network.http.file_too_large](/core/2/api/errors/error-codes/network#subdomain-0x0301-http) error, even if `server.maxRequestSize` is larger
  - `limits.loginsPerSecond` (`1`): maximum number of logins per second and per network connection

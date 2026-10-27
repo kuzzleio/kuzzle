@@ -216,12 +216,6 @@ const routes: KuzzleHttpRoute[] = [
     controller: "admin",
     action: "resetDatabase",
   },
-  {
-    verb: "post",
-    path: "/admin/_resetKuzzleData",
-    controller: "admin",
-    action: "resetKuzzleData",
-  },
   { verb: "post", path: "/admin/_dump", controller: "admin", action: "dump" },
   {
     verb: "post",
@@ -284,12 +278,6 @@ const routes: KuzzleHttpRoute[] = [
     path: "/:index/_exists",
     controller: "index",
     action: "exists",
-  },
-  {
-    verb: "get",
-    path: "/:index/_autoRefresh",
-    controller: "index",
-    action: "getAutoRefresh",
   },
   { verb: "get", path: "/_list", controller: "index", action: "list" },
   { verb: "get", path: "/_storageStats", controller: "index", action: "stats" },
@@ -1192,13 +1180,6 @@ const routes: KuzzleHttpRoute[] = [
     controller: "ms",
     action: "append",
   },
-  {
-    verb: "post",
-    path: "/ms/_bgrewriteaof",
-    controller: "ms",
-    action: "bgrewriteaof",
-  },
-  { verb: "post", path: "/ms/_bgsave", controller: "ms", action: "bgsave" },
   { verb: "post", path: "/ms/_bitop/:_id", controller: "ms", action: "bitop" },
   { verb: "post", path: "/ms/_decr/:_id", controller: "ms", action: "decr" },
   {

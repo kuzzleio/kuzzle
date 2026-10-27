@@ -17,9 +17,13 @@ Returns the status of Kuzzle and it's internal services.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_healthcheck[?services]
+URL: http://kuzzle:7512/_healthCheck[?services=<services>]
 Method: GET
 ```
+
+::: info
+The route is case-sensitive. `GET /_healthcheck` (lowercase) is a different, lightweight probe endpoint: it does not run this action, always answers with a `200` status, does not check any service, and is not logged. See [HTTP protocol](/core/2/api/protocols/http#probe-and-raw-endpoints).
+:::
 
 ### Other protocols
 
@@ -56,14 +60,15 @@ The status can either be `green`, `yellow` or `red`.
   "controller": "server",
   "collection": null,
   "index": null,
-  "volatile": null
+  "volatile": null,
   "requestId": "<unique request identifier>",
   "result": {
     "status": "<status>",
-      "services": {
-        "internalCache" : "<status>",
-        "memoryStorage" : "<status>",
-        "storageEngine" : "<status>"
-      }
+    "services": {
+      "internalCache": "<status>",
+      "memoryStorage": "<status>",
+      "storageEngine": "<status>"
+    }
+  }
 }
 ```

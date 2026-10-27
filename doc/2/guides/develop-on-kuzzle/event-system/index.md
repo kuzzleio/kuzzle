@@ -81,14 +81,14 @@ app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
 ::: warning
 As pipes are executed synchronously by Kuzzle, they can increase the execution time of a request.  
 A pipe that takes a long time to execute will generate an alert message in the logs.
-This warning can be configured under the [plugins.pipeWarnTime](/core/2/guides/advanced/configuration) configuration key.
+This warning can be configured under the [plugins.common.pipeWarnTime](/core/2/guides/advanced/configuration) configuration key.
 :::
 
 ### Aborting a task
 
 When the pipe handler function returns a rejected promise or throws an error, Kuzzle aborts the current task.
 
-If the error is one of the [available default errors](/core/2/api/errors/types) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/api/errors/types#plugin-implementation-error) error.
+If the error is one of the [available default errors](/core/2/api/errors/types) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/api/errors/types#pluginimplementationerror) error.
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
@@ -98,7 +98,7 @@ app.pipe.register(
     'generic:document:afterGet', 
     async (documents: Document[], request: KuzzleRequest) => {
       for (const document of documents) {
-        if (request.getKuid() !== document._source._kuzzle_info.creator) {
+        if (request.getKuid() !== document._source._kuzzle_info.author) {
           throw new ForbiddenError('Unauthorized access');
         }
       }
@@ -133,7 +133,7 @@ We need to use the [Backend.hook.register](/core/2/framework/classes/backend-hoo
 
 It is possible to register several hooks on the same event by calling several times the [Backend.hook.register](/core/2/framework/classes/backend-hook/register) method.
 
-**Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
+**Example:** _Use the [pub/sub engine](/core/2/guides/main-concepts/realtime-engine#pub-sub) to log user registration_
 
 ```js
 app.hook.register('security:afterCreateRestrictedUser', async (request: KuzzleRequest) => {
@@ -145,8 +145,9 @@ app.hook.register('security:afterCreateRestrictedUser', async (request: KuzzleRe
 
 When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/framework/events/hook) is triggered.  
 
-Handler function attached to this event will receive the following arguments:
-| Arguments    | Type     | Description                                   |
+Handler functions attached to this event receive a single object with the following properties:
+
+| Property     | Type     | Description                                   |
 |--------------|----------|-----------------------------------------------|
 | `pluginName` | `String` | Application or plugin name                    |
 | `event`      | `String` | Original event to which the hook was attached |
@@ -155,7 +156,7 @@ Handler function attached to this event will receive the following arguments:
 ```js
 app.hook.register(
   'hook:onError', 
-  async (pluginName: string, event: string, error: Error) => {
+  async ({ pluginName, event, error }: { pluginName: string, event: string, error: Error }) => {
     app.log.error(`Error occured on event "${event}": ${error}`);
   });
 ```

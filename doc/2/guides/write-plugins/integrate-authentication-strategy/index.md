@@ -151,7 +151,7 @@ create(request, credentials, kuid, strategy);
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | API request asking for the credentials creation                                                  |
 | `credentials` | <pre>object</pre>                                              | New credentials to create, already validated by this strategy's [validate](#validate) function   |
-| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
+| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy used by these credentials                                                |
 
 ### Returned value
@@ -179,7 +179,7 @@ delete (request, kuid, strategy);
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | API request asking for the credentials deletion                                                  |
-| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
+| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
 ### Returned value
@@ -203,7 +203,7 @@ exists(request, kuid, strategy);
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                               |
-| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
+| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
 ### Returned value
@@ -228,7 +228,7 @@ update(request, credentials, kuid, strategy);
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                                     |
 | `credentials` | <pre>object</pre>                                              | Updated credentials.<br/>Those are already validated by this strategy's [validate](#validate) function |
-| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid)       |
+| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)       |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy name                                                                           |
 
 ### Returned value
@@ -257,7 +257,7 @@ validate(request, credentials, kuid, strategy, isUpdate);
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                                                                                                                          |
 | `credentials` | <pre>object</pre>                                              | Credentials to validate                                                                                                                                                                     |
-| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid)                                                                                            |
+| `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)                                                                                            |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy name                                                                                                                                                                |
 | `isUpdate`    | <pre>boolean</pre>                                             | Tells whether the request is a credentials update. In the case of an update, the `credentials` object may only contain changes to be applied, instead of a complete credentials description |
 
@@ -307,7 +307,7 @@ The `verify` function must return a promise, resolving to an object with the fol
 
 | Properties | Type              | Description                                                                                                                                                                                              |
 | ---------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kuid`     | <pre>string</pre> | If the authentication succeeds, this property must be set to the user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid). Otherwise, this must be set to `null` |
+| `kuid`     | <pre>string</pre> | If the authentication succeeds, this property must be set to the user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid). Otherwise, this must be set to `null` |
 | `message`  | <pre>string</pre> | If `kuid` is set to `null` (authentication failed), this optional property can be set with a rejection reason                                                                                            |
 
 :::info
@@ -336,7 +336,7 @@ afterRegister(strategyInstance);
 
 ## (optional) getById
 
-The `getById` function returns credentials information using the authentication strategy's user identifier (which may not be the [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid)).
+The `getById` function returns credentials information using the authentication strategy's user identifier (which may not be the [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)).
 
 If this function is not implemented, an empty object is returned by Kuzzle instead.
 
@@ -385,7 +385,7 @@ getInfo(request, kuid, strategy);
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | The API request asking for credentials information                                               |
-| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
+| `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
 ### Returned value

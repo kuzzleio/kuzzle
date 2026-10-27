@@ -143,11 +143,11 @@ These projects are available under the Apache-2 license on [Github](https://gith
 
 ### Admin Console
 
-The [Admin Console](https://next-console.kuzzle.io) is a Single Page Application (SPA) written in Vue.js.  
+The [Admin Console](https://console.kuzzle.io) is a Single Page Application (SPA) written in Vue.js.  
 
 It is used to manage its data and the user permissions system.
 
-As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://next-console.kuzzle.io](http://next-console.kuzzle.io).
+As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [https://console.kuzzle.io](https://console.kuzzle.io).
 
 ![Screenshot of the admin console interface](./ecosystem-admin-console.png)
 

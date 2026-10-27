@@ -15,7 +15,7 @@ Returns the complete list of indexes.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_list[?countCollections]
+URL: http://kuzzle:7512/_list[?countCollection]
 Method: GET
 ```
 
@@ -36,7 +36,7 @@ Method: GET
 
 ### Optional:
 
-- `countCollections`: if set to true, will returns the number of collections in each index
+- `countCollection`: if set to `true`, also returns the number of collections in each index. The argument name is singular: `countCollections` is ignored.
 
 ---
 
@@ -44,7 +44,7 @@ Method: GET
 
 Returns an object containing an `indexes` array containing the indexes names.  
 
-If the `countCollections` argument has been set to `true`, then the object contains an `collections` object containing the number of collection in each index.
+If the `countCollection` argument is set to `true`, the object also contains a `collections` object with the number of collections in each index.
 
 ```js
 {
@@ -61,7 +61,7 @@ If the `countCollections` argument has been set to `true`, then the object conta
       "index_n"
     ],
 
-    // only when countCollections is set to true
+    // only when countCollection is set to true
     "collections": {
       "index_1": 42,
       "index_2": 21

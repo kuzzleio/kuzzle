@@ -35,7 +35,7 @@ If you're more familiar with the way relational databases store data, here is an
 Elasticsearch is **primarily designed to be a search engine**, so there are **limitations when using it as a database**:
  - once set, mappings types cannot be changed
  - no transaction system
- - [Near Realtime Search](/core/2/guides/main-concepts/querying#mappings-dynamic-policy)
+ - [Near Realtime Search](/core/2/guides/main-concepts/querying#near-realtime)
 
 ## Internal Representation
 
@@ -46,7 +46,7 @@ As the word index refers to Kuzzle indexes but also Elasticsearch indexes, we wi
 :::
 
 Kuzzle indexes and collections are emulated in Elasticsearch in the following way:
- - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`) as long as an alias name (e.g. `@&nyc-open-data._kuzzle_keep`)
+ - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`) as well as an alias name (e.g. `@&nyc-open-data._kuzzle_keep`). This placeholder is dropped when a collection is created in the index, and created again when a collection is deleted from it
  - **collections correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
 
 Kuzzle distinguishes two types of storage:
@@ -77,7 +77,6 @@ kourou es:indices:cat
   "%plugin-kuzzle-plugin-auth-passport-local.users",
 
   # Public indices available through the API
-  "&ktm-open-data._kuzzle_keep",
   "&ktm-open-data.thamel-taxi"
 ]
 
@@ -229,7 +228,7 @@ Kuzzle will accept either string or boolean values for the dynamic property but 
 
 Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
 
-The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/advanced/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
+The default policy for new collections is `"false"` and is configurable in the [kuzzlerc](/core/2/guides/advanced/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
 
 ::: warning
 We advise not to let Elasticsearch dynamically infer the type of new fields in production.
@@ -498,7 +497,7 @@ kourou document:createOrReplace ktm-open-data thamel-taxi '{
 
 The [document:update](/core/2/api/controllers/document/update) action differs from other write actions because it takes a partial content with the field to update in the request `body`.
 
-**Example:** _Partially update a document with the [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) action_
+**Example:** _Partially update a document with the [document:update](/core/2/api/controllers/document/update) action_
 
 ```bash
 kourou document:update ktm-open-data thamel-taxi '{
@@ -573,7 +572,7 @@ kourou document:createOrReplace ktm-open-data thamel-taxi '{
 kourou document:get ktm-open-data thamel-taxi --id liia
 ```
 
-It's also possible to retrieve multiple documents at once with the [document:mGet]([document:get](/core/2/api/controllers/document/get)) action.
+It's also possible to retrieve multiple documents at once with the [document:mGet](/core/2/api/controllers/document/m-get) action.
 
 This methods takes an array of IDs in the request body.
 
@@ -620,7 +619,7 @@ The following actions are available:
  - [bulk:write](/core/2/api/controllers/bulk/write): write a document
  - [bulk:mWrite](/core/2/api/controllers/bulk/m-write): write multiple documents
  - [bulk:import](/core/2/api/controllers/bulk/import): import documents as fast as possible
- - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): delete large volume of documents matching a query
+ - [bulk:deleteByQuery](/core/2/api/controllers/bulk/delete-by-query): delete large volume of documents matching a query
  - [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query): update large volume of documents matching a query
 
 ::: warning
@@ -637,7 +636,7 @@ It is possible to **interact directly with Elasticsearch** through clients expos
 This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
-It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.ESClient](/core/2/framework/classes/backend-storage#properties).
+It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.StorageClient](/core/2/framework/classes/backend-storage/properties).
 :::
 
 
@@ -656,13 +655,30 @@ const esRequest =  {
 };
 
 // Use directly an Elasticsearch client instance
-await app.storage.client.index(esRequest);
+await app.storage.storageClient.index(esRequest);
 
 // Instantiate and use a new client
-const storageClient = new app.storage.Client();
+const storageClient = new app.storage.StorageClient();
 await storageClient.index(esRequest);
 ```
+
+::: info
+The client matches the Elasticsearch version Kuzzle is configured for (`services.storageEngine.majorVersion`). The example above uses the Elasticsearch 7 client. With [Elasticsearch 8](/core/2/guides/elasticsearch/v8), requests take the document as `document` instead of `body`, and responses are returned directly instead of being wrapped in a `body` property.
+:::
 
 ::: warning
 Kuzzle uses an [internal naming system](/core/2/guides/main-concepts/data-storage#internal-representation) to map Elasticsearch index names with Kuzzle indexes and collections names.
 :::
+
+## Collection Write Locks
+
+<SinceBadge version="2.59.0" />
+
+Maintenance operations, such as a mapping migration, can **lock a collection against writes**. While a collection is locked:
+
+- every action writing to it (creating, updating or deleting documents, changing its mappings, etc.) is rejected with a `503` [services.storage.collection_locked](/core/2/api/errors/error-codes/services) error, which names the lock owner and the reason,
+- reads (`document:get`, `document:search`, etc.) work as usual.
+
+The lock applies to the whole cluster. Clients receiving this error can retry the write once the maintenance operation is over.
+
+With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.

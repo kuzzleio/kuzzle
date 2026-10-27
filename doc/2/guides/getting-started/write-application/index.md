@@ -74,14 +74,12 @@ In particular, those methods make it possible to:
  - Log Messages
  - And much more!
 
-**Example:** _Use the Embedded SDK to create an index after startup with the [index.create](/sdk/js/7/controllers/index/create) method_
+**Example:** _Use the Embedded SDK to count documents after startup with the [document.count](/sdk/js/7/controllers/document/count) method_
 ```js
 app.start()
   .then(async () => {
-    // Interact with Kuzzle API to create a new index if it does not already exist
-    if (! await app.sdk.index.exists('nyc-open-data')) {
-      await app.sdk.index.create('nyc-open-data');
-    }
+    const count = await app.sdk.document.count('nyc-open-data', 'yellow-taxi');
+    app.log.info(`${count} taxis in the database`);
   })
   .catch(console.error);
 ```
@@ -129,6 +127,64 @@ await app.sdk.query({
 });
 ```
 
+## Initialize data at startup
+
+Several nodes of a [cluster](/core/2/guides/advanced/cluster-scalability) can start at the same time, so startup code must not assume it runs alone. For instance, checking that an index does not exist and then creating it fails when two nodes do it at once: both see no index, and the second creation fails with `index_already_exists`.
+
+Kuzzle offers cluster-safe ways to initialize data:
+
+- **Declare your indexes, collections and mappings** with [app.import.mappings](/core/2/framework/classes/backend-import/mappings) before starting the application. They are created at startup by one node, while the other nodes wait for it. Permissions can be declared the same way with [app.import.roles](/core/2/framework/classes/backend-import/roles), [profiles](/core/2/framework/classes/backend-import/profiles) and [users](/core/2/framework/classes/backend-import/users).
+- **Run code only once per environment** with [app.install](/core/2/framework/classes/backend/install): the handler runs on the first start only, by a single node, and is recorded so that it never runs again on this environment (e.g. to load initial documents, or to migrate data when releasing a new version). If the handler throws, the application does not start.
+- **Run code on one node at a time** with [withLock](/core/2/framework/functions/with-lock), once the application has started.
+
+**Example:** _Declare an index and its collection, and migrate existing documents once_
+```js
+app.import.mappings({
+  'nyc-open-data': {
+    'yellow-taxi': {
+      mappings: {
+        properties: {
+          name: { type: 'keyword' },
+          age: { type: 'integer' }
+        }
+      }
+    }
+  }
+});
+
+// The id identifies this installation: use a new id to run new code
+app.install('taxis-default-age', async () => {
+  // Elasticsearch 7 client request; "&nyc-open-data.yellow-taxi" is the
+  // Elasticsearch name of the "yellow-taxi" collection
+  await app.storage.storageClient.updateByQuery({
+    index: '&nyc-open-data.yellow-taxi',
+    body: {
+      query: { bool: { must_not: { exists: { field: 'age' } } } },
+      script: { source: 'ctx._source.age = 0' }
+    }
+  });
+}, 'Give an age to the taxis that have none');
+```
+
+::: warning
+Installation handlers run while the application starts, before [app.sdk](/core/2/framework/classes/backend/properties#sdk) is available: use [app.storage](/core/2/framework/classes/backend-storage) to access the data.
+:::
+
+**Example:** _Make sure only one node at a time runs a task_
+```js
+import { withLock } from 'kuzzle';
+
+app.start()
+  .then(async () => {
+    await withLock('nyc-open-data:init', async () => {
+      if (! await app.sdk.index.exists('nyc-open-data')) {
+        await app.sdk.index.create('nyc-open-data');
+      }
+    });
+  })
+  .catch(console.error);
+```
+
 ## Complete example
 
 ```js
@@ -150,15 +206,25 @@ app.controller.register('greeting', {
   }
 });
 
+// Declare the indexes and collections to create at startup
+app.import.mappings({
+  'nyc-open-data': {
+    'yellow-taxi': {
+      mappings: {
+        properties: {
+          name: { type: 'keyword' },
+          age: { type: 'integer' }
+        }
+      }
+    }
+  }
+});
+
 // Start the application
 app.start()
   .then(async () => {
     // Now we can interact with Kuzzle API
-
-    // Interact with Kuzzle API to creates a new index if it does not exists
-    if (! await app.sdk.index.exists('nyc-open-data')) {
-      await app.sdk.index.create('nyc-open-data');
-    }
+    app.log.info('Application started');
   })
   .catch(console.error);
 ```

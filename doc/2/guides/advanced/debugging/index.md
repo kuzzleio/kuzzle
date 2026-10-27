@@ -19,7 +19,7 @@ It's easier and safer to use the [Debug Controller](/core/2/api/controllers/debu
 Whereas when launching Kuzzle with `node --inspect` you need to setup some Port Forwarding from your host machine to your local machine to be able to debug Kuzzle remotely, and you need to be sure that no one can access your instance using the Debug Port exposed.
 
 :::warning
-By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it in the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/debug-controller/.kuzzlerc.sample.jsonc#L229)
+By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it with the `security.debug.native_debug_protocol` key of the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc)
 by setting `security.debug.native_debug_protocol` to `true` and rebooting your instance.
 :::
 
@@ -74,7 +74,7 @@ To allow the Chrome Inspector to see our proxy server exposed by the command `ko
 you need to add `localhost:9222` to the list of targets the Chrome Inspector can see and debug.
 
 :::info
-Here we are using the port `9222` but keep in mind that this port can be any other number. You need to change it accordingly on what port the proxy server is listening to, see end of [Step 1 - Setup proxy server](#step-1---setup-server-proxy)
+Here we are using the port `9222` but keep in mind that this port can be any other number. You need to change it accordingly on what port the proxy server is listening to, see end of [Step 1 - Setup proxy server](#step-1-setup-proxy-server)
 
 The host will always be localhost since it's the IP of the proxy server that is running on your local machine.
 :::

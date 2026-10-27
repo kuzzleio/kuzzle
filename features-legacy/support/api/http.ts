@@ -1322,13 +1322,6 @@ export default class HttpApi {
     });
   }
 
-  resetKuzzleData() {
-    return this.callApi({
-      method: "POST",
-      url: this.apiPath("admin/_resetKuzzleData"),
-    });
-  }
-
   resetSecurity() {
     return this.callApi({
       body: {

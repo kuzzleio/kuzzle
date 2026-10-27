@@ -14,7 +14,7 @@
   - **Deprecated**: `@deprecated`, or a runtime deprecation warning, with no removal plan written down.
   - **Candidate**: a compatibility shim, a typed lie or a "breaking" `@todo`. Needs a decision before v3.
 
-Each v3 item also needs a migration note for the v3 release notes, and the deprecated doc pages listed [at the end](#user-documentation) need their pages removed or rewritten.
+A row whose item has a user-facing replacement also gets its line on the public page [Towards Kuzzle 3](../doc/2/guides/kuzzle-3/index.md), in the same PR. Each v3 item also needs a migration note for the v3 release notes, and the deprecated doc pages listed [at the end](#user-documentation) need their pages removed or rewritten.
 
 ---
 
@@ -97,6 +97,7 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 | `admin:resetCache` accepts only `memoryStorage` (drop `internalCache`)                                                                                                                         | `@todo`                                                           | Candidate  | `lib/api/controllers/adminController.ts`                           |
 | `auth:login` stops re-sending the same token for API keys / infinite tokens                                                                                                                    | "to avoid breaking changes"                                       | Candidate  | `lib/api/controllers/authController.ts`                            |
 | Remove the `strategy !== "local"` special case of `auth:refreshToken`, together with the bundled `kuzzle-plugin-auth-passport-local`                                                           | TODO; the plugin is a core dependency                             | Candidate  | `lib/api/controllers/authController.ts`; `package.json`            |
+| Remove the `realtime:validate` action (use `document:validate`)                                                                                                                                | Doc-only deprecation (1.5.0), still served                        | Deprecated | `lib/api/controllers/realtimeController.ts`                        |
 
 ## Errors
 
@@ -114,7 +115,7 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 | Remove `server.protocols.websocket.heartbeat` (ignored, warns)                                                  | "to be removed in the next major version"                                              | Planned    | `lib/core/network/protocols/httpwsProtocol.ts`                                                                                           |
 | Remove `realtime.pcreSupport` (the sample still says "will be removed from Kuzzle v2": stale)                   | Configurations that set it would change behaviour                                      | Planned    | `lib/config/default.config.ts`; `.kuzzlerc.sample.jsonc`                                                                                 |
 | `services.storageEngine.majorVersion`: deprecated once the ES9 driver ships, "keeps working unchanged until v3" | v2 rule: an ES7 or ES8 stack changes nothing                                           | Planned    | [ADR-0003](adr-003/ADR-0003-storage-drivers.md)                                                                                          |
-| Remove `security.jwt` (use `security.authToken`). The sample still documents only `jwt`                         | "Dropping it is a breaking change for anyone who has not migrated"                     | Deprecated | `lib/types/config/SecurityConfiguration.ts`; `lib/core/security/tokenRepository.ts`                                                      |
+| Remove `security.jwt` (use `security.authToken`), and read `gracePeriod` from `authToken` (today only `jwt.gracePeriod` is read) | "Dropping it is a breaking change for anyone who has not migrated"                     | Deprecated | `lib/types/config/SecurityConfiguration.ts`; `lib/core/security/tokenRepository.ts`                                                      |
 | Remove `plugins["kuzzle-plugin-logger"]` (use `server.logs`) and `plugins.common.pipeTimeout`                   | Runtime deprecation warnings                                                           | Deprecated | `lib/kuzzle/Logger.ts`; `lib/core/plugin/pluginsManager.ts`                                                                              |
 | Reject a websocket `idleTimeout` under 1000 ms (today replaced by 60 000 with a warning)                        | Would refuse configurations that boot today                                            | Candidate  | `lib/core/network/protocols/httpwsProtocol.ts`; TD-79                                                                                    |
 | Default `vault.newAlgorithm` to `true` (AES-256-GCM)                                                            | Secrets encrypted with the legacy AES-256-CBC would no longer decrypt without the flag | Candidate  | `.kuzzlerc.sample.jsonc`; `lib/types/config/KuzzleConfiguration.ts`                                                                      |
@@ -151,11 +152,12 @@ Each v3 item also needs a migration note for the v3 release notes, and the depre
 
 ## User documentation
 
-71 pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
+These pages of `doc/2/` carry a `DeprecatedBadge` for items above. They need to be removed or rewritten with their items:
 
 - **API:**
   - `auth/*`: 9 pages, legacy routes.
-  - `server/get-{stats,all-stats,last-stats}`.
+  - `server/get-{stats,all-stats,last-stats}`, `server/public-api`.
+  - `realtime/validate`.
   - `collection/{update-mapping,create,list}`.
   - `document/{update,upsert,m-update,delete-by-query}`.
   - `security/search-profiles`.
