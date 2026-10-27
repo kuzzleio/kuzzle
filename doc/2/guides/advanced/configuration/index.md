@@ -28,7 +28,7 @@ You can write your custom config parameters in a `.kuzzlerc` and store it in `$H
   "services": {
     "storageEngine": {
       "client": {
-        "host": "http://localhost:9200"
+        "node": "http://localhost:9200"
       }
     }
   }
@@ -42,10 +42,10 @@ The name of the environment variable must match the path of the configuration pa
 - Use the prefix `kuzzle_`,
 - then append the parameter path (as defined in the `.kuzzlerc` file) by using a **double underscore** `__` to separate each level of its hierarchy.
 
-For example, the `.kuzzlerc` parameter `services.storageEngine.host` in example 1, is represented by the environment variable `kuzzle_services__storageEngine__host`:
+For example, the `.kuzzlerc` parameter `services.storageEngine.client.node` in example 1, is represented by the environment variable `kuzzle_services__storageEngine__client__node`:
 
 ```bash
-export kuzzle_services__storageEngine__host="http://localhost:9200"
+export kuzzle_services__storageEngine__client__node="http://localhost:9200"
 ```
 
 You can also pass stringified JSON values this way to override non-scalar values such as objects or arrays.
@@ -63,8 +63,6 @@ export kuzzle_services__common='*json:{"defaultInitTimeout":120000, "retryInterv
 Environment variables are particularly handy when running Kuzzle in a **Docker** container. Using **Docker Compose**, they can easily be configured in the `environment` section of the `docker-compose.yml` file. For example, here's how we pass environment variables to Kuzzle in our default docker-compose file:
 
 ```yaml
-version: "3"
-
 services:
   kuzzle:
     image: kuzzleio/kuzzle:2
@@ -77,6 +75,7 @@ services:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_security__authToken__secret=<a long random secret>
       - NODE_ENV=production
 
   redis:
@@ -90,6 +89,35 @@ services:
 
 :::info
 For an exhaustive list of configuration parameters, please refer to the [kuzzlerc sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
+:::
+
+## Commonly used sections
+
+### Application logs
+
+The `server.appLogs` section sets the log level (`level`, default `info`) and where the logs are sent (`transport`: stdout, a file, Loki or Elasticsearch). See the [Internal Logger](/core/2/guides/advanced/internal-logger#configure-the-logger) guide.
+
+```bash
+export kuzzle_server__appLogs__level=debug
+```
+
+### Authentication tokens
+
+The `security.authToken` section configures the authentication tokens:
+
+| Key | Default | Description |
+|---|---|---|
+| `secret` | `null` | Secret used to sign the tokens. **Set it in production**: without it, Kuzzle generates one and stores it in Elasticsearch |
+| `algorithm` | `HS256` | Signing algorithm |
+| `expiresIn` | `1h` | Default token time to live |
+| `maxTTL` | `-1` | Maximum time to live a user can ask for at login, in milliseconds (`-1`: no limit) |
+
+```bash
+export kuzzle_security__authToken__secret="<a long random secret>"
+```
+
+::: warning
+`security.jwt` is the deprecated name of this section: use `security.authToken`. As `security.authToken` has default values, a key set under `security.jwt` is only read when the same key has no value under `security.authToken` (e.g. `secret`).
 :::
 
 ## Use Backend.config property
@@ -116,8 +144,8 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide for more in
 // Read a configuration value
 console.log(`Kuzzle will listen on port ${app.config.content.server.port}`);
 
-// Set log level to debug
-app.config.content.server.appLogs.level = "debug";
+// Allow more concurrent requests
+app.config.content.limits.concurrentRequests = 200;
 
 // Listen to port 4242
 app.config.content.server.port = 4242;
