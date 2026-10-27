@@ -798,32 +798,43 @@ export class KuzzleRequest {
     if (args[name] === undefined) {
       throw assertionError.get("missing_argument", name);
     }
-    if (format && !moment(args[name], format, true).isValid()) {
-      throw assertionError.get("invalid_type", name, "date");
-    }
-    if (!moment(args[name], moment.ISO_8601).isValid()) {
+    // A custom format replaces the ISO 8601 check: applying both rejected
+    // every value of a format that is not ISO 8601.
+    const isValid = format
+      ? moment(args[name], format, true).isValid()
+      : moment(args[name], moment.ISO_8601).isValid();
+    if (!isValid) {
       throw assertionError.get("invalid_type", name, "date");
     }
     return this.getString(name);
   }
 
   /**
-   * Gets a parameter from a request arguments and returns it to timestamp format.
+   * Gets a parameter from a request arguments and checks that it is an integer
+   * timestamp (e.g. milliseconds since Epoch).
+   *
+   * An integer string, such as an HTTP query string value, is accepted and
+   * converted. A date string (e.g. `"2026-10-27"`) is rejected.
    *
    * @param name parameter name.
    * @throws {api.assert.missing_argument} If parameter not found and no default
    *                                       value provided
-   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   * @throws {api.assert.invalid_type} If parameter value is not an integer
+   *                                   timestamp.
    */
   getTimestamp(name: string): number {
-    const args = this.input.args;
-    if (args[name] === undefined) {
+    const value = this.input.args[name];
+    if (value === undefined) {
       throw assertionError.get("missing_argument", name);
     }
-    if (moment(args[name], true).isValid() === false) {
+    const timestamp =
+      typeof value === "string" && /^-?\d+$/.test(value)
+        ? Number(value)
+        : value;
+    if (!Number.isSafeInteger(timestamp)) {
       throw assertionError.get("invalid_type", name, "date");
     }
-    return this.getInteger(name);
+    return timestamp;
   }
 
   /**
