@@ -357,6 +357,16 @@ describe("#api/controllers/AdminController", () => {
       });
       expect(shutdown).not.toHaveBeenCalled();
     });
+
+    // The flag was declared and checked, but never set: the guard never fired.
+    it("refuses a second call once the first has started the shutdown", async () => {
+      await controller.shutdown();
+
+      await expect(controller.shutdown()).rejects.toMatchObject({
+        id: "api.process.action_locked",
+      });
+      expect(shutdown).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("#loadMappings", () => {
@@ -382,6 +392,26 @@ describe("#api/controllers/AdminController", () => {
       expect(asked("core:storage:public:document:import")).toEqual([
         [{ city: { seventeen: [] } }, { refresh: "false" }],
       ]);
+    });
+
+    // The documented answer; 2.17.6 to 2.59 answered the import's `undefined`.
+    it("answers an acknowledgement once the fixtures are loaded", async () => {
+      request.input.body = { city: { seventeen: [] } };
+
+      expect(await controller.loadFixtures(request)).toEqual({
+        acknowledge: true,
+      });
+    });
+
+    // Unlike loadMappings: refresh=false does not detach the import, so its
+    // failure still reaches the caller.
+    it("reports a failed import even with refresh=false", async () => {
+      request.input.body = { city: { seventeen: [] } };
+      request.input.args.refresh = "false";
+      const error = new Error("import failed");
+      ask.mockRejectedValueOnce(error);
+
+      await expect(controller.loadFixtures(request)).rejects.toBe(error);
     });
   });
 

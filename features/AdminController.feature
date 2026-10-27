@@ -91,6 +91,25 @@ Feature: Admin Controller
       | id | "security.user.prevent_overwrite" |
     And The user "coolie" should not exists
 
+  # admin:loadFixtures =========================================================
+
+  Scenario: Load fixtures and receive an acknowledgement
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "admin":"loadFixtures" with body:
+      """
+      {
+        "nyc-open-data": {
+          "yellow-taxi": [
+            { "create": { "_id": "fixture-1" } },
+            { "name": "fixture" }
+          ]
+        }
+      }
+      """
+    Then I should receive a result matching:
+      | acknowledge | true |
+    And The document "fixture-1" should exist
+
   # admin:dump ================================================================
 
   Scenario: Refuse a malformed dump suffix
