@@ -165,6 +165,14 @@ describe("#util/Mutex", () => {
       expect(await mutex.wait({ timeout: -1 })).toBe(true);
     });
 
+    it("uses the mutex settings when called without options", async () => {
+      cached = [true, true, false];
+
+      const mutex = new Mutex("foo", { attemptDelay: 1, timeout: -1 });
+
+      expect(await mutex.wait()).toBe(true);
+    });
+
     it("resolves false when the resource is still held at the timeout", async () => {
       cached = [true];
 
