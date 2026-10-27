@@ -8,6 +8,8 @@ description: Koncorde.remove method
 
 # `remove()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Removes a filter.
 
 ### Arguments

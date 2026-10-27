@@ -8,6 +8,8 @@ description: InternalLogger.debug method
 
 # `debug()`
 
+<DeprecatedBadge version="2.60.0" />
+
 Logs a debug message.
 
 ::: info

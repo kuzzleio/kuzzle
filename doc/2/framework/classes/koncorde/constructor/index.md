@@ -7,6 +7,8 @@ description: Koncorde class constructor
 
 # Constructor
 
+<DeprecatedBadge version="2.14.0" />
+
 Creates a new Koncorde engine instance.
 
 ### Arguments

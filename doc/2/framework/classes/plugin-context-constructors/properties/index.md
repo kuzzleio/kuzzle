@@ -52,10 +52,10 @@ await esClient.index(esRequest)
 Instantiates a new [Koncorde](/core/2/framework/classes/koncorde) engine.
 
 ::: info
-The `Koncorde` class should be imported from the `kuzzle` package.
+The `Koncorde` class exported by the `kuzzle` package is itself deprecated since 2.14.0: use the [koncorde](https://www.npmjs.com/package/koncorde) package (v4) directly.
 
 ```js
-import { Koncorde } from 'kuzzle';
+import { Koncorde } from 'koncorde';
 ```
 :::
 

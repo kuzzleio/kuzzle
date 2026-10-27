@@ -8,6 +8,8 @@ description: Koncorde.store method
 
 # `store()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Stores filters, normalized with the [Koncorde.normalize](/core/2/framework/classes/koncorde/normalize) function.
 
 ### Arguments

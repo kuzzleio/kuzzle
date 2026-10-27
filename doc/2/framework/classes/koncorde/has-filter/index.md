@@ -7,6 +7,8 @@ description: Koncorde.hasFilter method
 
 # `hasFilter()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Tells whether a filter is registered.
 
 ### Arguments

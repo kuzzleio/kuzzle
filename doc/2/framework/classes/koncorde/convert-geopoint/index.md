@@ -7,6 +7,8 @@ description: Koncorde.convertGeopoint static method
 
 # `convertGeopoint()` (static)
 
+<DeprecatedBadge version="2.14.0" />
+
 Converts a geopoint, in one of the formats accepted by Koncorde [geospatial clauses](/core/2/api/koncorde-filters-syntax/clauses#geodistance), to a standardized `{ lat, lon }` object.
 
 ### Arguments

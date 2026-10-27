@@ -8,6 +8,8 @@ description: Koncorde.test method
 
 # `test()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Tests data and returns the matching filter identifiers.
 
 ### Arguments

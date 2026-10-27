@@ -8,6 +8,8 @@ description: Koncorde.validate method
 
 # `validate()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Validates the provided filters without storing them.
 
 ### Arguments

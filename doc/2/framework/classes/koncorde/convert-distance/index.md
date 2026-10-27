@@ -7,6 +7,8 @@ description: Koncorde.convertDistance static method
 
 # `convertDistance()` (static)
 
+<DeprecatedBadge version="2.14.0" />
+
 Converts a distance string to a number of meters.
 
 ### Arguments

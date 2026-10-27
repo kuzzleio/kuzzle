@@ -8,6 +8,12 @@ description: InternalLogger class properties
 
 # InternalLogger
 
+<DeprecatedBadge version="2.60.0" />
+
+::: warning
+`InternalLogger` is deprecated: use [Logger](/core/2/framework/classes/logger), the type of [Backend.log](/core/2/framework/classes/backend/properties#log), instead.
+:::
+
 The `InternalLogger` class allows developers to use Kuzzle's internal logger.
 
 ::: warning

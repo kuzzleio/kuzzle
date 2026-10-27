@@ -8,6 +8,8 @@ description: Koncorde.getFilterIds method
 
 # `getFilterIds()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Retrieves the list of filter identifiers registered on an index-collection pair.
 
 ### Arguments

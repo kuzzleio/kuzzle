@@ -8,6 +8,8 @@ description: Koncorde.register method
 
 # `register()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Registers a filter to this Koncorde instance.
 
 This method is equivalent to executing [Koncorde.normalize](/core/2/framework/classes/koncorde/normalize) + [Koncorde.store](/core/2/framework/classes/koncorde/store).

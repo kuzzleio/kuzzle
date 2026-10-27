@@ -9,6 +9,7 @@ description: InternalLogger.level method
 # `level()`
 
 <SinceBadge version="2.43.0" />
+<DeprecatedBadge version="2.60.0" />
 
 Changes the log level of the Kuzzle logger at runtime.
 

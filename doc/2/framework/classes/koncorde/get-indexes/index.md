@@ -7,6 +7,8 @@ description: Koncorde.getIndexes method
 
 # `getIndexes()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Returns the list of indexes with registered filters.
 
 ### Arguments

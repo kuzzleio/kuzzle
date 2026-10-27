@@ -8,6 +8,8 @@ description: Koncorde.normalize method
 
 # `normalize()`
 
+<DeprecatedBadge version="2.14.0" />
+
 Normalizes filters without storing them.
 
 The result can be directly used with the [Koncorde.store](/core/2/framework/classes/koncorde/store) function.

@@ -9,6 +9,7 @@ description: InternalLogger.fatal method
 # `fatal()`
 
 <SinceBadge version="2.43.0" />
+<DeprecatedBadge version="2.60.0" />
 
 Logs a fatal message.
 
