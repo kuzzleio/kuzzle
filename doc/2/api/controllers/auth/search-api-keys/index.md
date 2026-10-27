@@ -126,3 +126,10 @@ Returns an object with the following properties:
   }
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [BadRequestError](/core/2/api/errors/types#badrequesterror): for instance, an invalid search query or an unsupported Koncorde operator

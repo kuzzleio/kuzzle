@@ -54,3 +54,10 @@ Returns a confirmation that the command is being executed.
   "result": { "acknowledge": true }
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror): unknown `database` (`services.cache.database_not_found`)
