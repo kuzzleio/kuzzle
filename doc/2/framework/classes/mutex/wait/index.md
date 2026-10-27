@@ -18,7 +18,7 @@ description: Mutex class wait() method
 `withLock` has no `wait` counterpart: have every node run the initialization under `withLock`, and skip it when it finds the work already done.
 
 ```ts
-wait(options: { attemptDelay?: number, timeout?: number }): Promise<boolean>
+wait(options?: { attemptDelay?: number, timeout?: number }): Promise<boolean>
 ```
 
 Waits for the resource to be unlocked, without locking it.
@@ -27,7 +27,7 @@ Waits for the resource to be unlocked, without locking it.
 
 | Arguments           | Type              | Description                                                                                                                     |
 | ------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| `options`           | <pre>object</pre> | Mutex override options (see below). The object is required: pass `{}` to keep the mutex settings |
+| `options`           | <pre>object</pre> | Optional mutex override options (see below). Without it, the mutex settings apply. Before 2.60.0, the object was required: `wait()` without argument threw a `TypeError` |
 
 ### options
 

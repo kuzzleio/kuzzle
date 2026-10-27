@@ -23,10 +23,10 @@ child(namespace: string): Logger
 
 ## Return
 
-A child logger with the [trace](/core/2/framework/classes/logger/trace), [debug](/core/2/framework/classes/logger/debug), [info](/core/2/framework/classes/logger/info), [warn](/core/2/framework/classes/logger/warn), [error](/core/2/framework/classes/logger/error), [fatal](/core/2/framework/classes/logger/fatal), [flush](/core/2/framework/classes/logger/flush) and `child` methods and the [level](/core/2/framework/classes/logger/properties#level) property.
+A child [Logger](/core/2/framework/classes/logger), with every method of its parent, `getLevel`, `setLevel`, `silly` and `verbose` included.
 
-::: warning
-Although the declared return type is `Logger`, a child does not have the `getLevel`, `setLevel`, `silly` and `verbose` methods. Use its `level` property instead.
+::: info
+Before 2.60.0, a child lacked `getLevel`, `setLevel`, `silly` and `verbose`, although it was declared as a `Logger`.
 :::
 
 ## Usage
