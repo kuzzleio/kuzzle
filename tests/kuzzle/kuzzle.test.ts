@@ -516,6 +516,112 @@ describe("#kuzzle/Kuzzle", () => {
     });
   });
 
+  /* #3045: a SIGTERM during the startup started the shutdown, but the startup
+   * went on to take the installations lock; a node killed before its drain
+   * ended left that lock to the other nodes for its whole TTL. */
+  describe("#start, when a shutdown begins during the startup", () => {
+    let exit: ReturnType<typeof vi.spyOn>;
+    let drained: () => void;
+
+    /** Settles with "pending" when `promise` has not settled by then. */
+    const settledOrPending = (promise: Promise<unknown>) =>
+      Promise.race([
+        promise.then(
+          () => "resolved",
+          () => "rejected",
+        ),
+        new Promise((resolve) => setTimeout(() => resolve("pending"), 20)),
+      ]);
+
+    beforeEach(() => {
+      exit = vi.spyOn(process, "exit").mockImplementation(() => {
+        return undefined as never;
+      });
+      kuzzle.install = vi.fn(async () => undefined);
+      kuzzle.loadInitialState = vi.fn(async () => undefined);
+
+      // The shutdown waits for requests still running, as in the issue
+      funnelOf(kuzzle).remainingRequests = 2;
+      const drain = new Promise<void>((resolve) => {
+        drained = () => {
+          funnelOf(kuzzle).remainingRequests = 0;
+          resolve();
+        };
+      });
+      vi.spyOn(Bluebird, "delay").mockImplementation(
+        () => drain as unknown as Bluebird<void>,
+      );
+    });
+
+    it("stops before the next step, and leaves the end to the shutdown", async () => {
+      vi.mocked(kuzzle.pluginsManager.init).mockImplementation(async () => {
+        void kuzzle.shutdown();
+
+        return {};
+      });
+
+      const started = kuzzle.start(application);
+
+      expect(await settledOrPending(started)).toBe("pending");
+      expect(kuzzle.loadInitialState).not.toHaveBeenCalled();
+      expect(kuzzle.install).not.toHaveBeenCalled();
+      expect(kuzzle.entryPoint.startListening).not.toHaveBeenCalled();
+      expect(order).not.toContain("pipe:kuzzle:start");
+      expect(kuzzle.log.info).toHaveBeenCalledWith(
+        "[ℹ] Startup stopped: Kuzzle is shutting down",
+      );
+      expect(kuzzle.log.error).not.toHaveBeenCalled();
+      expect(kuzzle.state).toBe(kuzzleStateEnum.SHUTTING_DOWN);
+
+      drained();
+
+      await vi.waitFor(() => expect(exit).toHaveBeenCalled());
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+      expect(kuzzle.entryPoint.dispatch).toHaveBeenCalledOnce();
+      expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
+    });
+
+    it("does not take the installations lock when it comes after the imports", async () => {
+      Reflect.deleteProperty(kuzzle, "install");
+      answers.set("core:storage:private:document:exist", false);
+      const handler = vi.fn(async () => undefined);
+      vi.mocked(kuzzle.loadInitialState).mockImplementation(async () => {
+        void kuzzle.shutdown();
+      });
+
+      const started = kuzzle.start(
+        application,
+        invalid({ installations: [{ handler, id: "slow" }] }),
+      );
+
+      expect(await settledOrPending(started)).toBe("pending");
+      expect(locks.taken).toEqual([]);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("reports a step that fails because of it without a second shutdown", async () => {
+      vi.mocked(kuzzle.pluginsManager.init).mockImplementation(async () => {
+        void kuzzle.shutdown();
+
+        throw new Error("redis is gone");
+      });
+
+      const started = kuzzle.start(application);
+
+      expect(await settledOrPending(started)).toBe("pending");
+      expect(kuzzle.log.info).toHaveBeenCalledWith(
+        "[ℹ] Startup stopped: Kuzzle is shutting down (redis is gone)",
+      );
+      expect(kuzzle.log.error).not.toHaveBeenCalled();
+
+      drained();
+
+      // A requested shutdown: the failure it caused does not turn it into one
+      await vi.waitFor(() => expect(exit).toHaveBeenCalled());
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+  });
+
   describe("#dumpAndExit", () => {
     let exit: ReturnType<typeof vi.spyOn>;
     let dump: ReturnType<typeof vi.fn>;
@@ -842,6 +948,25 @@ describe("#kuzzle/Kuzzle", () => {
       ]);
     });
 
+    /* #3045: the lock may come once the node holding it is done, long after
+     * this one was asked to stop. */
+    it("should give the lock back at once when the shutdown began meanwhile", async () => {
+      answers.set("core:storage:private:document:exist", false);
+      vi.mocked(withLock).mockImplementationOnce(async (_key, callback) => {
+        invalid<{ _state: kuzzleStateEnum }>(kuzzle)._state =
+          kuzzleStateEnum.SHUTTING_DOWN;
+
+        return callback();
+      });
+
+      await expect(kuzzle.install([{ handler, id: "id" }])).rejects.toThrow(
+        "Kuzzle is shutting down",
+      );
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(ask).not.toHaveBeenCalled();
+    });
+
     it("should skip an installation that already ran", async () => {
       answers.set("core:storage:private:document:exist", true);
 
@@ -1010,6 +1135,21 @@ describe("#kuzzle/Kuzzle", () => {
           });
         },
       );
+
+      it("should not import once the shutdown began", async () => {
+        invalid<{ _state: kuzzleStateEnum }>(kuzzle)._state =
+          kuzzleStateEnum.SHUTTING_DOWN;
+
+        await expect(kuzzle.loadInitialState(toImport, {})).rejects.toThrow(
+          "Kuzzle is shutting down",
+        );
+
+        expect(ask).not.toHaveBeenCalled();
+        expect(locks.events).toEqual([
+          "lock:backend:import:fixtures",
+          "unlock:backend:import:fixtures",
+        ]);
+      });
 
       /* TD-69 (#2782): the two reads used to happen before `mutex.lock()`, so
        * the holder decided from a snapshot another node could already have
