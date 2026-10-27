@@ -19,7 +19,7 @@ URL: http://kuzzle:7512/api-keys/<apiKeyId>[?refresh=wait_for]
 Method: DELETE
 ```
 
-<SinceBadge version="2.61.0"/>
+<SinceBadge version="2.60.0"/>
 
 The API key can also be targeted by its clear-text `key` or its `fingerprint`
 instead of its `_id`, using query string parameters:
@@ -55,8 +55,8 @@ A `key` passed in the query string is a secret written in the URL, so it can end
 One of the following must be provided to identify the API key to delete. If several are given, `_id` is used first, then `key`, then `fingerprint`, and the others are ignored:
 
 - `_id`: API key ID
-- `key`: the clear-text API key <SinceBadge version="2.57.0"/> (over HTTP: <SinceBadge version="2.61.0"/>)
-- `fingerprint`: the API key fingerprint (SHA-256 hash of the clear-text key) <SinceBadge version="2.57.0"/> (over HTTP: <SinceBadge version="2.61.0"/>)
+- `key`: the clear-text API key <SinceBadge version="2.57.0"/> (over HTTP: <SinceBadge version="2.60.0"/>)
+- `fingerprint`: the API key fingerprint (SHA-256 hash of the clear-text key) <SinceBadge version="2.57.0"/> (over HTTP: <SinceBadge version="2.60.0"/>)
 
 ### Optional:
 

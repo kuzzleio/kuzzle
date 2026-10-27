@@ -120,7 +120,7 @@ export kuzzle_security__authToken__secret="<a long random secret>"
 ::: warning
 `security.jwt` is the deprecated name of this section: use `security.authToken`. A key set under `security.jwt` still applies when `security.authToken` does not set it, and Kuzzle logs a deprecation warning at startup. <SinceBadge version="2.61.0"/>
 
-Before Kuzzle 2.61, `security.authToken.gracePeriod` was ignored, and `security.jwt.algorithm`, `expiresIn` and `maxTTL` were ignored too. To keep existing configurations working, a `gracePeriod` set under both names is still read from `security.jwt`.
+Before Kuzzle 2.60, `security.authToken.gracePeriod` was ignored, and `security.jwt.algorithm`, `expiresIn` and `maxTTL` were ignored too. To keep existing configurations working, a `gracePeriod` set under both names is still read from `security.jwt`.
 :::
 
 ## Use Backend.config property
