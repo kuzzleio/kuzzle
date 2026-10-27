@@ -1,3 +1,27 @@
+## [2.60.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.4...v2.60.0-beta.5) (2026-10-27)
+
+### Features
+
+* **auth:** add DELETE /api-keys to delete one's own API key by key or fingerprint ([377c158](https://github.com/kuzzleio/kuzzle/commit/377c158dc4b612e326bec10ab23009b565698d10)), closes [#3068](https://github.com/kuzzleio/kuzzle/issues/3068) [#3069](https://github.com/kuzzleio/kuzzle/issues/3069)
+
+### Bug Fixes
+
+* **admin:** set the shutdown guard, answer loadFixtures with an acknowledgement ([6688e5f](https://github.com/kuzzleio/kuzzle/commit/6688e5f94318a38d45950d9cd0bf93f96735cb0d)), closes [#3067](https://github.com/kuzzleio/kuzzle/issues/3067) [#3070](https://github.com/kuzzleio/kuzzle/issues/3070)
+* **config:** honour security.authToken.gracePeriod and user-set security.jwt keys ([d6644ec](https://github.com/kuzzleio/kuzzle/commit/d6644ec39a8140eedc7960e5a583b7f79d78a571)), closes [#3065](https://github.com/kuzzleio/kuzzle/issues/3065)
+* **funnel:** log a rejection of request:afterExecution for plugin requests ([be90601](https://github.com/kuzzleio/kuzzle/commit/be90601a663e187b01c51a39f0363aeeeac38ba1))
+* **funnel:** never re-run a failed triggerEvents plugin request ([98b4ac0](https://github.com/kuzzleio/kuzzle/commit/98b4ac00aef3f8e98a4feec8a59552316e9509c2))
+* **http:** remove the routes to four removed API actions ([8089dfc](https://github.com/kuzzleio/kuzzle/commit/8089dfc83b9338992e5f5f30e983069e7a1aa21e))
+* **kuzzle:** stop the startup once a shutdown has begun ([5856d84](https://github.com/kuzzleio/kuzzle/commit/5856d846e01f372eba1f7bb4cb52d07215a61aad)), closes [#3045](https://github.com/kuzzleio/kuzzle/issues/3045)
+* **logger:** make Logger.child() return a Logger ([d77330a](https://github.com/kuzzleio/kuzzle/commit/d77330a52dcedf641f96cabadcd75aaef034a696))
+* **mutex:** default the options of Mutex.wait() ([3308c16](https://github.com/kuzzleio/kuzzle/commit/3308c161153b42c214c0a5dc7bfee94fbe3cdcc0))
+* **request:** getDate custom formats and getTimestamp integer strings ([d9d808e](https://github.com/kuzzleio/kuzzle/commit/d9d808e9f327d137bd5dc558aa18585b9cb4a2c6)), closes [#3056](https://github.com/kuzzleio/kuzzle/issues/3056) [#3057](https://github.com/kuzzleio/kuzzle/issues/3057)
+* **response:** overwrite Last-Modified and Location headers ([6b3449d](https://github.com/kuzzleio/kuzzle/commit/6b3449d8ae768b111facf34fef970c959ce45b41))
+* **router:** mark the callback-form http pipe as not awaited ([6bc17ac](https://github.com/kuzzleio/kuzzle/commit/6bc17acbd1dee2f857473180831d6b3de4db7957))
+* **router:** trigger http:<verb> lowercased for every route ([4439bcc](https://github.com/kuzzleio/kuzzle/commit/4439bccb6d9e45afdc8b421e16fd55eb7bf997aa))
+* **storage:** apply mappings of a collection:create that loses the creation race ([8690363](https://github.com/kuzzleio/kuzzle/commit/869036360e535d5553b9e1c89e4df10b4596cb06)), closes [#3043](https://github.com/kuzzleio/kuzzle/issues/3043)
+* **storage:** reload the index cache right after the cluster join ([ac89fa7](https://github.com/kuzzleio/kuzzle/commit/ac89fa7da1afb6e375b8e9cac34e45130a94a127)), closes [#3036](https://github.com/kuzzleio/kuzzle/issues/3036) [#3044](https://github.com/kuzzleio/kuzzle/issues/3044)
+* **vault:** find the project's secrets file from an npm install of dist/ ([87c29b5](https://github.com/kuzzleio/kuzzle/commit/87c29b54d94bd6a89b6aa0f08608e9dc0aeff7ae)), closes [#3066](https://github.com/kuzzleio/kuzzle/issues/3066)
+
 ## [2.60.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.3...v2.60.0-beta.4) (2026-10-26)
 
 ### Bug Fixes
