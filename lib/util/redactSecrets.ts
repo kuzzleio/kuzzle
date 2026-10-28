@@ -45,6 +45,8 @@ const SECRET_SUFFIXES = [
   "secretkey",
   "signingkey",
   "encryptionkey",
+  "accesskey",
+  "access_key",
   "vault_key",
 ];
 

@@ -29,7 +29,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 1. **No new Redis feature.** Password, ACL user, TLS and Sentinel stay plain ioredis `options`. They are documented (`.kuzzlerc.sample.jsonc`, a "Securing Redis" section of the configuration guide) and proven by the functional cluster.
 2. **One "public config" function** (`lib/util/redactSecrets.ts`): applies today's `getConfig` removals (`http.routes`, `security`, `VAULT_KEY`) then the redaction. `server:getConfig` and `admin:dump` both use it, so they can no longer drift apart.
-3. **Generic key-name rule, not a list of paths** — a fixed list would always miss plugins and application config. `isSecretKey(name)`, case-insensitive: exact `key`, `pfx`, `auth`; or a name ending with `password`, `passphrase`, `secret`, `apikey`, `token`, `credentials`, `privatekey`, `secretkey`, `signingkey`, `encryptionkey`, `vault_key`. `cookieAuthentication` does not match by construction.
+3. **Generic key-name rule, not a list of paths** — a fixed list would always miss plugins and application config. `isSecretKey(name)`, case-insensitive: exact `key`, `pfx`, `auth`; or a name ending with `password`, `passphrase`, `secret`, `apikey`, `token`, `credentials`, `privatekey`, `secretkey`, `signingkey`, `encryptionkey`, `accesskey`, `access_key`, `vault_key`. `cookieAuthentication` does not match by construction.
 4. **Redaction semantics.** A value under a secret key becomes `"***"`, the field is kept; `null`, `undefined` and booleans are left as-is, so one can still see whether a secret is set. A plain object under a secret key (`auth: { username, password }`) keeps its structure with its leaves masked; any other value — `Buffer`, array — is masked whole. Redaction runs **before** any JSON clone. In every string, URL credentials `user:pass@` become `user:***@`. `mappings` subtrees are never redacted. The input is never mutated.
 5. **The dump redacts its environment too.** `nodejs.json` masks `process.env` entries with the same rule (`kuzzle_…__password` matches by name). The core dump cannot be redacted: the documentation says a full dump is never attached to a ticket as-is.
 6. **Environment secrets keep their text form, numbers only.** For a secret key, `unstringify()` skips the number conversion and nothing else: `"0123"` stays `"0123"`, while `"true"` / `"false"` and `*json:` keep working — `requirePassword=false` stays a boolean. Not breaking: ioredis and the Elasticsearch client stringify passwords anyway.
@@ -83,6 +83,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 - **2026-10-13** — **Redaction before any JSON clone; non-plain-object secret values masked whole.**
 - **2026-10-13** — **Security fix, no v3 breaking-change row.**
 - **2026-10-13** — **Worker `Buffer` / function limit documented, not fixed.**
+- **2026-10-28** — **`…accesskey`, `…access_key` added to the rule** (step 01): `secretAccessKey` and `AWS_SECRET_ACCESS_KEY`, named in the Context, matched no suffix.
 - **2026-10-13** — **Out of scope:** password-less startup warning (deferred); ZeroMQ inter-node security (separate issue).
 
 ---
@@ -91,7 +92,6 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 - Core dump: documented only. Whether `admin:dump` should offer a config-only mode without `gcore` for support tickets.
 - Password-less Redis startup warning: deferred, revisit if support sees exposed instances.
-- Rule gap: the Context names `secretAccessKey`, but no §3 suffix matches it (nor `AWS_SECRET_ACCESS_KEY`). Add an `accesskey` suffix? See [step 01](steps/01-redact-secrets.md).
 
 ---
 

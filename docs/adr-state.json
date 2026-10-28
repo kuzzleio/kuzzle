@@ -47,9 +47,7 @@
       "openStep": "docs/adr-004/steps/01-redact-secrets.md",
       "nextAction": "Review the step 01 branch feat/adr-0004-step-01-redact-secrets, then push it, open the PR to 2-dev and the ZeroMQ inter-node security issue.",
       "blockers": [],
-      "openPoints": [
-        "Rule gap: secretAccessKey / AWS_SECRET_ACCESS_KEY match no suffix of Decision §3; add an `accesskey` suffix?"
-      ]
+      "openPoints": []
     }
   ]
 }

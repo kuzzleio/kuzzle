@@ -31,6 +31,8 @@ describe("#util/redactSecrets", () => {
       "secretKey",
       "signingKey",
       "encryptionKey",
+      "secretAccessKey",
+      "AWS_SECRET_ACCESS_KEY",
       "VAULT_KEY",
       "kuzzle_services__internalCache__options__password",
       "REDIS_PASSWORD",
@@ -53,18 +55,10 @@ describe("#util/redactSecrets", () => {
       "cert",
       "mappings",
       "secretless",
+      "accessKeyId",
+      "AWS_ACCESS_KEY_ID",
     ])("does not treat %s as a secret", (name) => {
       expect(isSecretKey(name)).toBe(false);
-    });
-
-    /*
-     * Pinned as the rule stands in ADR-0004 Decision §3: `secretAccessKey`
-     * ends with `accesskey`, which no suffix covers, although the hub's
-     * context lists it among the names the rule was meant to catch. Open
-     * point of the ADR; flip this test if the rule gains the suffix.
-     */
-    it("does not match secretAccessKey (open point of ADR-0004)", () => {
-      expect(isSecretKey("secretAccessKey")).toBe(false);
     });
   });
 
