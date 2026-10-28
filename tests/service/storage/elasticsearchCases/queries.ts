@@ -910,6 +910,33 @@ export function describeQueries(harness: ESHarness) {
       expect(callback.mock.calls[1][0]).toEqual(secondPage.hits);
     });
 
+    /* ES 7 clears the scroll without awaiting it, and a failure there used to
+     * be an unhandled rejection; ES 8 awaits it, so the failure is the
+     * caller's. */
+    it("does not leave a failure to clear the scroll unhandled", async () => {
+      harness.envelope.answerScroll(harness.clientStub.search, {
+        hits: { hits: [21], total: { value: 1 } },
+        _scroll_id: "scroll-id",
+      });
+      harness.clientStub.clearScroll.mockRejectedValue(
+        new Error("scroll expired"),
+      );
+
+      const run = harness.client.mExecute(index, collection, {}, () => 1);
+
+      if (harness.envelope.version === "8") {
+        await expect(run).rejects.toThrow("scroll expired");
+        return;
+      }
+
+      await expect(run).resolves.toEqual([1]);
+      await vi.waitFor(() =>
+        expect(harness.client.logger.warn).toHaveBeenCalledWith(
+          "Unable to clear scroll scroll-id: scroll expired",
+        ),
+      );
+    });
+
     it("refuses a query that is not an object", async () => {
       await expect(
         harness.client.mExecute(index, collection, "not an object", () => {}),
