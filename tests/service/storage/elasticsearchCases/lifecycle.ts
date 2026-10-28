@@ -123,26 +123,62 @@ export function describeLifecycle(harness: ESHarness) {
     });
   });
 
+  /** How many primary shards the collection's settings report. */
+  const armPrimaries = (count: string) =>
+    harness.clientStub.indices.getSettings.mockResolvedValue(
+      harness.envelope.respond({
+        [indice]: { settings: { index: { number_of_shards: count } } },
+      }),
+    );
+
+  /** The health request `waitForCollectionShards` sends for one primary. */
+  const shardsWait = () => ({
+    index: alias,
+    timeout: "30s",
+    wait_for_active_shards: harness.envelope.singleShard,
+    wait_for_status: "yellow",
+  });
+
   /*
    * #3033: a collection another node has just created exists before its
    * primary shard is active, and Elasticsearch answers 503 to any document
-   * request until it is. Waiting for a `yellow` status on its alias is
-   * waiting for its primaries, bounded by the request's own timeout.
+   * request until it is. The wait is bounded by the request's own timeout.
+   *
+   * #3074: a `yellow` status alone does not wait, since Elasticsearch reports
+   * a new index whose primaries are still initializing as `yellow`. The wait
+   * asks for as many active shard copies as the collection has primaries,
+   * read from its settings.
    */
   describe("#waitForCollectionShards", () => {
-    it("waits, bounded, for the collection's primary shards", async () => {
-      harness.clientStub.cluster.health.mockResolvedValue(
-        harness.envelope.respond({ status: "yellow", timed_out: false }),
-      );
+    beforeEach(() => {
+      armPrimaries("1");
 
+      harness.clientStub.cluster.health.mockResolvedValue(
+        harness.envelope.respond({ status: "green", timed_out: false }),
+      );
+    });
+
+    it("waits, bounded, for the collection's primary shard to be active", async () => {
       await expect(
         harness.client.waitForCollectionShards(index, collection),
       ).resolves.toBeUndefined();
 
-      expect(harness.sent(harness.clientStub.cluster.health)).toEqual({
+      expect(harness.sent(harness.clientStub.indices.getSettings)).toEqual({
         index: alias,
-        timeout: "30s",
-        wait_for_status: "yellow",
+        name: "index.number_of_shards",
+      });
+      expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+        shardsWait(),
+      );
+    });
+
+    it("waits for as many active shards as the collection has primaries", async () => {
+      armPrimaries("3");
+
+      await harness.client.waitForCollectionShards(index, collection);
+
+      expect(harness.sent(harness.clientStub.cluster.health)).toMatchObject({
+        wait_for_active_shards: harness.envelope.activeShards(3),
       });
     });
 
@@ -168,11 +204,27 @@ export function describeLifecycle(harness: ESHarness) {
         harness.esClientError,
       );
     });
+
+    it("rejects through the wrapper, without waiting, when the settings cannot be read", async () => {
+      harness.clientStub.indices.getSettings.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.waitForCollectionShards(index, collection),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.clientStub.cluster.health).not.toHaveBeenCalled();
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(
+        harness.esClientError,
+      );
+    });
   });
 
   describe("#createCollection", () => {
     const arm = () => {
       armNodeCount(1);
+      armPrimaries("1");
 
       harness.clientStub.indices.create.mockResolvedValue(
         harness.envelope.respond({}),
@@ -402,11 +454,9 @@ export function describeLifecycle(harness: ESHarness) {
       });
 
       // #3033: another node created it, maybe before its shards were active
-      expect(harness.sent(harness.clientStub.cluster.health)).toEqual({
-        index: alias,
-        timeout: "30s",
-        wait_for_status: "yellow",
-      });
+      expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+        shardsWait(),
+      );
       expect(update).toHaveBeenCalledWith(index, collection, {
         mappings: { properties: { city: { type: "keyword" } } },
         settings: { index: { blocks: { write: true } } },
@@ -585,11 +635,9 @@ export function describeLifecycle(harness: ESHarness) {
         ).resolves.toBeNull();
 
         expect(harness.esWrapper.formatESError).not.toHaveBeenCalled();
-        expect(harness.sent(harness.clientStub.cluster.health)).toEqual({
-          index: alias,
-          timeout: "30s",
-          wait_for_status: "yellow",
-        });
+        expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+          shardsWait(),
+        );
         expect(update).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledWith(index, collection, {
           mappings: { properties: { city: { type: "keyword" } } },
