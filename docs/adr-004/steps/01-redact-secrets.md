@@ -34,4 +34,5 @@ Apply the hub's Decision §1–§8 in one PR: one redaction function shared by `
 
 ## Validation
 
-See the PR description.
+- Unit suite in Docker (`.ci/scripts/docker-test.sh unit`): 167 files, 4 455 passed, 2 skipped. `pr-preflight`: all checks OK (lint 0 errors, error codes, ADR state, ratchets & test type-check, doc budgets). `npm run build` OK.
+- Functional, ES8 websocket (`ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket`): the cluster starts on the password-protected Redis (`redis-cli ping` answers `NOAUTH` without it), both `@es8` scenarios pass. Two local-only workarounds, neither in the PR: the Docker VM disk was >95 % full, so ES8 refused to allocate shards until a local `my_elasticsearch.yml` disabled the disk threshold; and `@network` / `Websocket.feature` reach `localhost:17510` / `localhost:7512`, which does not resolve from inside `docker-test.sh`'s container (pre-existing, unrelated). With `--tags "not @network"`: 164 scenarios, 162 passed, 1 failed (`Websocket.feature:5`, `ECONNREFUSED 127.0.0.1:7512`, same cause), 1 skipped by fail-fast. CI runs the suite from the host, where both resolve.
