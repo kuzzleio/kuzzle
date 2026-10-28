@@ -1,6 +1,6 @@
 # Step 01 — Redact configuration secrets, protected Redis in CI, docs
 
-**Status:** 🟦 In progress — PR under review · **Opened:** 2026-10-28 · **PR:** [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) (base `2-dev`) · Back to the [hub](../ADR-0004-secrets-in-config.md)
+**Status:** ✅ Done — merged 2026-10-28, ships in 2.60.1 · **Opened:** 2026-10-28 · **PR:** [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) (base `2-dev`) · Back to the [hub](../ADR-0004-secrets-in-config.md)
 
 ## Goal
 
@@ -38,3 +38,4 @@ Apply the hub's Decision §1–§8 in one PR: one redaction function shared by `
 - Unit suite in Docker (`.ci/scripts/docker-test.sh unit`): 167 files, 4 455 passed, 2 skipped. `pr-preflight`: all checks OK (lint 0 errors, error codes, ADR state, ratchets & test type-check, doc budgets). `npm run build` OK.
 - Functional, ES8 websocket (`ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket`): the cluster starts on the password-protected Redis (`redis-cli ping` answers `NOAUTH` without it), both `@es8` scenarios pass. Two local-only workarounds, neither in the PR: the Docker VM disk was >95 % full, so ES8 refused to allocate shards until a local `my_elasticsearch.yml` disabled the disk threshold; and `@network` / `Websocket.feature` reach `localhost:17510` / `localhost:7512`, which does not resolve from inside `docker-test.sh`'s container (pre-existing, unrelated). With `--tags "not @network"`: 164 scenarios, 162 passed, 1 failed (`Websocket.feature:5`, `ECONNREFUSED 127.0.0.1:7512`, same cause), 1 skipped by fail-fast. CI runs the suite from the host, where both resolve.
 - Re-run after freeing Docker disk space, no workaround (2026-10-28, with the `accesskey` fix): `ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket -- --tags "not @network and not @websocket"` → 162 scenarios, 162 passed.
+- Template pass on the PR build (2026-10-28), against 2.60.0 and beta.7 results: three real-project templates (ES8, and ES7 for one), standard cluster scenarios (start, restart, early stops and kills), functional suites and one protected-Redis run each — all green, no regression. With a leading-zero Redis password, 2.60.0 crashloops on `WRONGPASS` and the PR build starts. The pass found the `KUZZLE_LICENSE_KEY` gap (closed above). Pre-existing issues seen again went to #3086, #3087, #3088.

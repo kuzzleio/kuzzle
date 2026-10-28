@@ -1,7 +1,7 @@
 # ADR-0004: Securing Redis access and keeping configuration secrets out of public outputs
 
-**Status:** Accepted (2026-10-13)
-**Date:** 2026-10-13
+**Status:** **Closed — implemented (2026-10-28), frozen.** Its one step shipped as [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) (Kuzzle 2.60.1); what stays open is carried by [#3089](https://github.com/kuzzleio/kuzzle/issues/3089) and [#3084](https://github.com/kuzzleio/kuzzle/issues/3084).
+**Date:** 2026-10-13 → implemented 2026-10-28
 **Deciders:** Kuzzle core team (Ricky — nriquelmebareiro@kuzzle.io)
 **Scope:** how Kuzzle connects to a protected Redis (`services.internalCache`, `services.memoryStorage`, the ID card worker), how configuration secrets are read from the environment (`lib/config/index.ts`), and every place the configuration leaves the process (`server:getConfig`, `admin:dump`)
 **Related documents:** step files under [`steps/`](steps/) · [v3 breaking changes](../v3-breaking-changes.md) (no row: this is a security fix)
@@ -57,9 +57,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 ## Cold start
 
-**Where we are (2026-10-28):** step 01 **in progress** — PR [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) under review (base `2-dev`): redaction shared by `getConfig` and the dump, number-only `unstringify` exemption, password-protected Redis on the ES8 functional cluster, docs. Detail and gotchas in [step 01](steps/01-redact-secrets.md).
-
-**Next action:** review and merge [#3085](https://github.com/kuzzleio/kuzzle/pull/3085), then close step 01 and the ADR. ZeroMQ follow-up: [#3084](https://github.com/kuzzleio/kuzzle/issues/3084).
+**Nothing to resume (2026-10-28):** the ADR is closed and frozen. Step 01 ([#3085](https://github.com/kuzzleio/kuzzle/pull/3085)) shipped every point of the Decision, validated on three real-project templates (ES7 and ES8, protected Redis). Follow-ups: [#3089](https://github.com/kuzzleio/kuzzle/issues/3089) (dump without core dump, password-less Redis warning, known limits of the rule), [#3084](https://github.com/kuzzleio/kuzzle/issues/3084) (ZeroMQ between nodes).
 
 **Conventions** (same as ADR-0001 / 0003): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -69,7 +67,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | 🟦 In progress | [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) | [detail](steps/01-redact-secrets.md) |
+| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | ✅ Done | [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) | [detail](steps/01-redact-secrets.md) |
 
 ---
 
@@ -91,8 +89,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 ## Open points
 
-- Core dump: documented only. Whether `admin:dump` should offer a config-only mode without `gcore` for support tickets.
-- Password-less Redis startup warning: deferred, revisit if support sees exposed instances.
+None: moved to [#3089](https://github.com/kuzzleio/kuzzle/issues/3089).
 
 ---
 

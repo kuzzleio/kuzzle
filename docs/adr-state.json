@@ -42,10 +42,10 @@
       "id": "0004",
       "hub": "docs/adr-004/ADR-0004-secrets-in-config.md",
       "title": "Securing Redis access and keeping configuration secrets out of public outputs",
-      "status": "active",
-      "statusLabel": "🟦 Active · step 01 in review (#3085)",
-      "openStep": "docs/adr-004/steps/01-redact-secrets.md",
-      "nextAction": "Review and merge #3085 (step 01), then close step 01 and the ADR.",
+      "status": "closed",
+      "statusLabel": "⚪ Closed · ships in 2.60.1",
+      "openStep": null,
+      "nextAction": null,
       "blockers": [],
       "openPoints": []
     }
