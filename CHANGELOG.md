@@ -1,3 +1,9 @@
+## [2.60.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.5...v2.60.0-beta.6) (2026-10-28)
+
+### Bug Fixes
+
+* **storage:** make waitForCollectionShards wait for active primaries ([5249c0c](https://github.com/kuzzleio/kuzzle/commit/5249c0cb9531aef1cee82656044652f52c78090a)), closes [#3074](https://github.com/kuzzleio/kuzzle/issues/3074)
+
 ## [2.60.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.4...v2.60.0-beta.5) (2026-10-27)
 
 ### Features
