@@ -1,3 +1,9 @@
+## [2.60.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.6...v2.60.0-beta.7) (2026-10-28)
+
+### Bug Fixes
+
+* handle or mark every floating promise Sonar reports (S9383) ([b3fd043](https://github.com/kuzzleio/kuzzle/commit/b3fd043683ffe497003a4573117dce66085cabde))
+
 ## [2.60.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.60.0-beta.5...v2.60.0-beta.6) (2026-10-28)
 
 ### Bug Fixes
