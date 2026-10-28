@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.59
 
-This page covers Kuzzle **2.60.0**, including what its first beta, 2.60.0-beta.1, already shipped. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-56) too.
+This page covers Kuzzle **2.60.0**, including what its first beta, 2.60.0-beta.1, already shipped, and the [2.60.1](#_2-60-1) patch. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-56) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.59.0. The one requirement that changes is the Node.js version. Items that may need an action on your side are marked **Action**.
 
@@ -158,3 +158,27 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **`Logger.child()`** returns a full `Logger`: `getLevel`, `setLevel`, `silly` and `verbose` were missing.
 - **Response headers:** setting `Location` or `Last-Modified` replaces the previous value, instead of appending to it.
 - **Deprecated:** [`InternalLogger`](/core/2/framework/classes/internal-logger) (use `Logger`, which `app.log` and `context.logger` are) and the `Koncorde` class exported by Kuzzle (use the [`koncorde`](https://www.npmjs.com/package/koncorde) package). Both keep working in Kuzzle 2; see [Towards Kuzzle 3](/core/2/guides/kuzzle-3).
+
+## 2.60.1
+
+A security fix: the configuration's secrets no longer leave the process in clear. See [Securing Redis](/core/2/guides/advanced/configuration#securing-redis) for the details of the rule.
+
+### Secrets masked in `server:getConfig` and `admin:dump`
+
+[`server:getConfig`](/core/2/api/controllers/server/get-config) and the files written by [`admin:dump`](/core/2/api/controllers/admin/dump) now show `"***"` in place of any value whose key is named like a secret: `password`, `passphrase`, `secret`, `token`, `apiKey`, `credentials`, `privateKey`, `licenseKey`, `key`, `pfx`, `auth`, and other names ending like these. This covers plugin and application configuration too. The key itself is kept, and `null` or a boolean is shown as is, so you can still tell whether a secret is set. Credentials in URLs become `https://user:***@host`.
+
+- The dump's `kuzzle.json` no longer holds the `security` section, the vault key and `http.routes`, like `server:getConfig` already did.
+- The dump's `nodejs.json` masks the environment variables with the same rule (`kuzzle_services__internalCache__options__password`, `KUZZLE_LICENSE_KEY`...).
+- The core dump a full dump also writes is the whole process memory: it cannot be masked. Never attach a full dump to a support ticket as is.
+
+**Action:** if a tool reads a secret back through `server:getConfig` or a dump, it now reads `"***"`: give it the secret another way.
+
+### A secret set through an environment variable keeps its text
+
+A `kuzzle_…` environment variable whose key is named like a secret is no longer turned into a number: `kuzzle_services__internalCache__options__password=0123` now gives the password `"0123"`. It used to give the number `123`, so the connection failed, and a value past 2^53 lost precision. `true` and `false` still become booleans, and `*json:` still works.
+
+**Action:** if you worked around this, for example by setting the Redis password to the number Kuzzle sent (`123`) or by writing `*json:"0123"`, check that the value Kuzzle now sends matches the server's.
+
+### Protected Redis
+
+Kuzzle already passed the `options` of `services.internalCache` and `services.memoryStorage` to its Redis client as is, so a password, an ACL user, TLS or Sentinel worked without code. This is now documented in [Securing Redis](/core/2/guides/advanced/configuration#securing-redis) and in `.kuzzlerc.sample.jsonc`, and tested. The cluster's ID card worker uses the same options: give it PEM text rather than a `Buffer`, and no functions.
