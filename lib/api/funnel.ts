@@ -1345,7 +1345,10 @@ function capitalize(string: string): string {
  * @param  {Request} request
  * @returns {Promise}
  */
-function doAction(controller: BaseController, request: KuzzleRequest) {
+function doAction(
+  controller: BaseController,
+  request: KuzzleRequest,
+): PromiseLike<unknown> {
   // `Reflect.apply(Reflect.get(...))`, not `controller[action](...)`: the
   // action is a runtime-built key and `BaseController` deliberately has no
   // index signature (TD-28). `apply` rather than calling the result of `get`
@@ -1357,14 +1360,7 @@ function doAction(controller: BaseController, request: KuzzleRequest) {
     request,
   ]);
 
-  // Same duck-type check as before, spelled so it narrows: a truthy non-object
-  // used to reach `ret.then` and read `undefined`, which took this branch too.
-  if (
-    !ret ||
-    typeof ret !== "object" ||
-    !("then" in ret) ||
-    typeof ret.then !== "function"
-  ) {
+  if (!isThenable(ret)) {
     return kerror.reject(
       "plugin",
       "controller",
@@ -1375,6 +1371,20 @@ function doAction(controller: BaseController, request: KuzzleRequest) {
   }
 
   return ret;
+}
+
+/**
+ * Same duck-type check as before, spelled as a guard so that it narrows to
+ * what `await` takes: a truthy non-object used to reach `ret.then` and read
+ * `undefined`, which failed the check too.
+ */
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "then" in value &&
+    typeof value.then === "function"
+  );
 }
 
 /**
