@@ -108,17 +108,15 @@ function maskSecret(value: unknown): unknown {
  * any JSON clone — a JSON clone turns a `Buffer` into `{ type, data }`, whose
  * leaves would no longer be recognised as one secret.
  */
-export function redactSecrets<T>(value: T): T {
-  return redact(value) as T;
-}
-
-function redact(value: unknown): unknown {
+export function redactSecrets(value: JSONObject): JSONObject;
+export function redactSecrets(value: unknown): unknown;
+export function redactSecrets(value: unknown): unknown {
   if (typeof value === "string") {
     return redactUrlCredentials(value);
   }
 
   if (Array.isArray(value)) {
-    return value.map(redact);
+    return value.map(redactSecrets);
   }
 
   if (!isPlainObject(value)) {
@@ -133,7 +131,7 @@ function redact(value: unknown): unknown {
     } else if (isSecretKey(key)) {
       copy[key] = maskSecret(child);
     } else {
-      copy[key] = redact(child);
+      copy[key] = redactSecrets(child);
     }
   }
 
