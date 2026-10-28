@@ -43,9 +43,9 @@
       "hub": "docs/adr-004/ADR-0004-secrets-in-config.md",
       "title": "Securing Redis access and keeping configuration secrets out of public outputs",
       "status": "active",
-      "statusLabel": "🟦 Active · step 01 in progress",
+      "statusLabel": "🟦 Active · step 01 in review (#3085)",
       "openStep": "docs/adr-004/steps/01-redact-secrets.md",
-      "nextAction": "Review the step 01 branch feat/adr-0004-step-01-redact-secrets, then push it, open the PR to 2-dev and the ZeroMQ inter-node security issue.",
+      "nextAction": "Review and merge #3085 (step 01), then close step 01 and the ADR.",
       "blockers": [],
       "openPoints": []
     }

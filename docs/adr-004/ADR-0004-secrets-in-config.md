@@ -57,9 +57,9 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 ## Cold start
 
-**Where we are (2026-10-28):** step 01 **in progress** — implemented on branch `feat/adr-0004-step-01-redact-secrets` (base `2-dev`), not pushed yet: redaction shared by `getConfig` and the dump, number-only `unstringify` exemption, password-protected Redis on the ES8 functional cluster, docs. Detail and gotchas in [step 01](steps/01-redact-secrets.md).
+**Where we are (2026-10-28):** step 01 **in progress** — PR [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) under review (base `2-dev`): redaction shared by `getConfig` and the dump, number-only `unstringify` exemption, password-protected Redis on the ES8 functional cluster, docs. Detail and gotchas in [step 01](steps/01-redact-secrets.md).
 
-**Next action:** maintainer review of the step 01 branch, then push, open the PR and the ZeroMQ issue (both drafted in the step's hand-off).
+**Next action:** review and merge [#3085](https://github.com/kuzzleio/kuzzle/pull/3085), then close step 01 and the ADR. ZeroMQ follow-up: [#3084](https://github.com/kuzzleio/kuzzle/issues/3084).
 
 **Conventions** (same as ADR-0001 / 0003): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -69,7 +69,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | 🟦 In progress | — | [detail](steps/01-redact-secrets.md) |
+| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | 🟦 In progress | [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) | [detail](steps/01-redact-secrets.md) |
 
 ---
 
@@ -84,7 +84,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 - **2026-10-13** — **Security fix, no v3 breaking-change row.**
 - **2026-10-13** — **Worker `Buffer` / function limit documented, not fixed.**
 - **2026-10-28** — **`…accesskey`, `…access_key` added to the rule** (step 01): `secretAccessKey` and `AWS_SECRET_ACCESS_KEY`, named in the Context, matched no suffix.
-- **2026-10-13** — **Out of scope:** password-less startup warning (deferred); ZeroMQ inter-node security (separate issue).
+- **2026-10-13** — **Out of scope:** password-less startup warning (deferred); ZeroMQ inter-node security (separate issue, [#3084](https://github.com/kuzzleio/kuzzle/issues/3084)).
 
 ---
 

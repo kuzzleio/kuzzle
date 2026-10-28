@@ -1,6 +1,6 @@
 # Step 01 — Redact configuration secrets, protected Redis in CI, docs
 
-**Status:** 🟦 In progress — PR under review · **Opened:** 2026-10-28 · **PR:** — (branch `feat/adr-0004-step-01-redact-secrets`, base `2-dev`) · Back to the [hub](../ADR-0004-secrets-in-config.md)
+**Status:** 🟦 In progress — PR under review · **Opened:** 2026-10-28 · **PR:** [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) (base `2-dev`) · Back to the [hub](../ADR-0004-secrets-in-config.md)
 
 ## Goal
 
@@ -11,7 +11,7 @@ Apply the hub's Decision §1–§8 in one PR: one redaction function shared by `
 - [x] Unit (vitest, `tests/`): every rule name, both ways (`cookieAuthentication`, booleans, `null`, `requirePassword=false` stays boolean); nested objects; URL credentials; `Buffer` / array masked whole; `mappings.properties.token` untouched; input not mutated; `getConfig` masks Redis password, `tls.key`, ES `client.auth`, a plugin secret; `unstringify` keeps `password: "0123"` and still turns a non-secret `"42"` into `42`; dump has no `security` / `VAULT_KEY`, masked config and masked `env`.
 - [x] Functional: `.ci/test-cluster-8.yml` Redis with `--requirepass`, `kuzzle_services__internalCache__options__password` and `…__memoryStorage__…` on the 3 nodes (cluster start proves main process + ID card worker authenticate); `.ci/test-cluster-7.yml` stays password-less; the `getConfig` `"***"` scenario restricted to ES8; check `.ci/scripts/run-monkey-tests.sh` reuses the cluster file without talking to Redis directly.
 - [x] Docs: sample config (password, ACL, TLS, Sentinel); guide section (env-var example, worker limit, `getConfig` / dump redaction, core dump warning).
-- [ ] `pr-preflight`; open the ZeroMQ issue (drafted, to be opened with the PR).
+- [x] `pr-preflight`; open the ZeroMQ issue ([#3084](https://github.com/kuzzleio/kuzzle/issues/3084)).
 
 ## What was done
 
@@ -36,3 +36,4 @@ Apply the hub's Decision §1–§8 in one PR: one redaction function shared by `
 
 - Unit suite in Docker (`.ci/scripts/docker-test.sh unit`): 167 files, 4 455 passed, 2 skipped. `pr-preflight`: all checks OK (lint 0 errors, error codes, ADR state, ratchets & test type-check, doc budgets). `npm run build` OK.
 - Functional, ES8 websocket (`ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket`): the cluster starts on the password-protected Redis (`redis-cli ping` answers `NOAUTH` without it), both `@es8` scenarios pass. Two local-only workarounds, neither in the PR: the Docker VM disk was >95 % full, so ES8 refused to allocate shards until a local `my_elasticsearch.yml` disabled the disk threshold; and `@network` / `Websocket.feature` reach `localhost:17510` / `localhost:7512`, which does not resolve from inside `docker-test.sh`'s container (pre-existing, unrelated). With `--tags "not @network"`: 164 scenarios, 162 passed, 1 failed (`Websocket.feature:5`, `ECONNREFUSED 127.0.0.1:7512`, same cause), 1 skipped by fail-fast. CI runs the suite from the host, where both resolve.
+- Re-run after freeing Docker disk space, no workaround (2026-10-28, with the `accesskey` fix): `ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket -- --tags "not @network and not @websocket"` → 162 scenarios, 162 passed.
