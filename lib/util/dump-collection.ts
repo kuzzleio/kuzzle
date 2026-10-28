@@ -362,7 +362,8 @@ export function dumpCollectionDocuments(
         options,
         fields,
       );
-      dumper.dump();
+      // Errors are written to the stream, which is what the client reads
+      void dumper.dump();
       break;
     default:
       dumper = new JSONLDumper(
@@ -372,7 +373,7 @@ export function dumpCollectionDocuments(
         writableStream,
         options,
       );
-      dumper.dump();
+      void dumper.dump();
       break;
   }
 

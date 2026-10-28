@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import Long from "long";
 import * as protobuf from "protobufjs";
@@ -189,7 +191,15 @@ class ClusterCommand {
     await this.loadProtobuf();
     await this.serve();
 
-    this.listen();
+    // Never awaited (it loops until `dispose()`), and it rethrows a failed
+    // receive or reply: logged rather than left unhandled.
+    this.listen().catch((error: unknown) => {
+      this.logger.error(
+        `[CLUSTER] Command layer stopped listening: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+    });
   }
 
   async serve(): Promise<void> {
@@ -201,7 +211,8 @@ class ClusterCommand {
    * Listens to incoming requests and answer to them.
    * Do NOT await this method, it's meant to run indefinitely until the close()
    * method is invoked.
-   * This method can (and should) never return a rejected promise.
+   * It rejects when a receive or a reply fails while it is running, which
+   * ends the loop: `init()` logs it.
    */
   async listen(): Promise<void> {
     this.state = stateEnum.RUNNING;
