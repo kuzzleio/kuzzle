@@ -224,7 +224,7 @@ describe("#util/redactSecrets", () => {
 
     it("passes scalars through", () => {
       expect(redactSecrets(42)).toBe(42);
-      expect(redactSecrets(null)).toBe(null);
+      expect(redactSecrets(null)).toBeNull();
       expect(redactSecrets("http://a:b@c")).toBe("http://a:***@c");
     });
   });
