@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.60
 
-**Status:** in beta since 2026-10-12 (`npm install kuzzle@beta`). Not released as stable yet.
+**Released:** 2026-10-28. [GitHub release](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.0).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.59](/core/2/guides/upgrade-notes/from-2-59).
 
