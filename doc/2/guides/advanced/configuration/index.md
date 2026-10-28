@@ -123,6 +123,40 @@ export kuzzle_security__authToken__secret="<a long random secret>"
 Before Kuzzle 2.60, `security.authToken.gracePeriod` was ignored, and `security.jwt.algorithm`, `expiresIn` and `maxTTL` were ignored too. To keep existing configurations working, a `gracePeriod` set under both names is still read from `security.jwt`.
 :::
 
+### Securing Redis
+
+Kuzzle uses Redis for its internal cache (`services.internalCache`) and for the [memory storage](/core/2/api/controllers/memory-storage) (`services.memoryStorage`). By default it connects without credentials, which is only acceptable on a private network that nothing else can reach.
+
+The `options` object of both sections is handed as-is to the [ioredis](https://github.com/redis/ioredis) client, so authentication and encryption need no Kuzzle-specific setting:
+
+| ioredis option | Use |
+|---|---|
+| `password` | Password set by the Redis `requirepass` directive |
+| `username` + `password` | A Redis 6+ ACL user |
+| `tls` | TLS connection (`ca`, `cert`, `key`, `servername`...) |
+| `sentinelUsername`, `sentinelPassword` | Credentials of the Sentinel instances, when using Sentinel |
+
+They work the same way with a single server, Sentinel or a Redis cluster. Set them on **both** sections, even when they point at the same server:
+
+```bash
+export kuzzle_services__internalCache__options__password="<redis password>"
+export kuzzle_services__memoryStorage__options__password="<redis password>"
+```
+
+A password set through an environment variable is kept as text, even when it looks like a number (`0123` stays `0123`).
+
+::: warning
+Kuzzle hands the `services.internalCache` configuration to a worker process as JSON. A `Buffer` set from code reaches it as a plain `{ type, data }` object, and functions (such as an ioredis `retryStrategy`) are dropped. Give TLS keys and certificates as PEM text, and do not rely on functions in options the internal cache needs.
+:::
+
+#### Secrets in API answers and dumps
+
+[server:getConfig](/core/2/api/controllers/server/get-config) and [admin:dump](/core/2/api/controllers/admin/dump) never return a secret: the value of any key named like one (`password`, `passphrase`, `secret`, `token`, `apiKey`, `credentials`, `privateKey`, `key`, `pfx`, `auth`...) is replaced with `"***"`, the key itself is kept so that one can still tell whether it is set, and credentials in URLs (`https://user:password@host`) become `https://user:***@host`. This applies to plugin and application configuration too. The `security` section and `http.routes` are not returned at all. The dump masks the environment variables (`nodejs.json`) with the same rule.
+
+::: warning
+A dump also holds a core dump of the Kuzzle process (`core.gz`), which contains its whole memory, secrets included: no redaction can apply to it. Never attach a full dump to a support ticket as-is; send the JSON files only, unless asked for the core dump through a secure channel.
+:::
+
 ## Use Backend.config property
 
 <SinceBadge version="2.8.0" />

@@ -10,14 +10,18 @@ Creates a snapshot of Kuzzle's state. By default, the request waits for the dump
 Depending on the configuration of Kuzzle, this may include the following:
 
 * a coredump of Kuzzle running process
-* the current Kuzzle configuration
+* the current Kuzzle configuration, secrets masked as in [server:getConfig](/core/2/api/controllers/server/get-config)
 * server logs
-* Node.js binary & properties
+* Node.js binary & properties (environment variables masked by the same rule)
 * a list of OS properties
 * plugins configurations
 * usage statistics of the dumped instance
 
 The generated directory can be used to feed a complete report to the support team.
+
+::: warning
+The coredump holds the whole memory of the Kuzzle process, secrets included, and cannot be masked. Never attach it to a support ticket as-is. See [Securing Redis](/core/2/guides/advanced/configuration#securing-redis).
+:::
 
 ---
 

@@ -36,7 +36,9 @@ Method: GET
 
 ## Response
 
-Returns the complete Kuzzle configuration, in JSON format.
+Returns the Kuzzle configuration, in JSON format, without its `security` section and `http.routes`.
+
+Secrets are masked: the value of any key named like one (`password`, `secret`, `token`, `apiKey`, `privateKey`, `key`...) is replaced with `"***"`, and credentials in URLs become `user:***@`. See [Securing Redis](/core/2/guides/advanced/configuration#securing-redis) for the full rule.
 
 ```js
 {
