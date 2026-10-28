@@ -26,6 +26,7 @@ Apply the hub's Decision §1–§8 in one PR: one redaction function shared by `
 ## Local decisions / gotchas
 
 - **`secretAccessKey` gap closed:** the hub's Context named it, but no §3 suffix matched it (nor `AWS_SECRET_ACCESS_KEY`). Maintainer decision (2026-10-28): `accesskey` and `access_key` suffixes added (Decision §3 + register); `accessKeyId` / `AWS_ACCESS_KEY_ID` still not secret, pinned by tests.
+- **`KUZZLE_LICENSE_KEY` gap closed** (found by the template pass, 2026-10-28): `rc` matches the `kuzzle_` prefix case-insensitively, so any `KUZZLE_*` variable becomes a top-level config key; `LICENSE_KEY` matched no suffix and leaked in `getConfig`, `kuzzle.json` and `nodejs.json`. `licensekey` / `license_key` suffixes added (Decision §3 + register).
 - **URL rule** requires `//` before `user:pass@` (`mailto:a@b` and `foo:bar@baz` are left alone) and a non-empty password.
 - **Packaged defaults canary:** a unit test asserts `toPublicConfig(defaultConfig)` masks nothing — no false positive in Kuzzle's own defaults.
 - **Not covered by the rule:** a secret nested inside a `*json:` environment value whose own name is not secret (e.g. `kuzzle_services__internalCache__options='*json:{"password":"…"}'`) stays readable in `nodejs.json` (it is masked in `kuzzle.json`). `.ci/services-8.yml` (the "build and run" stack) keeps a password-less Redis: out of the checklist.

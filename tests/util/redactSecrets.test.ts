@@ -33,6 +33,9 @@ describe("#util/redactSecrets", () => {
       "encryptionKey",
       "secretAccessKey",
       "AWS_SECRET_ACCESS_KEY",
+      "licenseKey",
+      "LICENSE_KEY",
+      "KUZZLE_LICENSE_KEY",
       "VAULT_KEY",
       "kuzzle_services__internalCache__options__password",
       "REDIS_PASSWORD",
@@ -251,6 +254,13 @@ describe("#util/redactSecrets", () => {
       expect(config.http.routes).toEqual([{ a: 1 }]);
       expect(config.security.authToken.secret).toBe("s");
       expect(config.VAULT_KEY).toBe("vault");
+    });
+
+    // `rc` maps a `KUZZLE_LICENSE_KEY` environment variable to a top-level key
+    it("masks a top-level LICENSE_KEY coming from the environment", () => {
+      expect(toPublicConfig({ LICENSE_KEY: "abc-0042" })).toEqual({
+        LICENSE_KEY: "***",
+      });
     });
 
     it("accepts a configuration without an http section", () => {
