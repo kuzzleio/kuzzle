@@ -1,7 +1,7 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-10-23",
-  "latestVersion": "2.59.0",
+  "snapshot": "2026-10-28",
+  "latestVersion": "2.60.0",
   "adrs": [
     {
       "id": "0001",
@@ -42,12 +42,14 @@
       "id": "0004",
       "hub": "docs/adr-004/ADR-0004-secrets-in-config.md",
       "title": "Securing Redis access and keeping configuration secrets out of public outputs",
-      "status": "accepted",
-      "statusLabel": "🟡 Accepted · nothing implemented yet",
-      "openStep": null,
-      "nextAction": "Open step 01: redactSecrets + shared public-config function for getConfig and the dump (config + env), number-only unstringify exemption, Redis requirepass on the ES8 functional cluster, docs.",
+      "status": "active",
+      "statusLabel": "🟦 Active · step 01 in progress",
+      "openStep": "docs/adr-004/steps/01-redact-secrets.md",
+      "nextAction": "Review the step 01 branch feat/adr-0004-step-01-redact-secrets, then push it, open the PR to 2-dev and the ZeroMQ inter-node security issue.",
       "blockers": [],
-      "openPoints": []
+      "openPoints": [
+        "Rule gap: secretAccessKey / AWS_SECRET_ACCESS_KEY match no suffix of Decision §3; add an `accesskey` suffix?"
+      ]
     }
   ]
 }

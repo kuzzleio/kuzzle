@@ -57,9 +57,9 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 ## Cold start
 
-**Where we are (2026-10-13):** ADR **accepted**; the three corrections to the first plan (dump environment + `VAULT_KEY` / `security`, number-only `unstringify` exemption, `mappings` exclusion + `…key` suffixes) were validated by the maintainer. Nothing implemented yet.
+**Where we are (2026-10-28):** step 01 **in progress** — implemented on branch `feat/adr-0004-step-01-redact-secrets` (base `2-dev`), not pushed yet: redaction shared by `getConfig` and the dump, number-only `unstringify` exemption, password-protected Redis on the ES8 functional cluster, docs. Detail and gotchas in [step 01](steps/01-redact-secrets.md).
 
-**Next action:** open step 01 (one PR, base `2-dev`).
+**Next action:** maintainer review of the step 01 branch, then push, open the PR and the ZeroMQ issue (both drafted in the step's hand-off).
 
 **Conventions** (same as ADR-0001 / 0003): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -69,14 +69,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | ⬜ To do | — | — |
-
-Step 01 checklist (moves to its file when it opens):
-
-- Unit (vitest, `tests/`): every rule name, both ways (`cookieAuthentication`, booleans, `null`, `requirePassword=false` stays boolean); nested objects; URL credentials; `Buffer` / array masked whole; `mappings.properties.token` untouched; input not mutated; `getConfig` masks Redis password, `tls.key`, ES `client.auth`, a plugin secret; `unstringify` keeps `password: "0123"` and still turns a non-secret `"42"` into `42`; dump has no `security` / `VAULT_KEY`, masked config and masked `env`.
-- Functional: `.ci/test-cluster-8.yml` Redis with `--requirepass`, `kuzzle_services__internalCache__options__password` and `…__memoryStorage__…` on the 3 nodes (cluster start proves main process + ID card worker authenticate); `.ci/test-cluster-7.yml` stays password-less; the `getConfig` `"***"` scenario restricted to ES8; check `.ci/scripts/run-monkey-tests.sh` reuses the cluster file without talking to Redis directly.
-- Docs: sample config (password, ACL, TLS, Sentinel); guide section (env-var example, worker limit, `getConfig` / dump redaction, core dump warning).
-- `pr-preflight`; open the ZeroMQ issue.
+| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | 🟦 In progress | — | [detail](steps/01-redact-secrets.md) |
 
 ---
 
@@ -98,6 +91,7 @@ Step 01 checklist (moves to its file when it opens):
 
 - Core dump: documented only. Whether `admin:dump` should offer a config-only mode without `gcore` for support tickets.
 - Password-less Redis startup warning: deferred, revisit if support sees exposed instances.
+- Rule gap: the Context names `secretAccessKey`, but no §3 suffix matches it (nor `AWS_SECRET_ACCESS_KEY`). Add an `accesskey` suffix? See [step 01](steps/01-redact-secrets.md).
 
 ---
 
