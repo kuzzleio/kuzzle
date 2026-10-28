@@ -61,6 +61,8 @@ A shutdown caused by a failure is bounded: if it has not finished after 30 secon
 
 A requested shutdown exits with code `0`. During the betas of 2.60, it could exit with code `1` when a plugin unlocked a [`Mutex`](/core/2/framework/classes/mutex) that the shutdown had already released; unlocking it there now does nothing.
 
+A shutdown that fails (a `kuzzle:shutdown` pipe that throws, a lock that cannot be released…) now logs `[shutdown] Unable to shut down gracefully: <message>` and exits with code `1`. It used to be an unhandled rejection: after a requested shutdown (`SIGTERM`, `SIGINT`, `admin:shutdown`, a cluster-wide shutdown), the process then stayed alive with its network layer already closed.
+
 **Action:** none. A failed start could not be retried anyway: a second `app.start()` fails on "another one already exists". The error is still returned by `app.start()` before the process exits, so a `catch` that logs it keeps working.
 
 ### A node that stops during a cluster startup
@@ -108,6 +110,10 @@ Indexes that already hold it keep it until a new collection is created in them; 
 - **Errors are logged under `err`.** Kuzzle uses kuzzle-logger 1.5 or later: an error is logged under an `err` field, with its `name`, `message`, `stack`, `cause` and custom properties (such as a `KuzzleError`'s `id` and `status`), instead of having only its enumerable properties spread at the top level of the log entry. The `namespace`, `nodeId` and `requestId` fields are applied to error entries too.
   **Action:** if a log pipeline, dashboard or alert reads error fields at the top level of Kuzzle's logs, point it to `err`.
 - **Elasticsearch errors without a body.** When Elasticsearch answers an error with no body (a `503` while shards initialize, for instance), the `services.storage.unexpected_error` error used to have an empty message (ES 8) or `Response Error` (ES 7). Its message now gives the HTTP status, for instance `ResponseError: Elasticsearch responded 503 (no body)`.
+- **Errors logged instead of unhandled rejections.** These errors used to be logged as `ERROR: unhandledRejection: ...`, which also crashed the process in development mode. They are now logged with their own message, and the process keeps running:
+  - `[CLUSTER] Stopped listening to node <id>: <message>` and `[CLUSTER] Command layer stopped listening: <message>`, when a cluster connection fails;
+  - `[CLUSTER] Unable to dump on request from node <id>: <message>`, when a dump requested by another node fails;
+  - `Unable to clear scroll <id>: <message>` (a warning, Elasticsearch 7 only), when a multi-document action cannot clear its scroll.
 - **One shutdown per node.** A stop no longer logs `Initiating shutdown...` twice, and a node that lost Redis for a while logs `[CLUSTER] Node too slow: ID card expired` and shuts down once, instead of once per missed ID card renewal. A failure reported while the node is already shutting down, such as a cluster eviction during a `SIGTERM` stop, still makes it exit with a non-zero code.
 - The Loki preset now runs on pino-loki 3 (through kuzzle-logger 1.7). The preset keeps the behaviour it had with pino-loki 2: logs are still batched every second by default, and `meta` is not sent as structured metadata unless asked for.
 
@@ -144,6 +150,7 @@ These dependencies changed major version. Each was pinned to its previous behavi
 - **A failed `app.start()` ends the process.** An application test that expects `app.start()` to reject now sees the process exit with code `1` right after (see [A failed startup stops the node](#a-failed-startup-stops-the-node)); mock `process.exit` in such a test.
 - **Locks released at shutdown.** A node that stops now releases the locks it took with `withLock` before it exits, as it already did for `Mutex`, so the other nodes no longer wait for them to expire.
 - **Plugin requests with `triggerEvents`.** When such a request failed, the action was run a second time, without events: a request rejected by a pipe could still be executed. It now fails once, with its error. An error that is not a `KuzzleError`, thrown by the action, now arrives wrapped in `plugin.runtime.unexpected_error`, as for an API request; it used to arrive as is, from the second run. A rejection of the `request:afterExecution` pipe for these requests is logged, instead of being left unhandled.
+- **A pipe whose handler throws.** When a pipe handler registered with `onPipe`, or a listener of the piped event, throws, the `pipe()` call now rejects with that error. It used to stay pending forever, and the error was an unhandled rejection.
 - **`http:<verb>` events** are always triggered with the lowercase verb (`http:get`). A route declared with an uppercase verb (`verb: 'GET'`) used to trigger only `http:GET`: it now triggers `http:get`, then `http:GET` for compatibility (deprecated, removed in Kuzzle 3). A `http:*` listener is called twice for such a route.
 - **`request.getDate(name, format)`**: a custom `format` replaces the ISO 8601 check. It was checked on top of it, so a format such as `DD/MM/YYYY` rejected every value.
 - **`request.getTimestamp(name)`** accepts integer strings (HTTP query strings), and rejects date strings: `"2026-10-27"` used to return `2026`.
