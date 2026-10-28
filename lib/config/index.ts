@@ -34,6 +34,7 @@ import type {
 } from "../types/config/KuzzleConfiguration";
 import packageJson from "../../package.json";
 import { wrap } from "../kerror";
+import { isSecretKey } from "../util/redactSecrets";
 import { isPlainObject } from "../util/safeObject";
 import bytes from "../util/bytes";
 
@@ -203,6 +204,11 @@ function unstringify(cfg: RawConfig): RawConfig {
               `the key "${k}" does not contain a valid stringified JSON (${cfg[k]})`,
             );
           }
+        } else if (isSecretKey(k)) {
+          // A secret keeps its text form: "0123" is a password, not 123
+          // (ADR-0004). Only the number conversion is skipped, so a boolean
+          // switch named like a secret (`requirePassword`) still converts.
+          return;
         } else if (/^(-|\+)?([0-9]+)$/.test(cfg[k])) {
           cfg[k] = Number.parseInt(cfg[k]);
         } else if (/^(-|\+)?([0-9]+(\.[0-9]+)?)$/.test(cfg[k])) {

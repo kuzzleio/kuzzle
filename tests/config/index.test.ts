@@ -237,6 +237,36 @@ describe("#config", () => {
       );
     });
 
+    /*
+     * ADR-0004 §6: a secret set through the environment keeps its text form.
+     * Only the number conversion is skipped: a boolean switch whose name ends
+     * like a secret still converts, and `*json:` still parses.
+     */
+    it("keeps a secret that looks like a number as a string", () => {
+      const result = load({
+        nested: { apiKey: "9007199254740993", password: "0123" },
+        port: "42",
+        token: "-1.5",
+      });
+
+      expect((result.nested as JSONObject).password).toBe("0123");
+      expect((result.nested as JSONObject).apiKey).toBe("9007199254740993");
+      expect(result.token).toBe("-1.5");
+      expect(result.port).toBe(42);
+    });
+
+    it("still converts booleans and *json: under a secret key", () => {
+      const result = load({
+        auth: '*json:{"username": "u", "password": "p"}',
+        requirePassword: "false",
+        sentinelPassword: "true",
+      });
+
+      expect(result.requirePassword).toBe(false);
+      expect(result.sentinelPassword).toBe(true);
+      expect(result.auth).toEqual({ password: "p", username: "u" });
+    });
+
     it("descends into nested sections", () => {
       const result = load({
         foo: "42",
