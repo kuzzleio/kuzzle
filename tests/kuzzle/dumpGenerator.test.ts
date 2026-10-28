@@ -220,6 +220,73 @@ describe("#kuzzle/DumpGenerator", () => {
       });
     });
 
+    /* ADR-0004 §2 and §5: dumps are attached to support tickets, so the
+     * configuration goes through the same public-config function as
+     * server:getConfig, and the environment is masked by the same rule. */
+    describe("secrets", () => {
+      afterEach(() => {
+        vi.unstubAllEnvs();
+      });
+
+      it("should drop security and VAULT_KEY and mask the configuration", async () => {
+        config.VAULT_KEY = "vault";
+        config.http = { accessControlAllowOrigin: "*", routes: [{}] };
+        config.security = { authToken: { secret: "jwt-secret" } };
+        config.services = {
+          internalCache: {
+            options: {
+              password: "redis-password",
+              tls: { key: Buffer.from("k") },
+            },
+          },
+        };
+
+        await generator.dump(suffix);
+
+        const dumped = written("kuzzle.json").config;
+
+        expect(dumped).not.toHaveProperty("security");
+        expect(dumped).not.toHaveProperty("VAULT_KEY");
+        expect(dumped.http).toEqual({ accessControlAllowOrigin: "*" });
+        expect(dumped.services.internalCache.options).toEqual({
+          password: "***",
+          tls: { key: "***" },
+        });
+        expect(dumped.dump).toEqual(config.dump);
+        // The live configuration is left as it was.
+        expect(config.services.internalCache.options.password).toBe(
+          "redis-password",
+        );
+      });
+
+      it("should mask the environment", async () => {
+        vi.stubEnv(
+          "kuzzle_services__internalCache__options__password",
+          "redis-password",
+        );
+        vi.stubEnv(
+          "kuzzle_services__storageEngine__client__node",
+          "https://elastic:es-password@es:9200",
+        );
+        vi.stubEnv("KUZZLE_DUMP_TEST_PLAIN", "visible");
+
+        await generator.dump(suffix);
+
+        const { env } = written("nodejs.json");
+
+        expect(env.kuzzle_services__internalCache__options__password).toBe(
+          "***",
+        );
+        expect(env.kuzzle_services__storageEngine__client__node).toBe(
+          "https://elastic:***@es:9200",
+        );
+        expect(env.KUZZLE_DUMP_TEST_PLAIN).toBe("visible");
+        expect(
+          process.env.kuzzle_services__internalCache__options__password,
+        ).toBe("redis-password");
+      });
+    });
+
     /* ⚠️ `plugins.json` holds what `getPluginsDescription()` answers. The Mocha
      * spec set `pluginsManager.plugins` to the same object and asserted
      * against *that*, so a subject dumping the wrong one of the two would

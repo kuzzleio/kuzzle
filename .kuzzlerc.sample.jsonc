@@ -569,6 +569,34 @@
     //       The amount of time (in milliseconds) after which a PING command will be issued
     //       to the Redis server to keep the connection alive.
     //       Values <= 0 will disable the keepalive feature.
+    //
+    // Securing Redis: authentication and TLS are plain ioredis "options",
+    // in every mode below (single server, Sentinel, cluster), and apply to
+    // "memoryStorage" the same way. Prefer setting secrets through
+    // environment variables, e.g.
+    //   kuzzle_services__internalCache__options__password=<password>
+    // server:getConfig and admin:dump answer "***" for them.
+    // See "Securing Redis" in the configuration guide.
+    //   * password (Redis "requirepass"):
+    //       "options": { "password": "<password>" }
+    //   * ACL user (Redis 6+):
+    //       "options": { "username": "kuzzle", "password": "<password>" }
+    //   * TLS (PEM text, not a Buffer: the configuration reaches a worker
+    //     process as JSON):
+    //       "options": {
+    //         "tls": {
+    //           "ca": "-----BEGIN CERTIFICATE-----\n...",
+    //           "cert": "-----BEGIN CERTIFICATE-----\n...",
+    //           "key": "-----BEGIN PRIVATE KEY-----\n...",
+    //           "servername": "redis.example.com"
+    //         }
+    //       }
+    //   * Sentinel (see 2. below), when the sentinels require a password:
+    //       "options": {
+    //         "password": "<Redis password>",
+    //         "sentinelUsername": "<sentinel ACL user, Redis 6+>",
+    //         "sentinelPassword": "<sentinel password>"
+    //       }
     "internalCache": {
       "backend": "redis",
       "node": {

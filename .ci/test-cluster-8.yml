@@ -21,6 +21,13 @@ x-kuzzle-config: &kuzzle-config
     kuzzle_services__storageEngine__commonMapping__dynamic: "true"
     kuzzle_services__internalCache__node__host: "redis"
     kuzzle_services__memoryStorage__node__host: "redis"
+    # Redis runs with a password on this stack only (ADR-0004): the cluster
+    # starting at all proves the main process and the ID card worker both
+    # authenticate, and test-cluster-7.yml keeps the password-less path
+    # covered. The leading zero checks that the configuration loader keeps a
+    # secret as text instead of turning it into the number 123456789.
+    kuzzle_services__internalCache__options__password: &redis-password "0123456789"
+    kuzzle_services__memoryStorage__options__password: *redis-password
     kuzzle_server__protocols__mqtt__enabled: "true"
     kuzzle_server__protocols__mqtt__developmentMode: "false"
     kuzzle_http__accessControlAllowOrigin: "localhost"
@@ -94,7 +101,8 @@ services:
 
   redis:
     image: redis:8
-  
+    command: ["redis-server", "--requirepass", *redis-password]
+
   elasticsearch:
     image: docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
     environment:
