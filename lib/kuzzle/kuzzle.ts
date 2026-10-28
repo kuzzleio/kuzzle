@@ -401,17 +401,9 @@ class Kuzzle extends KuzzleEventEmitter {
       // A failed start cannot be retried (a second Kuzzle instance cannot be
       // built), and what it did start keeps the process alive: in production,
       // a node with no listener and an ID card still renewed (#3020). Not
-      // awaited, so the caller still gets the error before the process exits.
-      this.shutdown(1).catch((shutdownError: unknown) => {
-        this.log.error(
-          `Unable to shut down after a failed start: ${
-            shutdownError instanceof Error
-              ? shutdownError.message
-              : inspect(shutdownError)
-          }`,
-        );
-        process.exit(1);
-      });
+      // awaited, so the caller still gets the error before the process exits;
+      // `shutdown` never rejects, and exits even when it fails.
+      void this.shutdown(1);
 
       throw error;
     }
@@ -501,7 +493,23 @@ class Kuzzle extends KuzzleEventEmitter {
       }, FAILURE_SHUTDOWN_TIMEOUT);
     }
 
-    this.shutdownPromise ??= this.runShutdown();
+    // Never rejects: every caller but one fires it and forgets it (signal
+    // handlers, cluster eviction, admin:shutdown), so a failure here used to
+    // be an unhandled rejection, and the process stayed up with its network
+    // layer already closed. It exits non-zero instead.
+    this.shutdownPromise ??= this.runShutdown().catch((error: unknown) => {
+      this.log.error(
+        `[shutdown] Unable to shut down gracefully: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+
+      if (this.shutdownWatchdog !== null) {
+        clearTimeout(this.shutdownWatchdog);
+      }
+
+      process.exit(Math.max(this.shutdownExitCode, 1));
+    });
 
     return this.shutdownPromise;
   }
@@ -1004,7 +1012,7 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("unhandledRejection");
 
     process.on("exit", () => {
-      this.shutdown();
+      void this.shutdown();
     });
 
     process.on("unhandledRejection", (reason, promise) => {
@@ -1038,7 +1046,7 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("uncaughtException");
     process.on("uncaughtException", (err) => {
       this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
-      this.dumpAndExit("uncaught-exception");
+      void this.dumpAndExit("uncaught-exception");
     });
 
     // abnormal termination signals => generate a core dump
@@ -1046,7 +1054,7 @@ class Kuzzle extends KuzzleEventEmitter {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.error(`ERROR: Caught signal: ${signal}`);
-        this.dumpAndExit("signal-".concat(signal.toLowerCase()));
+        void this.dumpAndExit("signal-".concat(signal.toLowerCase()));
       });
     }
 
@@ -1068,7 +1076,7 @@ class Kuzzle extends KuzzleEventEmitter {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.info(`Caught signal ${signal} => gracefully exit`);
-        this.shutdown();
+        void this.shutdown();
       });
     }
   }

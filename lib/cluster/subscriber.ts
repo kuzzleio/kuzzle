@@ -303,7 +303,16 @@ class ClusterSubscriber {
       this.heartbeatDelay,
     );
 
-    this.listen();
+    // Never awaited (it loops until the remote node is evicted), and it can
+    // still reject: a failed read evicts the remote node, which removes its
+    // ID card from Redis.
+    this.listen().catch((error: unknown) => {
+      this.logger.error(
+        `[CLUSTER] Stopped listening to node ${this.remoteNodeId}: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+    });
   }
 
   /**
@@ -498,7 +507,8 @@ class ClusterSubscriber {
       // pairs the topic with its message.
       await Reflect.apply(this.handlers[topic], this, [message]);
     } catch (e) {
-      this.localNode.evictSelf(
+      // Cannot reject: it logs, broadcasts, and shuts down, which never rejects
+      void this.localNode.evictSelf(
         `Unable to process sync message (topic: ${topic}, message: ${JSON.stringify(
           message,
         )}`,
@@ -555,7 +565,7 @@ class ClusterSubscriber {
         `[CLUSTER] Node evicted by ${message.evictor}. Reason: ${message.reason}`,
       );
       // A failure, like `evictSelf`'s: exit non-zero (#2785).
-      global.kuzzle.shutdown(1);
+      void global.kuzzle.shutdown(1);
       return;
     }
 
@@ -819,7 +829,15 @@ class ClusterSubscriber {
    */
   handleDumpRequest(message: DumpRequestMessage): void {
     debug("Dump generation request received from node %s", this.remoteNodeId);
-    global.kuzzle.dump(message.suffix);
+    // Nothing awaits it: a failure (another dump running, an unwritable dump
+    // path) is logged rather than left unhandled, as on SIGTRAP.
+    global.kuzzle.dump(message.suffix).catch((error: unknown) => {
+      this.logger.error(
+        `[CLUSTER] Unable to dump on request from node ${this.remoteNodeId}: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+    });
   }
 
   /**
@@ -833,7 +851,7 @@ class ClusterSubscriber {
     this.logger.error(
       `[CLUSTER] Cluster wide shutdown from ${this.remoteNodeId}`,
     );
-    global.kuzzle.shutdown();
+    void global.kuzzle.shutdown();
   }
 
   /**

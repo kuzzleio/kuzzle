@@ -85,7 +85,7 @@ describe("ClusterSubscriber", () => {
 
     kuzzle = stubKuzzle({
       ask: vi.fn(async () => undefined),
-      dump: vi.fn(),
+      dump: vi.fn(async () => undefined),
       pluginsManager: {
         registerStrategy: vi.fn(),
         unregisterStrategy: vi.fn(),
@@ -165,13 +165,30 @@ describe("ClusterSubscriber", () => {
         expect(subscriber.checkHeartbeat).toHaveBeenCalledTimes(1),
       );
     });
+
+    // Not awaited: a failure (evicting the remote node after a failed read
+    // needs Redis) used to be an unhandled rejection.
+    it("logs it when listening fails", async () => {
+      subscriber.listen = vi.fn(async () => {
+        throw new Error("redis is gone");
+      });
+      subscriber.checkHeartbeat = vi.fn();
+
+      await subscriber.init();
+
+      await vi.waitFor(() =>
+        expect(kuzzle.log.error).toHaveBeenCalledWith(
+          `[CLUSTER] Stopped listening to node ${remoteNodeId}: redis is gone`,
+        ),
+      );
+    });
   });
 
   describe("after init", () => {
     beforeEach(async () => {
       const listen = subscriber.listen;
 
-      subscriber.listen = vi.fn();
+      subscriber.listen = vi.fn(async () => undefined);
       await subscriber.init();
       subscriber.listen = listen;
 
@@ -314,7 +331,7 @@ describe("ClusterSubscriber", () => {
         // Re-armed on fake time: the heartbeat timer `init()` starts is what
         // runs the checks here, not a call made by the spec.
         const listen = subscriber.listen;
-        subscriber.listen = vi.fn();
+        subscriber.listen = vi.fn(async () => undefined);
         await subscriber.init();
         subscriber.listen = listen;
       });
@@ -686,7 +703,7 @@ describe("ClusterSubscriber", () => {
             // Re-armed on fake time: the heartbeat timer `init()` starts is
             // what drives the check here, not a call made by the spec.
             const listen = subscriber.listen;
-            subscriber.listen = vi.fn();
+            subscriber.listen = vi.fn(async () => undefined);
             await subscriber.init();
             subscriber.listen = listen;
 
@@ -1103,6 +1120,19 @@ describe("ClusterSubscriber", () => {
         subscriber.handleDumpRequest({ suffix: "suffix" });
 
         expect(kuzzle.dump.mock.calls).toEqual([["suffix"]]);
+      });
+
+      // Nothing awaits it: a failed dump used to be an unhandled rejection.
+      it("#handleDumpRequest logs a dump that fails", async () => {
+        kuzzle.dump.mockRejectedValueOnce(new Error("already dumping"));
+
+        subscriber.handleDumpRequest({ suffix: "suffix" });
+
+        await vi.waitFor(() =>
+          expect(kuzzle.log.error).toHaveBeenCalledWith(
+            `[CLUSTER] Unable to dump on request from node ${remoteNodeId}: already dumping`,
+          ),
+        );
       });
 
       it("#handleShutdown shuts kuzzle down", () => {

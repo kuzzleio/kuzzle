@@ -180,6 +180,26 @@ describe("#cluster/ClusterCommand", () => {
       // exercises for real, by sending a request to it.
       expect(command.running).toBe(true);
     });
+
+    // Not awaited, and `listen()` rethrows a failed receive or reply: that
+    // used to be an unhandled rejection.
+    it("logs it when listening fails", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.server }));
+      vi.spyOn(command, "listen").mockRejectedValue(new Error("socket gone"));
+
+      try {
+        await command.init();
+
+        await vi.waitFor(() =>
+          expect(logger.error).toHaveBeenCalledWith(
+            "[CLUSTER] Command layer stopped listening: socket gone",
+          ),
+        );
+      } finally {
+        // Not running, so `afterEach` leaves the bound port alone
+        command.dispose();
+      }
+    });
   });
 
   describe("#dispose", () => {

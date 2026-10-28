@@ -188,7 +188,8 @@ class AdminController extends NativeController {
     }
 
     this.shuttingDown = true;
-    global.kuzzle.shutdown();
+    // Not awaited, so that this request is answered first. It never rejects.
+    void global.kuzzle.shutdown();
 
     return { acknowledge: true };
   }

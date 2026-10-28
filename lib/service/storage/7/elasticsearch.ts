@@ -1511,7 +1511,15 @@ export class ES7 {
         );
       });
     } finally {
-      this.clearScroll(scrollId);
+      // Not awaited, but not left unhandled either: a scroll that cannot be
+      // cleared expires on its own.
+      this.clearScroll(scrollId).catch((error: unknown) => {
+        this.logger.warn(
+          `Unable to clear scroll ${scrollId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
     }
 
     return results;

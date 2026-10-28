@@ -510,7 +510,7 @@ describe("#kuzzle/Kuzzle", () => {
 
         await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
         expect(kuzzle.log.error).toHaveBeenCalledWith(
-          "Unable to shut down after a failed start: redis is gone",
+          "[shutdown] Unable to shut down gracefully: redis is gone",
         );
       });
     });
@@ -829,6 +829,27 @@ describe("#kuzzle/Kuzzle", () => {
       // e.g. a SIGTERM, then a cluster eviction while it runs
       await Promise.all([kuzzle.shutdown(), kuzzle.shutdown(1)]);
 
+      expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
+
+    /* Its callers fire it and forget it (signal handlers, cluster eviction,
+     * admin:shutdown): a failure was an unhandled rejection, and a requested
+     * shutdown then left the process up with its network layer closed. */
+    it("never rejects: a failure is logged and the process exits with 1", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+      vi.mocked(kuzzle.pipe).mockImplementation(async (event: string) => {
+        if (event === "kuzzle:shutdown") {
+          throw new Error("redis is gone");
+        }
+
+        return undefined;
+      });
+
+      await expect(kuzzle.shutdown()).resolves.toBeUndefined();
+
+      expect(kuzzle.log.error).toHaveBeenCalledWith(
+        "[shutdown] Unable to shut down gracefully: redis is gone",
+      );
       expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     });
 
