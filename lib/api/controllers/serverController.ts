@@ -28,6 +28,7 @@ import packagejson from "../../../package.json";
 
 import * as kerror from "../../kerror";
 import type { ApiRoute } from "../../types/ApiRoute";
+import { toPublicConfig } from "../../util/redactSecrets";
 import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 
@@ -127,20 +128,9 @@ class ServerController extends NativeController {
    * @returns {Promise<Object>}
    */
   async getConfig() {
-    const config = JSON.parse(JSON.stringify(global.kuzzle.config)); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
-
-    // Already and more appropriately returned by server:info
-    config.http.routes = undefined;
-
-    // Not a good idea to export Kuzzle's salt, hash algorithm
-    // and default rights
-    config.security = undefined;
-
-    if (config.VAULT_KEY) {
-      config.VAULT_KEY = undefined;
-    }
-
-    return config;
+    // Secrets are masked before the JSON clone: the clone turns a `Buffer`
+    // into `{ type, data }`, which would no longer be masked whole (ADR-0004).
+    return JSON.parse(JSON.stringify(toPublicConfig(global.kuzzle.config))); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
   }
 
   /**

@@ -31,6 +31,7 @@ import moment from "moment";
 import packageJson from "../../package.json";
 import * as kerror from "../kerror";
 import { BadRequestError } from "../kerror/errors";
+import { redactSecrets, toPublicConfig } from "../util/redactSecrets";
 
 class DumpGenerator {
   private _dump = false;
@@ -113,13 +114,14 @@ class DumpGenerator {
       throw new Error(message, { cause: e });
     }
 
-    // dump kuzzle information
+    // dump kuzzle information, secrets masked: dumps end up attached to
+    // support tickets (ADR-0004)
     this.logger.info("> dumping kuzzle configuration");
     fs.writeFileSync(
       path.join(dumpPath, "kuzzle.json"),
       JSON.stringify(
         {
-          config: global.kuzzle.config,
+          config: toPublicConfig(global.kuzzle.config),
           version: packageJson.version,
         },
         null,
@@ -138,19 +140,21 @@ class DumpGenerator {
       ).concat("\n"),
     );
 
-    // dump Node.js configuration
+    // dump Node.js configuration. The environment is masked by the same key
+    // rule as the configuration: a `kuzzle_…__password` variable is where a
+    // documented Redis password lives.
     this.logger.info("> dumping Node.js configuration");
     fs.writeFileSync(
       path.join(dumpPath, "nodejs.json"),
       JSON.stringify(
-        {
+        redactSecrets({
           argv: process.argv,
           config: process.config,
           env: process.env,
           moduleLoadList: process.moduleLoadList,
           release: process.release,
           versions: process.versions,
-        },
+        }),
         null,
         " ",
       ).concat("\n"),

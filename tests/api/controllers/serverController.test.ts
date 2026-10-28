@@ -8,6 +8,7 @@ import {
 import ServerController from "../../../lib/api/controllers/serverController";
 import { KuzzleRequest } from "../../../lib/api/request";
 import { ExternalServiceError } from "../../../lib/kerror/errors/externalServiceError";
+import type { JSONObject } from "../../../lib/types/JSONObject";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 describe("#api/controllers/ServerController", () => {
@@ -117,6 +118,89 @@ describe("#api/controllers/ServerController", () => {
       });
 
       expect(ask).toHaveBeenCalledWith("core:security:user:admin:exist");
+    });
+  });
+
+  describe("#getConfig", () => {
+    /*
+     * ADR-0004: what getConfig answers leaves the process, so secrets are
+     * masked; their field is kept so one can still tell they are set.
+     */
+    const privateKey = Buffer.from("-----BEGIN PRIVATE KEY-----");
+
+    let config: JSONObject;
+
+    beforeEach(() => {
+      config = {
+        VAULT_KEY: "vault",
+        http: { accessControlAllowOrigin: "*", routes: [{ verb: "get" }] },
+        plugins: {
+          "kuzzle-plugin-auth-passport-local": { requirePassword: false },
+          "some-oauth-plugin": { clientId: "id", clientSecret: "oauth" },
+        },
+        security: { authToken: { secret: "jwt-secret" } },
+        services: {
+          internalCache: {
+            options: {
+              password: "redis-password",
+              tls: { ca: "-----BEGIN CERTIFICATE-----", key: privateKey },
+            },
+          },
+          storageEngine: {
+            client: {
+              auth: { password: "es-password", username: "elastic" },
+              node: "https://elastic:es-password@es:9200",
+            },
+          },
+        },
+        version: "2.56.0",
+      };
+
+      stubKuzzle({ config });
+    });
+
+    it("should mask secrets and keep the rest", async () => {
+      const result = await controller.getConfig();
+
+      expect(result.services.internalCache.options.password).toBe("***");
+      expect(result.services.internalCache.options.tls).toEqual({
+        ca: "-----BEGIN CERTIFICATE-----",
+        key: "***",
+      });
+      expect(result.services.storageEngine.client).toEqual({
+        auth: { password: "***", username: "***" },
+        node: "https://elastic:***@es:9200",
+      });
+      expect(result.plugins["some-oauth-plugin"]).toEqual({
+        clientId: "id",
+        clientSecret: "***",
+      });
+      expect(
+        result.plugins["kuzzle-plugin-auth-passport-local"].requirePassword,
+      ).toBe(false);
+      expect(JSON.stringify(result)).not.toMatch(
+        /redis-password|es-password|PRIVATE|"oauth"|jwt-secret|vault/,
+      );
+    });
+
+    it("should not return http.routes, security nor VAULT_KEY", async () => {
+      const result = await controller.getConfig();
+
+      expect(result.http).toEqual({ accessControlAllowOrigin: "*" });
+      expect(result).not.toHaveProperty("security");
+      expect(result).not.toHaveProperty("VAULT_KEY");
+    });
+
+    it("should leave the live configuration untouched", async () => {
+      await controller.getConfig();
+
+      expect(config.services.internalCache.options.password).toBe(
+        "redis-password",
+      );
+      expect(config.services.internalCache.options.tls.key).toBe(privateKey);
+      expect(config.http.routes).toEqual([{ verb: "get" }]);
+      expect(config.security).toEqual({ authToken: { secret: "jwt-secret" } });
+      expect(config.VAULT_KEY).toBe("vault");
     });
   });
 
