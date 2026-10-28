@@ -73,11 +73,12 @@ export type ControllerDefinition = {
       /**
        * Function handler for incoming requests.
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       handler: (request: KuzzleRequest) => Promise<any>;
       /**
        * Declare HTTP routes (optional).
-       * Http routes will be auto-generated unless at least one is provided
-       * or an empty array is provided.
+       * When omitted or empty, a default route is generated:
+       * `GET /_/<controller>/<action>`, both names in kebab-case.
        */
       http?: HttpRoute[];
     };
@@ -95,8 +96,8 @@ export type HttpRoute = {
 
   /**
    * Route path.
-   * A route starting with `/` will be prefixed by `/_` otherwise the route
-   * will be prefixed by `/_/<application-name>/`.
+   * A route starting with `/` is used as is, any other route is prefixed
+   * with `/_/`.
    */
   path: string;
 

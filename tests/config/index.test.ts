@@ -89,7 +89,11 @@ describe("#config", () => {
 
       expect(rc.load).toHaveBeenCalledTimes(1);
       expect(rc.load.mock.calls[0][0]).toBe("kuzzle");
-      expect(rc.load.mock.calls[0][1]).toEqual(defaultConfig);
+      // Minus the token settings' values, applied after (see below).
+      expect(rc.load.mock.calls[0][1]).toEqual({
+        ...defaultConfig,
+        security: { ...defaultConfig.security, authToken: {}, jwt: {} },
+      });
     });
 
     it("reports an unreadable configuration file as a Kuzzle error", () => {
@@ -668,6 +672,82 @@ describe("#config", () => {
       expect((result.internal as JSONObject).notifiableProtocols).toEqual([
         "websocket",
       ]);
+    });
+  });
+
+  /*
+   * `security.jwt` is the deprecated spelling of `security.authToken`, and
+   * both ship the same non-null defaults: merged by `rc`, a user's
+   * `jwt.expiresIn` could not be told from the packaged one, and was ignored.
+   */
+  describe("#mergeTokenSettings", () => {
+    const security = (overrides: JSONObject) =>
+      load(overrides).security as JSONObject;
+
+    it("applies the packaged defaults to both sections", () => {
+      const result = security({});
+
+      expect(result.authToken).toEqual(defaultConfig.security.authToken);
+      expect(result.jwt).toEqual(defaultConfig.security.authToken);
+      expect(load().internal).toMatchObject({ deprecatedSettings: [] });
+    });
+
+    it("applies a value set under the deprecated jwt section", () => {
+      const result = security({
+        security: { jwt: { expiresIn: "2h", maxTTL: 3600000 } },
+      });
+
+      expect(result.authToken).toMatchObject({
+        algorithm: "HS256",
+        expiresIn: "2h",
+        maxTTL: 3600000,
+      });
+      expect(result.jwt).toEqual(result.authToken);
+    });
+
+    it("prefers a value set under authToken, even one equal to the default", () => {
+      const result = security({
+        security: {
+          authToken: { expiresIn: "1h", gracePeriod: 3000 },
+          jwt: { expiresIn: "2h", gracePeriod: 5000 },
+        },
+      });
+
+      // gracePeriod used to be read from jwt only: set in both, jwt still wins.
+      expect(result.authToken).toMatchObject({
+        expiresIn: "1h",
+        gracePeriod: 5000,
+      });
+    });
+
+    it("applies a gracePeriod set under authToken", () => {
+      const result = security({
+        security: { authToken: { gracePeriod: 3000 } },
+      });
+
+      expect(result.jwt).toMatchObject({ gracePeriod: 3000 });
+    });
+
+    it("treats a null authToken value as unset, as the readers always did", () => {
+      const result = security({
+        security: { authToken: { secret: null }, jwt: { secret: "s3cr3t" } },
+      });
+
+      expect((result.authToken as JSONObject).secret).toBe("s3cr3t");
+    });
+
+    it("lists the jwt keys the configuration sets, for the deprecation warning", () => {
+      expect(
+        load({ security: { jwt: { expiresIn: "2h", secret: "s" } } }).internal,
+      ).toMatchObject({
+        deprecatedSettings: ["security.jwt.expiresIn", "security.jwt.secret"],
+      });
+    });
+
+    it("leaves the packaged defaults untouched", () => {
+      load({ security: { authToken: { expiresIn: "2h" } } });
+
+      expect(defaultConfig.security.authToken.expiresIn).toBe("1h");
     });
   });
 

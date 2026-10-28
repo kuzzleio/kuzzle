@@ -15,7 +15,7 @@ KuzzleRequest input, normalizing a [Kuzzle API call](/core/2/api/payloads/reques
 
 This is the class used to build the `input` property of any [KuzzleRequest](/core/2/guides/write-protocols/context/request) object.
 
-Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput)
+Technical information: [RequestInput](/core/2/framework/classes/request-input)
 
 ---
 

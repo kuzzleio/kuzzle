@@ -27,6 +27,7 @@ import Bluebird from "bluebird";
 
 import "../types";
 import type { JSONObject } from "../types/JSONObject";
+import type ClusterNode from "./node";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
@@ -95,7 +96,7 @@ export class ClusterIdCardHandler {
   /**
    * Node instance. Represents the local node.
    */
-  private node: any;
+  private readonly node: ClusterNode;
 
   /**
    * Local node ID Card
@@ -127,7 +128,7 @@ export class ClusterIdCardHandler {
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
    */
-  private refreshTimer: any = null;
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Local node ID
@@ -150,10 +151,17 @@ export class ClusterIdCardHandler {
 
   private readonly logger = global.kuzzle.log.child("cluster:id-card");
 
-  constructor(node: any) {
+  constructor(node: ClusterNode) {
     this.node = node;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
+  }
+
+  /**
+   * How long an ID card outlives the last renewal of its node, in ms
+   */
+  get ttl(): number {
+    return this.refreshDelay * this.refreshMultiplier;
   }
 
   /**
@@ -209,7 +217,8 @@ export class ClusterIdCardHandler {
     this.refreshWorker = refreshWorker;
 
     refreshWorker.on("message", async (message: JSONObject) => {
-      if (message.error) {
+      // A renewal racing the disposal finds the card deleted: not a failure
+      if (message.error && !this.disposed) {
         await this.node.evictSelf(message.error);
       }
     });
@@ -287,7 +296,7 @@ export class ClusterIdCardHandler {
       "message",
       ({ initialized }: { initialized: JSONObject }) => {
         if (initialized) {
-          clearInterval(this.refreshTimer);
+          clearInterval(this.refreshTimer ?? undefined);
           this.refreshTimer = null;
         }
       },
@@ -311,6 +320,30 @@ export class ClusterIdCardHandler {
         this.refreshWorker.send({ action: "dispose" });
       } catch {
         // It could happens that the worker has been killed before the dispose causing send to fail
+      }
+    }
+
+    clearInterval(this.refreshTimer ?? undefined);
+    this.refreshTimer = null;
+
+    // The worker deletes the card too, but nothing waits for it: the process
+    // usually exits first, and the card then outlives it by a TTL, long
+    // enough for a node restarted on this IP to take it for a live duplicate
+    if (this.nodeIdKey !== null) {
+      try {
+        await global.kuzzle.ask("core:cache:internal:del", this.nodeIdKey);
+        await global.kuzzle.ask(
+          "core:cache:internal:execute",
+          "srem",
+          REDIS_ID_CARDS_INDEX,
+          this.nodeIdKey,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Could not delete the ID card ${this.nodeIdKey}: it expires in ${this.ttl}ms (${
+            error instanceof Error ? error.message : String(error)
+          })`,
+        );
       }
     }
   }
@@ -430,7 +463,7 @@ export class ClusterIdCardHandler {
       "core:cache:internal:store",
       this.nodeIdKey,
       JSON.stringify(this.idCard.serialize()),
-      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier },
+      { onlyIfNew: creation, ttl: this.ttl },
     );
   }
 }

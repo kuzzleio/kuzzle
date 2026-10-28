@@ -28,6 +28,7 @@ export type StorageEngineElasticsearch = {
    * }
    *
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   client: any;
 
   /**
@@ -43,6 +44,12 @@ export type StorageEngineElasticsearch = {
    * @see https://www.elastic.co/guide/en/elasticsearch/reference/7.4/dynamic-mapping.html
    */
   commonMapping: {
+    /**
+     * Collection metadata applied to a new collection whose mappings carry
+     * none of their own. Not in the defaults.
+     */
+    _meta?: Record<string, unknown>;
+
     /**
      * @default "false"
      */

@@ -17,7 +17,7 @@ Gets the detailed rights configured by a security profile.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_profiles/<_id>/_rights
+URL: http://kuzzle:7512/profiles/<_id>/_rights
 Method: GET
 ```
 

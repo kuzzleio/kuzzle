@@ -38,7 +38,7 @@ See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide
 
 ## `definition`
 
-This property is an instance of the [BackendStorage](/core/2/framework/classes/backend-storage) class that allows to interact directly with Elasticsearch.  
+This property defines the controller actions: their handlers and, optionally, their HTTP routes and OpenAPI specification.
 
 | Type                                                                   | Description             |
 |------------------------------------------------------------------------|-------------------------|

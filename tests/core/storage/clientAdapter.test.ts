@@ -45,6 +45,7 @@ const CLIENT_METHODS = [
   "updateCollection",
   "updateMapping",
   "upsert",
+  "waitForCollectionShards",
 ] as const;
 
 const CACHE_METHODS = [
@@ -113,6 +114,7 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "updateCollection",
       "updateMapping",
       "upsert",
+      "waitForCollectionShards",
     ];
     const cacheMethods = [
       "addCollection",
@@ -174,7 +176,45 @@ vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
 }));
 
+/** Every lock taken through `withLock`, and whether it is still held. */
+const locks = vi.hoisted(() => {
+  const taken: {
+    config: { retryAttempts?: number; ttl?: number } | undefined;
+    held: boolean;
+    resource: string;
+  }[] = [];
+
+  return { taken };
+});
+
+vi.mock("../../../lib/util/distributedLock", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("../../../lib/util/distributedLock")
+  >()),
+  withLock: vi.fn(
+    async (
+      resource: string,
+      callback: () => Promise<unknown>,
+      config?: { retryAttempts?: number; ttl?: number },
+    ) => {
+      const lock = { config, held: true, resource };
+      locks.taken.push(lock);
+
+      try {
+        return await callback();
+      } finally {
+        lock.held = false;
+      }
+    },
+  ),
+}));
+
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import * as kerror from "../../../lib/kerror";
+import {
+  MutexLockLostError,
+  withLock,
+} from "../../../lib/util/distributedLock";
 import { present } from "../../helpers/present";
 
 describe("#core/storage/ClientAdapter", () => {
@@ -203,6 +243,7 @@ describe("#core/storage/ClientAdapter", () => {
     emitted = [];
     pipes = new Map();
     redis = new Map();
+    locks.taken.length = 0;
 
     const hash = (key: string) => {
       let fields = redis.get(key);
@@ -255,8 +296,7 @@ describe("#core/storage/ClientAdapter", () => {
       onPipe: vi.fn((event: string, handler: () => unknown) => {
         pipes.set(event, handler);
       }),
-      // `loadMappings` takes a Mutex, which reaches the cache through `ask`;
-      // the collection write locks reach Redis through it.
+      // The collection write locks reach Redis through `ask`.
       ask: vi.fn(async (event: string, ...args: unknown[]) =>
         event === "core:cache:internal:execute"
           ? execute(...(args as [string, string, ...string[]]))
@@ -267,7 +307,7 @@ describe("#core/storage/ClientAdapter", () => {
     adapter = new ClientAdapter(storeScopeEnum.PRIVATE);
     await adapter.init();
 
-    client = adapter.client as Recorder;
+    client = adapter.client as unknown as Recorder;
     cache = adapter.cache as unknown as Recorder;
   });
 
@@ -287,16 +327,50 @@ describe("#core/storage/ClientAdapter", () => {
       expect(adapter.es.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
-      expect(handlers.size).toBe(56);
+      expect(handlers.size).toBe(58);
     });
 
-    it("reloads the collection write locks once the cluster is joined", async () => {
+    it("reloads the collection write locks once the node goes live", async () => {
       const loadLocks = vi.spyOn(adapter, "loadLocks");
 
       await pipes.get("kuzzle:state:live")?.();
 
       expect(loadLocks).toHaveBeenCalledOnce();
     });
+
+    /* kuzzle#3029: a peer created them, then stopped before this node joined.
+     * kuzzle#3044: `Kuzzle.start()` asks for `cache:reload` right after the
+     * cluster join, before the plugins' `init()`. */
+    it.each(["cache:reload", "kuzzle:state:live"])(
+      "caches the indexes and collections a peer created, on %s",
+      async (trigger) => {
+        (
+          globalThis as {
+            kuzzle: {
+              config: {
+                services: {
+                  storageEngine: { generateMissingAliases: boolean };
+                };
+              };
+            };
+          }
+        ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
+        client.getSchema.mockResolvedValue({ peer: ["c"] });
+        cache.addIndex.mockClear();
+        cache.addCollection.mockClear();
+        const loadLocks = vi.spyOn(adapter, "loadLocks");
+
+        await (trigger === "cache:reload"
+          ? ask("cache:reload")
+          : pipes.get(trigger)?.());
+
+        expect(cache.addIndex).toHaveBeenCalledWith("peer");
+        expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
+        expect(loadLocks).toHaveBeenCalledOnce();
+        // Aliases were generated at init: a reload writes nothing.
+        expect(client.generateMissingAliases).not.toHaveBeenCalled();
+      },
+    );
 
     it("namespaces every event with the adapter's scope", () => {
       for (const event of handlers.keys()) {
@@ -341,6 +415,13 @@ describe("#core/storage/ClientAdapter", () => {
         "getSettings",
         [IDX, COL],
         true,
+      ],
+      [
+        "collection:shards:wait",
+        [IDX, COL],
+        "client",
+        "waitForCollectionShards",
+        [IDX, COL],
       ],
       ["collection:exist", [IDX, COL], "cache", "hasCollection", [IDX, COL]],
       ["collection:list", [IDX], "cache", "listCollections", [IDX]],
@@ -662,6 +743,7 @@ describe("#core/storage/ClientAdapter", () => {
       // covered by one of the dedicated blocks below.
       const dedicated = [
         "cache:refresh",
+        "cache:reload",
         "collection:create",
         "collection:delete",
         "index:create",
@@ -744,6 +826,7 @@ describe("#core/storage/ClientAdapter", () => {
     it("dispatches to the matching method", async () => {
       const spies = {
         "cache:refresh": vi.spyOn(adapter, "populateCache"),
+        "cache:reload": vi.spyOn(adapter, "reloadCache"),
         "collection:create": vi.spyOn(adapter, "createCollection"),
         "collection:delete": vi.spyOn(adapter, "deleteCollection"),
         "index:create": vi.spyOn(adapter, "createIndex"),
@@ -760,6 +843,7 @@ describe("#core/storage/ClientAdapter", () => {
       }
 
       await ask("cache:refresh");
+      await ask("cache:reload");
       await ask("collection:create", "i", "c", { o: 1 }, { p: 1 });
       await ask("collection:delete", "i", "c");
       await ask("index:create", "i", { o: 1 });
@@ -811,6 +895,36 @@ describe("#core/storage/ClientAdapter", () => {
         id: "services.storage.index_already_exists",
       });
       expect(client.createIndex).not.toHaveBeenCalled();
+    });
+
+    /* kuzzle#3029: a peer created it, and its cache broadcast never came. */
+    it("caches an index that already exists in storage, then rejects", async () => {
+      const error = kerror.get(
+        "services",
+        "storage",
+        "index_already_exists",
+        "public",
+        "i",
+      );
+      cache.hasIndex.mockReturnValue(false);
+      client.createIndex.mockRejectedValueOnce(error);
+
+      await expect(adapter.createIndex("i")).rejects.toBe(error);
+
+      expect(cache.addIndex).toHaveBeenCalledWith("i");
+      expect(emitted).toHaveLength(0);
+    });
+
+    it("does not cache the index on any other storage error", async () => {
+      const error = new Error("boom");
+      cache.hasIndex.mockReturnValue(false);
+      cache.addIndex.mockClear();
+      client.createIndex.mockRejectedValueOnce(error);
+
+      await expect(adapter.createIndex("i")).rejects.toBe(error);
+
+      expect(cache.addIndex).not.toHaveBeenCalled();
+      expect(emitted).toHaveLength(0);
     });
 
     it("skips the storage write with indexCacheOnly", async () => {
@@ -1286,6 +1400,56 @@ describe("#core/storage/ClientAdapter", () => {
         refresh: true,
       });
       expect(client.refreshCollection).not.toHaveBeenCalled();
+    });
+
+    it("loads the mappings under the loadMappings lock, with no retry limit", async () => {
+      const heldDuring: boolean[] = [];
+      vi.spyOn(adapter, "createIndex").mockResolvedValue(undefined);
+      vi.spyOn(adapter, "createCollection").mockImplementation(async () => {
+        heldDuring.push(locks.taken[0]?.held ?? false);
+      });
+
+      await adapter.loadMappings({ i1: { c1: {}, c2: {} } } as never);
+
+      // Waits forever and keeps the 60 s TTL, as the `Mutex` it replaces did.
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+          held: false,
+          resource: "loadMappings",
+        },
+      ]);
+      expect(heldDuring).toEqual([true, true]);
+    });
+
+    it("gives the lock back when a mapping fails to load", async () => {
+      vi.spyOn(adapter, "createIndex").mockRejectedValue(new Error("boom"));
+
+      await expect(
+        adapter.loadMappings({ i1: { c1: {} } } as never),
+      ).rejects.toThrow("boom");
+      expect(locks.taken).toMatchObject([
+        { held: false, resource: "loadMappings" },
+      ]);
+    });
+
+    it("rejects with MutexLockLostError when the lock is lost", async () => {
+      vi.spyOn(adapter, "createIndex").mockResolvedValue(undefined);
+      vi.spyOn(adapter, "createCollection").mockResolvedValue(undefined);
+      vi.mocked(withLock).mockRejectedValueOnce(
+        new MutexLockLostError("loadMappings"),
+      );
+
+      await expect(
+        adapter.loadMappings({ i1: { c1: {} } } as never),
+      ).rejects.toBeInstanceOf(MutexLockLostError);
+    });
+
+    it("rejects a non-object payload before taking the lock", async () => {
+      await expect(adapter.loadMappings("nope" as never)).rejects.toMatchObject(
+        { id: "api.assert.invalid_argument" },
+      );
+      expect(locks.taken).toEqual([]);
     });
 
     it("rejects a non-object payload, at either level", async () => {

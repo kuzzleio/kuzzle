@@ -165,6 +165,14 @@ describe("#util/Mutex", () => {
       expect(await mutex.wait({ timeout: -1 })).toBe(true);
     });
 
+    it("uses the mutex settings when called without options", async () => {
+      cached = [true, true, false];
+
+      const mutex = new Mutex("foo", { attemptDelay: 1, timeout: -1 });
+
+      expect(await mutex.wait()).toBe(true);
+    });
+
     it("resolves false when the resource is still held at the timeout", async () => {
       cached = [true];
 
@@ -204,6 +212,8 @@ describe("#util/Mutex", () => {
 
     it("refuses to unlock a resource it does not hold", async () => {
       const mutex = new Mutex("foo", { timeout: 0 });
+
+      // Never locked, outside of an exit: still a programming error
 
       await expect(mutex.unlock()).rejects.toBeInstanceOf(KuzzleInternalError);
       await expect(mutex.unlock()).rejects.toMatchObject({
@@ -311,6 +321,17 @@ describe("#util/Mutex", () => {
 
       expect(await settled(mutex.lock())).toBe("pending");
       expect(asked("core:cache:internal:store")).toEqual([]);
+    });
+
+    it("lets the holder unlock a lock it already freed", async () => {
+      const mutex = new Mutex("foo", { timeout: 0 });
+
+      await mutex.lock();
+      await Mutex.releaseAllBeforeExit();
+      ask.mockClear();
+
+      await expect(mutex.unlock()).resolves.toBeUndefined();
+      expect(asked("core:cache:internal:script:execute")).toEqual([]);
     });
 
     it("gives back a lock acquired while it was running", async () => {

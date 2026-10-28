@@ -13,7 +13,7 @@ description: KuzzleRequest class setResult() method
 Sets the request result and status
 
 ::: warning
-**Use [request.response.configure](/core/2/framework/classes/request-response/configure) instead**, which takes a `result` option <SinceBadge version="auto" />:
+**Use [request.response.configure](/core/2/framework/classes/request-response/configure) instead**, which takes a `result` option <SinceBadge version="2.57.0" />:
 
 ```ts
 request.response.configure({ result, status, headers, format: 'raw' });

@@ -143,14 +143,14 @@ export function setupElasticsearch(version: ESVersion): ESHarness {
        * `if (this._client) { return; }`, so a preset client is what makes the
        * sequence a no-op.
        */
-      built.client._client = stubESClient();
+      Reflect.set(built.client, "_client", stubESClient());
 
       return built;
     };
 
     harness.es = harness.build();
-    harness.clientStub = harness.es.client._client;
     harness.client = harness.es.client;
+    harness.clientStub = harness.client._client;
 
     await harness.es.init();
 

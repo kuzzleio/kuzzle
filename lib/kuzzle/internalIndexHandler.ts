@@ -23,13 +23,14 @@ import crypto from "node:crypto";
 
 import Bluebird from "bluebird";
 
+import { authTokenSetting } from "../core/security/authTokenSettings";
 import { Store } from "../core/shared/store";
 import type { StorageEngineElasticsearch } from "../types";
 import { storeScopeEnum } from "../core/storage/storeScopeEnum";
 import { configuredSpecifications } from "../core/validation/specification";
 import * as kerror from "../kerror";
 import createDebug from "../util/debug";
-import { Mutex } from "../util/mutex"; // NOSONAR: see init()
+import { withLock } from "../util/distributedLock";
 
 const debug = createDebug("kuzzle:bootstrap:internalIndex");
 
@@ -110,45 +111,47 @@ class InternalIndexHandler extends Store {
   async init(): Promise<void> {
     await super.init(this.config.collections);
 
-    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
-    // incompatible acquisition/TTL formats and must not contend on the same
-    // key — swapping it is a behaviour change, deferred to #2894.
-    const lockOptions = { timeout: -1, ttl: 30000 };
-    const mutex = new Mutex("InternalIndexBootstrap", lockOptions); // NOSONAR
+    // No retry limit: the node holding it is bootstrapping the internal
+    // index, and this one cannot start before that is done
+    await withLock(
+      "InternalIndexBootstrap",
+      async () => {
+        try {
+          const bootstrapped = await this.exists(
+            "config",
+            this._BOOTSTRAP_DONE_ID,
+          );
 
-    await mutex.lock();
+          if (bootstrapped) {
+            await this._initSecret();
+            return;
+          }
 
-    try {
-      const bootstrapped = await this.exists("config", this._BOOTSTRAP_DONE_ID);
+          await Bluebird.resolve(this._bootstrapSequence()).timeout(
+            this.timeout,
+          );
 
-      if (bootstrapped) {
-        await this._initSecret();
-        return;
-      }
+          // A node that stopped while holding the lock may still have its
+          // own bootstrap in flight, and write this marker after the check
+          // above: replacing it keeps this node from failing on it
+          await this.createOrReplace("config", this._BOOTSTRAP_DONE_ID, {
+            timestamp: Date.now(),
+          });
+        } catch (error) {
+          if (error instanceof Bluebird.TimeoutError) {
+            throw kerror.get(
+              "services",
+              "storage",
+              "bootstrap_timeout",
+              "internalIndex",
+            );
+          }
 
-      await Bluebird.resolve(this._bootstrapSequence()).timeout(this.timeout);
-
-      await this.create(
-        "config",
-        { timestamp: Date.now() },
-        {
-          id: this._BOOTSTRAP_DONE_ID,
-        },
-      );
-    } catch (error) {
-      if (error instanceof Bluebird.TimeoutError) {
-        throw kerror.get(
-          "services",
-          "storage",
-          "bootstrap_timeout",
-          "internalIndex",
-        );
-      }
-
-      throw error;
-    } finally {
-      await mutex.unlock();
-    }
+          throw error;
+        }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+    );
   }
 
   /**
@@ -164,14 +167,12 @@ class InternalIndexHandler extends Store {
     debug("Bootstrapping JWT secret");
     await this._initSecret();
 
-    // Create datamodel version
-    await this.create(
-      "config",
-      { version: dataModelVersion },
-      {
-        id: this._DATAMODEL_VERSION_ID,
-      },
-    );
+    // Replaced rather than created: a bootstrap interrupted after this write
+    // but before the `.done` marker leaves it behind, and the next attempt
+    // must not fail on it (every step above is idempotent too)
+    await this.createOrReplace("config", this._DATAMODEL_VERSION_ID, {
+      version: dataModelVersion,
+    });
   }
 
   /**
@@ -215,22 +216,35 @@ class InternalIndexHandler extends Store {
   }
 
   async _initSecret(): Promise<void> {
-    // NOSONAR: `jwt` is the deprecated spelling of `authToken`, read second so
-    // an existing configuration keeps working. Dropping it is a breaking change
-    // for anyone who has not migrated, not a conversion's to make.
-    const { authToken, jwt } = global.kuzzle.config.security; // NOSONAR
-    const configSeed = authToken?.secret ?? jwt?.secret; // NOSONAR
+    // `jwt` is the deprecated spelling of `authToken`, read second so an
+    // existing configuration keeps working (see authTokenSetting).
+    const configSeed = authTokenSetting("secret");
 
     let storedSeed = await this.exists("config", this._JWT_SECRET_ID);
 
     if (!configSeed) {
       if (!storedSeed) {
         storedSeed = crypto.randomBytes(512).toString("hex");
-        await this.create(
-          "config",
-          { seed: storedSeed },
-          { id: this._JWT_SECRET_ID },
-        );
+
+        try {
+          await this.create(
+            "config",
+            { seed: storedSeed },
+            { id: this._JWT_SECRET_ID },
+          );
+        } catch (error) {
+          // An interrupted bootstrap stored one in the meantime: it is the
+          // seed other nodes may already sign with, so keep it, and read it
+          // back below
+          const alreadyStored =
+            error instanceof Error &&
+            "id" in error &&
+            error.id === "services.storage.document_already_exists";
+
+          if (!alreadyStored) {
+            throw error;
+          }
+        }
       }
 
       this.logger.warn(

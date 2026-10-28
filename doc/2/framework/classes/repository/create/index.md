@@ -33,7 +33,13 @@ The `options` argument accepts the following parameters:
 
 ### Return
 
-The `create` function returns a promise, resolving to the document creation result.
+The `create` function returns a promise, resolving to the document creation result, with the following properties:
+
+| Field      | Type                  | Description |
+|------------|-----------------------|-------------|
+| `_id`      | <pre>string</pre>     | Document unique identifier |
+| `_version` | <pre>integer</pre>    | Document version |
+| `_source`  | <pre>JSONObject</pre> | Document content, including the `_kuzzle_info` metadata |
 
 ### Example
 
@@ -46,18 +52,18 @@ const content = {
 
 const result = await repository.create(content);
 /*
-  * { _index: '%<plugin name>',
-  *   _type: '<collection>',
-  *   _id: '<a unique id>',
+  * { _id: '<unique id>',
   *   _version: 1,
-  *   result: 'created',
-  *   _shards: { total: 2, successful: 1, failed: 0 },
-  *   created: true,
   *   _source: {
   *     someField: 'some content',
-  *     anotherField: 'another content'
+  *     anotherField: 'another content',
+  *     _kuzzle_info: {
+  *       author: null,
+  *       createdAt: 1700000000000,
+  *       updatedAt: null,
+  *       updater: null
+  *     }
   *   }
   * }
   */
-
 ```

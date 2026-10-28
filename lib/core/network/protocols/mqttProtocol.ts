@@ -23,12 +23,13 @@ import * as net from "node:net";
 import { inspect } from "node:util";
 
 import type {
+  AedesOptions,
   AedesPublishPacket,
   Client,
   PublishPacket,
   Subscription,
 } from "aedes";
-import Aedes from "aedes";
+import { Aedes } from "aedes";
 import type { JSONObject } from "../../../types/JSONObject";
 
 import { Request } from "../../../api/request";
@@ -55,6 +56,15 @@ interface MqttConfig {
   };
 }
 
+/**
+ * aedes 1 disconnects a client whose socket stays undrained for 60s
+ * (`drainTimeout`); aedes 0.x had no such timeout. Kuzzle 2 keeps the 0.x
+ * behaviour, as nothing in the MQTT configuration lets a user choose.
+ */
+const AEDES_OPTIONS: AedesOptions = {
+  drainTimeout: 0,
+};
+
 interface MqttNotification {
   channels: string[];
   connectionId?: string;
@@ -75,8 +85,10 @@ class MqttProtocol extends Protocol<MqttConfig> {
   constructor() {
     super("mqtt");
 
-    // eslint-disable-next-line new-cap
-    this.aedes = new Aedes();
+    // Built here so that `aedes` and `server` exist from construction on, as
+    // they always have; aedes 1 only starts its broker (persistence, timers)
+    // in `listen()`, which `init()` awaits.
+    this.aedes = new Aedes(AEDES_OPTIONS);
     this.server = net.createServer(this.aedes.handle);
 
     this.connections = new Map();
@@ -133,6 +145,8 @@ class MqttProtocol extends Protocol<MqttConfig> {
     this.aedes.on("clientError", this.onDisconnection.bind(this));
     this.aedes.on("clientDisconnect", this.onDisconnection.bind(this));
     this.aedes.on("publish", this.onMessage.bind(this));
+
+    await this.aedes.listen();
 
     await new Promise<void>((res) =>
       this.server.listen(this.config.server.port, res),

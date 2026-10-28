@@ -23,7 +23,7 @@ For example, in the diagram below, the `editor` profile has all permissions, the
 
 ![Users, Profiles and Roles image diagram](./profiles-roles.png)
 
-Roles, profiles and users can be edited in the [Admin Console](http://console.kuzzle.io).
+Roles, profiles and users can be edited in the [Admin Console](https://console.kuzzle.io).
 
 ---
 
@@ -52,7 +52,7 @@ kourou security:createFirstAdmin '{
 Once the administrator account is created, and anonymous access rights are removed, you can properly secure your installation.  
 
 ::: info
-You can then use the [Admin Console](http://console.kuzzle.io) or Kuzzle API to create new users and assign them permissions.
+You can then use the [Admin Console](https://console.kuzzle.io) or Kuzzle API to create new users and assign them permissions.
 :::
 ---
 
@@ -109,16 +109,22 @@ As an example, below is the role definition that Kuzzle uses to request authoriz
         "getCurrentUser": true,
         "getMyRights": true
       }
+    },
+    "server": {
+      "actions": {
+        "publicApi": true,
+        "openapi": true
+      }
     }
   }
 }
-
 ```
 
-In the above role definition, anonymous users can perform the following actions: [auth:login](/core/2/api/controllers/auth/login), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [auth:getMyRights](/core/2/api/controllers/auth/get-my-rights).
+In the above role definition, anonymous users can perform the following actions: [auth:login](/core/2/api/controllers/auth/login), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [auth:getMyRights](/core/2/api/controllers/auth/get-my-rights), plus [server:publicApi](/core/2/api/controllers/server/public-api) and [server:openapi](/core/2/api/controllers/server/openapi).
 
 ::: info
-Default roles and profiles used once the administrator account is created with the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action can be configured under the [security.default](/core/2/guides/advanced/configuration) configuration key.
+Default roles and profiles used once the administrator account is created with the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action can be configured under the [security.standard](/core/2/guides/advanced/configuration) configuration key.  
+The `security.default` key holds the permissive role used **before** the first administrator account exists.
 :::
 
 For a list of available controllers and actions from Kuzzle's API by opening the following URL in your browser: [http://localhost:7512/?pretty](http://localhost:7512/?pretty)
@@ -403,11 +409,11 @@ For instance, suppose you have a chat application and you want the users to only
 
 There are multiple ways of adding a business logic layer on top of the standard Kuzzle security one:
 
-* With a [Pipe](/core/2/guides/develop-on-kuzzle/event-system#pipes), you can listen to one or multiple [API events](/core/2/framework/events/api), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
+* With a [Pipe](/core/2/guides/develop-on-kuzzle/event-system#pipe), you can listen to one or multiple [API events](/core/2/framework/events/api), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
 * If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/2/guides/advanced/data-validation)
 
 ::: info
-More information about dynamic rules with pipes: [Event System](/core/2/guides/develop-on-kuzzle/event-system#pipes)
+More information about dynamic rules with pipes: [Event System](/core/2/guides/develop-on-kuzzle/event-system#pipe)
 ::: 
 
 ## Load permissions

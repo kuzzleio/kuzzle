@@ -13,7 +13,7 @@ Deletes a document.
 ### Arguments
 
 ```js
-delete (id: string, options?: JSONObject): Promise<JSONObject>;
+delete (id: string, options?: JSONObject): Promise<void>;
 ```
 
 <br/>
@@ -33,21 +33,10 @@ The `options` argument accepts the following parameters:
 
 ### Return
 
-The `delete` function returns a promise, resolving to the document deletion result.
+The `delete` function returns a promise, resolving once the document is deleted. It resolves to nothing.
 
 ### Example
 
 ```js
 await repository.delete('someDocumentId');
-
-/*
-  *  { found: true,
-  *    _index: '%<plugin name>',
-  *    _type: '<collection>',
-  *    _id: 'someDocumentId',
-  *    _version: 3,
-  *    result: 'deleted',
-  *    _shards: { total: 2, successful: 1, failed: 0 }
-  *  }
-  */
 ```

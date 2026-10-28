@@ -328,7 +328,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 }'
 ```
 
-<SinceBadge version="auto"/>
+<SinceBadge version="2.19.8"/>
 
 Also, native Elasticsearch clause can be used, they will just not be translated and added as-is in the search query.
 

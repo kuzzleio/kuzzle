@@ -17,7 +17,7 @@ Registers a new realtime subscription on behalf of a client. The subscription wo
 ### Arguments
 
 ```ts
-register(connectionId: string, index: string, collection: string, filters: JSONObject): Promise<{ roomId: string }>
+register(connectionId: string, index: string, collection: string, filters: JSONObject): Promise<{ roomId: string, channel: string }>
 ```
 
 <br/>
@@ -33,7 +33,12 @@ register(connectionId: string, index: string, collection: string, filters: JSONO
 
 ### Return
 
-Resolves to the room ID associated with the registered subscription.
+Resolves to an object with the following properties:
+
+| Property  | Type              | Description |
+|-----------|-------------------|-------------|
+| `roomId`  | <pre>string</pre> | Identifier of the room associated with the registered subscription |
+| `channel` | <pre>string</pre> | Channel on which the notifications are sent to the connection |
 
 ---
 
@@ -41,8 +46,7 @@ Resolves to the room ID associated with the registered subscription.
 
 ```js
 async subscribeToSomething(request) {
-  const options = {};
-  const roomId = await this.context.accessors.subscription.register(
+  const { roomId } = await this.context.accessors.subscription.register(
     request.context.connection.id, 
     'myindex', 
     'mycollection', 

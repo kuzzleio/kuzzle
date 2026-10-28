@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & test type-check, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified.
+description: Finish-and-land ritual for a change in the kuzzle repo — update living docs (README / CONTRIBUTING / the governing ADR) + memory + the associated PR description, run the full local validation (lint, error-codes, migration ratchets & test type-check, unit tests, build), make logical commits, push, WAIT for the real SonarCloud quality gate and iterate until green, and leave the state cold-start-ready for a fresh context. Use when the user says "wrapup", "wrap up", "wrap up the session", "/wrapup", "finalise", "land it", or when a slice/task is functionally done and needs to be documented, validated, committed, pushed and gate-verified. Also before a release PR (2-dev → beta, beta → master): it writes the plain-language changelog page, the upgrade notes and the Towards Kuzzle 3 page (section 5b).
 ---
 
 # Wrapup
@@ -17,7 +17,8 @@ The ritual to *land* a change once it works: leave the docs true, the branch pus
 ## 1. Update the living docs
 
 - **`README.md` / `CONTRIBUTING.md`** — keep them true to the code when the change touches user-facing behavior, setup, commands, or a contributor rule (a new lint/test gate, a migration constraint, a naming convention…). If nothing user-facing changed, say so and move on.
-- **The governing ADR** — if the change belongs to a documented decision record (e.g. `docs/adr-001/ADR-0001-migration-typescript.md`), update it in the SAME pass: the **step table** (statuses / PRs), the **Cold start** block, the **Decision register** if a decision was made, open points closed/opened. The ADR is the source of truth; a change that outruns its ADR is not done. Convert relative dates to absolute. If the change came out of a review finding that carries a *generalisable part*, add its row to the ADR's **lessons index** (`docs/adr-001/lessons.md`) with what enforces it — prose is the default and prose is how a finding recurs. For the ADR's **structure** (hub + per-step files, frozen on close, central decision register), follow the `kuzzle-adr` skill.
+- **The governing ADR** — if the change belongs to a documented decision record (e.g. `docs/adr-003/ADR-0003-storage-drivers.md`), update it in the SAME pass: the **step table** (statuses / PRs), the **Cold start** block, the **Decision register** if a decision was made, open points closed/opened. The ADR is the source of truth; a change that outruns its ADR is not done. Convert relative dates to absolute. If the change came out of a review finding that carries a *generalisable part*, add its row to the governing ADR's **lessons index** (its `lessons.md`, created on the first such finding; ADR-0001's is frozen) with what enforces it — prose is the default and prose is how a finding recurs. For the ADR's **structure** (hub + per-step files, frozen on close, central decision register), follow the `kuzzle-adr` skill.
+- **Where the session's narrative goes** — what was done, proofs of runs, local decisions and gotchas → the **open step file**. A structural decision → **one line** in the hub register. The hub's cold start is **rewritten** to the current state, never appended to. Then `node .ci/scripts/check-doc-budgets.ts` (also run by `pr-preflight` and the `doc-budgets` CI job): if a living file overflows, move the content where the message says — never raise a budget in `docs/doc-budgets.json` to let a journal through.
 - **Memory** (`.../memory/`): update the project memory file with what was non-obvious — new gotchas, decisions, current state, next step. Refresh the `MEMORY.md` one-liner if a new fact file was created.
 - **The associated PR description** — if the branch has an open PR (`gh pr view <PR>`), keep its body in sync with what actually landed: the overview, the tracking/step table (statuses), and any "delivered in this PR vs later" framing. Edit it with `gh pr edit <PR> --body-file …`. A PR whose description contradicts its commits misleads reviewers. Do this after the push so it reflects the real state.
 
@@ -26,6 +27,7 @@ The ritual to *land* a change once it works: leave the docs true, the branch pus
 Before considering the wrapup done, sanity-check that a brand-new session with **zero prior context** could pick the work up from the written record alone:
 
 - The ADR's **Cold start** block names the branch, what is done/validated, the next step, and the key gotchas — updated to this session.
+- **`docs/adr-state.json`** reflects it, if any ADR state changed (step opened/closed, next action, blocker lifted, release): **replace** the fields, never append; then `node .ci/scripts/adr-state.ts --check` and read `--digest` as a fresh session would (schema: `kuzzle-adr` skill).
 - The **memory** file states the current state and the concrete next action (absolute dates, not "today"/"yesterday").
 - Anything you only "know" from this conversation (a live-validation result, a deferred decision, a trigger for a deferred item) is written down somewhere durable — not left implicit.
 
@@ -73,6 +75,15 @@ Never commit if tests fail. If something is skipped, say so.
   (`output.summary` of that check-run lists the failed gate conditions, e.g. "1 New Minor Issue".)
 - **Gotcha — reformatting expands "new code":** touching a file (a repo-wide Prettier pass, a rename) marks its lines as *new code* for Sonar, so pre-existing smells/duplication in it are re-evaluated against the strict new-code gate. Expect and fix these, or scope the reformat to avoid dragging legacy in.
 - Fix, re-validate (step 2), commit, push, and **go back to step 4**. Repeat until the SonarCloud check is green. Wrapup is not done until it is.
+
+## 5b. Release wrapup (2-dev → beta, and beta → master)
+
+When the change being landed is a **release PR** (2-dev → beta for a new beta, beta → master for a stable), the public docs must tell users what the release changes *before* the PR is opened. Last tag: `git describe --tags --abbrev=0 origin/beta` (or `origin/master` for a stable); changes: `git log --no-merges <last-tag>..origin/2-dev`, keeping `feat` / `fix` / `perf` and dropping what users never see (CI, tests, refactors, ADRs, skills, lint, ratchets).
+
+1. **Changelog page** `doc/2/guides/changelog/<major>-<minor>/index.md` (e.g. `2-60`): create it on the first beta of a minor, update it on each later beta. Plain words, written for an operator or a plugin developer, never commit titles. Fixed sections: *In short* (2–3 sentences), *What you need to do* (or "Nothing."), *What's new*, *What's fixed* (grouped by theme), *Under the hood* (dependencies) if any. First line: `**Status:** in beta since <date of beta.1>` on a beta, `**Released:** <date>` + GitHub release link on the stable. Sidebar `order` = `(100 - minor) * 10`, so the newest minor comes first, and the branch `index.md` redirects to the newest page. Link to the upgrade notes for the details, and to the reference pages of new APIs.
+2. **Upgrade notes** `doc/2/guides/upgrade-notes/from-<previous minor>/`: every user-visible change since the last tag has its paragraph (what you can observe, **Action** when there is one). The changelog says *what* changed; the upgrade notes say *what to check*. Both must agree.
+3. **Towards Kuzzle 3** `doc/2/guides/kuzzle-3/index.md`: `git diff <last-tag> origin/2-dev -- docs/v3-breaking-changes.md`; every row added with a user-facing replacement gets its line in the matching table there (deprecated thing → what to use instead). Candidates stay under "Still under discussion".
+4. Run `pr-preflight`, open the docs PR to `2-dev`, merge it **before** the release PR so the release carries its own notes.
 
 ## 6. Report honestly
 

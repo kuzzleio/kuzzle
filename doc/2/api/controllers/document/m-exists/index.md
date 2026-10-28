@@ -32,11 +32,11 @@ Body:
 }
 ```
 
-You can also access this route with the `GET` verb:
+Instead of a body, the identifiers can also be passed as a comma-separated list in the query string (there is no `GET` route for this action):
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_mExists?ids=documentId,anotherDocumentId
-Method: GET
+Method: POST
 ```
 
 ### Other protocols
@@ -82,13 +82,9 @@ kourou document:mExists <index> <collection> <body>
 
 Returns an object containing 2 arrays: `successes` and `errors`
 
-The `successes` array contain the list of retrieved documents.
+The `successes` array contains the IDs of the existing documents.
 
-Each document is an object with the following properties:
-
-- `_id`: document unique identifier
-
-The `errors` array contain the IDs of not found documents.
+The `errors` array contains the IDs of the documents that do not exist.
 
 If `strict` mode is enabled, will rather return an error if at least one document could not been retreived.
 
@@ -104,9 +100,9 @@ If `strict` mode is enabled, will rather return an error if at least one documen
   "result": {
     "successes": [
       "<documentId>",
-      "<anotherDocumentId>",
-    ]
-    "errors": [ "<anotherDocumentId>"]
+      "<anotherDocumentId>"
+    ],
+    "errors": ["<missingDocumentId>"]
   }
 }
 ```

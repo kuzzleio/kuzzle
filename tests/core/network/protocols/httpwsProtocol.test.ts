@@ -574,6 +574,22 @@ describe("core/network/protocols/httpwsProtocol", () => {
       expect(processRequest.mock.calls[0][1]).toMatchObject({ content: null });
     });
 
+    it("answers a request declaring an empty body without waiting for data", () => {
+      const processRequest = vi
+        .spyOn(httpWs, "httpProcessRequest")
+        .mockImplementation(() => {});
+      const pipe = vi.spyOn(global.kuzzle, "pipe");
+
+      // uWS may never fire `onData` for such a request: nothing must wait on it.
+      app()._httpOnMessage("post", "/", "", { "content-length": "0" });
+
+      expect(app()._httpResponse!.onData).not.toHaveBeenCalled();
+      expect(app()._httpResponse!.onAborted).toHaveBeenCalledTimes(1);
+      expect(pipe).not.toHaveBeenCalled();
+      expect(processRequest).toHaveBeenCalledTimes(1);
+      expect(processRequest.mock.calls[0][1]).toMatchObject({ content: null });
+    });
+
     it("rejects malformed JSON content", async () => {
       app()._httpOnMessage("get", "/", "", {});
       await app()._httpResponse!._onData(Buffer.from("{lol}"), true);

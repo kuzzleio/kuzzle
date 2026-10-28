@@ -46,11 +46,12 @@ import ms from "ms";
 import semver from "semver";
 
 import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
+import type { StorageEngineElasticsearch } from "../../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type { ValidatedTarget } from "../../../types/Target";
 import * as kerror from "../../../kerror";
 import didYouMean from "../../../util/didYouMean";
 import extractFields from "../../../util/extractFields";
-import { Mutex } from "../../../util/mutex";
+import { withLock } from "../../../util/distributedLock";
 import { randomNumber } from "../../../util/name-generator";
 import { assertIsObject } from "../../../util/requestAssertions";
 import { isPlainObject } from "../../../util/safeObject";
@@ -76,6 +77,18 @@ const CHILD_MAPPING_PROPERTIES = ["type"];
 
 // Used for collection emulation
 const HIDDEN_COLLECTION = "_kuzzle_keep";
+
+// The hidden collection locks wait for as long as it takes, as the `Mutex`
+// they replace did: they guard a collection creation, which must not fail
+// only because another request on the same index got there first. The lock
+// is refreshed while held, so a live holder is never overtaken; a crashed
+// one leaves it for at most `ttl` (30 s).
+const HIDDEN_COLLECTION_LOCK = { retryAttempts: Number.POSITIVE_INFINITY };
+
+// How long `waitForCollectionShards` lets Elasticsearch wait for a
+// collection's primary shards, which is also Elasticsearch's own default
+const COLLECTION_SHARDS_TIMEOUT = "30s";
+
 const ALIAS_PREFIX = "@"; // @todo next major release: Add ALIAS_PREFIX in FORBIDDEN_CHARS
 const PRIVATE_PREFIX = "%";
 const PUBLIC_PREFIX = "&";
@@ -117,20 +130,23 @@ export class ES8 {
   public _scope: storeScopeEnum;
   public _indexPrefix: string;
   public _esWrapper!: ESWrapper;
-  public _esVersion: any;
+  public _esVersion: estypes.ElasticsearchVersionInfo | null;
   public _translator: QueryTranslator;
   public searchBodyKeys: string[];
   public scriptKeys: string[];
   public scriptAllowedArgs: string[];
   public maxScrollDuration: number;
   public scrollTTL: number;
-  public _config: any;
+  public _config: StorageEngineElasticsearch;
 
   private readonly logger = global.kuzzle.log.child(
     "service:storage:elasticsearch:8",
   );
 
-  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
+  constructor(
+    config: StorageEngineElasticsearch,
+    scope = storeScopeEnum.PUBLIC,
+  ) {
     this._config = config;
     this._scope = scope;
     this._indexPrefix =
@@ -243,7 +259,7 @@ export class ES8 {
   async info(): Promise<InfoResult> {
     const result: InfoResult = {
       type: "elasticsearch",
-      version: this._esVersion,
+      version: this._esVersion?.number ?? "",
     };
 
     try {
@@ -279,7 +295,6 @@ export class ES8 {
     let size = 0;
 
     for (const [indice, indiceInfo] of Object.entries(stats.indices ?? {})) {
-      const infos = indiceInfo as any;
       // Ignore non-Kuzzle indices, and the ones Kuzzle must leave alone
       if (
         (!indice.startsWith(PRIVATE_PREFIX) &&
@@ -307,14 +322,17 @@ export class ES8 {
         size: 0,
       });
 
+      // Both are there: the request asks for the `docs` and `store` metrics.
+      const sizeInBytes = indiceInfo.total?.store?.size_in_bytes ?? 0;
+
       indexStats.collections.push({
-        documentCount: infos.total.docs.count,
+        documentCount: indiceInfo.total?.docs?.count ?? 0,
         name: collectionName,
-        size: infos.total.store.size_in_bytes,
+        size: sizeInBytes,
       });
 
-      indexStats.size += infos.total.store.size_in_bytes;
-      size += infos.total.store.size_in_bytes;
+      indexStats.size += sizeInBytes;
+      size += sizeInBytes;
     }
 
     return {
@@ -421,7 +439,7 @@ export class ES8 {
       index?: string;
       collection?: string;
       searchBody?: JSONObject;
-      targets?: any[];
+      targets?: ValidatedTarget[];
     } = {},
     {
       from,
@@ -433,7 +451,7 @@ export class ES8 {
       scroll?: string;
     } = {},
   ) {
-    let esIndexes: any;
+    let esIndexes: string;
 
     if (targets && targets.length > 0) {
       esIndexes = this._targetsToIndexes(targets);
@@ -545,9 +563,13 @@ export class ES8 {
   }
 
   async _formatSearchResult(
-    body: any,
+    body: estypes.SearchResponse,
     remaining?: number,
-    searchInfo: any = {},
+    searchInfo: {
+      collection?: string;
+      index?: string;
+      targets?: ValidatedTarget[];
+    } = {},
   ) {
     let aliasToTargets: AliasToTargets = {};
     const aliasCache = new Map<string, string[]>();
@@ -605,22 +627,26 @@ export class ES8 {
       };
     };
 
-    async function formatInnerHits(innerHits: JSONObject | undefined) {
+    async function formatInnerHits(
+      innerHits: Record<string, estypes.SearchInnerHitsResult> | undefined,
+    ) {
       if (!innerHits) {
         return undefined;
       }
 
-      const formattedInnerHits: JSONObject = {};
-      for (const [name, innerHit] of Object.entries(innerHits)) {
-        formattedInnerHits[name] = await Bluebird.map(
-          (innerHit as any).hits.hits,
-          formatHit,
-        );
-      }
-      return formattedInnerHits;
+      const formatted = await Promise.all(
+        Object.entries(innerHits).map(
+          async ([name, innerHit]): Promise<[string, unknown[]]> => [
+            name,
+            await Bluebird.map(innerHit.hits.hits, formatHit),
+          ],
+        ),
+      );
+
+      return Object.fromEntries(formatted);
     }
 
-    const hits = await Bluebird.map(body.hits.hits, async (hit: any) => ({
+    const hits = await Bluebird.map(body.hits.hits, async (hit) => ({
       inner_hits: await formatInnerHits(hit.inner_hits),
       ...(await formatHit(hit)),
     }));
@@ -631,7 +657,7 @@ export class ES8 {
       remaining,
       scrollId: body._scroll_id,
       suggest: body.suggest,
-      total: body.hits.total.value,
+      total: this._getHitsTotalValue(body.hits),
     };
   }
 
@@ -1241,7 +1267,7 @@ export class ES8 {
     index: string,
     collection: string,
     id: string,
-    fields: string,
+    fields: string[],
     {
       refresh,
       userId = null,
@@ -1408,7 +1434,7 @@ export class ES8 {
 
     const flatChanges = extractFields(changes, { alsoExtractValues: true });
 
-    for (const { key, value } of flatChanges as any) {
+    for (const { key, value } of flatChanges) {
       script.source += `ctx._source.${key} = params['${key}'];`;
       script.params[key] = value;
     }
@@ -1465,7 +1491,7 @@ export class ES8 {
     index: string,
     collection: string,
     query: JSONObject,
-    callback: any,
+    callback: (hits: estypes.SearchHit[]) => unknown,
     {
       size = 10,
       scrollTTl = "5s",
@@ -1473,7 +1499,7 @@ export class ES8 {
       size?: number;
       scrollTTl?: string;
     } = {},
-  ): Promise<any> {
+  ): Promise<unknown[]> {
     const esRequest: estypes.SearchRequest = {
       ...this._sanitizeSearchBody({ query }),
       from: 0,
@@ -1577,7 +1603,7 @@ export class ES8 {
       settings = {},
     }: {
       mappings?: estypes.MappingTypeMapping;
-      settings?: Record<string, any>;
+      settings?: estypes.IndicesIndexSettings;
     } = {},
   ) {
     this._assertValidIndexAndCollection(index, collection);
@@ -1589,19 +1615,6 @@ export class ES8 {
         "collection_reserved",
         HIDDEN_COLLECTION,
       );
-    }
-
-    const mutex = new Mutex(`hiddenCollection/create/${index}`);
-    try {
-      await mutex.lock();
-
-      if (await this._hasHiddenCollection(index)) {
-        await this.deleteCollection(index, HIDDEN_COLLECTION);
-      }
-    } catch (error) {
-      throw this._esWrapper.formatESError(error);
-    } finally {
-      await mutex.unlock();
     }
 
     const esRequest: estypes.IndicesCreateRequest = {
@@ -1618,27 +1631,37 @@ export class ES8 {
 
     const exists = await this.hasCollection(index, collection);
     if (exists) {
-      return this.updateCollection(index, collection, { mappings, settings });
+      return this._updateConcurrentlyCreatedCollection(
+        index,
+        collection,
+        mappings,
+        settings,
+      );
     }
 
     this._checkMappings(mappings);
 
+    // Copies, not in-place changes: the race branch below must hand the
+    // caller's own mappings and settings to `updateCollection`
     esRequest.mappings = {
       _meta: mappings._meta || this._config.commonMapping._meta,
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
+        {},
         mappings.properties,
         this._config.commonMapping.properties,
       ),
     };
 
-    settings.number_of_replicas =
-      settings.number_of_replicas ||
-      this._config.defaultSettings.number_of_replicas;
-
-    settings.number_of_shards =
-      settings.number_of_shards ||
-      this._config.defaultSettings.number_of_shards;
+    esRequest.settings = {
+      ...settings,
+      number_of_replicas:
+        settings.number_of_replicas ||
+        this._config.defaultSettings.number_of_replicas,
+      number_of_shards:
+        settings.number_of_shards ||
+        this._config.defaultSettings.number_of_shards,
+    };
 
     try {
       await this._client.indices.create(esRequest);
@@ -1648,14 +1671,96 @@ export class ES8 {
         "resource_already_exists_exception"
       ) {
         // race condition: the indice has been created between the "exists"
-        // check above and this "create" attempt
-        return null;
+        // check above and this "create" attempt, by a request that may not
+        // have waited for its shards yet. This request's mappings and
+        // settings must still be applied, as if it had seen it exist
+        return this._updateConcurrentlyCreatedCollection(
+          index,
+          collection,
+          mappings,
+          settings,
+        );
       }
 
       throw this._esWrapper.formatESError(error);
     }
 
+    // Only once the real collection exists: dropping the placeholder first
+    // would leave the index with no indice at all if the creation failed.
+    // Lock and ES errors alike reach the caller through `formatESError`
+    try {
+      await withLock(
+        `hiddenCollection/create/${index}`,
+        async () => {
+          if (await this._hasHiddenCollection(index)) {
+            await this.deleteCollection(index, HIDDEN_COLLECTION);
+          }
+        },
+        HIDDEN_COLLECTION_LOCK,
+      );
+    } catch (error) {
+      throw this._esWrapper.formatESError(error);
+    }
+
     return null;
+  }
+
+  /**
+   * Applies the mappings and settings of a `createCollection` call to a
+   * collection that already exists because another request created it,
+   * maybe so recently that its primary shards are still initializing.
+   */
+  private async _updateConcurrentlyCreatedCollection(
+    index: string,
+    collection: string,
+    mappings: estypes.MappingTypeMapping,
+    settings: estypes.IndicesIndexSettings,
+  ) {
+    await this.waitForCollectionShards(index, collection);
+    return this.updateCollection(index, collection, { mappings, settings });
+  }
+
+  /**
+   * Waits until the primary shards of a collection are active, for at most
+   * `timeout`, and rejects if they are not by then.
+   *
+   * A collection another node has just created is in the cluster state, so
+   * it exists, before its primary shard is active: until then, Elasticsearch
+   * answers 503 to any document request on it. The node that creates a
+   * collection waits for its shards (`wait_for_active_shards`); a node that
+   * finds it already there calls this instead. It answers at once when the
+   * shards are already active.
+   *
+   * A `yellow` status alone does not wait: Elasticsearch reports a new index
+   * whose primaries are still initializing as `yellow` (#3074). Asking for as
+   * many active shard copies as the index has primaries does, and, unlike
+   * `wait_for_no_initializing_shards`, does not also wait for replicas that
+   * are recovering, which a collection with data may take longer to do.
+   */
+  async waitForCollectionShards(
+    index: string,
+    collection: string,
+    timeout: string = COLLECTION_SHARDS_TIMEOUT,
+  ): Promise<void> {
+    const alias = this._getAlias(index, collection);
+
+    try {
+      const body = await this._client.indices.getSettings({
+        index: alias,
+        name: "index.number_of_shards",
+      });
+      const primaries =
+        Object.values(body)[0]?.settings?.index?.number_of_shards;
+
+      await this._client.cluster.health({
+        index: alias,
+        timeout,
+        wait_for_active_shards: Number(primaries ?? 1),
+        wait_for_status: "yellow",
+      });
+    } catch (error) {
+      throw this._esWrapper.formatESError(error);
+    }
   }
 
   /**
@@ -1745,7 +1850,7 @@ export class ES8 {
     }: {
       mappings?: estypes.MappingTypeMapping;
       reindexCollection?: boolean;
-      settings?: Record<string, any>;
+      settings?: estypes.IndicesIndexSettings;
     } = {},
   ) {
     const esRequest: estypes.IndicesGetSettingsRequest = {
@@ -1803,9 +1908,11 @@ export class ES8 {
    * @param indexSettings the index settings
    * @returns {{index: *}} a new index settings with only allowed settings.
    */
-  getAllowedIndexSettings(indexSettings: JSONObject) {
+  getAllowedIndexSettings(
+    indexSettings: estypes.IndicesIndexSettings | undefined,
+  ) {
     return {
-      index: _.omit(indexSettings.index, [
+      index: _.omit(indexSettings?.index, [
         "creation_date",
         "provided_name",
         "uuid",
@@ -2242,7 +2349,11 @@ export class ES8 {
         });
       }
 
-      await this._createHiddenCollection(index);
+      // `createCollection` drops the placeholder through here: recreating it
+      // would undo that.
+      if (collection !== HIDDEN_COLLECTION) {
+        await this._createHiddenCollection(index);
+      }
     } catch (e) {
       throw this._esWrapper.formatESError(e);
     }
@@ -2261,7 +2372,7 @@ export class ES8 {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
-    const deleted = new Set();
+    const deleted = new Set<string>();
 
     try {
       const body = await this._catAliases();
@@ -2468,7 +2579,7 @@ export class ES8 {
   async mCreate(
     index: string,
     collection: string,
-    documents: JSON[],
+    documents: JSONObject[],
     {
       refresh,
       timeout,
@@ -3342,7 +3453,7 @@ export class ES8 {
    */
   async _getSettings(
     esRequest: estypes.IndicesGetSettingsRequest,
-  ): Promise<any> {
+  ): Promise<estypes.IndicesIndexSettings | undefined> {
     const response = await this._client.indices.getSettings(esRequest);
     const index = esRequest.index as string;
 
@@ -3577,32 +3688,33 @@ export class ES8 {
    * @param {String} index Index name
    */
   async _createHiddenCollection(index: string) {
-    const mutex = new Mutex(`hiddenCollection/${index}`);
-
     try {
-      await mutex.lock();
+      await withLock(
+        `hiddenCollection/${index}`,
+        async () => {
+          if (await this._hasHiddenCollection(index)) {
+            return;
+          }
 
-      if (await this._hasHiddenCollection(index)) {
-        return;
-      }
+          const esRequest: estypes.IndicesCreateRequest = {
+            aliases: {
+              [this._getAlias(index, HIDDEN_COLLECTION)]: {},
+            },
+            index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
+            settings: {
+              number_of_replicas:
+                this._config.defaultSettings.number_of_replicas,
+              number_of_shards: this._config.defaultSettings.number_of_shards,
+            },
+            wait_for_active_shards: await this._getWaitForActiveShards(),
+          };
 
-      const esRequest: estypes.IndicesCreateRequest = {
-        aliases: {
-          [this._getAlias(index, HIDDEN_COLLECTION)]: {},
+          await this._client.indices.create(esRequest);
         },
-        index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
-        settings: {
-          number_of_replicas: this._config.defaultSettings.number_of_replicas,
-          number_of_shards: this._config.defaultSettings.number_of_shards,
-        },
-        wait_for_active_shards: await this._getWaitForActiveShards(),
-      };
-
-      await this._client.indices.create(esRequest);
+        HIDDEN_COLLECTION_LOCK,
+      );
     } catch (e) {
       throw this._esWrapper.formatESError(e);
-    } finally {
-      await mutex.unlock();
     }
   }
 

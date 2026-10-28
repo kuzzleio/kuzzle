@@ -22,17 +22,18 @@ import Bluebird from "bluebird";
 
 import * as kerror from "../../kerror";
 import { NativeController } from "./baseController";
-import { Mutex } from "../../util/mutex";
+import { MutexAcquireError, withLock } from "../../util/distributedLock";
 import type { KuzzleRequest } from "../request";
 import type { User } from "../../model/security/user";
-import type { ResetSecurityResult } from "../../types/controllers/adminController.type";
+import type { ResetSecurityResult } from "../../types/controllers/ResetSecurityResult";
+import type { KuzzleLogger } from "kuzzle-logger";
 
 /**
  * @class AdminController
  */
 class AdminController extends NativeController {
   protected shuttingDown: boolean;
-  protected logger: any;
+  protected logger: KuzzleLogger;
 
   constructor() {
     super([
@@ -77,72 +78,86 @@ class AdminController extends NativeController {
    * Reset all roles, profiles and users
    */
   async resetSecurity() {
-    const mutex = new Mutex("resetSecurity", { timeout: 0 });
+    return this.failIfLocked(
+      "resetSecurity",
+      "Kuzzle is already reseting roles, profiles and users.",
+      async () => {
+        const result: ResetSecurityResult = {};
+        const options = { refresh: "wait_for" };
 
-    if (!(await mutex.lock())) {
-      throw kerror.get(
-        "api",
-        "process",
-        "action_locked",
-        "Kuzzle is already reseting roles, profiles and users.",
-      );
-    }
+        result.deletedUsers = await this.ask(
+          "core:security:user:truncate",
+          options,
+        );
+        result.deletedProfiles = await this.ask(
+          "core:security:profile:truncate",
+          options,
+        );
+        result.deletedRoles = await this.ask(
+          "core:security:role:truncate",
+          options,
+        );
 
-    const result: ResetSecurityResult = {};
+        await global.kuzzle.internalIndex.createInitialSecurities();
 
-    try {
-      const options = { refresh: "wait_for" };
+        await this.ask(
+          "core:cache:internal:del",
+          `backend:init:import:permissions`,
+        );
 
-      result.deletedUsers = await this.ask(
-        "core:security:user:truncate",
-        options,
-      );
-      result.deletedProfiles = await this.ask(
-        "core:security:profile:truncate",
-        options,
-      );
-      result.deletedRoles = await this.ask(
-        "core:security:role:truncate",
-        options,
-      );
-
-      await global.kuzzle.internalIndex.createInitialSecurities();
-
-      await this.ask(
-        "core:cache:internal:del",
-        `backend:init:import:permissions`,
-      );
-    } finally {
-      await mutex.unlock();
-    }
-
-    return result;
+        return result;
+      },
+    );
   }
 
   /**
    * Reset all indexes created by users
    */
   async resetDatabase() {
-    const mutex = new Mutex("resetDatabase", { timeout: 0 });
+    return this.failIfLocked(
+      "resetDatabase",
+      "Kuzzle is already reseting all indexes.",
+      async () => {
+        const indexes = await this.ask("core:storage:public:index:list");
+        await this.ask("core:storage:public:index:mDelete", indexes);
 
-    if (!(await mutex.lock())) {
-      throw kerror.get(
-        "api",
-        "process",
-        "action_locked",
-        "Kuzzle is already reseting all indexes.",
-      );
-    }
+        await this.ask(
+          "core:cache:internal:del",
+          `backend:init:import:mappings`,
+        );
+
+        return { acknowledge: true };
+      },
+    );
+  }
+
+  /**
+   * Runs `callback` under the `resource` lock, or refuses the action right
+   * away if another node or request already holds it
+   */
+  private async failIfLocked<T>(
+    resource: string,
+    message: string,
+    callback: () => Promise<T>,
+  ): Promise<T> {
+    let acquired = false;
 
     try {
-      const indexes = await this.ask("core:storage:public:index:list");
-      await this.ask("core:storage:public:index:mDelete", indexes);
+      return await withLock(
+        resource,
+        async () => {
+          acquired = true;
+          return callback();
+        },
+        { retryAttempts: 0 },
+      );
+    } catch (error) {
+      // The same error thrown from inside the callback is not this lock
+      if (!acquired && error instanceof MutexAcquireError) {
+        throw kerror.get("api", "process", "action_locked", message);
+      }
 
-      await this.ask("core:cache:internal:del", `backend:init:import:mappings`);
-
-      return { acknowledge: true };
-    } finally {
-      await mutex.unlock();
+      throw error;
     }
   }
 
@@ -172,18 +187,27 @@ class AdminController extends NativeController {
       );
     }
 
-    global.kuzzle.shutdown();
+    this.shuttingDown = true;
+    // Not awaited, so that this request is answered first. It never rejects.
+    void global.kuzzle.shutdown();
 
     return { acknowledge: true };
   }
 
-  loadFixtures(request: KuzzleRequest) {
+  /**
+   * Always waits for the import, so that a failure is reported to the caller:
+   * `refresh=false` only skips waiting for the documents to be indexed.
+   */
+  async loadFixtures(request: KuzzleRequest) {
     const fixtures = request.getBody();
     const refresh = request.getRefresh("wait_for");
 
-    return global.kuzzle.ask("core:storage:public:document:import", fixtures, {
+    await global.kuzzle.ask("core:storage:public:document:import", fixtures, {
       refresh,
     });
+
+    // The documented answer. 2.17.6 to 2.59 answered `null` instead.
+    return { acknowledge: true };
   }
 
   loadMappings(request: KuzzleRequest) {
@@ -216,7 +240,7 @@ class AdminController extends NativeController {
 
   _waitForAction(
     waitForRefresh: string,
-    promise: Promise<any>,
+    promise: Promise<unknown>,
   ): Promise<{ acknowledge: boolean }> {
     const result = { acknowledge: true };
 

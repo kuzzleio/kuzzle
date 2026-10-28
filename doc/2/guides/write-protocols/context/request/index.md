@@ -16,7 +16,7 @@ Object representation of a Kuzzle [API call](/core/2/api/payloads/request), to b
 
 That object is continuously updated to reflect the current state of the request, during its entire lifecycle.
 
-For more information about this object, refer to its [technical documentation](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#request).
+For more information about this object, refer to its [technical documentation](/core/2/framework/classes/kuzzle-request).
 
 ---
 
@@ -24,14 +24,14 @@ For more information about this object, refer to its [technical documentation](h
 
 Network protocol specific headers can be added to the response. If the protocol supports it, these headers are forwarded in the response sent to the client.
 
-To customize the response content, read the [RequestResponse](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse) documentation.
+To customize the response content, read the [RequestResponse](/core/2/framework/classes/request-response) documentation.
 
 ---
 
 ## Constructor
 
 ```js
-new KuzzleRequest(data, [options]);
+new context.Request(data, [options]);
 ```
 
 <br/>
@@ -47,8 +47,7 @@ The `options` object can contain the following properties:
 
 | Properties   | Type     | Description                                                                                                                                                                                |
 |--------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `connection` | `object` | Connection information (see the <a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestcontextconnection-object-format>connection</a> class documentation) |
-
+| `connection` | `object` | Connection information (see the [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) documentation) |
 | `error`        | `KuzzleError`,<br/>Error | Sets the request response with the provided [error](/core/2/guides/write-protocols/context/errors)                                                                                                                                                                          |
 | `requestId`    | `string`                                                              | User-defined request identifier                                                                                                                                                                                            |
 | `result`       | `*`                                                                  | Sets the request response with the provided result, and the request status is set to `200`                                                                                                                                 |
@@ -62,10 +61,10 @@ Read-only:
 
 | Properties  | Type                                                                                                           | Description                                                          |
 |-------------|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| `context`   | [RequestContext](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext) | General request information (logged user, network information, ...)  |
+| `context`   | [RequestContext](/core/2/framework/classes/request-context) | General request information (logged user, network information, ...)  |
 | `error`     | `KuzzleError`                                                                                                  | KuzzleRequest [error](/core/2/guides/write-protocols/context/errors) |
-| `input`     | [RequestInput](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput)     | Input request representation                                         |
-| `response`  | [RequestResponse](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse)                           | Serialized [request response](/core/2/api/payloads/response)         |
+| `input`     | [RequestInput](/core/2/framework/classes/request-input)     | Input request representation                                         |
+| `response`  | [RequestResponse](/core/2/framework/classes/request-response)                           | Serialized [request response](/core/2/api/payloads/response)         |
 | `result`    | `*`                                                                                                            | KuzzleRequest result                                                 |
 | `timestamp` | `integer`                                                                                                      | KuzzleRequest creation timestamp, in Epoch-millis format             |
 
@@ -96,7 +95,7 @@ Serializes the request into into a pair of objects that can be sent across the n
 
 ```js
 const foo = request.serialize();
-const bar = new context.KuzzleRequest(foo.data, foo.options);
+const bar = new context.Request(foo.data, foo.options);
 ```
 
 ---
@@ -154,6 +153,6 @@ The `options` object can contain the following properties:
 
 | Properties | Type (default)    | Description                                                                                                                                          |
 |------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headers`  | `object`          | Network specific headers. Shortcut to the [response](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse) header functions             |
+| `headers`  | `object`          | Network specific headers. Shortcut to the [response](/core/2/framework/classes/request-response) header functions             |
 | `raw`      | `boolean (false)` | If `true`, instead of a standard [kuzzle response](/core/2/api/payloads/response), the result is sent as is to the client, without being interpreted |
 | `status`   | `integer (200)`   | KuzzleRequest status                                                                                                                                 |

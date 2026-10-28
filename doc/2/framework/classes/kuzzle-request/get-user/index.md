@@ -10,7 +10,9 @@ description: KuzzleRequest class getUser() method
 
 <SinceBadge version="2.11.0" />
 
-Returns the current user.
+Returns the current user, or `null` if the request has none.
+
+See the [KuzzleUser](/core/2/framework/types/kuzzle-user) type.
 
 ### Arguments
 

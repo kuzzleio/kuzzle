@@ -19,7 +19,7 @@ An error is returned if the profile is still in use.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_profiles/<_id>[?refresh=wait_for][&onAssignedUsers=remove|fail]
+URL: http://kuzzle:7512/profiles/<_id>[?refresh=wait_for][&onAssignedUsers=remove|fail]
 Method: DELETE
 ```
 

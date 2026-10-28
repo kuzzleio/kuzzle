@@ -7,16 +7,20 @@
 import type {
   IKuzzleConfiguration,
   JSONObject,
-  KuzzleRequest,
   PluginHookDefinition,
   PluginPipeDefinition,
   SecurityConfiguration,
+  Store,
 } from "kuzzle";
 import {
   Backend,
+  Connection,
+  Headers,
   Inflector,
+  KuzzleRequest,
   ObjectRepository,
   QueryTranslator,
+  RequestContext,
   RequestInput,
   RequestResponse,
   cacheDbEnum,
@@ -48,6 +52,16 @@ export const cluster: IKuzzleConfiguration["cluster"] = {
   ports: { command: 7511, sync: 7510 },
   syncTimeout: 5000,
 };
+
+// TD-19: the config members v2.56.0 declared `any`, read without narrowing.
+export function untypedSections(config: IKuzzleConfiguration) {
+  const iface: string = config.cluster.interface;
+  const seed: Buffer = config.internal.hash.seed;
+  const routes: Array<{ path: string }> = config.http.routes;
+  const node: string = config.services.storageEngine.client.node;
+
+  return { iface, node, routes, seed };
+}
 
 // T-14: a security section without the deprecated `jwt`.
 export function security(
@@ -131,3 +145,52 @@ export const camel: string = Inflector.camelCase(42 as unknown);
 
 // Profile._hash, v2.56.0's `() => boolean`.
 export const unpatched: boolean = Profile._hash();
+
+// TD-11: a `Store`'s answers, read and assigned without narrowing.
+export async function storeAnswers(store: Store, filters: unknown) {
+  const count: number = await store.count("drivers", filters);
+  const found: { hits: Driver[] } = await store.search("drivers", filters);
+  const next: { total: number } = await store.scroll(found, "1m");
+  const created: Driver[] = await store.createCollections({});
+
+  return { count, created, found, next: next.total };
+}
+
+// TD-15: building a request out of untyped values, then reading its result,
+// headers and connection details without narrowing.
+export function untypedRequest(data: unknown, options: unknown) {
+  const request = new KuzzleRequest(data, options);
+  const context = new RequestContext(options);
+  const connection = new Connection(options);
+
+  request.setResult(data);
+  request.response.result = options;
+  request.input.body = [data];
+
+  const result: { total: number } = request.result;
+  const answered: string[] = request.response.result;
+  const proxied: string = request.response.headers["x-a"];
+  const header: string | undefined = new Headers().getHeader(data);
+  const misc: number = connection.misc.port;
+  const tags: string[] = request.getArray("tags");
+  const ids: JSONObject = request.getArrayFromBodyOrArgs("ids", "a,b");
+
+  return { answered, context, header, ids, misc, proxied, result, tags };
+}
+
+// TD-02: untyped values handed to the application's logger, config and
+// pipes, and the members still declared `any` read without narrowing.
+export function untypedApplication(raw: unknown) {
+  app.log.info(raw);
+  app.log.error(raw);
+  app.config.set("limits.documentsFetchCount", raw);
+  app.pipe.register("custom:event", async (payload: JSONObject) => payload, {
+    dynamic: true,
+    name: "custom",
+  });
+
+  const client: { ping(): Promise<boolean> } = app.storage.storageClient;
+  const appError: Error = app.kerror.get("some_error", raw);
+
+  return { appError, client };
+}

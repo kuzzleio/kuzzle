@@ -35,6 +35,7 @@ export type StrategyDefinition = {
        * Name of a registered authenticator to use with this strategy.
        */
       authenticator: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       [key: string]: any;
     };
     /**

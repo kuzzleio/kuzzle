@@ -48,7 +48,7 @@ export type ContextMisc = {
    */
   path?: string;
   /**
-   * HTTP headers
+   * HTTP method, uppercase (e.g. `GET`)
    */
   verb?: string;
   /**
@@ -56,6 +56,7 @@ export type ContextMisc = {
    */
   headers?: JSONObject;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   [key: string]: any;
 };
 
@@ -75,7 +76,7 @@ export class Connection {
   [_c_ips]: string[];
   [_c_misc]: ContextMisc;
 
-  constructor(connection: any) {
+  constructor(connection: unknown) {
     this[_c_id] = null;
     this[_c_protocol] = null;
     this[_c_ips] = [];
@@ -175,7 +176,13 @@ export class RequestContext {
   [_user]: User | null;
   [_connection]: Connection;
 
-  constructor(options: any = {}) {
+  /**
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies; the implementation reads the options as
+   * the object `KuzzleRequest`'s constructor has checked they are.
+   */
+  constructor(options?: unknown);
+  constructor(options: JSONObject = {}) {
     this[_token] = null;
     this[_user] = null;
     this[_connection] = new Connection(options.connection);

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 
 import type { CryptonomiconCipher } from "kuzzle-vault";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -183,6 +184,42 @@ describe("#kuzzle/vault", () => {
       expect(recorded.calls).toEqual([
         { key: "the spoon does not exist", cipher: "aes-256-gcm" },
       ]);
+    });
+  });
+
+  /*
+   * Installed with npm (KaaF), the project's `config/` is above
+   * `node_modules/kuzzle`. The check matched only the pre-2.50 layout
+   * (`lib/kuzzle`), so since the build outputs to `dist/` the default file
+   * was looked up inside the package.
+   */
+  describe("#defaultSecretsFile", () => {
+    it("finds the project's file from an npm install of the dist/ build", () => {
+      expect(
+        vault.defaultSecretsFile("/app/node_modules/kuzzle/dist/lib/kuzzle"),
+      ).toBe(path.resolve("/app/config/secrets.enc.json"));
+    });
+
+    it("finds the project's file from an npm install of the pre-2.50 layout", () => {
+      expect(
+        vault.defaultSecretsFile("/app/node_modules/kuzzle/lib/kuzzle"),
+      ).toBe(path.resolve("/app/config/secrets.enc.json"));
+    });
+
+    it("uses a checkout's own config/ otherwise", () => {
+      expect(vault.defaultSecretsFile("/src/kuzzle/lib/kuzzle")).toBe(
+        path.resolve("/src/kuzzle/config/secrets.enc.json"),
+      );
+    });
+
+    it("is the file load() checks when none is given", () => {
+      existsSync.mockReturnValue(false);
+
+      vault.load();
+
+      expect(existsSync).toHaveBeenCalledWith(
+        path.resolve(__dirname, "../../config/secrets.enc.json"),
+      );
     });
   });
 });

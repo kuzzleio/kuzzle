@@ -81,10 +81,15 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
   return { ClusterIdCardHandler: IdCardHandlerStub, IdCard: actual.IdCard };
 });
 
-vi.mock("../../lib/util/mutex", async () => {
-  const { MutexStub } = await import("./nodeFixture");
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
+  const { withLock } = await import("./nodeFixture");
 
-  return { Mutex: MutexStub };
+  return {
+    ...(await importOriginal<
+      typeof import("../../lib/util/distributedLock")
+    >()),
+    withLock,
+  };
 });
 
 async function loadSubject() {
@@ -116,7 +121,7 @@ describe("ClusterNode", () => {
   let bus: ReturnType<typeof stubBus>;
   let error: ReturnType<typeof vi.fn>;
   let warn: ReturnType<typeof vi.fn>;
-  let MutexStub: any;
+  let withLock: ReturnType<typeof vi.fn>;
 
   const clusterConfig = () => ({
     activityDepth: 50,
@@ -138,11 +143,13 @@ describe("ClusterNode", () => {
     // A `vi.mock` factory's result is cached per registration, not per module
     // registry, so after `vi.resetModules()` a fresh `import("./nodeFixture")`
     // answers a *second copy* of these classes — one the subject never saw.
-    // Static state set on that copy (the mutex list, the subscription flag)
+    // State set on that copy (the lock stub, the subscription flag)
     // never reaches the code under test, and three tests failed silently that
     // way: an empty list and an unheeded flag both read as "nothing happened".
-    ({ Mutex: MutexStub } = await import("../../lib/util/mutex"));
-    MutexStub.instances.length = 0;
+    withLock = vi.mocked(
+      (await import("../../lib/util/distributedLock")).withLock,
+    );
+    withLock.mockImplementation(async (_resource, callback) => callback());
 
     bus = stubBus();
     error = vi.fn();
@@ -667,16 +674,17 @@ describe("ClusterNode", () => {
     const fullstate = { full: "state", activity: [], nodesState: [] };
 
     it("returns immediately when there is no other node", async () => {
-      kuzzle.config.cluster.joinTimeout = 12345;
       node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
 
       await node.handshake();
 
-      const mutex = MutexStub.instances.at(-1);
-
-      expect(mutex.timeout).toBe(12345);
-      expect(mutex.lock).toHaveBeenCalledTimes(1);
-      expect(mutex.unlock).toHaveBeenCalledTimes(1);
+      expect(withLock.mock.calls).toEqual([
+        [
+          "clusterHandshake",
+          expect.any(Function),
+          { retryAttempts: Number.POSITIVE_INFINITY },
+        ],
+      ]);
 
       expect(node.idCardHandler.createIdCard).toHaveBeenCalledTimes(1);
       expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(1);
@@ -687,19 +695,202 @@ describe("ClusterNode", () => {
       expect(node.idCardHandler.addNode).not.toHaveBeenCalled();
     });
 
-    it("aborts when another node shares this node's IP", async () => {
-      node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
-      node.ip = "2.3.4.2";
+    /* The ID card is what tells the other nodes this one exists: it must
+     * not be written before this node holds the handshake lock. */
+    it("creates its ID card only once it holds the handshake lock", async () => {
+      node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
+      let locked = false;
+      withLock.mockImplementation(async (_resource, callback) => {
+        locked = true;
+        try {
+          return await callback();
+        } finally {
+          locked = false;
+        }
+      });
+      node.idCardHandler.createIdCard.mockImplementation(async () => {
+        expect(locked).toBe(true);
+      });
 
       await node.handshake();
 
-      expect(node.command.getFullState).not.toHaveBeenCalled();
-      expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
-      expect(node.fullState.loadFullState).not.toHaveBeenCalled();
+      expect(node.idCardHandler.createIdCard).toHaveBeenCalledTimes(1);
+    });
+
+    /* Waiting on the lock has no limit of its own: `joinTimeout` is what
+     * gives up, as it did when `Mutex` waited for that long. */
+    it("shuts down after joinTimeout while still waiting for the lock", async () => {
+      vi.useFakeTimers();
+
+      try {
+        kuzzle.config.cluster.joinTimeout = 12345;
+        withLock.mockImplementation(() => new Promise(() => undefined));
+
+        const handshake = node.handshake();
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.timeout",
+          message:
+            "Failed to join the cluster: timed out (joinTimeout: 12345ms).",
+        });
+
+        await vi.advanceTimersByTimeAsync(12344);
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        await rejection;
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+        expect(node.idCardHandler.createIdCard).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    /* `start()` carries on as soon as `handshake()` settles: a lock obtained
+     * once it has timed out must not introduce the node to the others. */
+    it("does not join when it gets the lock after joinTimeout", async () => {
+      vi.useFakeTimers();
+
+      try {
+        kuzzle.config.cluster.joinTimeout = 100;
+        let acquired: () => void = () => undefined;
+        withLock.mockImplementation(
+          (_resource, callback) =>
+            new Promise((resolve) => {
+              acquired = () => resolve(callback());
+            }),
+        );
+
+        const handshake = node.handshake();
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.timeout",
+        });
+
+        await vi.advanceTimersByTimeAsync(100);
+        await rejection;
+
+        acquired();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(node.idCardHandler.createIdCard).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    /* The handshake keeps running once its lock is lost, and may still
+     * introduce this node to the others: it leaves the cluster. */
+    it("shuts down when it loses the handshake lock", async () => {
+      const { MutexLockLostError } =
+        await import("../../lib/util/distributedLock");
+      const lost = new MutexLockLostError("clusterHandshake");
+      withLock.mockRejectedValue(lost);
+
+      await expect(node.handshake()).rejects.toBe(lost);
+
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
       expect(error.mock.calls.flat().join("\n")).toMatch(
-        /Another node share the same IP address as this one \(2\.3\.4\.2\): baz/,
+        /Lost the handshake lock while joining the cluster/,
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not shut down for any other handshake failure", async () => {
+      const failure = new Error("Redis is gone");
+      withLock.mockRejectedValue(failure);
+
+      await expect(node.handshake()).rejects.toBe(failure);
+
+      expect(kuzzle.shutdown).not.toHaveBeenCalled();
+    });
+
+    it("stops the join timer once the handshake is over", async () => {
+      vi.useFakeTimers();
+
+      try {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue([]);
+
+        await node.handshake();
+        await vi.advanceTimersByTimeAsync(kuzzle.config.cluster.joinTimeout);
+
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    describe("when another node has this node's IP", () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+        node.ip = "2.3.4.2";
+        node.heartbeatDelay = 2000;
+        node.idCardHandler.ttl = 4000;
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      /* It may be the stale card of a previous run of this node: it is only
+       * a duplicate if it outlives a TTL (and a renewal in flight). */
+      it("aborts if its ID card is still there after a TTL", async () => {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
+
+        const handshake = node.handshake();
+        // Rejects, so that `start()` does not go on starting the node
+        const rejection = expect(handshake).rejects.toMatchObject({
+          id: "cluster.join.duplicate_ip",
+          message:
+            "Another node shares the same IP address as this one (2.3.4.2): baz.",
+        });
+
+        await vi.advanceTimersByTimeAsync(5999);
+        expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledOnce();
+        expect(warn.mock.calls.flat().join("\n")).toMatch(
+          /same IP address as this one \(2\.3\.4\.2\)\. Waiting 6000ms/,
+        );
+
+        await vi.advanceTimersByTimeAsync(1);
+        await rejection;
+
+        expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(2);
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
+        expect(node.fullState.loadFullState).not.toHaveBeenCalled();
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it("joins the other nodes if its ID card has expired by then", async () => {
+        const alive = idCards().filter(({ id }) => id !== "baz");
+        node.idCardHandler.getRemoteIdCards
+          .mockResolvedValueOnce(idCards())
+          .mockResolvedValue(alive);
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        const handshake = node.handshake();
+        await vi.advanceTimersByTimeAsync(6000);
+        await handshake;
+
+        expect(node.command.getFullState).toHaveBeenCalledExactlyOnceWith(
+          alive,
+        );
+        expect(node.command.broadcastHandshake).toHaveBeenCalledExactlyOnceWith(
+          alive,
+        );
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
+
+      it("joins at once when the stale card was the only one", async () => {
+        node.idCardHandler.getRemoteIdCards
+          .mockResolvedValueOnce([idCard({ id: "baz", ip: "2.3.4.2" })])
+          .mockResolvedValue([]);
+
+        const handshake = node.handshake();
+        await vi.advanceTimersByTimeAsync(6000);
+        await handshake;
+
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
     });
 
     it("connects to the existing nodes and loads their full state", async () => {
@@ -805,7 +996,9 @@ describe("ClusterNode", () => {
       node.command.getFullState.mockResolvedValue(null);
       node.idCardHandler.getRemoteIdCards.mockResolvedValue(idCards());
 
-      await node.handshake();
+      await expect(node.handshake()).rejects.toMatchObject({
+        id: "cluster.join.full_state_unavailable",
+      });
 
       expect(node.idCardHandler.getRemoteIdCards).toHaveBeenCalledTimes(2);
       expect(node.idCardHandler.addNode).not.toHaveBeenCalled();
@@ -813,10 +1006,7 @@ describe("ClusterNode", () => {
       expect(node.command.broadcastHandshake).not.toHaveBeenCalled();
       expect(node.fullState.loadFullState).not.toHaveBeenCalled();
       expect(warn.mock.calls.flat().join("\n")).toMatch(/Retrying/);
-      expect(error.mock.calls.flat().join("\n")).toMatch(
-        /network split detected/,
-      );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
 
     it("syncs with the nodes that answered and discards the rest", async () => {
@@ -861,12 +1051,10 @@ describe("ClusterNode", () => {
         () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
-      node.handshake();
-
-      await vi.waitFor(() =>
-        expect(error.mock.calls.flat().join("\n")).toMatch(/timed out/),
-      );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      await expect(node.handshake()).rejects.toMatchObject({
+        id: "cluster.join.timeout",
+      });
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
 
@@ -1077,6 +1265,22 @@ describe("ClusterNode", () => {
     });
   });
 
+  describe("#nodeId / #hasNodeId", () => {
+    it("throws on a read before the handshake, and says so without throwing", () => {
+      expect(node.hasNodeId).toBe(false);
+      expect(() => node.nodeId).toThrow(
+        "[CLUSTER] No node id yet: the handshake has not run",
+      );
+    });
+
+    it("returns the id once the handshake has set it", () => {
+      node.nodeId = "thisnode";
+
+      expect(node.hasNodeId).toBe(true);
+      expect(node.nodeId).toBe("thisnode");
+    });
+  });
+
   describe("#evictNode", () => {
     let subscriber: { dispose: ReturnType<typeof vi.fn>; remoteNodeIP: string };
 
@@ -1113,6 +1317,19 @@ describe("ClusterNode", () => {
       ]);
       expect(subscriber.dispose).toHaveBeenCalledTimes(1);
       expect(kuzzle.state).toBe(kuzzleStateEnum.RUNNING);
+    });
+
+    it("evicts without broadcasting before the handshake (#3031)", async () => {
+      // A subscriber can evict its remote node before this node has an id:
+      // there is no evictor to name, and the getter would throw.
+      node._nodeId = null;
+
+      await expect(
+        node.evictNode("bar", { broadcast: true, reason: "because" }),
+      ).resolves.toBeUndefined();
+
+      expectEvicted();
+      expect(node.publisher.sendNodeEvicted).not.toHaveBeenCalled();
     });
 
     it("evicts without broadcasting by default", async () => {
@@ -1159,7 +1376,7 @@ describe("ClusterNode", () => {
       expect(error.mock.calls.flat().join("\n")).toMatch(
         /Network split detected/,
       );
-      expect(kuzzle.shutdown).toHaveBeenCalledTimes(1);
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     };
 
     it("does nothing when the cluster is consistent", async () => {
@@ -1325,6 +1542,19 @@ describe("ClusterNode", () => {
       await node.enforceClusterConsistency();
 
       expect(kuzzle.shutdown).not.toHaveBeenCalled();
+    });
+
+    it("shuts down with exit code 1 when the check itself fails", async () => {
+      node.idCardHandler.getRemoteIdCards.mockRejectedValue(
+        new Error("redis is gone"),
+      );
+
+      await expect(node.enforceClusterConsistency()).resolves.toBeUndefined();
+
+      expect(error.mock.calls.flat().join("\n")).toMatch(
+        /Unexpected exception caught during a cluster consistency check/,
+      );
+      expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
     });
   });
 });

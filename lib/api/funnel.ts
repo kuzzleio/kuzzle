@@ -21,7 +21,7 @@
 
 import Bluebird from "bluebird";
 import Deque from "denque";
-import * as Cookie from "cookie";
+import { parseCookie } from "cookie";
 import get from "lodash/get";
 
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
@@ -721,7 +721,7 @@ class Funnel {
 
     let cookie;
     try {
-      cookie = Cookie.parse(request.input.headers.cookie);
+      cookie = parseCookie(request.input.headers.cookie);
     } catch {
       throw kerror.get("security", "cookie", "invalid");
     }
@@ -908,13 +908,27 @@ class Funnel {
       } catch (e) {
         error = e;
         debug("Error processing request %s: %a", request.id, error);
+        // processRequest does not dump: do it as the event-less path does.
+        // Rethrown, never falling through to the event-less execution below,
+        // which ran a failed (or pipe-rejected) request a second time.
+        this.handleErrorDump(causeOf(e));
+        throw e;
       } finally {
-        global.kuzzle.pipe("request:afterExecution", {
-          error: error,
-          request: request,
-          result: res,
-          success: error === undefined,
-        });
+        // Not awaited, as it always was: the caller's result does not depend
+        // on it. Its rejection is logged instead of left unhandled.
+        global.kuzzle
+          .pipe("request:afterExecution", {
+            error: error,
+            request: request,
+            result: res,
+            success: error === undefined,
+          })
+          ?.catch((pipeError: unknown) => {
+            this.logger.error(
+              pipeError,
+              `request:afterExecution pipe failed for plugin request ${request.id}`,
+            );
+          });
       }
     }
     try {
@@ -1331,7 +1345,10 @@ function capitalize(string: string): string {
  * @param  {Request} request
  * @returns {Promise}
  */
-function doAction(controller: BaseController, request: KuzzleRequest) {
+function doAction(
+  controller: BaseController,
+  request: KuzzleRequest,
+): PromiseLike<unknown> {
   // `Reflect.apply(Reflect.get(...))`, not `controller[action](...)`: the
   // action is a runtime-built key and `BaseController` deliberately has no
   // index signature (TD-28). `apply` rather than calling the result of `get`
@@ -1343,14 +1360,7 @@ function doAction(controller: BaseController, request: KuzzleRequest) {
     request,
   ]);
 
-  // Same duck-type check as before, spelled so it narrows: a truthy non-object
-  // used to reach `ret.then` and read `undefined`, which took this branch too.
-  if (
-    !ret ||
-    typeof ret !== "object" ||
-    !("then" in ret) ||
-    typeof ret.then !== "function"
-  ) {
+  if (!isThenable(ret)) {
     return kerror.reject(
       "plugin",
       "controller",
@@ -1361,6 +1371,20 @@ function doAction(controller: BaseController, request: KuzzleRequest) {
   }
 
   return ret;
+}
+
+/**
+ * Same duck-type check as before, spelled as a guard so that it narrows to
+ * what `await` takes: a truthy non-object used to reach `ret.then` and read
+ * `undefined`, which failed the check too.
+ */
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "then" in value &&
+    typeof value.then === "function"
+  );
 }
 
 /**

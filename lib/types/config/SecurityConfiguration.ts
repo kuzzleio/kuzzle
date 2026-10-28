@@ -25,9 +25,10 @@ export type SecurityConfiguration = {
   /**
    * @deprecated Use `security.authToken` instead.
    *
-   * `default.config.ts` always ships it, and `authToken`'s readers fall back
-   * to it — `authToken.algorithm ?? jwt.algorithm`. Optional all the same, as
-   * v2.56.0 declared it: a required member breaks code that builds this type.
+   * Each setting the configuration sets here applies unless `authToken` sets
+   * it too (`loadConfig()` resolves both sections to the values in effect,
+   * see `authTokenSetting`). Optional all the same, as v2.56.0 declared it:
+   * a required member breaks code that builds this type.
    */
   jwt?: JSONObject;
 

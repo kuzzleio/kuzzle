@@ -4,8 +4,8 @@ set -ex
 
 if [ -z "$NODE_VERSION" ];
 then
-  echo "Missing NODE_VERSION, use default NODE_20_VERSION"
-  export NODE_VERSION=$NODE_20_VERSION
+  echo "Missing NODE_VERSION, use default 24 (the CI test-cluster image default)"
+  export NODE_VERSION=24
 fi
 
 # Resolved absolutely, once, so it does not depend on the caller's cwd.

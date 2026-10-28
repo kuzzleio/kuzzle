@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "outDir": "dist",
+    // TypeScript 6 no longer infers it from the input files. `.` is what it
+    // inferred from `lib/`, `index.ts` and `bin/`, so `dist/` keeps its layout.
+    "rootDir": ".",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "declaration": true,
@@ -8,15 +11,20 @@
     "module": "commonjs",
     "target": "es2020",
     "lib": ["es2022", "dom", "dom.iterable"],
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "baseUrl": ".",
+    // `node` (node10) is deprecated by TypeScript 6. `bundler` is its
+    // replacement for a `commonjs` output: it only changes how imports are
+    // resolved for type-checking, never the emitted JavaScript (`node16` would
+    // turn `import()` into a native ESM import at runtime).
+    "moduleResolution": "bundler",
+    // `bundler` honours `exports`, and `sdk-es7` (@elastic/elasticsearch 7)
+    // exposes its type subpaths only through the folder mapping `"./": "./"`,
+    // which TypeScript does not support. This keeps `sdk-es7/api/types` &co
+    // resolving, so the specifiers in the published `.d.ts` do not change.
+    // (`baseUrl`, deprecated by TypeScript 6, is gone: nothing used it.)
     "paths": {
-      "*": [
-        "node_modules/*",
-        "src/types/*"
-      ]
+      "sdk-es7/*": ["./node_modules/sdk-es7/*"]
     },
+    "sourceMap": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

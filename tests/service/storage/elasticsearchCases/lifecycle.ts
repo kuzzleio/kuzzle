@@ -11,19 +11,21 @@
  *
  * Two things are stubbed here that are not stubbed elsewhere:
  *
- * - **The `Mutex`.** `createCollection` and `_createHiddenCollection` each
- *   take one, and a real one asks the cache bus in a retry loop. It is not
- *   the subject; the cases assert that it is taken and released.
+ * - **The lock.** `createCollection` and `_createHiddenCollection` each
+ *   take one through `withLock`, which needs Redis. Both entry points mock it
+ *   with `lockFixture.ts`; the cases assert which lock is taken, with which
+ *   options, and that the work happens while it is held.
  * - **The seams these actions stand on** — `hasCollection`,
  *   `deleteCollection`, `_getAvailableIndice`, `_getIndice` — each of which
  *   has its own block in `inventory.ts` (L5a). Everything below them is the
  *   real client stub.
  */
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Mutex } from "../../../../lib/util/mutex";
+import { MutexAcquireError } from "../../../../lib/util/distributedLock";
 
 import type { ESHarness } from "./harness";
+import { locks } from "./lockFixture";
 
 const index = "nyc-open-data";
 const collection = "yellow-taxi";
@@ -33,14 +35,21 @@ const indice = "&nyc-open-data.yellow-taxi";
 export function describeLifecycle(harness: ESHarness) {
   /**
    * `createCollection` and `_createHiddenCollection` serialise themselves on
-   * a Mutex whose real implementation polls the cache bus until it wins. The
-   * lock is not what these cases are about — that it is taken and released
-   * is, so both halves are spies rather than no-ops.
+   * a `withLock` key per index. The lock is mocked (`lockFixture.ts`); what
+   * these cases check is which key is taken, that it waits with no retry
+   * limit as the `Mutex` it replaced did, and what runs while it is held.
    */
-  const stubMutex = () => ({
-    lock: vi.spyOn(Mutex.prototype, "lock").mockResolvedValue(true),
-    unlock: vi.spyOn(Mutex.prototype, "unlock").mockResolvedValue(undefined),
+  beforeEach(() => {
+    locks.taken.length = 0;
+    locks.failWith = undefined;
   });
+
+  const lockOn = (key: string) => locks.taken.find((lock) => lock.key === key);
+
+  /** Whether `key` is held right now, read from inside a stubbed call. */
+  const heldWhen = (key: string) => () => lockOn(key)?.held === true;
+
+  const noRetryLimit = { retryAttempts: Number.POSITIVE_INFINITY };
 
   /**
    * How many nodes `cat.nodes` reports, which is the only thing
@@ -114,10 +123,108 @@ export function describeLifecycle(harness: ESHarness) {
     });
   });
 
+  /** How many primary shards the collection's settings report. */
+  const armPrimaries = (count: string) =>
+    harness.clientStub.indices.getSettings.mockResolvedValue(
+      harness.envelope.respond({
+        [indice]: { settings: { index: { number_of_shards: count } } },
+      }),
+    );
+
+  /** The health request `waitForCollectionShards` sends for one primary. */
+  const shardsWait = () => ({
+    index: alias,
+    timeout: "30s",
+    wait_for_active_shards: harness.envelope.singleShard,
+    wait_for_status: "yellow",
+  });
+
+  /*
+   * #3033: a collection another node has just created exists before its
+   * primary shard is active, and Elasticsearch answers 503 to any document
+   * request until it is. The wait is bounded by the request's own timeout.
+   *
+   * #3074: a `yellow` status alone does not wait, since Elasticsearch reports
+   * a new index whose primaries are still initializing as `yellow`. The wait
+   * asks for as many active shard copies as the collection has primaries,
+   * read from its settings.
+   */
+  describe("#waitForCollectionShards", () => {
+    beforeEach(() => {
+      armPrimaries("1");
+
+      harness.clientStub.cluster.health.mockResolvedValue(
+        harness.envelope.respond({ status: "green", timed_out: false }),
+      );
+    });
+
+    it("waits, bounded, for the collection's primary shard to be active", async () => {
+      await expect(
+        harness.client.waitForCollectionShards(index, collection),
+      ).resolves.toBeUndefined();
+
+      expect(harness.sent(harness.clientStub.indices.getSettings)).toEqual({
+        index: alias,
+        name: "index.number_of_shards",
+      });
+      expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+        shardsWait(),
+      );
+    });
+
+    it("waits for as many active shards as the collection has primaries", async () => {
+      armPrimaries("3");
+
+      await harness.client.waitForCollectionShards(index, collection);
+
+      expect(harness.sent(harness.clientStub.cluster.health)).toMatchObject({
+        wait_for_active_shards: harness.envelope.activeShards(3),
+      });
+    });
+
+    it("takes another timeout", async () => {
+      await harness.client.waitForCollectionShards(index, collection, "5s");
+
+      expect(harness.sent(harness.clientStub.cluster.health)).toMatchObject({
+        timeout: "5s",
+      });
+    });
+
+    /* A timeout is a 408 from Elasticsearch, which the client rejects. */
+    it("rejects through the wrapper when the shards are not active in time", async () => {
+      harness.clientStub.cluster.health.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.waitForCollectionShards(index, collection),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(
+        harness.esClientError,
+      );
+    });
+
+    it("rejects through the wrapper, without waiting, when the settings cannot be read", async () => {
+      harness.clientStub.indices.getSettings.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.waitForCollectionShards(index, collection),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.clientStub.cluster.health).not.toHaveBeenCalled();
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(
+        harness.esClientError,
+      );
+    });
+  });
+
   describe("#createCollection", () => {
     const arm = () => {
-      stubMutex();
       armNodeCount(1);
+      armPrimaries("1");
 
       harness.clientStub.indices.create.mockResolvedValue(
         harness.envelope.respond({}),
@@ -178,18 +285,95 @@ export function describeLifecycle(harness: ESHarness) {
      */
     it("drops the index's placeholder collection once a real one arrives", async () => {
       arm();
-      const mutex = stubMutex();
+      const key = `hiddenCollection/create/${index}`;
+      const deletedUnderLock: boolean[] = [];
       harness.client._hasHiddenCollection.mockResolvedValue(true);
+      harness.client.deleteCollection.mockImplementation(async () => {
+        deletedUnderLock.push(heldWhen(key)());
+      });
 
       await harness.client.createCollection(index, collection, {});
 
-      expect(mutex.lock).toHaveBeenCalled();
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(lockOn(key)).toMatchObject({ config: noRetryLimit, held: false });
       expect(harness.client._hasHiddenCollection).toHaveBeenCalledWith(index);
       expect(harness.client.deleteCollection).toHaveBeenCalledWith(
         index,
         "_kuzzle_keep",
       );
+      expect(deletedUnderLock).toEqual([true]);
+    });
+
+    /*
+     * The case above stubs `deleteCollection`; this one runs it. Deleting the
+     * placeholder must not bring it straight back: once the first real
+     * collection is created, the only indice the client creates is that one.
+     */
+    it("does not recreate the placeholder it just dropped", async () => {
+      arm();
+      const hiddenIndice = `&${index}._kuzzle_keep`;
+      vi.mocked(harness.client.deleteCollection).mockRestore();
+      vi.spyOn(harness.client, "_getIndice").mockResolvedValue(hiddenIndice);
+      vi.spyOn(harness.client, "_checkIfAliasExists").mockResolvedValue(false);
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      harness.clientStub.indices.delete.mockImplementation(async () => {
+        harness.client._hasHiddenCollection.mockResolvedValue(false);
+        return harness.envelope.respond({});
+      });
+
+      await harness.client.createCollection(index, collection, {});
+
+      expect(harness.clientStub.indices.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ index: hiddenIndice }),
+      );
+      expect(createdBody().aliases).toEqual({ [alias]: {} });
+    });
+
+    /*
+     * The lock waits with no limit, so in practice it fails only when Redis
+     * does or when it is lost. It is taken after the indice is created, so the
+     * placeholder stays, and the error goes through the wrapper like an
+     * Elasticsearch one.
+     */
+    it("keeps the placeholder when the lock fails, and rejects through the wrapper", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      const lockError = new MutexAcquireError(
+        `hiddenCollection/create/${index}`,
+        1,
+      );
+      locks.failWith = lockError;
+
+      await expect(
+        harness.client.createCollection(index, collection, {}),
+      ).rejects.toBe(lockError);
+
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(lockError);
+      expect(harness.client.deleteCollection).not.toHaveBeenCalled();
+    });
+
+    /*
+     * The placeholder is what makes an empty index exist. Dropped before a
+     * creation that then fails, it would leave the index with no indice at
+     * all: gone from Elasticsearch while Kuzzle still lists it.
+     */
+    it("keeps the placeholder when the collection cannot be created", async () => {
+      arm();
+      harness.client._hasHiddenCollection.mockResolvedValue(true);
+      const mappings = { dynamik: "strict" };
+
+      await expect(
+        harness.client.createCollection(index, collection, { mappings }),
+      ).rejects.toMatchObject({ id: "services.storage.invalid_mapping" });
+
+      harness.clientStub.indices.create.mockRejectedValue(
+        harness.esClientError,
+      );
+
+      await expect(
+        harness.client.createCollection(index, collection, {}),
+      ).rejects.toBe(harness.esClientError);
+
+      expect(harness.client.deleteCollection).not.toHaveBeenCalled();
     });
 
     it("takes the caller's `dynamic` and `_meta` over the common ones", async () => {
@@ -269,6 +453,10 @@ export function describeLifecycle(harness: ESHarness) {
         settings: { index: { blocks: { write: true } } },
       });
 
+      // #3033: another node created it, maybe before its shards were active
+      expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+        shardsWait(),
+      );
       expect(update).toHaveBeenCalledWith(index, collection, {
         mappings: { properties: { city: { type: "keyword" } } },
         settings: { index: { blocks: { write: true } } },
@@ -409,25 +597,101 @@ export function describeLifecycle(harness: ESHarness) {
 
     /*
      * `hasCollection` said no and `indices.create` says it exists: another
-     * node created it in between. Swallowed, because the caller asked for the
-     * collection to exist and it does.
+     * node created it in between. The caller asked for the collection to
+     * exist with its own mappings and settings, so this goes on as if the
+     * collection had been there all along: wait for its shards, then update.
      */
-    it("survives a race with another node creating the same collection", async () => {
-      arm();
-      const raced: Error & { meta?: unknown } = new Error("foo");
+    describe("when another node creates the same collection first", () => {
+      const armRace = () => {
+        arm();
+        const raced: Error & { meta?: unknown } = new Error("foo");
 
-      raced.meta = {
-        body: { error: { type: "resource_already_exists_exception" } },
+        raced.meta = {
+          body: { error: { type: "resource_already_exists_exception" } },
+        };
+        harness.clientStub.indices.create.mockRejectedValue(raced);
+
+        return vi
+          .spyOn(harness.client, "updateCollection")
+          .mockImplementation(async () => {
+            // #3033: the winner may not have waited for its shards yet
+            expect(harness.clientStub.cluster.health).toHaveBeenCalled();
+            return null;
+          });
       };
-      harness.clientStub.indices.create.mockRejectedValue(raced);
 
-      await expect(
-        harness.client.createCollection(index, collection, {
+      /*
+       * #3043: these were dropped, so a field only this request declared was
+       * missing, and a `strict` collection refused it on the next write.
+       */
+      it("applies this request's mappings and settings to it", async () => {
+        const update = armRace();
+
+        await expect(
+          harness.client.createCollection(index, collection, {
+            mappings: { properties: { city: { type: "keyword" } } },
+            settings: { index: { blocks: { write: true } } },
+          }),
+        ).resolves.toBeNull();
+
+        expect(harness.esWrapper.formatESError).not.toHaveBeenCalled();
+        expect(harness.sent(harness.clientStub.cluster.health)).toEqual(
+          shardsWait(),
+        );
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledWith(index, collection, {
           mappings: { properties: { city: { type: "keyword" } } },
-        }),
-      ).resolves.toBeNull();
+          settings: { index: { blocks: { write: true } } },
+        });
+      });
 
-      expect(harness.esWrapper.formatESError).not.toHaveBeenCalled();
+      /*
+       * The failed `indices.create` carried the common mapping and the
+       * default shard and replica counts. None of that may reach the update:
+       * `number_of_shards` cannot change on an existing indice, and an empty
+       * `settings` spares it a close and reopen.
+       */
+      it("hands the update the caller's own objects, not the ones it sent to create", async () => {
+        const update = armRace();
+        harness.config.defaultSettings = {
+          number_of_replicas: 42,
+          number_of_shards: 66,
+        };
+
+        await harness.client.createCollection(index, collection, {
+          mappings: { properties: { city: { type: "keyword" } } },
+        });
+
+        expect(createdBody().settings).toEqual({
+          number_of_replicas: 42,
+          number_of_shards: 66,
+        });
+        expect(update).toHaveBeenCalledWith(index, collection, {
+          mappings: { properties: { city: { type: "keyword" } } },
+          settings: {},
+        });
+      });
+
+      it("rejects when the update does", async () => {
+        const update = armRace();
+        const error = new Error("strict mapping conflict");
+        update.mockRejectedValue(error);
+
+        await expect(
+          harness.client.createCollection(index, collection, {
+            mappings: { properties: { city: { type: "keyword" } } },
+          }),
+        ).rejects.toBe(error);
+      });
+    });
+
+    /* The node that creates the collection waits through `indices.create`. */
+    it("does not ask for the cluster health of a collection it creates", async () => {
+      arm();
+
+      await harness.client.createCollection(index, collection, {});
+
+      expect(harness.clientStub.cluster.health).not.toHaveBeenCalled();
     });
 
     it("rejects through the wrapper when the client fails", async () => {
@@ -1143,9 +1407,9 @@ export function describeLifecycle(harness: ESHarness) {
       vi.spyOn(harness.client, "_getAvailableIndice").mockResolvedValue(
         hiddenIndice,
       );
-
-      return stubMutex();
     };
+
+    const key = "hiddenCollection/nisantasi";
 
     const createdBody = () => {
       const sent = harness.sent(harness.clientStub.indices.create);
@@ -1160,7 +1424,12 @@ export function describeLifecycle(harness: ESHarness) {
      * creating the same index at once.
      */
     it("creates the placeholder collection that makes an empty index exist", async () => {
-      const mutex = arm();
+      arm();
+      const createdUnderLock: boolean[] = [];
+      harness.clientStub.indices.create.mockImplementation(async () => {
+        createdUnderLock.push(heldWhen(key)());
+        return harness.envelope.respond({});
+      });
 
       await harness.client._createHiddenCollection("nisantasi");
 
@@ -1173,8 +1442,8 @@ export function describeLifecycle(harness: ESHarness) {
         settings: { number_of_shards: 1, number_of_replicas: 1 },
       });
 
-      expect(mutex.lock).toHaveBeenCalled();
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(lockOn(key)).toMatchObject({ config: noRetryLimit, held: false });
+      expect(createdUnderLock).toEqual([true]);
     });
 
     it("does nothing when the placeholder is already there", async () => {
@@ -1215,7 +1484,7 @@ export function describeLifecycle(harness: ESHarness) {
     });
 
     it("releases the lock even when the client fails", async () => {
-      const mutex = arm();
+      arm();
       harness.clientStub.indices.create.mockRejectedValue(
         harness.esClientError,
       );
@@ -1224,7 +1493,24 @@ export function describeLifecycle(harness: ESHarness) {
         harness.client._createHiddenCollection("nisantasi"),
       ).rejects.toBe(harness.esClientError);
 
-      expect(mutex.unlock).toHaveBeenCalled();
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(
+        harness.esClientError,
+      );
+      expect(lockOn(key)).toMatchObject({ held: false });
+    });
+
+    it("creates nothing when the lock fails, and rejects through the wrapper", async () => {
+      arm();
+      const lockError = new MutexAcquireError(key, 1);
+      locks.failWith = lockError;
+
+      await expect(
+        harness.client._createHiddenCollection("nisantasi"),
+      ).rejects.toBe(lockError);
+
+      expect(harness.esWrapper.formatESError).toHaveBeenCalledWith(lockError);
+      expect(harness.clientStub.cat.aliases).not.toHaveBeenCalled();
+      expect(harness.clientStub.indices.create).not.toHaveBeenCalled();
     });
   });
 

@@ -1,5 +1,6 @@
 // messages definition for issuing node commands and receiving the
 // corresponding responses
+// /!\ Every singular scalar field is "optional": see sync.proto's header.
 package command;
 
 syntax="proto3";
@@ -10,36 +11,36 @@ import "sync.proto";
 message FullStateResponse {
   // Describes the nodes that have subscribed to a given realtime room
   message NodeSubscribers {
-    string nodeId = 1;
-    uint32 subscribers = 2;
-    uint64 messageId = 3;
+    optional string nodeId = 1;
+    optional uint32 subscribers = 2;
+    optional uint64 messageId = 3;
   }
 
   // Describes a realtime room
   message RealtimeRoom {
-    string roomId = 1;
-    string index = 2;
-    string collection = 3;
+    optional string roomId = 1;
+    optional string index = 2;
+    optional string collection = 3;
 
     // array of polymorphic objects, needs to be stringified beforehand until
     // this PR is merged: https://github.com/protobufjs/protobuf.js/pull/1495
-    string filters = 4;
+    optional string filters = 4;
 
     repeated NodeSubscribers nodes = 5;
   }
 
   // Describes a cluster activity event
   message Activity {
-    string id = 1;
-    string date = 2;
-    string address = 3;
-    uint32 event = 4;
+    optional string id = 1;
+    optional string date = 2;
+    optional string address = 3;
+    optional uint32 event = 4;
     optional string reason = 5;
   }
 
   message NodeState {
-    string id = 1;
-    uint64 lastMessageId = 2;
+    optional string id = 1;
+    optional uint64 lastMessageId = 2;
   }
 
   repeated RealtimeRoom rooms = 1;
@@ -50,30 +51,30 @@ message FullStateResponse {
 
 // Handshake Request
 message HandshakeRequest {
-  string nodeId = 1;
-  uint64 lastMessageId = 2;
-  string ip = 3;
+  optional string nodeId = 1;
+  optional uint64 lastMessageId = 2;
+  optional string ip = 3;
 }
 
 // Handshake response
 message HandshakeResponse {
-  bool added = 1;
-  uint64 lastMessageId = 2;
+  optional bool added = 1;
+  optional uint64 lastMessageId = 2;
 }
 
 // Retransmit request: the messages a subscriber missed from this node's sync
 // stream, by message id, both ends included (#2785)
 message RetransmitRequest {
-  uint64 from = 1;
-  uint64 to = 2;
+  optional uint64 from = 1;
+  optional uint64 to = 2;
 }
 
 // Retransmit response: the missed messages, in order, exactly as they were
 // published (topic + encoded sync message)
 message RetransmitResponse {
   message Frame {
-    string topic = 1;
-    bytes data = 2;
+    optional string topic = 1;
+    optional bytes data = 2;
   }
 
   repeated Frame frames = 1;

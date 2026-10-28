@@ -49,6 +49,15 @@ else
 fi
 
 echo
+echo "==> ADR state (docs/adr-state.json)"
+if node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/adr-state.ts --check; then
+  echo "[OK] ADR state"
+else
+  echo "[FAIL] ADR state — state only, never history (kuzzle-adr skill)"
+  status=1
+fi
+
+echo
 echo "==> Migration ratchets & test type-check (npm run ratchet, npm run typecheck:tests)"
 # The E1 gotcha: a conversion that leaves the .js tracked passes locally but
 # fails the js ratchet in CI. Cheap to catch here.
@@ -60,6 +69,15 @@ if npm run ratchet && npm run typecheck:tests; then
   echo "[OK] ratchets & test type-check"
 else
   echo "[FAIL] ratchets & test type-check"
+  status=1
+fi
+
+echo
+echo "==> Documentation budgets (docs/doc-budgets.json)"
+if node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/check-doc-budgets.ts --base "${PREFLIGHT_BASE:-origin/2-dev}"; then
+  echo "[OK] documentation budgets"
+else
+  echo "[FAIL] documentation budgets — move the content where the message says, do not raise the budget"
   status=1
 fi
 

@@ -129,6 +129,7 @@ export interface IKuzzleConfiguration {
     /**
      * @default null
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     interface: any;
 
     /**
@@ -189,6 +190,7 @@ export interface IKuzzleConfiguration {
   };
 
   internal: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     hash: any;
     notifiableProtocols: string[];
 
@@ -199,6 +201,14 @@ export interface IKuzzleConfiguration {
      * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
      */
     allowAllOrigins?: boolean;
+
+    /**
+     * Derived at startup: the deprecated configuration keys the user set
+     * (today, those of "security.jwt"), logged as a warning.
+     *
+     * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
+     */
+    deprecatedSettings?: string[];
   };
 
   /**

@@ -17,7 +17,7 @@ This method is a backend version of the [realtime:subscribe](/core/2/api/control
 This connection will then starts to receive realtime messages on the returned `roomId`.
 
 ::: info
-This method can only be used before the application is started.
+This method can only be used once the application is started.
 :::
 
 ```ts
@@ -34,7 +34,7 @@ add(
     volatile?: JSONObject;
     scope?: "in" | "out" | "all" | "none";
     users?: "in" | "out" | "all" | "none";
-  }
+  } = {}
 ): Promise<{ roomId: string; channel: string }>
 ```
 
@@ -46,7 +46,7 @@ add(
 | `index`      | `string`     | Index name                                             |
 | `collection` | `string`     | Collection name                                        |
 | `filters`    | `JSONObject` | Subscription filters                                   |
-| `options`    | `JSONObject` | Subscription options (`volatile`, `scope` and `users`) |
+| `options`    | `JSONObject` | Optional subscription options (`volatile`, `scope` and `users`) |
 
 ## Usage
 

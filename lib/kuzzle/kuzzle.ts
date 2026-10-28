@@ -39,6 +39,8 @@ import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
 import EntryPoint from "../core/network/entryPoint";
 import Router from "../core/network/router";
 import PluginsManager from "../core/plugin/pluginsManager";
+import type Plugin from "../core/plugin/plugin";
+import type { OpenApiDefinition } from "../types/OpenApiDefinition";
 import RealtimeModule from "../core/realtime";
 import SecurityModule from "../core/security";
 import Statistics from "../core/statistics/statistics";
@@ -48,6 +50,7 @@ import * as kerror from "../kerror";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
+import { releaseAllLocksBeforeExit, withLock } from "../util/distributedLock";
 import { Mutex } from "../util/mutex";
 import type {
   ImportConfig,
@@ -64,6 +67,25 @@ import vault from "./vault";
 import { NameGenerator } from "../util/name-generator";
 
 let _kuzzle: Kuzzle | null = null;
+
+/**
+ * How long a shutdown caused by a failure may run before the process exits
+ * anyway: a `kuzzle:shutdown` pipe or a lock release that never settles must
+ * not keep a failed node alive, which a bare `process.exit(1)` never did
+ */
+const FAILURE_SHUTDOWN_TIMEOUT = 30000;
+
+/**
+ * Stops the startup sequence once a shutdown has begun (#3045): `start()`
+ * catches it and leaves the shutdown to end the process. Internal: never
+ * handed to the caller of `start()`.
+ */
+class StartupInterruptedError extends Error {
+  constructor() {
+    super("Kuzzle is shutting down");
+    this.name = "StartupInterruptedError";
+  }
+}
 
 Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
@@ -94,7 +116,6 @@ Reflect.defineProperty(global, "kuzzle", {
  */
 
 type ImportStatus = {
-  locked?: boolean;
   initialized?: boolean;
   firstCall?: boolean;
 };
@@ -102,6 +123,12 @@ type ImportStatus = {
 class Kuzzle extends KuzzleEventEmitter {
   public config: IKuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  /** The running shutdown, which later `shutdown()` calls wait for (#3017) */
+  private shutdownPromise: Promise<void> | null = null;
+  /** The highest exit code asked for by the `shutdown()` calls so far */
+  private shutdownExitCode = 0;
+  /** Ends a failure's shutdown that does not finish in time */
+  private shutdownWatchdog: NodeJS.Timeout | null = null;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
@@ -147,6 +174,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public vault: any;
 
   /**
@@ -253,8 +281,16 @@ class Kuzzle extends KuzzleEventEmitter {
    * @param {Object} - Additional options (import, installations, plugins, secretsFile, support, vaultKey)
    *
    * @this {Kuzzle}
+   *
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies. `Backend.start()` is the one caller, and
+   * it hands the application wrapper the implementation reads.
    */
-  async start(application: any, options: StartOptions = { import: {} }) {
+  start(application: unknown, options?: StartOptions): Promise<void>;
+  async start(
+    application: Plugin & { openApi: OpenApiDefinition },
+    options?: StartOptions,
+  ): Promise<void> {
     this.registerSignalHandlers();
 
     try {
@@ -271,16 +307,18 @@ class Kuzzle extends KuzzleEventEmitter {
       await new CacheEngine().init();
       await new StorageEngine().init();
       await new RealtimeModule().init();
+      this.stopIfShuttingDown();
       await this.internalIndex.init();
 
       await new SecurityModule().init();
 
       // This will init the cluster module if enabled
+      this.stopIfShuttingDown();
       await this.initKuzzleNode();
 
       this.vault = vault.load(
-        options.vaultKey,
-        options.secretsFile,
+        options?.vaultKey,
+        options?.secretsFile,
         this.config.vault?.newAlgorithm,
       );
 
@@ -300,14 +338,16 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.debugger.init();
 
+      this.stopIfShuttingDown();
       this.pluginsManager.application = application;
-      const pluginImports = await this.pluginsManager.init(options.plugins);
+      const pluginImports = await this.pluginsManager.init(options?.plugins);
 
-      const imports = _.merge({}, pluginImports, options.import);
+      const imports = _.merge({}, pluginImports, options?.import);
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.loadInitialState(imports, options.support);
+      this.stopIfShuttingDown();
+      await this.loadInitialState(imports, options?.support);
 
       await this.ask("core:security:verify");
 
@@ -315,7 +355,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.log.info("[✔] Core components loaded");
 
-      await this.install(options.installations);
+      this.stopIfShuttingDown();
+      await this.install(options?.installations);
 
       // `application` is the very wrapper handed to the plugins manager six
       // lines up, so reading the name back off the manager was a round trip
@@ -326,6 +367,8 @@ class Kuzzle extends KuzzleEventEmitter {
         this.config.http.routes,
         this.pluginsManager.routes,
       );
+
+      this.stopIfShuttingDown();
 
       // @deprecated
       await this.pipe("kuzzle:start");
@@ -345,14 +388,60 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
+      if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+        return this.leaveStartupToShutdown(error);
+      }
+
       this.log.error(
         `[X] Cannot start Kuzzle ${this.version}: ${
           error instanceof Error ? error.message : inspect(error)
         }`,
       );
 
+      // A failed start cannot be retried (a second Kuzzle instance cannot be
+      // built), and what it did start keeps the process alive: in production,
+      // a node with no listener and an ID card still renewed (#3020). Not
+      // awaited, so the caller still gets the error before the process exits;
+      // `shutdown` never rejects, and exits even when it fails.
+      void this.shutdown(1);
+
       throw error;
     }
+  }
+
+  /**
+   * A node asked to stop while it starts must not go on taking cluster-wide
+   * locks or running the application's installations: if it is killed before
+   * its shutdown releases them, the other nodes wait for their TTL (#3045).
+   */
+  private stopIfShuttingDown(): void {
+    if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+      throw new StartupInterruptedError();
+    }
+  }
+
+  /**
+   * The shutdown began during the startup, which stopped (or failed because
+   * of it): no "Cannot start" error and no second shutdown, the one running
+   * keeps its exit code and ends the process.
+   *
+   * The returned promise never settles, as `withLock` once the process is
+   * exiting: rejecting would send the caller down its failed-start path
+   * (often a `process.exit(1)`, which would cut the shutdown short), and
+   * resolving would tell it that Kuzzle is running.
+   */
+  private leaveStartupToShutdown(error: unknown): Promise<never> {
+    let message = "[ℹ] Startup stopped: Kuzzle is shutting down";
+
+    // A step that failed because of the shutdown, rather than stopped by it
+    if (!(error instanceof StartupInterruptedError)) {
+      const reason = error instanceof Error ? error.message : inspect(error);
+      message += ` (${reason})`;
+    }
+
+    this.log.info(message);
+
+    return new Promise<never>(() => undefined);
   }
 
   /**
@@ -365,6 +454,14 @@ class Kuzzle extends KuzzleEventEmitter {
       await new Cluster().init();
 
       this.log.info("[✔] Cluster initialized");
+
+      // The storage caches were loaded before the join: what a peer created
+      // in between was broadcast before this node could hear it. Read them
+      // again before the plugins' `init()` relies on them (#3044).
+      await Promise.all([
+        this.ask("core:storage:public:cache:reload"),
+        this.ask("core:storage:private:cache:reload"),
+      ]);
     } else {
       this.log.info("[X] Cluster disabled: single node mode.");
     }
@@ -380,6 +477,44 @@ class Kuzzle extends KuzzleEventEmitter {
    * @returns {Promise}
    */
   async shutdown(exitCode = 0): Promise<void> {
+    // Several sources can ask for it at once (a signal, a cluster eviction,
+    // the `exit` handler that `process.exit` below fires): they share the one
+    // shutdown, and a failure reported by any of them keeps the exit non-zero
+    this.shutdownExitCode = Math.max(this.shutdownExitCode, exitCode);
+
+    // Not for a requested shutdown: it waits for the requests still running,
+    // however long they take
+    if (exitCode !== 0) {
+      this.shutdownWatchdog ??= setTimeout(() => {
+        this.log.error(
+          `[shutdown] Not finished after ${FAILURE_SHUTDOWN_TIMEOUT}ms: exiting now`,
+        );
+        process.exit(this.shutdownExitCode);
+      }, FAILURE_SHUTDOWN_TIMEOUT);
+    }
+
+    // Never rejects: every caller but one fires it and forgets it (signal
+    // handlers, cluster eviction, admin:shutdown), so a failure here used to
+    // be an unhandled rejection, and the process stayed up with its network
+    // layer already closed. It exits non-zero instead.
+    this.shutdownPromise ??= this.runShutdown().catch((error: unknown) => {
+      this.log.error(
+        `[shutdown] Unable to shut down gracefully: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+
+      if (this.shutdownWatchdog !== null) {
+        clearTimeout(this.shutdownWatchdog);
+      }
+
+      process.exit(Math.max(this.shutdownExitCode, 1));
+    });
+
+    return this.shutdownPromise;
+  }
+
+  private async runShutdown(): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info("Initiating shutdown...");
@@ -401,7 +536,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
     // mid-startup is often in the middle of one (F-13).
-    await Mutex.releaseAllBeforeExit(); // NOSONAR: frees locks taken through the deprecated API
+    await Promise.all([
+      releaseAllLocksBeforeExit(),
+      Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
+    ]);
 
     this.log.info("Halted.");
 
@@ -415,7 +553,11 @@ class Kuzzle extends KuzzleEventEmitter {
     // application's buffered logs were dropped on shutdown (TD-51).
     await this?.pluginsManager?.application?.instance?.log?.flush?.();
 
-    process.exit(exitCode);
+    if (this.shutdownWatchdog !== null) {
+      clearTimeout(this.shutdownWatchdog);
+    }
+
+    process.exit(this.shutdownExitCode);
   }
 
   /**
@@ -432,65 +574,70 @@ class Kuzzle extends KuzzleEventEmitter {
       return;
     }
 
-    const mutex = new Mutex("backend:installations");
-    await mutex.lock();
+    // No retry limit: another node is running the installations, and this
+    // one must not start before they are recorded
+    await withLock(
+      "backend:installations",
+      async () => {
+        for (const installation of installations) {
+          // The lock may come long after it was asked for, once the node
+          // holding it is done: by then, this one may be shutting down
+          this.stopIfShuttingDown();
 
-    try {
-      for (const installation of installations) {
-        const isAlreadyInstalled = await this.ask(
-          "core:storage:private:document:exist",
-          "kuzzle",
-          "installations",
-          installation.id,
-        );
-
-        if (!isAlreadyInstalled) {
-          try {
-            await installation.handler();
-          } catch (error) {
-            throw kerror.get(
-              "plugin",
-              "runtime",
-              "unexpected_installation_error",
-              installation.id,
-              error,
-            );
-          }
-
-          await this.ask(
-            "core:storage:private:document:create",
+          const isAlreadyInstalled = await this.ask(
+            "core:storage:private:document:exist",
             "kuzzle",
             "installations",
-            {
-              description: installation.description,
-              handler: installation.handler.toString(),
-              installedAt: Date.now(),
-            },
-            { id: installation.id },
+            installation.id,
           );
 
-          this.log.info(
-            `[✔] Install code "${installation.id}" successfully executed`,
-          );
+          if (!isAlreadyInstalled) {
+            try {
+              await installation.handler();
+            } catch (error) {
+              throw kerror.get(
+                "plugin",
+                "runtime",
+                "unexpected_installation_error",
+                installation.id,
+                error,
+              );
+            }
+
+            await this.ask(
+              "core:storage:private:document:create",
+              "kuzzle",
+              "installations",
+              {
+                description: installation.description,
+                handler: installation.handler.toString(),
+                installedAt: Date.now(),
+              },
+              { id: installation.id },
+            );
+
+            this.log.info(
+              `[✔] Install code "${installation.id}" successfully executed`,
+            );
+          }
         }
-      }
-    } finally {
-      await mutex.unlock();
-    }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY },
+    );
   }
 
   // For testing purpose
-  async ask(event: string, ...args: [payload?: any, ...rest: any]) {
+  async ask(event: string, ...args: [payload?: unknown, ...rest: unknown[]]) {
     return super.ask(event, ...args);
   }
 
   // For testing purpose
-  emit(event: string, ...args: any[]) {
+  emit(event: string, ...args: unknown[]) {
     return super.emit(event, ...args);
   }
 
   // For testing purpose
-  async pipe(event: string, ...args: any[]) {
+  async pipe(event: string, ...args: unknown[]) {
     return super.pipe(event, ...args);
   }
 
@@ -537,11 +684,8 @@ class Kuzzle extends KuzzleEventEmitter {
         "core:storage:public:mappings:import",
         toSupport.mappings,
         {
-          /**
-           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-           * we just want to load the mapping in our own index cache and not in the database.
-           */
-          indexCacheOnly: status.initialized || !status.locked,
+          // Already imported (by this node or another one): only fill the cache
+          indexCacheOnly: status.initialized,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
@@ -550,11 +694,8 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info("[✔] Mappings import successful");
     } else if (!_.isEmpty(toImport.mappings)) {
       await this.ask("core:storage:public:mappings:import", toImport.mappings, {
-        /**
-         * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-         * we just want to load the mapping in our own index cache and not in the database.
-         */
-        indexCacheOnly: status.initialized || !status.locked,
+        // Already imported (by this node or another one): only fill the cache
+        indexCacheOnly: status.initialized,
         propagate: false, // Each node needs to do the import themselves
         refresh: true,
       });
@@ -638,27 +779,6 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info("[✔] Permissions import successful");
     }
   }
-  /**
-   * Check if every import has been done, if one of them is not finished yet, wait for it
-   */
-  private async _waitForImportToFinish() {
-    const importTypes = Object.keys(this.importTypes);
-
-    for (const importType of importTypes) {
-      // If the import is done, we pop it from the queue to check the next one
-      if (
-        await this.ask(
-          "core:cache:internal:get",
-          `backend:init:import:${importType}`,
-        )
-      ) {
-        return;
-      }
-
-      await Bluebird.delay(1000);
-    }
-  }
-
   private isConfigsEmpty(
     importConfig: ImportConfig,
     supportConfig: SupportConfig,
@@ -678,20 +798,28 @@ class Kuzzle extends KuzzleEventEmitter {
     return false;
   }
 
+  /**
+   * Records the hash of the payload just imported (or found already imported)
+   * in both Redis and `%kuzzle.imports`, so that the next node or the next
+   * start can tell the import is done for this very payload
+   */
   private async persistHashedImport({
     existingRedisHash,
     existingESHash,
     importPayloadHash,
+    initialized,
     type,
   }: {
     existingRedisHash: string | null;
     existingESHash: string | null;
     importPayloadHash: string;
+    initialized: boolean;
     type: string;
   }) {
-    if (!existingRedisHash && !existingESHash) {
-      // If the import is not initialized in the redis cache and in the ES, we initialize it
-      this.log.info(`${type} import is not initialized, initializing...`);
+    // Not initialized: the payload was just imported, and a hash left by a
+    // previous payload must be replaced, or every start would import it again
+    if (!initialized || !existingESHash) {
+      this.log.info(`Recording the ${type} import in %kuzzle.imports...`);
 
       // `createOrReplace`, not `create`: this document has a fixed id, so a
       // conflict on it means another node initialized the same import — an
@@ -706,51 +834,13 @@ class Kuzzle extends KuzzleEventEmitter {
           hash: importPayloadHash,
         },
       );
+    }
+
+    if (!initialized || !existingRedisHash) {
       await this.ask(
         "core:cache:internal:store",
         `backend:init:import:${type}`,
         importPayloadHash,
-      );
-    } else if (existingRedisHash && !existingESHash) {
-      // If the import is initialized in the redis cache but not in the ES
-      // We initialize it in the ES
-      this.log.info(
-        `${type} import is not initialized in %kuzzle.imports, initializing...`,
-      );
-
-      const redisCache = await this.ask(
-        "core:cache:internal:get",
-        `backend:init:import:${type}`,
-      );
-
-      // Same reasoning as above: a fixed id, so a conflict is convergence.
-      await this.ask(
-        "core:storage:private:document:createOrReplace",
-        "kuzzle",
-        "imports",
-        `backend:init:import:${type}`,
-        {
-          hash: redisCache,
-        },
-      );
-    } else if (!existingRedisHash && existingESHash) {
-      // If the import is initialized in the ES but not in the redis cache
-      // We initialize it in the redis cache
-      this.log.info(
-        `${type} import is not initialized in the redis cache, initializing...`,
-      );
-
-      const esDocument = await this.ask(
-        "core:storage:private:document:get",
-        "kuzzle",
-        "imports",
-        `backend:init:import:${type}`,
-      );
-
-      await this.ask(
-        "core:cache:internal:store",
-        `backend:init:import:${type}`,
-        esDocument._source.hash,
       );
     }
   }
@@ -771,46 +861,45 @@ class Kuzzle extends KuzzleEventEmitter {
       return;
     }
 
-    const lockedMutex = [];
+    const importTypes = Object.entries(this.importTypes);
 
-    try {
-      for (const [type, importMethod] of Object.entries(this.importTypes)) {
-        const importPayload = {};
+    // Imports the types from `index` on. Each type's lock is taken around the
+    // remaining types, so that every lock taken is held until all the imports
+    // are done: a node waiting for the first lock starts only once the node
+    // ahead of it has imported everything.
+    const importFrom = async (index: number): Promise<void> => {
+      const next = importTypes[index];
 
-        switch (type) {
-          case "fixtures":
-            _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
-            break;
-          case "mappings":
-            _.set(importPayload, "toSupport.mappings", toSupport.mappings);
-            _.set(importPayload, "toImport.mappings", toImport.mappings);
-            break;
-          case "permissions":
-            _.set(importPayload, "toSupport.securities", toSupport.securities);
-            _.set(importPayload, "toImport.profiles", toImport.profiles);
-            _.set(importPayload, "toImport.roles", toImport.roles);
-            _.set(importPayload, "toImport.users", toImport.users);
-            break;
-        }
+      if (!next) {
+        return;
+      }
 
-        // `?? ""`: `json-stable-stringify` answers undefined for a value it
-        // cannot serialise, and the payload is built right above.
-        const importPayloadHash = sha256(stringify(importPayload) ?? "");
-        // `timeout: 0` means a single acquisition attempt: exactly one node
-        // runs the import and the others carry on with `locked: false`.
-        // The TTL has to outlive the import itself, because this lock is held
-        // until the `finally` below — across every import type and the wait
-        // that follows. It is still an upper bound rather than a guarantee,
-        // which is why the bookkeeping write below is idempotent (TD-69).
-        // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two
-        // use incompatible acquisition/TTL formats and must not contend on the
-        // same key — every other node still takes this lock with `Mutex`, so
-        // swapping one site would remove the exclusion it exists for. Deferred
-        // to #2894, like the remaining call sites.
-        const lockOptions = { timeout: 0, ttl: 60000 };
-        const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
+      const [type, importMethod] = next;
+      const importPayload = {};
 
-        const locked = await mutex.lock();
+      switch (type) {
+        case "fixtures":
+          _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
+          break;
+        case "mappings":
+          _.set(importPayload, "toSupport.mappings", toSupport.mappings);
+          _.set(importPayload, "toImport.mappings", toImport.mappings);
+          break;
+        case "permissions":
+          _.set(importPayload, "toSupport.securities", toSupport.securities);
+          _.set(importPayload, "toImport.profiles", toImport.profiles);
+          _.set(importPayload, "toImport.roles", toImport.roles);
+          _.set(importPayload, "toImport.users", toImport.users);
+          break;
+      }
+
+      // `?? ""`: `json-stable-stringify` answers undefined for a value it
+      // cannot serialise, and the payload is built right above.
+      const importPayloadHash = sha256(stringify(importPayload) ?? "");
+
+      const importType = async () => {
+        // Same as for the installations: the lock may come after a SIGTERM
+        this.stopIfShuttingDown();
 
         // Read the bookkeeping *after* the lock, never before: a read taken
         // before acquiring it is not protected by it, and the holder that
@@ -848,37 +937,44 @@ class Kuzzle extends KuzzleEventEmitter {
         await importMethod(
           { toImport, toSupport },
           {
-            firstCall: !initialized && locked,
-            initialized: initialized,
-            locked,
+            firstCall: !initialized,
+            initialized,
           },
         );
 
-        if (locked) {
-          lockedMutex.push(mutex);
+        await this.persistHashedImport({
+          existingESHash,
+          existingRedisHash,
+          importPayloadHash,
+          initialized,
+          type,
+        });
 
-          await this.persistHashedImport({
-            existingESHash,
-            existingRedisHash,
-            importPayloadHash,
-            type,
-          });
-        }
-      }
+        await importFrom(index + 1);
+      };
 
-      await this._waitForImportToFinish();
+      // No retry limit: the node holding it is running this import, and this
+      // one must not start before it is done. Once it gets the lock, it finds
+      // the import done for this payload and only fills its cache; if the
+      // node ahead died mid-import, it runs the import itself. The lock is
+      // refreshed while held; a lost lock fails the startup with
+      // `MutexLockLostError` (the bookkeeping write stays idempotent, TD-69).
+      await withLock(`backend:import:${type}`, importType, {
+        retryAttempts: Number.POSITIVE_INFINITY,
+        ttl: 60000,
+      });
+    };
 
-      this.log.info("[✔] Import successful");
-    } finally {
-      await Promise.all(lockedMutex.map((mutex) => mutex.unlock()));
-    }
+    await importFrom(0);
+
+    this.log.info("[✔] Import successful");
   }
 
   dump(suffix: string) {
     return this.dumpGenerator.dump(suffix);
   }
 
-  hash(input: any) {
+  hash(input: unknown) {
     let inString;
 
     switch (typeof input) {
@@ -916,7 +1012,7 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("unhandledRejection");
 
     process.on("exit", () => {
-      this.shutdown();
+      void this.shutdown();
     });
 
     process.on("unhandledRejection", (reason, promise) => {
@@ -950,7 +1046,7 @@ class Kuzzle extends KuzzleEventEmitter {
     process.removeAllListeners("uncaughtException");
     process.on("uncaughtException", (err) => {
       this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
-      this.dumpAndExit("uncaught-exception");
+      void this.dumpAndExit("uncaught-exception");
     });
 
     // abnormal termination signals => generate a core dump
@@ -958,7 +1054,7 @@ class Kuzzle extends KuzzleEventEmitter {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.error(`ERROR: Caught signal: ${signal}`);
-        this.dumpAndExit("signal-".concat(signal.toLowerCase()));
+        void this.dumpAndExit("signal-".concat(signal.toLowerCase()));
       });
     }
 
@@ -980,7 +1076,7 @@ class Kuzzle extends KuzzleEventEmitter {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.info(`Caught signal ${signal} => gracefully exit`);
-        this.shutdown();
+        void this.shutdown();
       });
     }
   }
@@ -995,7 +1091,9 @@ class Kuzzle extends KuzzleEventEmitter {
       }
     }
 
-    await this.shutdown();
+    // Only abnormal terminations get here: exit non-zero, so that an
+    // `on-failure` restart policy brings the node back (#3020)
+    await this.shutdown(1);
   }
 }
 

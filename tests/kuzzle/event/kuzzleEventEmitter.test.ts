@@ -365,6 +365,23 @@ describe("#kuzzle/event/KuzzleEventEmitter", () => {
       expect(pluginPipe).toHaveBeenCalledOnce();
       expect(corePipe).not.toHaveBeenCalled();
     });
+
+    /* A core pipe that threw left the pipe pending forever, and its error was
+     * an unhandled rejection. */
+    it("should reject if a core pipe throws, with or without plugin pipes", async () => {
+      const corePipe = vi.fn(async () => {
+        throw new Error("core pipe failed");
+      });
+
+      emitter.onPipe("foo:bar", corePipe);
+
+      await expect(emitter.pipe("foo:bar")).rejects.toThrow("core pipe failed");
+
+      emitter.registerPluginPipe("foo:bar", yields());
+
+      await expect(emitter.pipe("foo:bar")).rejects.toThrow("core pipe failed");
+      expect(corePipe).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("#ask", () => {

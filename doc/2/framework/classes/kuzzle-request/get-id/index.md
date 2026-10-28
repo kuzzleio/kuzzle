@@ -26,10 +26,13 @@ getId (
 </br>
 
 **Options:**
-| Name | Type | Description |
-|--------|-------------------|----------------|
-| `ifMissing` | <pre>'error'</pre> | 'generate' | 'ignore' | Method behavior if the ID is missing |
-| `generator` | <pre>() => string</pre> | Function used to generate an ID |
+
+| Name | Type | Description | Default |
+|------|------|-------------|---------|
+| `ifMissing` | <pre>string</pre> | Method behavior if the ID is missing: `error` throws an `api.assert.missing_argument` error, `generate` returns an ID created by `generator`, `ignore` returns `null` | `error` |
+| `generator` | <pre>() => string</pre> | Function used to generate an ID | `uuid.v4` |
+
+Throws an `api.assert.invalid_type` error if the provided `_id` is not a string.
 
 ### Example
 

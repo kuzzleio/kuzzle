@@ -16,6 +16,10 @@ We also support lodash syntax. [(`relations.lebron[0]`)](https://lodash.com/docs
 Contrary to other parameter types, an unset boolean does not trigger an
 error, instead it's considered as `false`
 
+::: info
+With the HTTP protocol, booleans are flags: if the parameter is present in the query string, it is `true` whatever its value (`?refresh=false` is `true`). To get `false`, omit the parameter.
+:::
+
 ### Arguments
 
 ```ts

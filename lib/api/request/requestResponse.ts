@@ -41,6 +41,7 @@ export class Headers {
   private namesMap: Map<string, string>;
   // Not private: `RequestResponse.headers` hands this proxy out, which is the
   // whole point of building one.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   proxy: any;
 
   constructor() {
@@ -52,7 +53,7 @@ export class Headers {
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
-    this.setHeader("X-Kuzzle-Node", (global as any).kuzzle.id);
+    this.setHeader("X-Kuzzle-Node", global.kuzzle.id);
   }
 
   /**
@@ -60,18 +61,18 @@ export class Headers {
    *
    * @param name Header name. Could be a string (case-insensitive) or a symbol
    */
-  getHeader(name: any): string | undefined {
+  getHeader(name: unknown): string | undefined {
     if (typeof name === "symbol") {
-      return this.headers[name as unknown as string];
+      return this.headers[name];
     }
 
-    assert.assertString("header name", name);
+    const header = assert.assertString("header name", name);
 
-    if (!name) {
+    if (!header) {
       return;
     }
 
-    const storedName = this.namesMap.get(name.toLowerCase());
+    const storedName = this.namesMap.get(header.toLowerCase());
 
     return storedName === undefined ? undefined : this.headers[storedName];
   }
@@ -124,7 +125,8 @@ export class Headers {
       case "host":
       case "if-modified-since":
       case "if-unmodified-since":
-      case "last-modified, location":
+      case "last-modified":
+      case "location":
       case "max-forwards":
       case "proxy-authorization":
       case "referer":
@@ -281,11 +283,12 @@ export class RequestResponse {
   /**
    * Request result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get result(): any {
     return this[_request].result;
   }
 
-  set result(r: any) {
+  set result(r: unknown) {
     this[_request].setResult(r);
   }
 
@@ -293,7 +296,7 @@ export class RequestResponse {
    * Node identifier
    */
   get node(): string {
-    return (global as any).kuzzle.id;
+    return global.kuzzle.id;
   }
 
   /**

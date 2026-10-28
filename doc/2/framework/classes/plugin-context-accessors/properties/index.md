@@ -8,7 +8,7 @@ description: PluginContextAccessors class properties
 
 # PluginContextAccessors
 
-The `PluginContextAccessors` instance is available through the [PluginContext.accessors](/core/2/framework/classes/plugin-context#accessors) property.
+The `PluginContextAccessors` instance is available through the [PluginContext.accessors](/core/2/framework/classes/plugin-context/properties#accessors) property.
 
 It contains various instantiated classes and methods that allow to interact with Kuzzle.
 
@@ -63,3 +63,18 @@ This property is an instance of the [Subscription](/core/2/framework/classes/sub
 | Type                                                              | Description           |
 | ----------------------------------------------------------------- | --------------------- |
 | <pre>[Subscription](/core/2/framework/classes/subscription)</pre> | Subscription instance |
+
+## `validation`
+
+This property gives access to the [Data Validation](/core/2/guides/advanced/data-validation) module. It is an object with two methods, bound to the [DataValidation](/core/2/framework/classes/data-validation) instance of Kuzzle:
+
+| Method | Description |
+|--------|-------------|
+| [addType](/core/2/framework/classes/data-validation/addType) | Adds a custom validation type |
+| [validate](/core/2/framework/classes/data-validation/validate) | Validates a request against the validation specifications |
+
+### Usage
+
+```js
+await context.accessors.validation.validate(request, false);
+```

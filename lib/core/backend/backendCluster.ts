@@ -19,7 +19,10 @@
  * limitations under the License.
  */
 
-import type { EventDefinition, ClusterEventHandler } from "../../../index";
+import type {
+  EventDefinition,
+  ClusterEventHandler,
+} from "../../types/EventHandler";
 
 export class BackendCluster {
   /**

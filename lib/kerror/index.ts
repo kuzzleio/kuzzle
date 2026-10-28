@@ -210,6 +210,7 @@ export function rawReject(
   subdomain: string,
   error: string,
   ...placeholders: unknown[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
 ): Promise<any> {
   return Promise.reject(
     rawGet(domains, domain, subdomain, error, ...placeholders),
@@ -307,6 +308,7 @@ export function reject(
   subdomain: string,
   error: string,
   ...placeholders: unknown[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
 ): Promise<any> {
   return rawReject(internalDomains, domain, subdomain, error, ...placeholders);
 }

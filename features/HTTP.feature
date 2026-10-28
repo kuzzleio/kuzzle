@@ -20,3 +20,20 @@ Feature: HTTP
     Then The response headers in the body should be equal:
       | foo   | "bar"  |
       | alpha | "beta" |
+
+  # These routes outlived their actions (removed in Kuzzle 2.0, or never
+  # mapped to Redis): they could only fail, with `api.process.action_not_found`
+  # or a rights error, and were listed in the OpenAPI definition.
+  @http
+  Scenario Outline: Routes to removed actions are unknown URLs
+    When I send a HTTP "<verb>" request to "http://localhost:17510<path>"
+    Then The HTTP response status should be 404
+    And The HTTP response JSON should match:
+      | error | { "id": "network.http.url_not_found" } |
+
+    Examples:
+      | verb | path                        |
+      | POST | /admin/_resetKuzzleData     |
+      | GET  | /nyc-open-data/_autoRefresh |
+      | POST | /ms/_bgsave                 |
+      | POST | /ms/_bgrewriteaof           |

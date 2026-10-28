@@ -20,12 +20,14 @@
  */
 
 import type { JSONObject } from "../../types/JSONObject";
+import type { ValidatedTarget } from "../../types/Target";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
-import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
+import { KuzzleError } from "../../kerror/errors/kuzzleError";
+import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
 
@@ -52,7 +54,7 @@ interface LoadMappingsOptions extends WriteScopeOptions {
 
 /** `{ index: { collection: payload } }`, as the fixtures and mappings
  * import payloads are shaped. */
-type ImportPayload = Record<string, Record<string, JSONObject>>;
+type ImportPayload = Record<string, Record<string, JSONObject[]>>;
 
 /** Hoisted out of the signature: an object literal as a default parameter is
  * re-allocated on every call, and this one is only ever read. */
@@ -70,10 +72,8 @@ const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
 class ClientAdapter {
   public es: Elasticsearch;
   /**
-   * The version-specific ES service (ES7 or ES8). Its type is whatever
-   * `Elasticsearch` exposes — which is `any` today, and is tracked there as
-   * TD-13; referencing it rather than re-writing `any` keeps that one hole
-   * counted once, at its source.
+   * The version-specific ES service: `ES7 | ES8`, as `Elasticsearch` declares
+   * it. Each call below type-checks against both.
    */
   public client: Elasticsearch["client"];
   public scope: storeScopeEnum;
@@ -100,10 +100,19 @@ class ClientAdapter {
     this.registerCacheEvents();
     this.registerLockEvents();
 
-    // The locks were first loaded with the cache, before this node joined the
-    // cluster: one taken in between was broadcast before this node could hear
-    // it. Reading them again once the cluster is joined closes that gap.
-    global.kuzzle.onPipe("kuzzle:state:live", () => this.loadLocks());
+    // The cache and the locks were first loaded before this node joined the
+    // cluster: an index, a collection or a lock a peer added in between was
+    // broadcast before this node could hear it. `Kuzzle.start()` asks for this
+    // reload right after the cluster is joined, before the plugins' `init()`
+    // runs (#3044).
+    global.kuzzle.onAsk(`core:storage:${this.scope}:cache:reload`, () =>
+      this.reloadCache(),
+    );
+
+    // Read again once the node goes live: a peer that joined after this node
+    // may have created indexes or collections before its own join (e.g. its
+    // internal index), and that broadcast reached no one.
+    global.kuzzle.onPipe("kuzzle:state:live", () => this.reloadCache());
 
     // Global store events registration
 
@@ -143,7 +152,22 @@ class ClientAdapter {
     }
 
     if (!indexCacheOnly) {
-      await this.client.createIndex(index);
+      try {
+        await this.client.createIndex(index);
+      } catch (error) {
+        // The index exists in storage but not in this node's cache: a peer
+        // created it and its cache broadcast never reached this node (e.g. the
+        // peer stopped before this node joined the cluster). Cache it so that
+        // the next request to that index finds it, then report the conflict.
+        if (
+          error instanceof KuzzleError &&
+          error.id === "services.storage.index_already_exists"
+        ) {
+          this.cache.addIndex(index);
+        }
+
+        throw error;
+      }
     }
 
     this.cache.addIndex(index);
@@ -239,6 +263,15 @@ class ClientAdapter {
       await this.client.generateMissingAliases();
     }
 
+    await this.reloadCache();
+  }
+
+  /**
+   * Adds the indexes and collections found in storage to the index cache,
+   * then reloads the collection write locks. Unlike `populateCache`, it never
+   * writes to storage.
+   */
+  async reloadCache(): Promise<void> {
     // `client` is untyped (see the field's comment), so the schema shape is
     // stated here: index name -> its collection names.
     const schema: Record<string, string[]> = await this.client.getSchema();
@@ -453,6 +486,18 @@ class ClientAdapter {
         this.cache.assertCollectionExists(index, collection);
         return this.client.getSettings(index, collection);
       },
+    );
+
+    /**
+     * Wait, for a bounded time, until the primary shards of a collection
+     * another node has just created are active
+     * @param {string} index
+     * @param {string} collection
+     */
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:shards:wait`,
+      (index: string, collection: string) =>
+        this.client.waitForCollectionShards(index, collection),
     );
 
     /**
@@ -1047,7 +1092,11 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:multiSearch`,
-      (targets: JSONObject[], searchBody: JSONObject, opts: JSONObject) => {
+      (
+        targets: ValidatedTarget[],
+        searchBody: JSONObject,
+        opts: JSONObject,
+      ) => {
         for (const target of targets) {
           for (const collection of target.collections) {
             this.cache.assertCollectionExists(target.index, collection);
@@ -1350,7 +1399,7 @@ class ClientAdapter {
    */
   async loadFixtures(
     fixtures: ImportPayload = {},
-    { refresh = "wait_for" }: { refresh?: string } = {},
+    { refresh = "wait_for" }: { refresh?: boolean | "wait_for" } = {},
   ) {
     if (!isPlainObject(fixtures)) {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
@@ -1405,37 +1454,36 @@ class ClientAdapter {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
-    // incompatible acquisition/TTL formats and must not contend on the same
-    // key — swapping it is a behaviour change, deferred to #2894.
-    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 }); // NOSONAR
+    // Mapping loads run one at a time across the cluster, with no retry
+    // limit (the `Mutex` it replaces waited forever too). The lock is
+    // refreshed while the mappings load; if it is lost, `loadMappings`
+    // rejects with `MutexLockLostError`.
+    await withLock(
+      "loadMappings",
+      async () => {
+        for (const [index, collections] of Object.entries(fixtures)) {
+          if (!isPlainObject(collections)) {
+            throw kerror.get(
+              "api",
+              "assert",
+              "invalid_argument",
+              collections,
+              "object",
+            );
+          }
 
-    await mutex.lock();
-
-    try {
-      for (const [index, collections] of Object.entries(fixtures)) {
-        if (!isPlainObject(collections)) {
-          throw kerror.get(
-            "api",
-            "assert",
-            "invalid_argument",
-            collections,
-            "object",
-          );
+          for (const [collection, mappings] of Object.entries(collections)) {
+            await this._loadCollectionMappings(
+              index,
+              collection,
+              mappings,
+              options,
+            );
+          }
         }
-
-        for (const [collection, mappings] of Object.entries(collections)) {
-          await this._loadCollectionMappings(
-            index,
-            collection,
-            mappings,
-            options,
-          );
-        }
-      }
-    } finally {
-      await mutex.unlock();
-    }
+      },
+      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+    );
   }
 
   /**

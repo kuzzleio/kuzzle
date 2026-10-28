@@ -5,43 +5,54 @@ import { NativeController } from "../../../lib/api/controllers/baseController";
 import { KuzzleRequest } from "../../../lib/api/request";
 import { NotFoundError } from "../../../lib/kerror/errors/notFoundError";
 import { PreconditionError } from "../../../lib/kerror/errors/preconditionError";
+import { MutexAcquireError } from "../../../lib/util/distributedLock";
 import { restoreKuzzle, stubKuzzle, stubLogger } from "../../mocks/kuzzle";
 
 /**
- * Every mutex the controller takes, and whether it was granted.
+ * Every lock the controller takes, and whether it was granted.
  *
- * `resetSecurity` and `resetDatabase` are both `{ timeout: 0 }` locks: they
- * either take it immediately or refuse the request. The Mocha mock exposed
- * one module-level `__getLastMutex()` and a `__canLock()` switch; this list
- * says *which* locks were taken, and `granted` is the same switch under a
- * name that is not global to the process.
+ * `resetSecurity` and `resetDatabase` both take their lock with no retry:
+ * they either get it immediately or refuse the request. A refused lock
+ * throws the real `MutexAcquireError`, as `withLock` does.
  */
-const mutexes = vi.hoisted(() => {
+const locks = vi.hoisted(() => {
   const taken: {
-    lock: ReturnType<typeof import("vitest").vi.fn>;
+    config: { retryAttempts?: number } | undefined;
+    released: boolean;
     resource: string;
-    timeout: number | undefined;
-    unlock: ReturnType<typeof import("vitest").vi.fn>;
   }[] = [];
 
   return { granted: true, taken };
 });
 
-vi.mock("../../../lib/util/mutex", () => ({
-  Mutex: class {
-    public lock = vi.fn(async () => mutexes.granted);
-    public timeout: number | undefined;
-    public unlock = vi.fn(async () => undefined);
+vi.mock("../../../lib/util/distributedLock", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("../../../lib/util/distributedLock")>();
 
-    constructor(
-      public readonly resource: string,
-      options: { timeout?: number } = {},
-    ) {
-      this.timeout = options.timeout;
-      mutexes.taken.push(this);
-    }
-  },
-}));
+  return {
+    ...original,
+    withLock: vi.fn(
+      async (
+        resource: string,
+        callback: () => Promise<unknown>,
+        config?: { retryAttempts?: number },
+      ) => {
+        const lock = { config, released: false, resource };
+        locks.taken.push(lock);
+
+        if (!locks.granted) {
+          throw new original.MutexAcquireError(resource, 1);
+        }
+
+        try {
+          return await callback();
+        } finally {
+          lock.released = true;
+        }
+      },
+    ),
+  };
+});
 
 describe("#api/controllers/AdminController", () => {
   let controller: AdminController;
@@ -59,13 +70,13 @@ describe("#api/controllers/AdminController", () => {
       .filter(([name]) => name === event)
       .map(([, ...args]) => args);
 
-  /** The mutex taken for `resource`, if any. */
+  /** The lock taken for `resource`, if any. */
   const lockOn = (resource: string) =>
-    mutexes.taken.find((mutex) => mutex.resource === resource);
+    locks.taken.find((lock) => lock.resource === resource);
 
   beforeEach(() => {
-    mutexes.taken.length = 0;
-    mutexes.granted = true;
+    locks.taken.length = 0;
+    locks.granted = true;
 
     answers = {};
     ask = vi.fn(async (event: string) => answers[event]);
@@ -210,9 +221,8 @@ describe("#api/controllers/AdminController", () => {
 
       const lock = lockOn("resetSecurity");
 
-      expect(lock?.timeout).toBe(0);
-      expect(lock?.lock).toHaveBeenCalledTimes(1);
-      expect(lock?.unlock).toHaveBeenCalledTimes(1);
+      expect(lock?.config).toEqual({ retryAttempts: 0 });
+      expect(lock?.released).toBe(true);
     });
 
     it("releases the lock even when a truncation fails", async () => {
@@ -228,11 +238,11 @@ describe("#api/controllers/AdminController", () => {
         "truncation failed",
       );
 
-      expect(lockOn("resetSecurity")?.unlock).toHaveBeenCalledTimes(1);
+      expect(lockOn("resetSecurity")?.released).toBe(true);
     });
 
     it("refuses when a reset is already underway", async () => {
-      mutexes.granted = false;
+      locks.granted = false;
 
       const rejection = controller.resetSecurity();
 
@@ -240,7 +250,17 @@ describe("#api/controllers/AdminController", () => {
       await expect(rejection).rejects.toMatchObject({
         id: "api.process.action_locked",
       });
-      expect(lockOn("resetSecurity")?.unlock).not.toHaveBeenCalled();
+      expect(lockOn("resetSecurity")?.released).toBe(false);
+    });
+  });
+
+  /* Only the reset's own lock being held means "already underway". */
+  describe("#failIfLocked", () => {
+    it("lets through a MutexAcquireError thrown by the reset itself", async () => {
+      const failure = new MutexAcquireError("some other lock", 1);
+      ask.mockRejectedValue(failure);
+
+      await expect(controller.resetDatabase()).rejects.toBe(failure);
     });
   });
 
@@ -266,9 +286,8 @@ describe("#api/controllers/AdminController", () => {
 
       const lock = lockOn("resetDatabase");
 
-      expect(lock?.timeout).toBe(0);
-      expect(lock?.lock).toHaveBeenCalledTimes(1);
-      expect(lock?.unlock).toHaveBeenCalledTimes(1);
+      expect(lock?.config).toEqual({ retryAttempts: 0 });
+      expect(lock?.released).toBe(true);
     });
 
     /* Not covered by the Mocha spec, and the reason for the `finally`. */
@@ -285,11 +304,11 @@ describe("#api/controllers/AdminController", () => {
         "deletion failed",
       );
 
-      expect(lockOn("resetDatabase")?.unlock).toHaveBeenCalledTimes(1);
+      expect(lockOn("resetDatabase")?.released).toBe(true);
     });
 
     it("refuses when a reset is already underway", async () => {
-      mutexes.granted = false;
+      locks.granted = false;
 
       const rejection = controller.resetDatabase();
 
@@ -338,6 +357,16 @@ describe("#api/controllers/AdminController", () => {
       });
       expect(shutdown).not.toHaveBeenCalled();
     });
+
+    // The flag was declared and checked, but never set: the guard never fired.
+    it("refuses a second call once the first has started the shutdown", async () => {
+      await controller.shutdown();
+
+      await expect(controller.shutdown()).rejects.toMatchObject({
+        id: "api.process.action_locked",
+      });
+      expect(shutdown).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("#loadMappings", () => {
@@ -363,6 +392,26 @@ describe("#api/controllers/AdminController", () => {
       expect(asked("core:storage:public:document:import")).toEqual([
         [{ city: { seventeen: [] } }, { refresh: "false" }],
       ]);
+    });
+
+    // The documented answer; 2.17.6 to 2.59 answered the import's `undefined`.
+    it("answers an acknowledgement once the fixtures are loaded", async () => {
+      request.input.body = { city: { seventeen: [] } };
+
+      expect(await controller.loadFixtures(request)).toEqual({
+        acknowledge: true,
+      });
+    });
+
+    // Unlike loadMappings: refresh=false does not detach the import, so its
+    // failure still reaches the caller.
+    it("reports a failed import even with refresh=false", async () => {
+      request.input.body = { city: { seventeen: [] } };
+      request.input.args.refresh = "false";
+      const error = new Error("import failed");
+      ask.mockRejectedValueOnce(error);
+
+      await expect(controller.loadFixtures(request)).rejects.toBe(error);
     });
   });
 

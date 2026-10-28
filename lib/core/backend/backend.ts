@@ -25,8 +25,8 @@ import type { JSONObject } from "../../types/JSONObject";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import type { EventDefinition } from "../../../index";
-import { NameGenerator } from "../../../index";
+import type { EventDefinition } from "../../types/EventHandler";
+import { NameGenerator } from "../../util/name-generator";
 import {
   BackendCluster,
   BackendConfig,
@@ -73,6 +73,10 @@ Reflect.defineProperty(global, "app", {
 });
 
 export class Backend {
+  // `Kuzzle` would reject `start()`'s options: the protected
+  // `_installationsWaitingList` declares `() => void` handlers, where
+  // `StartOptions` (and `install()`) take `() => Promise<void>`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   private _kuzzle: any;
   private _name: string;
   /**
@@ -126,6 +130,7 @@ export class Backend {
   /**
    * Errors manager
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public kerror: any;
 
   /**
@@ -179,13 +184,14 @@ export class Backend {
   public plugin: BackendPlugin;
 
   /**
-   * InternalLogger
+   * Application logger
    *
+   * @method trace
    * @method debug
    * @method info
    * @method warn
    * @method error
-   * @method verbose
+   * @method fatal
    */
   public log: Logger;
 

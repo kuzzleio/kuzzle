@@ -4,7 +4,7 @@ import { IdCard } from "../../lib/cluster/idCardHandler";
 
 /**
  * The five collaborators `ClusterNode` builds in its constructor, plus the
- * mutex its handshake takes.
+ * lock its handshake takes.
  *
  * ⚠️ This file must import nothing that reaches `lib/cluster/node.ts`: it is
  * what the `vi.mock` factories load, and a factory whose graph reaches the
@@ -136,19 +136,10 @@ export class IdCardHandlerStub {
   );
 }
 
-/** Records every mutex the subject takes, so a spec can read its timeout. */
-export class MutexStub {
-  static instances: MutexStub[] = [];
-
-  public lock = vi.fn(async () => undefined);
-  public unlock = vi.fn(async () => undefined);
-  public timeout: number;
-
-  constructor(
-    public resource: string,
-    options: { timeout?: number } = {},
-  ) {
-    this.timeout = options.timeout ?? -1;
-    MutexStub.instances.push(this);
-  }
-}
+/**
+ * Stands in for `withLock`: runs the callback at once, as a free lock would,
+ * and records which lock was taken and how.
+ */
+export const withLock = vi.fn(
+  async (_resource: string, callback: () => Promise<unknown>) => callback(),
+);

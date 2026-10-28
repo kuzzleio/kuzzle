@@ -176,7 +176,7 @@ class KuzzleEventEmitter extends EventEmitter {
    *
    * @warning Critical section of code
    */
-  emit(event: string | symbol, ...args: any[]): boolean {
+  emit(event: string | symbol, ...args: unknown[]): boolean {
     const events = getWildcardEvents(event as string);
     debug('Triggering event "%s" with data: %o', event, args);
 
@@ -256,7 +256,8 @@ class KuzzleEventEmitter extends EventEmitter {
     };
 
     if (funcs.length === 0) {
-      pipeCallback.call(callbackContext, null, ...payload);
+      // Never rejects: it settles `promback` instead
+      void pipeCallback.call(callbackContext, null, ...payload);
     } else {
       this.pipeRunner.run(funcs, payload, pipeCallback, callbackContext);
     }
@@ -271,7 +272,7 @@ class KuzzleEventEmitter extends EventEmitter {
     TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
   >(
     event: TAskEventDefinition["name"],
-    ...args: [payload?: TAskEventDefinition["payload"], ...rest: any]
+    ...args: [payload?: TAskEventDefinition["payload"], ...rest: unknown[]]
   ): Promise<TAskEventDefinition["result"]> {
     debug('Triggering ask "%s" with payload: %o', event, args);
 
@@ -306,7 +307,7 @@ class KuzzleEventEmitter extends EventEmitter {
    */
   call<TAskEventDefinition extends AskEventDefinition = AskEventDefinition>(
     event: TAskEventDefinition["name"],
-    ...args: [payload?: TAskEventDefinition["payload"], ...rest: any]
+    ...args: [payload?: TAskEventDefinition["payload"], ...rest: unknown[]]
   ): TAskEventDefinition["result"] {
     debug('Triggering callback "%s" with payload: %o', event, args);
 
@@ -446,14 +447,22 @@ async function pipeCallback(
     return;
   }
 
-  const corePipes = this.corePipes.get(this.targetEvent);
+  // Nothing awaits this function: a core pipe or a listener that throws
+  // settles the pipe, rather than leaving it pending forever and the error
+  // unhandled.
+  try {
+    const corePipes = this.corePipes.get(this.targetEvent);
 
-  if (corePipes) {
-    await Bluebird.map(corePipes, (fn: any) => fn(...updated));
-  }
+    if (corePipes) {
+      await Bluebird.map(corePipes, (fn) => fn(...updated));
+    }
 
-  for (const element of this.events) {
-    this.superEmit(element, ...updated);
+    for (const element of this.events) {
+      this.superEmit(element, ...updated);
+    }
+  } catch (e) {
+    this.promback.reject(e);
+    return;
   }
 
   this.promback.resolve(updated[0]);

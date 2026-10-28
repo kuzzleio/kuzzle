@@ -9,37 +9,37 @@ import { restoreKuzzle, stubKuzzle } from "../mocks/kuzzle";
 const INDEX = "%kuzzle";
 
 /**
- * Every mutex the subject and its base class take.
- *
- * ⚠️ Two modules reach for `lib/util/mutex` on this path — the handler, for
- * `InternalIndexBootstrap`, and `Store.init`, for `Store.init(%kuzzle)`. The
- * Mocha spec had to say so twice (`mockrequire` the module, then `reRequire`
- * `core/shared/store` so the base class picked the stub up); `vi.mock`
- * replaces the module for the whole graph, so one declaration covers both.
- * `MutexMock.__getLastMutex()` becomes this list, which says *which* locks
- * were taken rather than only the last one.
+ * Every lock taken through `withLock`, and whether it was given back: the base
+ * class's `Store.init(%kuzzle)` and the handler's own `InternalIndexBootstrap`.
  */
-const mutexes = vi.hoisted(() => {
+const locks = vi.hoisted(() => {
   const taken: {
-    lock: ReturnType<typeof import("vitest").vi.fn>;
+    config: { retryAttempts?: number; ttl?: number } | undefined;
+    released: boolean;
     resource: string;
-    unlock: ReturnType<typeof import("vitest").vi.fn>;
-    wait: ReturnType<typeof import("vitest").vi.fn>;
   }[] = [];
 
-  return { granted: true, taken };
+  return { taken };
 });
 
-vi.mock("../../lib/util/mutex", () => ({
-  Mutex: class {
-    public lock = vi.fn(async () => mutexes.granted);
-    public unlock = vi.fn(async () => undefined);
-    public wait = vi.fn(async () => true);
+vi.mock("../../lib/util/distributedLock", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lib/util/distributedLock")>()),
+  withLock: vi.fn(
+    async (
+      resource: string,
+      callback: () => Promise<unknown>,
+      config?: { retryAttempts?: number; ttl?: number },
+    ) => {
+      const lock = { config, released: false, resource };
+      locks.taken.push(lock);
 
-    constructor(public readonly resource: string) {
-      mutexes.taken.push(this);
-    }
-  },
+      try {
+        return await callback();
+      } finally {
+        lock.released = true;
+      }
+    },
+  ),
 }));
 
 const randomBytes = vi.hoisted(() => vi.fn(() => Buffer.from("12345")));
@@ -62,8 +62,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
       .map(([, ...args]) => args);
 
   beforeEach(() => {
-    mutexes.taken.length = 0;
-    mutexes.granted = true;
+    locks.taken.length = 0;
     randomBytes.mockClear();
 
     answers = {};
@@ -114,9 +113,8 @@ describe("#kuzzle/InternalIndexHandler", () => {
        * ⚠️ The fourth argument is the one the Mocha spec did not mention:
        * `should(spy).calledWith(a, b, c)` is satisfied by a call that passed
        * `(a, b, c, d)` — sinon matches a prefix. `createCollections` passes
-       * `{ indexCacheOnly }`, and whether the node writes the mappings or
-       * only caches them is the difference between the node that won the
-       * `Store.init` lock and the ones that waited for it.
+       * `{ indexCacheOnly }`, and every node now creates the collections
+       * itself (`false`), in turn under the `Store.init` lock.
        */
       expect(asked("core:storage:private:collection:create")).toEqual(
         expect.arrayContaining([
@@ -159,25 +157,29 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       /*
        * Two locks, not one: `Store.init` takes its own before creating the
-       * collections. The Mocha spec read only the last mutex built, so it
-       * could not have said which of the two it was looking at.
+       * collections, and only then the bootstrap one. Both wait with no retry
+       * limit, as the `Mutex` they replace did.
        */
-      const bootstrapLock = mutexes.taken.find(
-        (mutex) => mutex.resource === "InternalIndexBootstrap",
-      );
-
-      expect(mutexes.taken.map((mutex) => mutex.resource)).toEqual([
-        `Store.init(${INDEX})`,
-        "InternalIndexBootstrap",
+      expect(locks.taken).toEqual([
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          released: true,
+          resource: `Store.init(${INDEX})`,
+        },
+        {
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          released: true,
+          resource: "InternalIndexBootstrap",
+        },
       ]);
-      expect(bootstrapLock?.lock).toHaveBeenCalledTimes(1);
-      expect(bootstrapLock?.unlock).toHaveBeenCalledTimes(1);
 
-      expect(asked("core:storage:private:document:create")).toContainEqual([
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).toContainEqual([
         INDEX,
         "config",
+        `${INDEX}.done`,
         { timestamp: expect.any(Number) },
-        { id: `${INDEX}.done` },
       ]);
     });
 
@@ -192,9 +194,9 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       expect(initSecret).toHaveBeenCalledTimes(1);
       expect(bootstrap).not.toHaveBeenCalled();
-      expect(asked("core:storage:private:document:create")).not.toContainEqual(
-        expect.arrayContaining([{ id: `${INDEX}.done` }]),
-      );
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).not.toContainEqual(expect.arrayContaining([`${INDEX}.done`]));
     });
 
     it("does not record a bootstrap that failed", async () => {
@@ -205,9 +207,9 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       await expect(handler.init()).rejects.toBe(failure);
 
-      expect(asked("core:storage:private:document:create")).not.toContainEqual(
-        expect.arrayContaining([{ id: `${INDEX}.done` }]),
-      );
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).not.toContainEqual(expect.arrayContaining([`${INDEX}.done`]));
     });
 
     it("reports a bootstrap that timed out as a Kuzzle error", async () => {
@@ -225,6 +227,66 @@ describe("#kuzzle/InternalIndexHandler", () => {
     });
 
     /*
+     * #3028: a node stopped while bootstrapping, after the data model version
+     * was written but before the `.done` marker was. The next lock holder
+     * runs the whole sequence again, on an index that already holds some of
+     * its documents, and must not fail on any of them. The documents live in
+     * a map here, and `create` refuses an id that is already there, as
+     * Elasticsearch does.
+     */
+    it("resumes a bootstrap interrupted before the marker document", async () => {
+      const documents = new Map<string, unknown>([
+        ["config/internalIndex.dataModelVersion", { version: "2.0.0" }],
+        ["config/security.jwt.secret", { seed: "the-stored-seed" }],
+        ["roles/admin", {}],
+      ]);
+
+      ask.mockImplementation(async (event: string, ...args: unknown[]) => {
+        const [, collection, third, fourth] = args as [
+          string,
+          string,
+          unknown,
+          unknown,
+        ];
+
+        switch (event) {
+          case "core:storage:private:document:exist":
+            return documents.has(`${collection}/${String(third)}`);
+          case "core:storage:private:document:get":
+            return { _source: documents.get(`${collection}/${String(third)}`) };
+          case "core:storage:private:document:create": {
+            const key = `${collection}/${(fourth as { id: string }).id}`;
+
+            if (documents.has(key)) {
+              throw Object.assign(new Error("Document already exists."), {
+                id: "services.storage.document_already_exists",
+              });
+            }
+
+            documents.set(key, third);
+            return undefined;
+          }
+          case "core:storage:private:document:createOrReplace":
+            documents.set(`${collection}/${String(third)}`, fourth);
+            return undefined;
+          default:
+            return undefined;
+        }
+      });
+
+      await handler.init();
+
+      expect(documents.get(`config/${INDEX}.done`)).toEqual({
+        timestamp: expect.any(Number),
+      });
+      expect(documents.get("config/internalIndex.dataModelVersion")).toEqual({
+        version: "2.0.0",
+      });
+      expect(global.kuzzle.secret).toBe("the-stored-seed");
+      expect(randomBytes).not.toHaveBeenCalled();
+    });
+
+    /*
      * Not covered by the Mocha spec, and the reason the `finally` is there: a
      * node that fails to bootstrap must not leave the lock held, or every
      * other node waits for its TTL to expire.
@@ -237,11 +299,11 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       await expect(handler.init()).rejects.toThrow("bootstrap failed");
 
-      const bootstrapLock = mutexes.taken.find(
-        (mutex) => mutex.resource === "InternalIndexBootstrap",
+      const bootstrapLock = locks.taken.find(
+        (lock) => lock.resource === "InternalIndexBootstrap",
       );
 
-      expect(bootstrapLock?.unlock).toHaveBeenCalledTimes(1);
+      expect(bootstrapLock?.released).toBe(true);
     });
   });
 
@@ -262,11 +324,13 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(securities).toHaveBeenCalledTimes(1);
       expect(validations).toHaveBeenCalledTimes(1);
       expect(initSecret).toHaveBeenCalledTimes(1);
-      expect(asked("core:storage:private:document:create")).toContainEqual([
+      expect(
+        asked("core:storage:private:document:createOrReplace"),
+      ).toContainEqual([
         INDEX,
         "config",
+        "internalIndex.dataModelVersion",
         { version: expect.any(String) },
-        { id: "internalIndex.dataModelVersion" },
       ]);
     });
   });
@@ -429,6 +493,32 @@ describe("#kuzzle/InternalIndexHandler", () => {
       expect(randomBytes).not.toHaveBeenCalled();
       expect(asked("core:storage:private:document:create")).toEqual([]);
       expect(global.kuzzle.secret).toBe("the-stored-seed");
+    });
+
+    /*
+     * #3028: an interrupted bootstrap may store a seed between the check and
+     * the creation. That seed is the one other nodes may already sign with,
+     * so it is the one kept, rather than this node's own.
+     */
+    it("keeps a seed stored between its check and its creation", async () => {
+      answers["core:storage:private:document:exist"] = false;
+      answers["core:storage:private:document:get"] = {
+        _source: { seed: "the-other-seed" },
+      };
+
+      ask.mockImplementation(async (event: string) => {
+        if (event === "core:storage:private:document:create") {
+          throw Object.assign(new Error("Document already exists."), {
+            id: "services.storage.document_already_exists",
+          });
+        }
+
+        return answers[event];
+      });
+
+      await handler._initSecret();
+
+      expect(global.kuzzle.secret).toBe("the-other-seed");
     });
 
     it("forwards a rejection from the document creation", async () => {

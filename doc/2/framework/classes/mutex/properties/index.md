@@ -9,6 +9,11 @@ description: Mutex class properties
 # Properties
 
 <SinceBadge version="2.9.0" />
+<DeprecatedBadge version="2.57.0" />
+
+::: warning
+`Mutex` is deprecated since 2.57.0: use [withLock](/core/2/framework/functions/with-lock) instead. Both take the same Redis key, so a `Mutex` and a `withLock` call on the same resource exclude each other, and call sites can be migrated one at a time.
+:::
 
 ## `attemptDelay`
 
@@ -21,8 +26,14 @@ description: Mutex class properties
 
 | Type               | Description                       |
 |--------------------|-----------------------------------|
-| <pre>boolean</pre> | Indicates whether the resource is locked or not |
+| <pre>boolean (readonly)</pre> | Indicates whether this mutex instance holds the lock |
 
+
+## `mutexId`
+
+| Type               | Description                       |
+|--------------------|-----------------------------------|
+| <pre>string (readonly)</pre> | Unique identifier of this mutex instance (`<node id>/<random hex string>`). It is the value stored in the lock, so that only this instance can free it |
 
 ## `resource`
 

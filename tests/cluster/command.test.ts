@@ -57,6 +57,7 @@ type AddNode = (
 function fakeNode({
   addNode = vi.fn<AddNode>().mockResolvedValue(true),
   activity = [],
+  hasNodeId = true,
   lastMessageId = 12,
   port,
   remoteNodes = new Map(),
@@ -65,6 +66,11 @@ function fakeNode({
 }: {
   addNode?: Mock<AddNode>;
   activity?: Activity[];
+  /**
+   * False plays a node whose handshake has not set its id yet: the real
+   * `nodeId` getter throws then, and so does this fake's (#3031).
+   */
+  hasNodeId?: boolean;
   /**
    * Written as a plain number here because that is how a reader thinks about a
    * message counter, and converted below: what the node actually holds is a
@@ -90,8 +96,16 @@ function fakeNode({
       syncTimeout: 250,
     },
     fullState: { serialize: () => ({ authStrategies: [], rooms }) },
+    hasNodeId,
     ip: "127.0.0.1",
-    nodeId: "knode-local",
+    get nodeId(): string {
+      // `this`, not the parameter: a spec flips the flag to play the handshake.
+      if (!this.hasNodeId) {
+        throw new Error("[CLUSTER] No node id yet: the handshake has not run");
+      }
+
+      return "knode-local";
+    },
     publisher: {
       lastMessageId: Long.fromNumber(lastMessageId, true),
       replay,
@@ -165,6 +179,26 @@ describe("#cluster/ClusterCommand", () => {
       // protobuf root loaded and the port bound is what every test below
       // exercises for real, by sending a request to it.
       expect(command.running).toBe(true);
+    });
+
+    // Not awaited, and `listen()` rethrows a failed receive or reply: that
+    // used to be an unhandled rejection.
+    it("logs it when listening fails", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.server }));
+      vi.spyOn(command, "listen").mockRejectedValue(new Error("socket gone"));
+
+      try {
+        await command.init();
+
+        await vi.waitFor(() =>
+          expect(logger.error).toHaveBeenCalledWith(
+            "[CLUSTER] Command layer stopped listening: socket gone",
+          ),
+        );
+      } finally {
+        // Not running, so `afterEach` leaves the bound port alone
+        command.dispose();
+      }
     });
   });
 
@@ -270,6 +304,56 @@ describe("#cluster/ClusterCommand", () => {
       // REP/REQ is strictly alternating: a request with no reply would wedge
       // the remote node's socket for good, so an invalid topic still answers.
       expect(topic.toString()).toBe("discarded");
+    });
+
+    /*
+     * #3031: the socket is bound before the handshake sets the node id, and a
+     * node restarted on a dead node's IP is reached by peers still talking to
+     * that dead node. Answering used to read `nodeId`, which throws then.
+     */
+    describe("before the handshake has set the node id (#3031)", () => {
+      it("discards a fullstate request, and keeps serving", async () => {
+        const node = fakeNode({ hasNodeId: false, port: PORT.server });
+        command = new ClusterCommand(node);
+        await command.init();
+
+        const [topic] = await ask("fullstate", null);
+
+        expect(topic.toString()).toBe("discarded");
+
+        // The loop did not die on it: once the id is set, it answers again.
+        node.hasNodeId = true;
+        client?.close();
+
+        const [next] = await ask("fullstate", null);
+
+        expect(next.toString()).toBe("fullstate");
+        expect(command.running).toBe(true);
+      });
+
+      it("discards a handshake request without adding the peer", async () => {
+        const addNode = vi.fn<AddNode>().mockResolvedValue(true);
+        command = new ClusterCommand(
+          fakeNode({ addNode, hasNodeId: false, port: PORT.server }),
+        );
+        await command.init();
+
+        const encoder = protoroot.lookupType("HandshakeRequest");
+        const request = encoder
+          .encode(
+            encoder.create({
+              ip: "127.0.0.2",
+              lastMessageId: 3,
+              nodeId: "knode-2",
+            }),
+          )
+          .finish();
+
+        const [topic] = await ask("handshake", Buffer.from(request));
+
+        expect(topic.toString()).toBe("discarded");
+        expect(addNode).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -380,6 +464,31 @@ describe("#cluster/ClusterCommand", () => {
       }
     });
 
+    it("skips a node that discards the request instead of decoding its empty answer (#3031)", async () => {
+      const server = new ClusterCommand(
+        fakeNode({ hasNodeId: false, port: PORT.fullStateClient }),
+      );
+      await server.init();
+
+      try {
+        command = new ClusterCommand(fakeNode({ port: PORT.fullStateClient }));
+        await command.loadProtobuf();
+
+        // An empty DISCARDED frame decodes as an empty full state: taken as
+        // one, it would have loaded nothing and gone on with the handshake.
+        const fullState = await command.getFullState([
+          { id: "knode-1", ip: "127.0.0.1" },
+        ]);
+
+        expect(fullState).toBeNull();
+        expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
+          "Unable to fetch a full state from node knode-1 (request discarded)",
+        );
+      } finally {
+        server.dispose();
+      }
+    });
+
     it("tries the next node when one does not answer, and gives up after a full turn", async () => {
       const nodes = [
         { id: "knode-1", ip: "127.0.0.1" },
@@ -464,6 +573,33 @@ describe("#cluster/ClusterCommand", () => {
       present(response, "the handshake response");
       expect(Buffer.from(response).toString()).toBe(encoded.toString());
       expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it("returns null when the remote node discards the handshake (#3031)", async () => {
+      peer = new Reply();
+      await peer.bind(`tcp://127.0.0.1:${PORT.sendSingleHandshake}`);
+
+      const answeringPeer = peer;
+      const answering = answeringPeer
+        .receive()
+        .then(() => answeringPeer.send(["discarded", null]));
+
+      command = new ClusterCommand(
+        fakeNode({ port: PORT.sendSingleHandshake }),
+      );
+
+      const response = await command._sendSingleHandshake(
+        "knode-1",
+        "127.0.0.1",
+        Buffer.from("handshake request"),
+      );
+      await answering;
+
+      // Not an empty buffer: decoded, it read as an answer with nothing in it.
+      expect(response).toBeNull();
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Couldn't complete handshake with node knode-1: request discarded",
+      );
     });
 
     it("returns null when the remote node does not answer", async () => {

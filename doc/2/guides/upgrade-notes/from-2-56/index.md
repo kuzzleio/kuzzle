@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-order: 100
+order: 200
 title: Upgrading from 2.56 | Upgrade notes | Guide | Core
 meta:
   - name: description
@@ -22,8 +22,8 @@ The changelog is generated from the commits and says what was done. This page sa
 
 ### Configuration and HTTP
 
-- **Multipart uploads are now size-limited.** `limits.maxFormFileSize` (default 1 MB) was never enforced; now it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised.
-  **Action:** if you accept larger uploads, raise `limits.maxFormFileSize` too.
+- **Multipart uploads are now size-limited.** `server.protocols.http.maxFormFileSize` (default 1 MB) was never enforced; now it is. A multipart file above it gets `413 network.http.file_too_large`, even where `maxRequestSize` was raised.
+  **Action:** if you accept larger uploads, raise `server.protocols.http.maxFormFileSize` too.
 - **HTTP connections carry their real headers.** They were always empty (`{}`). They now reach the `connection:new` / `connection:remove` hook payloads, and the `combined` access-log format fills its referer and user-agent fields (they were always `-`). The `logstash` access-log format keeps the v2.56.0 shape: the request headers — `authorization` and `cookie` included — are logged once, under `extra.headers`, as in v2.56.0, and the `connection` objects of an entry carry no `headers` field (v2.56.0 logged an empty `{}` there).
   **Action:** if your `connection:*` hooks forward their payload somewhere `Authorization` or cookie values must not go, filter them there.
 - **Node identity.** Each node now has a name (`knode-…` unless your `Backend` names it). It appears in the Redis client name (`CLIENT LIST`), the cluster ID card, the `node` field of realtime notifications **and of every API response**, and the `X-Kuzzle-Node` HTTP header (which read the literal string `"undefined"`).
@@ -83,7 +83,7 @@ Other observable changes:
 
 ### Runtime API
 
-- New exports: `withLock`, a distributed and reentrant Redis lock, and `MutexLockLostError`. `withLock` replaces the deprecated `Mutex`; do not use both on the same key.
+- New exports: [`withLock`](/core/2/framework/functions/with-lock), a distributed and reentrant Redis lock, and [`MutexLockLostError`](/core/2/framework/error-classes/mutex-lock-lost-error). `withLock` replaces the deprecated `Mutex`. Both take the same Redis key with `SET NX`, so on the same key they exclude each other, and neither can release the other's lock: you can move your call sites from `Mutex` to `withLock` one at a time, and nodes of different versions stay mutually excluded during a rolling upgrade.
 - `request.response.configure({ result })` sets a result without resetting the status; `request.setResult` stays, deprecated. `request.getArrayOrCsv()` names what `getArrayLegacy()` did; `getArrayLegacy()` is still available, deprecated.
 - **`context.constructors.ESClient` follows `services.storageEngine.majorVersion`.** It always built an Elasticsearch 7 client, even on an Elasticsearch 8 deployment; it now builds a client of the configured major, like `app.storage.StorageClient` already did. Nothing changes on Elasticsearch 7.
   **Action:** on Elasticsearch 8, if a plugin uses this client, check its calls against the 8.x client (for instance, responses are no longer wrapped in `body`).

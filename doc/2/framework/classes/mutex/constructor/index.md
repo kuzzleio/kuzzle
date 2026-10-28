@@ -9,16 +9,25 @@ description: Mutex class constructor
 # Mutex
 
 <SinceBadge version="2.9.0" />
+<DeprecatedBadge version="2.57.0" />
+
+::: warning
+`Mutex` is deprecated since 2.57.0: use [withLock](/core/2/framework/functions/with-lock) instead. Both take the same Redis key, so a `Mutex` and a `withLock` call on the same resource exclude each other, and call sites can be migrated one at a time.
+:::
 
 Instantiates a new mutex, allowing to lock a resource.  
 Works both with single-node and cluster environments.
+
+::: info
+The constructor reads the node identifier: instantiate a `Mutex` once Kuzzle is running, from a plugin's `init` method onward, or in an application once `app.start()` has resolved. Before that, it throws a `TypeError`.
+:::
 
 ---
 
 ## Constructor
 
-```js
-new Mutex(resource, [options]);
+```ts
+new Mutex(resource: string, options?: MutexOptions);
 ```
 
 <br/>
@@ -26,11 +35,11 @@ new Mutex(resource, [options]);
 | Arguments           | Type              | Description                                                                                                                     |
 | ------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
 | `resource`          | <pre>string</pre> | Resource identifier to be locked (must be identical across all nodes for the same resource)  |
-| `options`           | <pre>object</pre> | (optional) Mutex options (see below) |
+| `options`           | <pre>MutexOptions</pre> | (optional) Mutex options (see below) |
 
 #### options
 
-The `options` object is used to configure the mutex behavior. The following properties can be provided:
+The `options` object is used to configure the mutex behavior. Its type, `MutexOptions`, can be imported from `kuzzle`. The following properties can be provided:
 
 | Option         | Type              | Description                                                                                                      |
 | -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -72,7 +81,7 @@ async function DoNotRepeatProcess () {
   const locked = await mutex.lock();
 
   if (!locked) {
-    throw TooManyRequestsError('That task is already ongoing');
+    throw new TooManyRequestsError('That task is already ongoing');
   }
 
   try {
@@ -81,5 +90,31 @@ async function DoNotRepeatProcess () {
   finally {
     await mutex.unlock();
   }
+}
+```
+
+---
+
+## Migrating to withLock
+
+[withLock](/core/2/framework/functions/with-lock) runs a callback under the lock and releases it when the callback settles: there is no `lock` / `unlock` pair to keep balanced.
+
+| `Mutex`                                   | `withLock`                                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `timeout: -1` (default): wait indefinitely | `retryAttempts: Infinity` (the default is 10 retries, `retryDelay` 200 ms apart)                       |
+| `timeout: 0`: `lock()` resolves to `false` | `retryAttempts: 0`: rejects with [MutexAcquireError](/core/2/framework/error-classes/mutex-acquire-error) |
+| `timeout: n` (milliseconds)               | `retryAttempts` set to about `n / retryDelay`                                                          |
+| `attemptDelay`                            | `retryDelay`                                                                                           |
+| `ttl` (default 5000), never extended      | `ttl` (default 30000), extended while the callback runs                                                |
+
+The first example above becomes:
+
+```ts
+import { withLock } from 'kuzzle';
+
+async function ConcurrentAccessMethod () {
+  await withLock('concurrentAccessMethodResource', async () => {
+    // safe zone: will only be executed once the resource is locked
+  }, { retryAttempts: Infinity });
 }
 ```

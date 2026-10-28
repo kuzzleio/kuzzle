@@ -24,6 +24,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # docs/adr-state.json is the structured extract of the ADR hubs that feeds
+  # the Claude Code session-start digest. It holds the current state only,
+  # under a schema, and must not contradict the hubs it points to. Node only,
+  # through Node's type stripping: no `npm ci`.
+  adr-state:
+    name: ADR state schema
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Schema and consistency of docs/adr-state.json
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/adr-state.ts --check
+
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-24.04
@@ -42,6 +61,32 @@ jobs:
 
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
+
+  # Bounds the repository's own living documentation (ADR hubs, open steps,
+  # AGENTS.md, skills...). ADR-0001's hub was compacted on 2026-09-18 and was
+  # back at 116 KB nine days later, because nothing bounded it. Node only: the
+  # script runs through Node's type stripping, so no `npm ci`. Rules:
+  # docs/doc-budgets.json.
+  doc-budgets:
+    name: Documentation budgets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          # The base branch's history is what tells a write-once archive that
+          # grew in this PR apart from one that was already that size.
+          fetch-depth: 0
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Size budgets of the documentation
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/check-doc-budgets.ts --base "origin/$BASE_REF"
 
   lint:
     name: Lint - Node.js
@@ -82,10 +127,10 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Node version 20
+      - name: Node version 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -252,7 +297,7 @@ jobs:
         # One runner, so no suite dimension: `mocha` left this matrix with the last
         # Mocha spec (step 13, L6h) and its apparatus with L7. ADR-0001's axis 2 is
         # closed — vitest is the unit runner.
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -309,7 +354,7 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
         es-version: [7, 8]
     runs-on: ubuntu-24.04
     steps:
@@ -339,7 +384,7 @@ jobs:
       # variant failing is exactly when the other five results matter most.
       fail-fast: false
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
         es-version: [7, 8]
     steps:
       - name: Checkout project

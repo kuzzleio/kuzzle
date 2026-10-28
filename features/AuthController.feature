@@ -254,3 +254,22 @@ Feature: Auth Controller
     And I successfully execute the action "auth":"searchApiKeys"
     Then I should receive a empty "hits" array
     And I can not login with the previously created API key
+
+  @security @http
+  Scenario Outline: Delete an API key over HTTP by its <by>
+    Given I successfully execute the action "auth":"createApiKey" with args:
+      | _id       | "SGN-HCM"                           |
+      | expiresIn | -1                                  |
+      | body      | { "description": "Sigfox API key" } |
+    And I save the created API key
+    When I delete the saved API key over HTTP by its <by>
+    Then I should receive a result matching:
+      | _id | "SGN-HCM" |
+    And I successfully execute the action "auth":"searchApiKeys"
+    And I should receive a empty "hits" array
+    And I can not login with the previously created API key
+
+    Examples:
+      | by          |
+      | key         |
+      | fingerprint |

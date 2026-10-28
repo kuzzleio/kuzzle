@@ -21,6 +21,8 @@
 
 /* eslint sort-keys: 0 */
 
+import type { JSONObject } from "../types/JSONObject";
+
 /**
  * A native Kuzzle HTTP route, as exposed through `config.http.routes`.
  *
@@ -39,7 +41,7 @@ interface KuzzleHttpRoute {
   };
   /** Alias of `path`, populated below. */
   url?: string;
-  openapi?: Record<string, any>;
+  openapi?: JSONObject;
 }
 
 const routes: KuzzleHttpRoute[] = [
@@ -214,12 +216,6 @@ const routes: KuzzleHttpRoute[] = [
     controller: "admin",
     action: "resetDatabase",
   },
-  {
-    verb: "post",
-    path: "/admin/_resetKuzzleData",
-    controller: "admin",
-    action: "resetKuzzleData",
-  },
   { verb: "post", path: "/admin/_dump", controller: "admin", action: "dump" },
   {
     verb: "post",
@@ -282,12 +278,6 @@ const routes: KuzzleHttpRoute[] = [
     path: "/:index/_exists",
     controller: "index",
     action: "exists",
-  },
-  {
-    verb: "get",
-    path: "/:index/_autoRefresh",
-    controller: "index",
-    action: "getAutoRefresh",
   },
   { verb: "get", path: "/_list", controller: "index", action: "list" },
   { verb: "get", path: "/_storageStats", controller: "index", action: "stats" },
@@ -1190,13 +1180,6 @@ const routes: KuzzleHttpRoute[] = [
     controller: "ms",
     action: "append",
   },
-  {
-    verb: "post",
-    path: "/ms/_bgrewriteaof",
-    controller: "ms",
-    action: "bgrewriteaof",
-  },
-  { verb: "post", path: "/ms/_bgsave", controller: "ms", action: "bgsave" },
   { verb: "post", path: "/ms/_bitop/:_id", controller: "ms", action: "bitop" },
   { verb: "post", path: "/ms/_decr/:_id", controller: "ms", action: "decr" },
   {
@@ -1585,7 +1568,7 @@ const routes: KuzzleHttpRoute[] = [
     action: "deleteApiKey",
     openapi: {
       description:
-        "Deletes a user API key, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. Exactly one of `key` or `fingerprint` must be provided. If you are looking to manage your own API keys, use the `auth` controller instead.",
+        "Deletes a user API key, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. One of them must be provided; if several are given, `_id` is used first, then `key`, then `fingerprint`, and the others are ignored. A `key` in the query string is a secret written in the URL: prefer the `fingerprint`. If you are looking to manage your own API keys, use the `auth` controller instead.",
       parameters: [
         {
           in: "path",
@@ -1643,6 +1626,59 @@ const routes: KuzzleHttpRoute[] = [
     path: "/api-keys/:_id",
     controller: "auth",
     action: "deleteApiKey",
+  },
+  {
+    verb: "delete",
+    path: "/api-keys",
+    controller: "auth",
+    action: "deleteApiKey",
+    openapi: {
+      description:
+        "Deletes an API key of the current user, identified by its clear-text `key` or its `fingerprint` instead of its `_id`. One of them must be provided; if several are given, `_id` is used first, then `key`, then `fingerprint`, and the others are ignored. A `key` in the query string is a secret written in the URL: prefer the `fingerprint`.",
+      parameters: [
+        {
+          in: "query",
+          name: "key",
+          schema: { type: "string" },
+          required: false,
+          description: "Clear-text API key to delete",
+        },
+        {
+          in: "query",
+          name: "fingerprint",
+          schema: { type: "string" },
+          required: false,
+          description: "SHA256 fingerprint of the API key to delete",
+        },
+        {
+          in: "query",
+          name: "refresh",
+          schema: {
+            type: "string",
+            enum: ["wait_for", "false"],
+            default: "wait_for",
+          },
+          required: false,
+          description:
+            "If set to `wait_for`, waits for the deletion to be indexed before responding",
+        },
+      ],
+      responses: {
+        200: {
+          description: "The deleted API key ID",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  _id: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 
   // PUT (idempotent)

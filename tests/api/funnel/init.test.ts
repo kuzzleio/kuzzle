@@ -18,6 +18,7 @@ import RealtimeController from "../../../lib/api/controllers/realtimeController"
 import SecurityController from "../../../lib/api/controllers/securityController";
 import ServerController from "../../../lib/api/controllers/serverController";
 import Funnel from "../../../lib/api/funnel";
+import httpRoutes from "../../../lib/api/httpRoutes";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 describe("#api/funnel.init", () => {
@@ -131,5 +132,27 @@ describe("#api/funnel.init", () => {
     expect(funnel.controllers.get("ms")).toBe(
       funnel.controllers.get("memoryStorage"),
     );
+  });
+
+  /*
+   * The route table is a hand-written list, and nothing tied it to the
+   * controllers: four routes (`admin:resetKuzzleData`,
+   * `index:getAutoRefresh`, `ms:bgsave`, `ms:bgrewriteaof`) outlived their
+   * actions, answered `api.process.action_not_found` and were still listed
+   * in the OpenAPI definition.
+   */
+  it("routes every native HTTP route to an existing action", async () => {
+    await funnel.init();
+
+    const deadRoutes = httpRoutes
+      .filter(
+        ({ controller, action }) =>
+          funnel.controllers.get(controller)?._isAction(action) !== true,
+      )
+      .map(({ verb, path, controller, action }) => {
+        return `${verb} ${path} -> ${controller}:${action}`;
+      });
+
+    expect(deadRoutes).toEqual([]);
   });
 });

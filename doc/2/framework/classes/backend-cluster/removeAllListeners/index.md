@@ -12,6 +12,10 @@ description: BackendCluster.removeAllListeners method
 
 Unregisters all listeners from an event.
 
+::: info
+This method can only be used once the application is started.
+:::
+
 ```ts
 removeAllListeners (event: string): Promise<void>
 ```
@@ -25,5 +29,5 @@ removeAllListeners (event: string): Promise<void>
 ## Usage
 
 ```js
-app.cluster.removeAllListeners('some:event');
+await app.cluster.removeAllListeners('some:event');
 ```

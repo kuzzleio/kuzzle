@@ -33,7 +33,7 @@ export class Logger extends KuzzleLogger {
    * Shared pino instance to avoid spawning a transport worker for every
    * Logger instance (pino.transport adds a process "exit" listener).
    */
-  private static basePino: any;
+  private static basePino: KuzzleLogger["pino"] | undefined;
 
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
@@ -76,9 +76,10 @@ export class Logger extends KuzzleLogger {
       return mergingObject;
     };
 
-    const hasSharedPino = Logger.basePino !== undefined;
+    const sharedPino = Logger.basePino;
+    const hasSharedPino = sharedPino !== undefined;
 
-    let loggerConfig: any;
+    let loggerConfig: ConstructorParameters<typeof KuzzleLogger>[0];
 
     if (hasSharedPino) {
       loggerConfig = { getMergingObject, skipPinoInstance: true };
@@ -118,10 +119,10 @@ export class Logger extends KuzzleLogger {
 
     super(loggerConfig);
 
-    if (hasSharedPino) {
+    if (sharedPino !== undefined) {
       // Reuse the shared pino instance to avoid stacking process exit listeners
       // added by pino.transport when spawning its worker thread.
-      this.pino = Logger.basePino.child({});
+      this.pino = sharedPino.child({});
     } else {
       Logger.basePino = this.pino;
     }
@@ -173,8 +174,15 @@ export class Logger extends KuzzleLogger {
     this.level = level;
   }
 
+  /**
+   * Creates a child logger with the given namespace, appended to the parent's
+   * one. Its level follows the parent's until it is set on the child.
+   */
   child(namespace: string): Logger {
-    // TODO, this is fishy we will probably need to properly remove the "as Logger"
-    return super.child(namespace) as Logger;
+    // kuzzle-logger builds the child as a plain KuzzleLogger (no getLevel,
+    // setLevel, silly, verbose): give it this class's prototype so it is the
+    // Logger it is declared to be. Its state is all KuzzleLogger's, and the
+    // deprecation flags start unset, as on a new Logger.
+    return Object.setPrototypeOf(super.child(namespace), Logger.prototype);
   }
 }

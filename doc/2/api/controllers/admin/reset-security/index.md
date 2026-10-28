@@ -49,3 +49,10 @@ Returns a confirmation that the command is being executed.
   "room": "4f9f6301-b2f8-4d13-b227-1598310f4750"
 }
 ```
+
+---
+
+## Possible errors
+
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [PreconditionError](/core/2/api/errors/types#preconditionerror): a security reset is already running (`api.process.action_locked`)

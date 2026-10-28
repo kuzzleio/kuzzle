@@ -45,6 +45,7 @@ import {
   UnauthorizedError,
 } from "../../kerror/errors";
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { withLock } from "../../util/distributedLock";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
@@ -58,21 +59,38 @@ import type { Kuzzle } from "../../kuzzle";
 
 const contextError = kerror.wrap("plugin", "context");
 
+type ESClientConstructor = PluginContext["constructors"]["ESClient"];
+type RepositoryConstructor = PluginContext["constructors"]["Repository"];
+
+/**
+ * Declared as v2.56.0 declared it. The answers stay `any` because a precise
+ * type would break the plugins that read them without narrowing; the options
+ * because the implementation hands them to `ObjectRepository`, which takes an
+ * object, and narrowing them here would break a call passing anything else.
+ */
 export interface Repository {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   create(document: JSONObject, options: any): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   createOrReplace(document: JSONObject, options: any): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   delete(documentId: string, options: any): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get(documentId: string): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   mGet(ids: string[]): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   replace(document: JSONObject, options: any): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   search(query: JSONObject, options: any): Promise<any>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   update(document: JSONObject, options: any): Promise<any>;
 }
 
@@ -85,8 +103,14 @@ export class PluginContext {
 
     /**
      * Trigger a custom plugin event
+     *
+     * A method signature, not a function-typed property, from here down to
+     * `log`: a method's parameters are compared bivariantly, so taking
+     * `unknown` instead of v2.56.0's `any` neither breaks a call nor an
+     * assignment of a function declaring a narrower parameter.
      */
-    trigger: (eventName: string, payload: any) => Promise<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
+    trigger(eventName: string, payload: unknown): Promise<any>;
 
     /**
      * Add or remove strategies dynamically
@@ -95,7 +119,7 @@ export class PluginContext {
       /**
        * Adds a new authentication strategy
        */
-      add: (name: string, properties: any) => Promise<void>;
+      add(name: string, properties: unknown): Promise<void>;
 
       /**
        * Removes an authentication strategy, preventing new authentications from using it.
@@ -107,7 +131,9 @@ export class PluginContext {
      * Accessor to the Data Validation API
      */
     validation: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       addType: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       validate: any;
     };
 
@@ -153,12 +179,13 @@ export class PluginContext {
       /**
        * Initializes the plugin storage
        */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
       bootstrap: (collections: any) => Promise<void>;
 
       /**
        * Creates a collection in the plugin storage
        */
-      createCollection: (collection: string, mappings: any) => Promise<void>;
+      createCollection(collection: string, mappings: unknown): Promise<void>;
     };
 
     /**
@@ -187,6 +214,7 @@ export class PluginContext {
     /**
      * @todo need documentation
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     BaseValidationType: any;
     /**
      * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
@@ -199,6 +227,7 @@ export class PluginContext {
     /**
      * Plugin private storage space
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     Repository: new (collection: string, objectConstructor: any) => Repository;
     /**
      * Instantiate a new Request from the original one, or from raw data.
@@ -216,22 +245,26 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
     ESClient: new () => any;
   };
 
   /**
    * @deprecated import directly: `import { BadRequestError, ... } from 'kuzzle'`
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public errors: any;
 
   /**
    * Errors manager
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public kerror: any;
 
   /**
    * @deprecated use `PluginContext.kerror` instead
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   public errorsManager: any;
 
   /**
@@ -248,12 +281,12 @@ export class PluginContext {
    * Internal Logger
    */
   public log: {
-    debug: (message: any) => void;
-    error: (message: any) => void;
-    info: (message: any) => void;
-    silly: (message: any) => void;
-    verbose: (message: any) => void;
-    warn: (message: any) => void;
+    debug(message: unknown): void;
+    error(message: unknown): void;
+    info(message: unknown): void;
+    silly(message: unknown): void;
+    verbose(message: unknown): void;
+    warn(message: unknown): void;
   };
 
   constructor(pluginName: string) {
@@ -299,7 +332,7 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository(
       collection: string,
-      ObjectConstructor: any = null,
+      ObjectConstructor: (new () => unknown) | null = null,
     ) {
       if (!collection) {
         throw contextError.get("missing_collection");
@@ -307,7 +340,9 @@ export class PluginContext {
 
       const pluginRepository = new PluginRepository(pluginStore, collection);
 
-      pluginRepository.init({ ObjectConstructor });
+      pluginRepository.init({
+        ObjectConstructor: ObjectConstructor ?? undefined,
+      });
 
       return {
         create: (...args) => pluginRepository.create(...args),
@@ -321,7 +356,7 @@ export class PluginContext {
       } as Repository;
     }
 
-    function PluginContextESClient(): any {
+    function PluginContextESClient() {
       return Elasticsearch.buildClient(
         global.kuzzle.config.services.storageEngine.client,
         global.kuzzle.config.services.storageEngine.majorVersion,
@@ -330,13 +365,12 @@ export class PluginContext {
 
     this.constructors = {
       BaseValidationType,
-      ESClient: PluginContextESClient as any,
+      // Plain functions called with `new`, like `Request` below: each returns
+      // an object, so `new` yields that object.
+      ESClient: PluginContextESClient as unknown as ESClientConstructor,
       Koncorde,
       Mutex: Mutex,
-      Repository: PluginContextRepository as unknown as new (
-        collection: string,
-        objectConstructor: any,
-      ) => Repository,
+      Repository: PluginContextRepository as unknown as RepositoryConstructor,
       // A plain function called with `new`: it returns an object, so `new`
       // yields that object — which is what plugins have always relied on.
       Request: instantiateRequest as unknown as PluginRequestConstructor,
@@ -642,6 +676,17 @@ function inheritInput(
 }
 
 /**
+ * Lock options of `auth:strategies:add` and `auth:strategies:remove`: wait
+ * as long as it takes, as the deprecated `Mutex` did (no acquisition
+ * timeout), with the same 30 s TTL — now refreshed while the strategy is
+ * being added or removed.
+ */
+const STRATEGY_LOCK = {
+  retryAttempts: Number.POSITIVE_INFINITY,
+  ttl: 30000,
+};
+
+/**
  * Returns a currified function of pluginsManager.registerStrategy
  *
  * @param  {string} pluginName
@@ -664,22 +709,24 @@ function curryAddStrategy(pluginName: string) {
       throw contextError.get("missing_authenticator", pluginName, name);
     }
 
-    const mutex = new Mutex("auth:strategies:add", { ttl: 30000 });
+    return withLock(
+      "auth:strategies:add",
+      async () => {
+        // @todo use Plugin.checkName to ensure format
+        global.kuzzle.pluginsManager.registerStrategy(
+          pluginName,
+          name,
+          strategy,
+        );
 
-    await mutex.lock();
-
-    try {
-      // @todo use Plugin.checkName to ensure format
-      global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
-
-      return await global.kuzzle.pipe("core:auth:strategyAdded", {
-        name,
-        pluginName,
-        strategy,
-      });
-    } finally {
-      await mutex.unlock();
-    }
+        return global.kuzzle.pipe("core:auth:strategyAdded", {
+          name,
+          pluginName,
+          strategy,
+        });
+      },
+      STRATEGY_LOCK,
+    );
   };
 }
 
@@ -695,18 +742,17 @@ function curryRemoveStrategy(pluginName: string) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name: string) {
-    const mutex = new Mutex("auth:strategies:remove", { ttl: 30000 });
+    return withLock(
+      "auth:strategies:remove",
+      async () => {
+        global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
 
-    await mutex.lock();
-
-    try {
-      global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-      return await global.kuzzle.pipe("core:auth:strategyRemoved", {
-        name,
-        pluginName,
-      });
-    } finally {
-      await mutex.unlock();
-    }
+        return global.kuzzle.pipe("core:auth:strategyRemoved", {
+          name,
+          pluginName,
+        });
+      },
+      STRATEGY_LOCK,
+    );
   };
 }

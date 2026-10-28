@@ -82,7 +82,15 @@ export class KuzzleRequest {
   [_deprecations]: Deprecation[] | undefined;
   [_timestamp]: number;
 
-  constructor(data: any, options?: any) {
+  /**
+   * Both arguments are checked at runtime: `RequestInput` throws on anything
+   * but a plain object, and so does this constructor on non-object options.
+   * The public signature takes `unknown`, which every call that compiled with
+   * v2.56.0's `any` still satisfies; the implementation reads them as the
+   * objects those checks make them.
+   */
+  constructor(data: unknown, options?: unknown);
+  constructor(data: JSONObject, options?: JSONObject | null) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -226,6 +234,7 @@ export class KuzzleRequest {
   /**
    * Request result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   get result(): any | null {
     return this[_result];
   }
@@ -276,7 +285,7 @@ export class KuzzleRequest {
    *    - `raw` (boolean): instead of a Kuzzle response, forward the result directly (default: false)
    */
   setResult(
-    result: any,
+    result: unknown,
     options: {
       /**
        * HTTP status code
@@ -691,6 +700,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArray(name: string, def: [] | undefined = undefined): any[] {
     return this._getArray(this.input.args, name, name, def, true);
   }
@@ -750,6 +760,7 @@ export class KuzzleRequest {
    * behaviour, named after what it does. Kept because `KuzzleRequest` is part
    * of the public plugin API.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
     return this.getArrayOrCsv(name, def);
   }
@@ -787,32 +798,43 @@ export class KuzzleRequest {
     if (args[name] === undefined) {
       throw assertionError.get("missing_argument", name);
     }
-    if (format && !moment(args[name], format, true).isValid()) {
-      throw assertionError.get("invalid_type", name, "date");
-    }
-    if (!moment(args[name], moment.ISO_8601).isValid()) {
+    // A custom format replaces the ISO 8601 check: applying both rejected
+    // every value of a format that is not ISO 8601.
+    const isValid = format
+      ? moment(args[name], format, true).isValid()
+      : moment(args[name], moment.ISO_8601).isValid();
+    if (!isValid) {
       throw assertionError.get("invalid_type", name, "date");
     }
     return this.getString(name);
   }
 
   /**
-   * Gets a parameter from a request arguments and returns it to timestamp format.
+   * Gets a parameter from a request arguments and checks that it is an integer
+   * timestamp (e.g. milliseconds since Epoch).
+   *
+   * An integer string, such as an HTTP query string value, is accepted and
+   * converted. A date string (e.g. `"2026-10-27"`) is rejected.
    *
    * @param name parameter name.
    * @throws {api.assert.missing_argument} If parameter not found and no default
    *                                       value provided
-   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   * @throws {api.assert.invalid_type} If parameter value is not an integer
+   *                                   timestamp.
    */
   getTimestamp(name: string): number {
-    const args = this.input.args;
-    if (args[name] === undefined) {
+    const value = this.input.args[name];
+    if (value === undefined) {
       throw assertionError.get("missing_argument", name);
     }
-    if (moment(args[name], true).isValid() === false) {
+    const timestamp =
+      typeof value === "string" && /^-?\d+$/.test(value)
+        ? Number(value)
+        : value;
+    if (!Number.isSafeInteger(timestamp)) {
       throw assertionError.get("invalid_type", name, "date");
     }
-    return this.getInteger(name);
+    return timestamp;
   }
 
   /**
@@ -982,6 +1004,7 @@ export class KuzzleRequest {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   getArrayFromBodyOrArgs(name: string, def?: any): JSONObject {
     if (
       this.context.connection.protocol !== "http" ||
@@ -1202,6 +1225,8 @@ export class KuzzleRequest {
     errorName: string,
     def: [] | undefined = undefined,
     querystring = false,
+    // `getBodyArray` answers this undeclared, so it is that public answer.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ): any[] {
     const value = get(obj, name, def);
 

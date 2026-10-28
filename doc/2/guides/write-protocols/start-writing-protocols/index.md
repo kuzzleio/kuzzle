@@ -29,7 +29,7 @@ Protocols are provided with objects to interact with Kuzzle:
 
 ### Location
 
-Protocols are subdirectories that must be put at the following location: `<kuzzle_install_dir>/protocols/enabled`.
+Protocols are subdirectories that must be put at the following location: `<kuzzle_install_dir>/protocols/enabled`, where `<kuzzle_install_dir>` is the directory that holds Kuzzle's compiled `lib/` (`/var/app` in the official Docker image, `node_modules/kuzzle/dist` in an npm install).
 
 The recommended way to install a protocol is to put it in `protocols/available`, and to create a symbolic link pointing to it in the `protocols/enabled` directory.
 
@@ -129,10 +129,10 @@ module.exports = class MyProtocol {
     this.entryPoint = entryPoint;
     this.context = context;
 
-    // user configuration can be retrieved from entryPoint.config[protocol name]
+    // user configuration can be retrieved from entryPoint.config.protocols[protocol name]
     this.config = Object.assign({
       default: 'value'
-    }, entryPoint.config[this.name] || {});
+    }, entryPoint.config.protocols[this.name] || {});
   }
 
   /*
@@ -158,12 +158,12 @@ module.exports = class MyProtocol {
 
     // when a client sends a request
     this.on('onClientRequest', (client, data) => {
-      // Instantiates a KuzzleRequest object to be passed to Kuzzle
+      // Instantiates a Request object to be passed to Kuzzle
       const
         connection = this.connections[client.id],
-        request = new this.context.KuzzleRequest(data, { connection });
+        request = new this.context.Request(data, { connection });
 
-      this.entryPoint.execute(request, response => {
+      this.entryPoint.execute(connection, request, response => {
         // forward the response to the client
       });
     });
@@ -178,10 +178,9 @@ module.exports = class MyProtocol {
   }
 
   /*
-   Invoked by Kuzzle when a "data.payload" payload needs to be
-   broadcasted
+   Invoked by Kuzzle when a payload needs to be broadcasted
   */
-  broadcast (channels, payload) {
+  broadcast ({ channels, payload }) {
     for (const channel of channels) {
       // send the payload to all connections having subscribed
       // to that channel
@@ -192,10 +191,10 @@ module.exports = class MyProtocol {
    Invoked by Kuzzle when a payload needs to be sent to
    a single connection
   */
-  notify (channels, connectionId, payload) {
+  notify ({ channels, connectionId, payload }) {
     for (const channel of channels) {
       // send the payload to the connection
-    });
+    }
   }
 
   /*
@@ -223,52 +222,10 @@ module.exports = class MyProtocol {
 ```
 
 
-## Configuration
+## Extending the base Protocol class
 
-When Kuzzle calls the plugin `init` method, it passes the plugin's custom configuration to it.
+The base `Protocol` class used by Kuzzle's own protocols is exposed to protocols as `context.Protocol`.
 
-Custom configuration parameters are specified for each plugin in the `plugins` object of the Kuzzle [configuration](/core/2/guides/advanced/configuration).
-
-For example:
-
-```json
-{
-  "plugins": {
-    "foobar-plugin": {
-      "option_1": "option_value",
-      "option_2": "option_value"
-    }
-  }
-}
-```
-
-## Plugin loaded from the filesystem
-
-<DeprecatedBadge version="2.8.0">
-
-Plugins are subdirectories that must be put at the following location: `<kuzzle_install_dir>/plugins/enabled`.
-
-The recommended way to install a plugin is to put it in `plugins/available`, and then link it to the `plugins/enabled` directory.
-
-### Node.js modules
-
-Kuzzle loads plugins as [Node.js modules](https://nodejs.org/docs/latest-v12.x/api/modules.html).
-
-This means that a plugin directory must contain either:
-
-- an `index.js` file
-
-and/or:
-
-- a valid [package.json](https://docs.npmjs.com/files/package.json) file. If the plugin's entrypoint is not the root `index.js` file, then the [main](https://docs.npmjs.com/files/package.json#main) property must be filled
-
-### manifest.json
-
-Kuzzle needs a few information to make your plugin work properly. These information must be provided in a `manifest.json` file, in the plugin directory.
-
-The following properties can be defined in this `manifest.json` file:
-
-- `name` (**required**): plugin unique identifier. Names can only contain letters, numbers, hyphens and underscores.
-- `kuzzleVersion`: a non-empty string describing a [semver range](https://www.npmjs.com/package/semver#ranges), limiting the range of Kuzzle versions supported by this plugin. If not set, a warning is displayed on the console, and Kuzzle assumes that the plugin is only compatible with Kuzzle v2.x
-
-</DeprecatedBadge>
+::: warning
+Since Kuzzle 2.57.0, the `entryPoint` property of the base `Protocol` class is read-only: a protocol extending it must not assign `this.entryPoint`, but call `super.init(entryPoint)` in its own `init` method, which sets it.
+:::

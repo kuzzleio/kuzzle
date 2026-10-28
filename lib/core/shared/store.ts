@@ -23,7 +23,7 @@ import * as kerror from "../../kerror";
 import type { StoreCollectionsDefinition } from "../../types";
 import { promiseAllN } from "../../util/async";
 import { getESIndexDynamicSettings } from "../../util/esRequest";
-import { Mutex } from "../../util/mutex";
+import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
@@ -62,7 +62,14 @@ const INDEXED_ASK_SUFFIXES = {
   updateMapping: "mappings:update",
 } as const;
 
-type StoreAskMethod = (...args: any[]) => Promise<any>;
+/**
+ * `Store` is exported, and v2.56.0 declared each of these methods as taking
+ * and answering `any`. The arguments are `unknown`, which every call that
+ * compiled still satisfies; the answer stays `any`, since any precise type
+ * would break a consumer that reads it without narrowing.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
+type StoreAskMethod = (...args: unknown[]) => Promise<any>;
 
 /**
  * Wrapper around the document store.
@@ -128,21 +135,25 @@ export class Store {
       // `this[method] = ...` cannot be typed without an index signature that
       // would swallow every real member — the trade-off TD-28 settled with
       // `Reflect.set` in `memoryStorageController` and `baseController`.
-      Reflect.set(this, method, (...args: any[]) =>
+      Reflect.set(this, method, (...args: unknown[]) =>
         global.kuzzle.ask(event, this.index, ...args),
       );
     }
 
     // the scroll and multiSearch method are special: they doesn't need an index parameter
     // we keep them for ease of use
-    this.scroll = (scrollId: string, opts: any) =>
+    this.scroll = (scrollId?: unknown, opts?: unknown) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:scroll`,
         scrollId,
         opts,
       );
 
-    this.multiSearch = (targets: any, searchBody: any, opts: any) =>
+    this.multiSearch = (
+      targets?: unknown,
+      searchBody?: unknown,
+      opts?: unknown,
+    ) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:multiSearch`,
         targets,
@@ -153,28 +164,17 @@ export class Store {
 
   /**
    * Initialize the index, and creates provided collections
+   *
+   * Every node creates the collections in turn, under the same lock, and
+   * waits for it with no limit. The lock is refreshed while the collections
+   * are created; if it is lost, this rejects with `MutexLockLostError`.
    */
   async init(collections: StoreCollectionsDefinition = {}): Promise<void> {
-    const creatingMutex = new Mutex(`Store.init(${this.index})`, {
-      timeout: 0,
-      ttl: 30000,
-    });
-
-    if (await creatingMutex.lock()) {
-      try {
-        await this.createCollections(collections, {
-          indexCacheOnly: false,
-        });
-      } finally {
-        await creatingMutex.unlock();
-      }
-    } else {
-      await creatingMutex.wait({ timeout: -1 });
-
-      await this.createCollections(collections, {
-        indexCacheOnly: true,
-      });
-    }
+    await withLock(
+      `Store.init(${this.index})`,
+      () => this.createCollections(collections, { indexCacheOnly: false }),
+      { retryAttempts: Number.POSITIVE_INFINITY },
+    );
   }
 
   /**
@@ -187,6 +187,7 @@ export class Store {
   createCollections(
     collections: StoreCollectionsDefinition,
     { indexCacheOnly = false } = {},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   ): Promise<any> {
     return promiseAllN(
       Object.entries(collections).map(([collection, config]) => async () => {
@@ -225,6 +226,15 @@ export class Store {
         );
 
         if (exist) {
+          // Another node created it, maybe so recently that its primary
+          // shards are still initializing: a document request on it would
+          // get a 503 until they are active
+          await global.kuzzle.ask(
+            `core:storage:${this.scope}:collection:shards:wait`,
+            this.index,
+            collection,
+          );
+
           // @deprecated
           const dynamicSettings = isConfigDeprecated
             ? null
@@ -236,15 +246,17 @@ export class Store {
             collection,
           );
 
+          // A `number_of_shards` left out is not specified, not a mismatch
           if (
-            !isConfigDeprecated &&
+            config.settings.number_of_shards !== undefined &&
             parseInt(existingSettings.number_of_shards) !==
               config.settings.number_of_shards
           ) {
             if (global.NODE_ENV === "development") {
               throw kerror.get(
+                "services",
                 "storage",
-                "wrong_collection_number_of_shards",
+                "wrong_es_static_settings_for_collection_recreation",
                 collection,
                 this.index,
                 this.scope,

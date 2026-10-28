@@ -1,6 +1,6 @@
 # Step 15 — consolidation: non-regression, breaking-change audit, then beta
 
-**Status:** 🟦 In progress — opened 2026-09-25; phases A, B, C and the fixes done, final re-run and mixed-cluster check passed 2026-09-26; **beta published** 2026-09-26 (`2.57.0-beta.1`); `2.57.0-beta.2` cut 2026-09-27 with the native addons prebuilt and koncorde's geospatial-removal crash fixed ([#2839](https://github.com/kuzzleio/kuzzle/issues/2839), [#2938](https://github.com/kuzzleio/kuzzle/pull/2938)); the real-project comparison (phase D) runs on it · **PR(s):** phase C measurements [#2901](https://github.com/kuzzleio/kuzzle/pull/2901), [#2924](https://github.com/kuzzleio/kuzzle/pull/2924), [#2935](https://github.com/kuzzleio/kuzzle/pull/2935) (drafts, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done — `2.57.0` released 2026-09-30, frozen 2026-10-06 · opened 2026-09-25; phases A, B, C and the fixes done, final re-run and mixed-cluster check passed 2026-09-26; **beta published** 2026-09-26 (`2.57.0-beta.1`); `2.57.0-beta.2` cut 2026-09-27 with the native addons prebuilt and koncorde's geospatial-removal crash fixed ([#2839](https://github.com/kuzzleio/kuzzle/issues/2839), [#2938](https://github.com/kuzzleio/kuzzle/pull/2938)); the real-project comparison (phase D) runs on it · **PR(s):** phase C measurements [#2901](https://github.com/kuzzleio/kuzzle/pull/2901), [#2924](https://github.com/kuzzleio/kuzzle/pull/2924), [#2935](https://github.com/kuzzleio/kuzzle/pull/2935) (drafts, not for merge) · **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -90,3 +90,11 @@ The user-facing upgrade page is [`doc/2/guides/upgrade-notes/from-2-56/`](../../
 - **A green functional suite is not a non-regression proof.** F-01 changes the error id of every missing-document answer, and none of the 30 green jobs noticed: the scenarios assert the status, not the id. _A suite only protects what it asserts_ — Phase C bounds the regressions, it does not exclude them.
 - **The fixture that hid F-01 is the same shape as the bug.** The unit specs build ES errors as plain objects, where `body` is an own property that a spread copies; the real client's `ResponseError` has it as a prototype getter. _A fixture that is structurally easier than the real value tests the fixture._
 - **"Not breaking" was checked per PR and failed in sum.** 15 PR bodies are contradicted by their own diff (Phase B). Each claim was written against its author's idea of the surface — mostly the runtime API — while the step-12 PRs changed the exported types that external TypeScript consumers compile against, and no PR had such a consumer to compile.
+
+## Closure — from the beta to `2.57.0`, 2026-09-27 → 2026-09-30
+
+- **Phase D, the real-project comparison**, ran on the betas against internal and client projects. It found no regression. Its one finding on the install path (F-D5) was fixed with the beta install docs in [#2942](https://github.com/kuzzleio/kuzzle/pull/2942). The per-project results stay outside this repository.
+- **Three more betas**: `beta.3` ([#2944](https://github.com/kuzzleio/kuzzle/pull/2944)); `beta.4` ([#2946](https://github.com/kuzzleio/kuzzle/pull/2946)), with no prerelease runtime dependency left; and `beta.5` ([#2949](https://github.com/kuzzleio/kuzzle/pull/2949)), which adds [#2947](https://github.com/kuzzleio/kuzzle/pull/2947), the plugin `ESClient` fix on ES 8.
+- **`2.57.0` stable on 2026-09-30**: `beta` → `master` ([#2950](https://github.com/kuzzleio/kuzzle/pull/2950)), then the back-merge into `2-dev` ([#2951](https://github.com/kuzzleio/kuzzle/pull/2951)). Release PRs carry no CI because their heads are `[skip ci]` release commits, so the check was the diff against the last CI-tested commit.
+
+The step is frozen. The breaking changes it set aside are in [`docs/v3-breaking-changes.md`](../../v3-breaking-changes.md).

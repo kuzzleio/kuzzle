@@ -4,7 +4,7 @@ type: page
 title: debug | Protocol Framework | Write protocols | Guide
 meta:
   - name: description
-    content: All debug messages are sent to the following namespace kuzzle:entry-point:protocols
+    content: All debug messages are sent to the following namespace kuzzle:network:protocols
   - name: keywords
     content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, debug
 ---
@@ -13,4 +13,4 @@ meta:
 
 An instance to the [debug](https://www.npmjs.com/package/debug) utility.
 
-All debug messages are sent to the following namespace: `kuzzle:entry-point:protocols`
+All debug messages are sent to the following namespace: `kuzzle:network:protocols`

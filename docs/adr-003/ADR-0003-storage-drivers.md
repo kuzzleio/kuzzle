@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-09-29):** ADR **accepted**; hub on branch `docs/adr-003-storage-drivers`. Step 00 (`ESClient` fix) is merged ([#2947](https://github.com/kuzzleio/kuzzle/pull/2947)). Steps 01+ start after 2.57 is released as stable.
+**Where we are (2026-10-06):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Step 00 (`ESClient` fix) is merged ([#2947](https://github.com/kuzzleio/kuzzle/pull/2947)) and shipped in 2.57.0. 2.57.0 has been stable since 2026-09-30, so steps 01+ can start.
 
-**Next action:** after 2.57 stable, open step 01 (contract + capability list).
+**Next action:** open step 01 (contract + capability list).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 

@@ -10,7 +10,7 @@ description: BaseValidationType class validateFieldSpecification() abstract meth
 
 Validates a new configuration for this data type.
 
-This is an abstract method. If not overloaded, it always returns `true`
+This is an abstract method. If not overloaded, it returns `opts` unchanged.
 
 ### Arguments
 

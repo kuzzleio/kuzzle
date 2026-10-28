@@ -79,20 +79,9 @@ Then(
     }
 
     const room = rooms[rooms.length - 1];
-    // `unsubscribe` answers nothing when the socket or the room has already
-    // gone, and the step used to call `.then` on that nothing.
-    const unsubscribed = realtimeApi(this).unsubscribe(room, socketName);
-
-    if (!unsubscribed) {
-      callback(
-        new Error(
-          `Cannot unsubscribe: room "${room}" is not open on "${socketName}"`,
-        ),
-      );
-      return;
-    }
-
-    unsubscribed
+    // Rejects when the socket or the room has already gone (TD-82).
+    realtimeApi(this)
+      .unsubscribe(room, socketName)
       .then(function () {
         callback();
       })

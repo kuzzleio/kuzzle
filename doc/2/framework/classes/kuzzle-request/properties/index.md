@@ -24,13 +24,17 @@ This object is received by the controller's [actions handler function](/core/2/g
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>[Deprecation[]](/core/2/framework/types/deprecation)</pre> | Array of deprecation warnings associated to the request | get |
+| <pre>[Deprecation[]](/core/2/framework/types/deprecation)</pre> | Array of deprecation warnings associated to the request (`undefined` when there is none) | get / set |
 
 ## `error`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
 | <pre>KuzzleError</pre> | One of the [API Error](/core/2/api/errors/types) or `null` | get |
+
+::: info
+Use [setError](/core/2/framework/classes/kuzzle-request/set-error) and [clearError](/core/2/framework/classes/kuzzle-request/clear-error) to change it.
+:::
 
 ## `id`
 
@@ -64,16 +68,21 @@ Correspond to the `requestId` property passed in the [RequestPayload](/core/2/ap
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>any</pre> | KuzzleRequest result | get / set |
+| <pre>any</pre> | KuzzleRequest result (`null` until one is set) | get |
+
+::: warning
+This property is read-only, and the request object is sealed: `request.result = value` throws a `TypeError`.
+To set the result, use [request.response.configure({ result })](/core/2/framework/classes/request-response/configure).
+:::
 
 ## `status`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>number</pre> | KuzzleRequest HTTP status | get / set |
+| <pre>number</pre> | KuzzleRequest HTTP status (`102` until a result or an error is set). The setter only accepts integers | get / set |
 
 ## `timestamp`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>number</pre> | KuzzleRequest timestamp (in Epoch-micro) | get |
+| <pre>number</pre> | KuzzleRequest timestamp, in milliseconds since Epoch (`Date.now()` when the request is created, unless the request payload provides one) | get |

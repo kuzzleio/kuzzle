@@ -46,6 +46,7 @@ export default class PassportWrapper {
    * @param strategyName
    * @returns {Promise.<*>}
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- kept for v2 compatibility, see docs/v3-breaking-changes.md
   authenticate(request: any, strategyName: string): Promise<unknown> {
     const response = new PassportResponse();
 
@@ -79,13 +80,17 @@ export default class PassportWrapper {
         );
       };
 
-      const authCB: AuthenticateCallback = (err, user, info: any) => {
+      const authCB: AuthenticateCallback = (err, user, info) => {
         if (err !== null) {
           fail(err);
         } else if (!user) {
-          reject(
-            kerror.get("plugin", "strategy", "missing_user", info.message),
-          );
+          const message =
+            // `typeof null` is "object" too: a strategy may fail with no info
+            typeof info === "object" && info !== null && "message" in info
+              ? info.message
+              : undefined;
+
+          reject(kerror.get("plugin", "strategy", "missing_user", message));
         } else {
           resolve(user);
         }
