@@ -35,6 +35,16 @@ Feature: Server Controller
       | validation   | "_OBJECT_"    |
       | version      | "_STRING_"    |
       | VAULT_KEY    | "_UNDEFINED_" |
+      | security     | "_UNDEFINED_" |
+
+  # Only the ES8 functional stack runs Redis with a password (ADR-0004)
+  @es8
+  Scenario: Get server configuration with secrets masked
+    When I successfully execute the action "server":"getConfig"
+    Then The property "services.internalCache.options" of the result should match:
+      | password | "***" |
+    And The property "services.memoryStorage.options" of the result should match:
+      | password | "***" |
 
   # server:healthCheck =========================================================
   Scenario: Get server health

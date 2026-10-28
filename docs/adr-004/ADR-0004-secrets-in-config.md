@@ -1,7 +1,7 @@
 # ADR-0004: Securing Redis access and keeping configuration secrets out of public outputs
 
-**Status:** Accepted (2026-10-13)
-**Date:** 2026-10-13
+**Status:** **Closed — implemented (2026-10-28), frozen.** Its one step shipped as [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) (Kuzzle 2.60.1); what stays open is carried by [#3089](https://github.com/kuzzleio/kuzzle/issues/3089) and [#3084](https://github.com/kuzzleio/kuzzle/issues/3084).
+**Date:** 2026-10-13 → implemented 2026-10-28
 **Deciders:** Kuzzle core team (Ricky — nriquelmebareiro@kuzzle.io)
 **Scope:** how Kuzzle connects to a protected Redis (`services.internalCache`, `services.memoryStorage`, the ID card worker), how configuration secrets are read from the environment (`lib/config/index.ts`), and every place the configuration leaves the process (`server:getConfig`, `admin:dump`)
 **Related documents:** step files under [`steps/`](steps/) · [v3 breaking changes](../v3-breaking-changes.md) (no row: this is a security fix)
@@ -29,7 +29,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 1. **No new Redis feature.** Password, ACL user, TLS and Sentinel stay plain ioredis `options`. They are documented (`.kuzzlerc.sample.jsonc`, a "Securing Redis" section of the configuration guide) and proven by the functional cluster.
 2. **One "public config" function** (`lib/util/redactSecrets.ts`): applies today's `getConfig` removals (`http.routes`, `security`, `VAULT_KEY`) then the redaction. `server:getConfig` and `admin:dump` both use it, so they can no longer drift apart.
-3. **Generic key-name rule, not a list of paths** — a fixed list would always miss plugins and application config. `isSecretKey(name)`, case-insensitive: exact `key`, `pfx`, `auth`; or a name ending with `password`, `passphrase`, `secret`, `apikey`, `token`, `credentials`, `privatekey`, `secretkey`, `signingkey`, `encryptionkey`, `vault_key`. `cookieAuthentication` does not match by construction.
+3. **Generic key-name rule, not a list of paths** — a fixed list would always miss plugins and application config. `isSecretKey(name)`, case-insensitive: exact `key`, `pfx`, `auth`; or a name ending with `password`, `passphrase`, `secret`, `apikey`, `token`, `credentials`, `privatekey`, `secretkey`, `signingkey`, `encryptionkey`, `accesskey`, `access_key`, `licensekey`, `license_key`, `vault_key`. `cookieAuthentication` does not match by construction.
 4. **Redaction semantics.** A value under a secret key becomes `"***"`, the field is kept; `null`, `undefined` and booleans are left as-is, so one can still see whether a secret is set. A plain object under a secret key (`auth: { username, password }`) keeps its structure with its leaves masked; any other value — `Buffer`, array — is masked whole. Redaction runs **before** any JSON clone. In every string, URL credentials `user:pass@` become `user:***@`. `mappings` subtrees are never redacted. The input is never mutated.
 5. **The dump redacts its environment too.** `nodejs.json` masks `process.env` entries with the same rule (`kuzzle_…__password` matches by name). The core dump cannot be redacted: the documentation says a full dump is never attached to a ticket as-is.
 6. **Environment secrets keep their text form, numbers only.** For a secret key, `unstringify()` skips the number conversion and nothing else: `"0123"` stays `"0123"`, while `"true"` / `"false"` and `*json:` keep working — `requirePassword=false` stays a boolean. Not breaking: ioredis and the Elasticsearch client stringify passwords anyway.
@@ -57,9 +57,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 ## Cold start
 
-**Where we are (2026-10-13):** ADR **accepted**; the three corrections to the first plan (dump environment + `VAULT_KEY` / `security`, number-only `unstringify` exemption, `mappings` exclusion + `…key` suffixes) were validated by the maintainer. Nothing implemented yet.
-
-**Next action:** open step 01 (one PR, base `2-dev`).
+**Nothing to resume (2026-10-28):** the ADR is closed and frozen. Step 01 ([#3085](https://github.com/kuzzleio/kuzzle/pull/3085)) shipped every point of the Decision, validated on three real-project templates (ES7 and ES8, protected Redis). Follow-ups: [#3089](https://github.com/kuzzleio/kuzzle/issues/3089) (dump without core dump, password-less Redis warning, known limits of the rule), [#3084](https://github.com/kuzzleio/kuzzle/issues/3084) (ZeroMQ between nodes).
 
 **Conventions** (same as ADR-0001 / 0003): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -69,14 +67,7 @@ Measured on `2-dev` (2026-10-13, commit `0517dc929`):
 
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
-| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | ⬜ To do | — | — |
-
-Step 01 checklist (moves to its file when it opens):
-
-- Unit (vitest, `tests/`): every rule name, both ways (`cookieAuthentication`, booleans, `null`, `requirePassword=false` stays boolean); nested objects; URL credentials; `Buffer` / array masked whole; `mappings.properties.token` untouched; input not mutated; `getConfig` masks Redis password, `tls.key`, ES `client.auth`, a plugin secret; `unstringify` keeps `password: "0123"` and still turns a non-secret `"42"` into `42`; dump has no `security` / `VAULT_KEY`, masked config and masked `env`.
-- Functional: `.ci/test-cluster-8.yml` Redis with `--requirepass`, `kuzzle_services__internalCache__options__password` and `…__memoryStorage__…` on the 3 nodes (cluster start proves main process + ID card worker authenticate); `.ci/test-cluster-7.yml` stays password-less; the `getConfig` `"***"` scenario restricted to ES8; check `.ci/scripts/run-monkey-tests.sh` reuses the cluster file without talking to Redis directly.
-- Docs: sample config (password, ACL, TLS, Sentinel); guide section (env-var example, worker limit, `getConfig` / dump redaction, core dump warning).
-- `pr-preflight`; open the ZeroMQ issue.
+| 01 | `redactSecrets` + public-config function; `getConfig` and dump (config + env) redacted; number-only `unstringify` exemption; unit tests; Redis `--requirepass` on the ES8 functional cluster; `.kuzzlerc.sample.jsonc` + "Securing Redis" guide | ✅ Done | [#3085](https://github.com/kuzzleio/kuzzle/pull/3085) | [detail](steps/01-redact-secrets.md) |
 
 ---
 
@@ -90,14 +81,15 @@ Step 01 checklist (moves to its file when it opens):
 - **2026-10-13** — **Redaction before any JSON clone; non-plain-object secret values masked whole.**
 - **2026-10-13** — **Security fix, no v3 breaking-change row.**
 - **2026-10-13** — **Worker `Buffer` / function limit documented, not fixed.**
-- **2026-10-13** — **Out of scope:** password-less startup warning (deferred); ZeroMQ inter-node security (separate issue).
+- **2026-10-28** — **`…accesskey`, `…access_key` added to the rule** (step 01): `secretAccessKey` and `AWS_SECRET_ACCESS_KEY`, named in the Context, matched no suffix.
+- **2026-10-28** — **`…licensekey`, `…license_key` added to the rule** (step 01, template pass): `rc` matches the `kuzzle_` prefix case-insensitively, so `KUZZLE_LICENSE_KEY` (read by a licensing plugin) lands as a top-level `LICENSE_KEY` and leaked through `getConfig` and the dump.
+- **2026-10-13** — **Out of scope:** password-less startup warning (deferred); ZeroMQ inter-node security (separate issue, [#3084](https://github.com/kuzzleio/kuzzle/issues/3084)).
 
 ---
 
 ## Open points
 
-- Core dump: documented only. Whether `admin:dump` should offer a config-only mode without `gcore` for support tickets.
-- Password-less Redis startup warning: deferred, revisit if support sees exposed instances.
+None: moved to [#3089](https://github.com/kuzzleio/kuzzle/issues/3089).
 
 ---
 
