@@ -52,6 +52,7 @@ Nothing else changes in the API or the TypeScript types.
 - A failed startup now always stops the node and exits with code `1`, so a restart policy restarts it. In production, the node used to stay alive, half started.
 - A shutdown caused by a failure is bounded to 30 seconds. A requested stop (`SIGTERM`, `admin:shutdown`) still waits for the requests in progress, and exits with code `0`.
 - A node deletes its cluster registration and releases its locks when it stops, so the other nodes no longer wait for them to expire.
+- A shutdown that fails now logs why and exits with code `1`. After a requested stop, the node used to stay alive with its network layer already closed.
 - A stop logs `Initiating shutdown...` once, not twice.
 
 ### Other fixes
@@ -63,11 +64,13 @@ Nothing else changes in the API or the TypeScript types.
 - `security.authToken.gracePeriod` is no longer ignored, and Kuzzle warns at startup when the deprecated `security.jwt` section is used.
 - Installed with npm, Kuzzle finds your project's secrets file again (`config/secrets.enc.json`).
 - `admin:loadFixtures` answers `{ acknowledge: true }` again, and a second `admin:shutdown` is refused while the node already shuts down.
+- A few cluster and Elasticsearch 7 errors that were left unhandled are now logged with a clear message. In development mode, they no longer crash the node.
 - Four HTTP routes that pointed to long-removed actions are gone.
 
 ### For plugin and application developers
 
 - A plugin request with `triggerEvents` that failed was run a second time, without events. It now fails once.
+- A pipe whose handler throws now rejects with that error, instead of never answering.
 - `http:<verb>` events always use the lowercase verb (`http:get`), even for a route declared as `GET`.
 - `request.getDate()` with a custom format and `request.getTimestamp()` with an integer string now work. A date string given to `getTimestamp()` is now rejected, instead of being cut to its first number.
 - `Mutex.wait()` works without argument, `Logger.child()` returns a full `Logger`, and `Location` / `Last-Modified` response headers are replaced instead of concatenated.
