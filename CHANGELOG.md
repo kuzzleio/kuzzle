@@ -1,3 +1,21 @@
+## [2.60.1](https://github.com/kuzzleio/kuzzle/compare/v2.60.0...v2.60.1) (2026-10-29)
+
+### Bug Fixes
+
+* **config:** keep secrets set through the environment as text ([132a7da](https://github.com/kuzzleio/kuzzle/commit/132a7dafcccc970f778565f21767418d6c74558f))
+* **redactSecrets:** treat …accesskey and …access_key names as secrets ([cbe585e](https://github.com/kuzzleio/kuzzle/commit/cbe585e55bfd61b14d904d025f2e0ebdfc6b75e7))
+* **redactSecrets:** treat …licensekey and …license_key names as secrets ([bcbd12e](https://github.com/kuzzleio/kuzzle/commit/bcbd12e73f2963bb7606faefc15081003d6d309b))
+* **security:** mask configuration secrets in server:getConfig and admin:dump ([3629fd7](https://github.com/kuzzleio/kuzzle/commit/3629fd7694db743e342865b99899d6068fb22b0e))
+
+## [2.60.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.60.0...v2.60.1-beta.1) (2026-10-28)
+
+### Bug Fixes
+
+* **config:** keep secrets set through the environment as text ([132a7da](https://github.com/kuzzleio/kuzzle/commit/132a7dafcccc970f778565f21767418d6c74558f))
+* **redactSecrets:** treat …accesskey and …access_key names as secrets ([cbe585e](https://github.com/kuzzleio/kuzzle/commit/cbe585e55bfd61b14d904d025f2e0ebdfc6b75e7))
+* **redactSecrets:** treat …licensekey and …license_key names as secrets ([bcbd12e](https://github.com/kuzzleio/kuzzle/commit/bcbd12e73f2963bb7606faefc15081003d6d309b))
+* **security:** mask configuration secrets in server:getConfig and admin:dump ([3629fd7](https://github.com/kuzzleio/kuzzle/commit/3629fd7694db743e342865b99899d6068fb22b0e))
+
 ## [2.60.0](https://github.com/kuzzleio/kuzzle/compare/v2.59.0...v2.60.0) (2026-10-28)
 
 ### Features
