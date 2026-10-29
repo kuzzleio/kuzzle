@@ -36,6 +36,34 @@ export interface CollectionLock {
   lockedAt: number;
 }
 
+/**
+ * One index's collections after a reload: the stored ones, except those whose
+ * cached state changed between the snapshot (`was`) and now (`is`), which keep
+ * their current state.
+ */
+function reconcileCollections(
+  stored: Set<string>,
+  was: Set<string> | undefined,
+  is: Set<string> | undefined,
+): Set<string> {
+  const collections = new Set<string>();
+
+  for (const collection of new Set([
+    ...stored,
+    ...(was ?? []),
+    ...(is ?? []),
+  ])) {
+    const wasCached = was?.has(collection) ?? false;
+    const isCached = is?.has(collection) ?? false;
+
+    if (wasCached === isCached ? stored.has(collection) : isCached) {
+      collections.add(collection);
+    }
+  }
+
+  return collections;
+}
+
 export class IndexCache {
   /**
    * Index map: each entry holds a set of collection names
@@ -178,22 +206,7 @@ export class IndexCache {
         continue;
       }
 
-      const collections = new Set<string>();
-
-      for (const collection of new Set([
-        ...storedCollections,
-        ...(was ?? []),
-        ...(is ?? []),
-      ])) {
-        const wasCached = was?.has(collection) ?? false;
-        const isCached = is?.has(collection) ?? false;
-
-        if (
-          wasCached === isCached ? storedCollections.has(collection) : isCached
-        ) {
-          collections.add(collection);
-        }
-      }
+      const collections = reconcileCollections(storedCollections, was, is);
 
       if (
         indexChanged ||
