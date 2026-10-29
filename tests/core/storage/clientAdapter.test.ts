@@ -55,7 +55,6 @@ const CACHE_METHODS = [
   "assertCollectionWritable",
   "assertIndexExists",
   "assertIndexWritable",
-  "clearLocks",
   "getLock",
   "hasCollection",
   "hasIndex",
@@ -64,7 +63,11 @@ const CACHE_METHODS = [
   "removeCollection",
   "removeIndex",
   "removeLock",
+  "replaceIndexes",
+  "replaceLocks",
   "setLock",
+  "snapshotIndexes",
+  "snapshotLocks",
 ] as const;
 
 type Recorder = Record<string, ReturnType<typeof vi.fn>>;
@@ -123,7 +126,6 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "assertCollectionWritable",
       "assertIndexExists",
       "assertIndexWritable",
-      "clearLocks",
       "getLock",
       "hasCollection",
       "hasIndex",
@@ -132,7 +134,11 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "removeCollection",
       "removeIndex",
       "removeLock",
+      "replaceIndexes",
+      "replaceLocks",
       "setLock",
+      "snapshotIndexes",
+      "snapshotLocks",
     ];
     const createdEs: unknown[] = [];
     const createdCache: unknown[] = [];
@@ -356,16 +362,23 @@ describe("#core/storage/ClientAdapter", () => {
           }
         ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
         client.getSchema.mockResolvedValue({ peer: ["c"] });
-        cache.addIndex.mockClear();
-        cache.addCollection.mockClear();
+        const snapshot = new Map();
+        cache.snapshotIndexes.mockReturnValue(snapshot);
+        cache.replaceIndexes.mockClear();
         const loadLocks = vi.spyOn(adapter, "loadLocks");
 
         await (trigger === "cache:reload"
           ? ask("cache:reload")
           : pipes.get(trigger)?.());
 
-        expect(cache.addIndex).toHaveBeenCalledWith("peer");
-        expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
+        // kuzzle#3040: replaced, with what was cached before storage was read.
+        expect(cache.replaceIndexes).toHaveBeenCalledExactlyOnceWith(
+          { peer: ["c"] },
+          snapshot,
+        );
+        expect(cache.snapshotIndexes.mock.invocationCallOrder[0]).toBeLessThan(
+          client.getSchema.mock.invocationCallOrder.at(-1) ?? 0,
+        );
         expect(loadLocks).toHaveBeenCalledOnce();
         // Aliases were generated at init: a reload writes nothing.
         expect(client.generateMissingAliases).not.toHaveBeenCalled();
@@ -1077,17 +1090,16 @@ describe("#core/storage/ClientAdapter", () => {
 
   describe("#populateCache", () => {
     it("mirrors the storage schema into the cache", async () => {
+      const snapshot = new Map();
       client.getSchema.mockResolvedValue({ i1: ["c1", "c2"], i2: [] });
-      cache.addIndex.mockClear();
-      cache.addCollection.mockClear();
+      cache.snapshotIndexes.mockReturnValue(snapshot);
 
       await adapter.populateCache();
 
-      expect(cache.addIndex).toHaveBeenCalledWith("i1");
-      expect(cache.addIndex).toHaveBeenCalledWith("i2");
-      expect(cache.addCollection).toHaveBeenCalledWith("i1", "c1");
-      expect(cache.addCollection).toHaveBeenCalledWith("i1", "c2");
-      expect(cache.addCollection).toHaveBeenCalledTimes(2);
+      expect(cache.replaceIndexes).toHaveBeenLastCalledWith(
+        { i1: ["c1", "c2"], i2: [] },
+        snapshot,
+      );
     });
 
     it("generates the missing aliases first when configured to", async () => {
@@ -1251,15 +1263,23 @@ describe("#core/storage/ClientAdapter", () => {
           ]),
         );
 
-        // `init` already loaded them once, from an empty hash.
-        cache.clearLocks.mockClear();
+        const snapshot = new Map();
+        cache.snapshotLocks.mockReturnValue(snapshot);
 
         await adapter.loadLocks();
 
-        expect(cache.clearLocks).toHaveBeenCalledOnce();
-        expect(cache.setLock).toHaveBeenCalledTimes(2);
-        expect(cache.setLock).toHaveBeenCalledWith("i", "c", lock);
-        expect(cache.setLock).toHaveBeenCalledWith("i", "c.d", lock);
+        expect(cache.replaceLocks).toHaveBeenLastCalledWith(
+          new Map([
+            [
+              "i",
+              new Map([
+                ["c", lock],
+                ["c.d", lock],
+              ]),
+            ],
+          ]),
+          snapshot,
+        );
       });
 
       it("keeps each scope's locks apart", async () => {
@@ -1270,7 +1290,10 @@ describe("#core/storage/ClientAdapter", () => {
 
         await adapter.loadLocks();
 
-        expect(cache.setLock).not.toHaveBeenCalled();
+        expect(cache.replaceLocks).toHaveBeenLastCalledWith(
+          new Map(),
+          undefined,
+        );
       });
     });
   });

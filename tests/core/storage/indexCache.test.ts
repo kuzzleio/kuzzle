@@ -132,6 +132,66 @@ describe("#core/storage/IndexCache", () => {
     });
   });
 
+  describe("#replaceIndexes", () => {
+    const cached = () =>
+      Object.fromEntries(
+        indexCache
+          .listIndexes()
+          .map((index) => [index, indexCache.listCollections(index).sort()]),
+      );
+
+    /* kuzzle#3040: a peer deleted them before this node joined the cluster,
+     * so their deletion broadcast never reached it. */
+    it("drops the indexes and collections storage no longer holds", () => {
+      indexCache.addCollection("kept", "a");
+      indexCache.addCollection("kept", "deleted");
+      indexCache.addCollection("deleted", "a");
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.replaceIndexes({ added: ["b"], kept: ["a"] }, snapshot);
+
+      expect(cached()).toEqual({ added: ["b"], kept: ["a"] });
+    });
+
+    it("keeps an index without collections", () => {
+      indexCache.replaceIndexes({ empty: [] }, indexCache.snapshotIndexes());
+
+      expect(cached()).toEqual({ empty: [] });
+    });
+
+    /* A change that landed while storage was read is newer than the read:
+     * the reload must neither bring back a deletion nor drop a creation. */
+    it("keeps what changed since the snapshot", () => {
+      indexCache.addCollection("idx", "removed");
+      indexCache.addCollection("removedIndex", "a");
+      indexCache.addCollection("recreated", "old");
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.addCollection("idx", "added");
+      indexCache.removeCollection("idx", "removed");
+      indexCache.addIndex("addedIndex");
+      indexCache.addCollection("addedCollectionIndex", "c");
+      indexCache.removeIndex("removedIndex");
+      indexCache.removeIndex("recreated");
+      indexCache.addCollection("recreated", "new");
+      indexCache.replaceIndexes(
+        {
+          idx: ["removed"],
+          recreated: ["old"],
+          removedIndex: ["a"],
+        },
+        snapshot,
+      );
+
+      expect(cached()).toEqual({
+        addedCollectionIndex: ["c"],
+        addedIndex: [],
+        idx: ["added"],
+        recreated: ["new"],
+      });
+    });
+  });
+
   describe("#assertions", () => {
     it("asserts an index exists", () => {
       indexCache.addIndex("foo");
@@ -191,14 +251,52 @@ describe("#core/storage/IndexCache", () => {
       expect(indexCache.getLock("foo", "bar")).toBe(refreshed);
     });
 
-    it("clears every lock at once", () => {
-      indexCache.setLock("foo", "bar", lock);
-      indexCache.setLock("fooz", "baz", lock);
+    describe("#replaceLocks", () => {
+      const stored = (...entries: [string, string, typeof lock][]) => {
+        const locks = new Map<string, Map<string, typeof lock>>();
 
-      indexCache.clearLocks();
+        for (const [index, collection, value] of entries) {
+          locks.set(
+            index,
+            (locks.get(index) ?? new Map()).set(collection, value),
+          );
+        }
 
-      expect(indexCache.getLock("foo", "bar")).toBeNull();
-      expect(indexCache.getLock("fooz", "baz")).toBeNull();
+        return locks;
+      };
+
+      it("replaces the cached locks with the stored ones", () => {
+        indexCache.setLock("foo", "bar", lock);
+        indexCache.setLock("fooz", "baz", lock);
+        const snapshot = indexCache.snapshotLocks();
+
+        indexCache.replaceLocks(stored(["foo", "qux", lock]), snapshot);
+
+        expect(indexCache.getLock("foo", "bar")).toBeNull();
+        expect(indexCache.getLock("fooz", "baz")).toBeNull();
+        expect(indexCache.getLock("foo", "qux")).toBe(lock);
+      });
+
+      /* kuzzle#3040: a lock taken, refreshed or released while the stored
+       * locks were read is newer than the read. */
+      it("keeps the locks that changed since the snapshot", () => {
+        const refreshed = { ...lock, lockedAt: 43 };
+        indexCache.setLock("foo", "refreshed", lock);
+        indexCache.setLock("foo", "released", lock);
+        const snapshot = indexCache.snapshotLocks();
+
+        indexCache.setLock("foo", "taken", lock);
+        indexCache.setLock("foo", "refreshed", refreshed);
+        indexCache.removeLock("foo", "released");
+        indexCache.replaceLocks(
+          stored(["foo", "refreshed", lock], ["foo", "released", lock]),
+          snapshot,
+        );
+
+        expect(indexCache.getLock("foo", "taken")).toBe(lock);
+        expect(indexCache.getLock("foo", "refreshed")).toBe(refreshed);
+        expect(indexCache.getLock("foo", "released")).toBeNull();
+      });
     });
 
     /* Locks are independent from the index cache: a lock check never asserts

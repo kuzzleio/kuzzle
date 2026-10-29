@@ -267,22 +267,20 @@ class ClientAdapter {
   }
 
   /**
-   * Adds the indexes and collections found in storage to the index cache,
-   * then reloads the collection write locks. Unlike `populateCache`, it never
-   * writes to storage.
+   * Replaces the index cache with the indexes and collections found in
+   * storage, then reloads the collection write locks. Unlike `populateCache`,
+   * it never writes to storage.
+   *
+   * Replaced, not merged: an index or a collection a peer deleted before this
+   * node joined the cluster must go too (kuzzle#3040).
    */
   async reloadCache(): Promise<void> {
+    const snapshot = this.cache.snapshotIndexes();
     // `client` is untyped (see the field's comment), so the schema shape is
     // stated here: index name -> its collection names.
     const schema: Record<string, string[]> = await this.client.getSchema();
 
-    for (const [index, collections] of Object.entries(schema)) {
-      this.cache.addIndex(index);
-
-      for (const collection of collections) {
-        this.cache.addCollection(index, collection);
-      }
-    }
+    this.cache.replaceIndexes(schema, snapshot);
 
     await this.loadLocks();
   }
@@ -292,19 +290,28 @@ class ClientAdapter {
    * stored in Redis.
    */
   async loadLocks(): Promise<void> {
+    const snapshot = this.cache.snapshotLocks();
     const fields: Record<string, string> | null = await global.kuzzle.ask(
       "core:cache:internal:execute",
       "hgetall",
       this.locksKey,
     );
-
-    this.cache.clearLocks();
+    const stored = new Map<string, Map<string, CollectionLock>>();
 
     for (const [field, value] of Object.entries(fields ?? {})) {
       const [index, collection]: [string, string] = JSON.parse(field);
 
-      this.cache.setLock(index, collection, JSON.parse(value));
+      let collections = stored.get(index);
+
+      if (collections === undefined) {
+        collections = new Map();
+        stored.set(index, collections);
+      }
+
+      collections.set(collection, JSON.parse(value));
     }
+
+    this.cache.replaceLocks(stored, snapshot);
   }
 
   /**
