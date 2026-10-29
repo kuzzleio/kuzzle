@@ -60,6 +60,7 @@ export * from "./errors/ErrorDomains";
 export * from "./events/EventGenericDocument";
 export * from "./events/EventProtocol";
 export * from "./realtime/RealtimeScope";
+export * from "./storage/StorageDriver";
 export * from "./realtime/RealtimeUsers";
 export * from "./realtime/RoomList";
 export * from "./shared/StoreCollectionsDefinition";

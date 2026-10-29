@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-10-06):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Step 00 (`ESClient` fix) is merged ([#2947](https://github.com/kuzzleio/kuzzle/pull/2947)) and shipped in 2.57.0. 2.57.0 has been stable since 2026-09-30, so steps 01+ can start.
+**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Step 00 (`ESClient` fix) shipped in 2.57.0. Step 01 is done: the `StorageDriver` contract (core, four capability groups, `manifest.json`) is exported by `kuzzle`, and the built-in ES7 / ES8 classes satisfy it as they are.
 
-**Next action:** open step 01 (contract + capability list).
+**Next action:** open step 02 (ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -100,7 +100,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
 | 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | ✅ Done 2026-09-29 | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
-| 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ⬜ To do | — | — |
+| 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) | [detail](steps/01-storage-driver-contract.md) |
 | 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ⬜ To do | — | — |
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ⬜ To do | — | — |
 | 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | ⬜ To do | — | — |
@@ -131,6 +131,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 - **2026-09-29** — **`majorVersion` deprecated with the ES9 driver; an ES7 / ES8 stack changes nothing** (config, dependencies) across all of v2.
 - **2026-09-29** — **`QueryTranslator` stays in the core as the ES family's Koncorde helper**, not part of the contract; drivers raise its `KeywordError` shape.
 - **2026-09-29** — **ADR accepted** by the maintainer.
+- **2026-10-29** — **Contract methods = what `ClientAdapter` calls today, as they are**; what Kuzzle itself needs (scroll, `deleteByQuery`, `mExecute`, `import`) is core. [step 01](steps/01-storage-driver-contract.md)
+- **2026-10-29** — **Capability groups: `aggregations`, `mappingUpdates`, `stats`, `updateByQuery`**; engine hooks (aliases, shard wait) are optional without a capability. [step 01](steps/01-storage-driver-contract.md)
+- **2026-10-29** — **Manifest = `manifest.json` at the package root** (`kuzzleVersion`, `capabilities`), read before the driver's code runs. [step 01](steps/01-storage-driver-contract.md)
 - **2026-09-29** — **Out of scope:** cache engine; data migration between engines; ADR written now, implementation after 2.57 stable.
 
 ---
@@ -138,7 +141,6 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 ## Open points
 
 - **Package granularity:** one package per engine major (`storage-opensearch-2`, `storage-opensearch-3`) assumed — or one per family with a version option, if OpenSearch 2 and 3 turn out to share one SDK?
-- **Capability list:** the exact groups and their granularity (step 01) — derived from what `ClientAdapter` and the controllers actually call, and checked against a paper SQL driver.
 - **Startup notice wording for `majorVersion`** (step 05): informational, must never fail or alter an ES7 / ES8 startup.
 - **Cross-repo CI loop** (step 04): Kuzzle's functional matrix runs the official drivers, which live in their own repos — a Kuzzle PR changing the contract cannot be tested against a driver not yet released for it. Either the matrix installs the drivers' main branches, or contract changes stay backward-compatible within a minor (or both).
 - **Interaction with ADR-0002 step 03** (shared types package): whether the driver contract later moves there.
