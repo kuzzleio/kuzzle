@@ -22,6 +22,16 @@ The command runs `npm ci && npm run build && npm run test:unit:vitest` inside
 a one-off container based on the `node` service from `docker-compose.yml`
 (`--no-deps`, so Elasticsearch/Redis are not started — unit tests don't need them).
 
+## Storage driver conformance
+
+```bash
+ES_VERSION=8 .ci/scripts/docker-test.sh conformance   # default ES_VERSION=7
+```
+
+Runs the storage driver conformance kit (`npm run test:conformance`, ADR-0003
+step 04) against the built-in driver, with only the test cluster's Elasticsearch
+started, in a compose project of its own (`kuzzle-conformance`).
+
 ## Functional tests
 
 ```bash
@@ -33,6 +43,10 @@ a one-off container based on the `node` service from `docker-compose.yml`
 
 # Against Elasticsearch 8 instead of the default 7:
 ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket
+
+# On a storage driver declaring no optional capability (the @capability-*
+# scenarios are skipped, see cucumber.config.cjs):
+STORAGE_DRIVER=core-only .ci/scripts/docker-test.sh functional websocket
 ```
 
 This spins up the 3-node Kuzzle cluster + nginx + Elasticsearch + Redis defined

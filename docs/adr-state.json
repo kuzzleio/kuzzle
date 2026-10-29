@@ -34,11 +34,9 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–03 done, 04 open",
       "openStep": "docs/adr-003/steps/04-conformance-kit.md",
-      "nextAction": "Settle step 04's design choices (kit packaging, where it runs in Kuzzle's CI, capability tags, cross-repo loop), then implement the conformance kit.",
+      "nextAction": "Open the step 04 PR (conformance kit), get CI and SonarCloud green, merge, then freeze the step and open step 05 (ES9 driver).",
       "blockers": [],
-      "openPoints": [
-        "Cross-repo CI loop: a contract change in Kuzzle cannot be tested against a driver not yet released for it (step 04)"
-      ]
+      "openPoints": []
     },
     {
       "id": "0004",

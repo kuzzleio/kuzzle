@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–03 are done: the `StorageDriver` contract is exported by `kuzzle`, ES7 / ES8 run as built-in drivers, and `services.storageEngine.driver` loads an external driver (manifest checked, undeclared capabilities rejected, same driver on every cluster node). Step 04 (conformance kit) is open on `feat/adr-0003-step-04-conformance-kit`.
+**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–03 are done: the `StorageDriver` contract is exported by `kuzzle`, ES7 / ES8 run as built-in drivers, and `services.storageEngine.driver` loads an external driver (manifest checked, undeclared capabilities rejected, same driver on every cluster node). Step 04 (conformance kit) is open on `feat/adr-0003-step-04-conformance-kit`: `describeStorageDriverConformance` is exported by `kuzzle`, passes on ES7 / ES8, and the functional suite runs on a driver declaring no capability.
 
-**Next action:** settle step 04's design choices ([detail](steps/04-conformance-kit.md)) with the maintainer, then implement the kit and run it against the built-in ES7 / ES8 drivers.
+**Next action:** land step 04 ([detail](steps/04-conformance-kit.md)) once CI and SonarCloud are green; then step 05 (ES9 driver).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -137,6 +137,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 - **2026-10-29** — **The driver class builds the native client** (static `createNativeClient(clientConfig)`, replacing step 01's instance `getNativeClient()`): the raw client surfaces keep building a new client each, as today. [step 02](steps/02-builtin-drivers.md)
 - **2026-10-29** — **Built-in drivers are not compared at cluster join**: a card without a driver is a built-in node, so ES7 / ES8 clusters (and older nodes) join as before; a driver upgrade is a full cluster restart. [step 03](steps/03-driver-loader.md)
 - **2026-10-29** — **Undeclared capability → `services.storage_driver.unsupported_capability` (400)**; a declared capability's methods are checked on the driver instance at startup. [step 03](steps/03-driver-loader.md)
+- **2026-10-29** — **Conformance kit in `kuzzle`, test-runner-agnostic** (`describeStorageDriverConformance` takes the runner's `describe` / `it` / hooks, asserts with `node:assert`); Kuzzle runs it on ES7 / ES8 in a dedicated CI job. [step 04](steps/04-conformance-kit.md)
+- **2026-10-29** — **Functional scenarios needing a capability are tagged `@capability-<name>`**, excluded from `KUZZLE_STORAGE_CAPABILITIES` (the driver's manifest list). [step 04](steps/04-conformance-kit.md)
+- **2026-10-29** — **Cross-repo loop: the contract only grows within a minor** (optional methods or capabilities), so a released driver stays valid; Kuzzle's matrix tests published drivers, no cross-repo CI. [step 04](steps/04-conformance-kit.md)
 - **2026-09-29** — **Out of scope:** cache engine; data migration between engines; ADR written now, implementation after 2.57 stable.
 
 ---
@@ -145,7 +148,6 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 - **Package granularity:** one package per engine major (`storage-opensearch-2`, `storage-opensearch-3`) assumed — or one per family with a version option, if OpenSearch 2 and 3 turn out to share one SDK?
 - **Startup notice wording for `majorVersion`** (step 05): informational, must never fail or alter an ES7 / ES8 startup.
-- **Cross-repo CI loop** (step 04): Kuzzle's functional matrix runs the official drivers, which live in their own repos — a Kuzzle PR changing the contract cannot be tested against a driver not yet released for it. Either the matrix installs the drivers' main branches, or contract changes stay backward-compatible within a minor (or both).
 - **Interaction with ADR-0002 step 03** (shared types package): whether the driver contract later moves there.
 - *(v3)* Which subset of ES mappings a non-ES driver must accept.
 

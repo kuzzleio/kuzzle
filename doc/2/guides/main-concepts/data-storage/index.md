@@ -712,12 +712,12 @@ At startup, Kuzzle reads the driver's `manifest.json` before loading its code, a
 
 Some features are optional for a driver, which lists those it implements in the `capabilities` field of its manifest:
 
-| Capability       | Feature                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| `aggregations`   | `aggregations` / `aggs` in a search body                                                     |
-| `mappingUpdates` | changing the mappings or the settings of an existing collection                              |
-| `stats`          | storage statistics (`index:stats`)                                                           |
-| `updateByQuery`  | updating every document matching a query (`document:updateByQuery`, `bulk:updateByQuery`)   |
+| Capability       | Feature                                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aggregations`   | `aggregations` / `aggs` in a search body                                                                                                                 |
+| `mappingUpdates` | changing the mappings or the settings of an existing collection, including the users' mappings (`security:updateUserMapping`, `app.import.userMappings`) |
+| `stats`          | storage statistics (`index:stats`)                                                                                                                       |
+| `updateByQuery`  | updating every document matching a query (`document:updateByQuery`, `bulk:updateByQuery`)                                                                |
 
 A request needing a capability the driver does not declare is rejected with a [services.storage_driver.unsupported_capability](/core/2/api/errors/error-codes/services) error. The built-in drivers implement them all.
 
@@ -728,3 +728,28 @@ Every node of a cluster must run the **same driver, in the same version**: a nod
 ### Integrated client
 
 `app.storage.storageClient`, `app.storage.StorageClient` and the plugins' `context.constructors.ESClient` are built by the driver: with an external driver, they give its engine's own client.
+
+### Writing a driver
+
+A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types, and ships a `manifest.json` at its root. Declare `kuzzle` as a peer dependency.
+
+`kuzzle` also exports the **conformance kit**: a test suite your driver runs against its real engine, covering the mandatory core and each capability your manifest declares. It registers its tests through your test runner's functions (vitest and jest as they are, mocha's `before` / `after` as `beforeAll` / `afterAll`):
+
+```js
+// test/conformance.test.js
+const { afterAll, beforeAll, describe, it } = require("vitest");
+const { describeStorageDriverConformance } = require("kuzzle");
+
+const manifest = require("../manifest.json");
+const MyDriver = require("..");
+
+describeStorageDriverConformance({
+  Driver: MyDriver,
+  capabilities: manifest.capabilities,
+  // merged over Kuzzle's default services.storageEngine configuration
+  config: { client: { node: "http://localhost:9200" } },
+  test: { afterAll, beforeAll, describe, it },
+});
+```
+
+The kit creates its indexes with a `conformance-` prefix, then deletes them, and runs the driver outside of Kuzzle: what the driver may use of the running Kuzzle instance (its logger, its configuration, its internal cache and the locks taken through it) is provided by the kit.
