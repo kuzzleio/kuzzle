@@ -53,6 +53,7 @@ Feature: Backend Import
   # import:userMappings =======================================================
 
   @preserveDatabase
+  @capability-mappingUpdates
   Scenario: Check if user mappings have been correctly imported
     Given I have configured user mappings in the app before startup
     When I successfully execute the action "security":"getUserMapping"

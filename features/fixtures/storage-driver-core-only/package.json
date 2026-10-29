@@ -1,0 +1,7 @@
+{
+  "name": "kuzzle-storage-core-only",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test fixture: a storage driver declaring no optional capability (ADR-0003 step 04)",
+  "main": "index.js"
+}

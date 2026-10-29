@@ -553,7 +553,20 @@ internalCache.options = {
 app.import.mappings(functionalFixtures.mappings);
 app.import.profiles(functionalFixtures.profiles);
 app.import.roles(functionalFixtures.roles);
-app.import.userMappings(functionalFixtures.userMappings);
+// Changing the users' mappings needs the `mappingUpdates` storage capability,
+// which .ci/test-cluster-core-only-driver.yml's driver does not declare
+// (ADR-0003 step 04, cucumber.config.cjs).
+const storageCapabilities = process.env.KUZZLE_STORAGE_CAPABILITIES;
+
+if (
+  storageCapabilities === undefined ||
+  storageCapabilities
+    .split(",")
+    .map((name) => name.trim())
+    .includes("mappingUpdates")
+) {
+  app.import.userMappings(functionalFixtures.userMappings);
+}
 app.import.users(functionalFixtures.users, { onExistingUsers: "overwrite" });
 
 loadAdditionalPlugins()
