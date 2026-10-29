@@ -34,7 +34,7 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–01 done, 02 open",
       "openStep": "docs/adr-003/steps/02-builtin-drivers.md",
-      "nextAction": "Land step 02 (ES7 / ES8 built-in drivers behind `ClientAdapter`): ES7 / ES8 functional matrix green, open the PR against 2-dev.",
+      "nextAction": "Merge step 02 PR #3100 (ES7 / ES8 built-in drivers) once CI and SonarCloud are green, then freeze the step and open step 03 (driver loader).",
       "blockers": [],
       "openPoints": []
     },
