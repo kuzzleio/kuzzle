@@ -21,11 +21,11 @@
 
 import type { JSONObject } from "../../types/JSONObject";
 
-import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { createNativeStorageClient } from "../../service/storage/builtInDrivers";
 import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
-  private _client: ReturnType<typeof Elasticsearch.buildClient> | null = null;
+  private _client: ReturnType<typeof createNativeStorageClient> | null = null;
   private _Client: BackendStorage["StorageClient"] | null = null;
 
   /**
@@ -39,13 +39,10 @@ export class BackendStorage extends ApplicationManager {
     const kuzzle = this._kuzzle;
 
     this._Client ??= function ESClient(clientConfig: JSONObject = {}) {
-      return Elasticsearch.buildClient(
-        {
-          ...kuzzle.config.services.storageEngine.client,
-          ...clientConfig,
-        },
-        kuzzle.config.services.storageEngine.majorVersion,
-      );
+      return createNativeStorageClient(kuzzle.config.services.storageEngine, {
+        ...kuzzle.config.services.storageEngine.client,
+        ...clientConfig,
+      });
     } as unknown as BackendStorage["StorageClient"];
 
     return this._Client;
@@ -59,12 +56,10 @@ export class BackendStorage extends ApplicationManager {
   get storageClient(): any {
     const kuzzle = this._kuzzle;
 
-    if (!this._client) {
-      this._client = Elasticsearch.buildClient(
-        kuzzle.config.services.storageEngine.client,
-        kuzzle.config.services.storageEngine.majorVersion,
-      );
-    }
+    this._client ??= createNativeStorageClient(
+      kuzzle.config.services.storageEngine,
+      kuzzle.config.services.storageEngine.client,
+    );
 
     return this._client;
   }

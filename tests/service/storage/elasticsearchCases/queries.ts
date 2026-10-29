@@ -190,7 +190,7 @@ export function describeQueries(harness: ESHarness) {
        * limit moved because the config moved.
        */
       await expect(
-        built.client.scroll("i-am-scroll-id", { scrollTTL: "42m" }),
+        built.driver.scroll("i-am-scroll-id", { scrollTTL: "42m" }),
       ).rejects.toMatchObject({ id: "services.storage.unknown_scroll_id" });
     });
 

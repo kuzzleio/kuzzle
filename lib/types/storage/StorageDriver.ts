@@ -161,24 +161,13 @@ export type StorageCollectionOptions = {
   settings?: JSONObject;
 };
 
-/**
- * The mandatory core: every driver implements it.
- *
- * @typeParam TNativeClient - The engine's own client, which `getNativeClient`
- *   hands to applications and plugins
- */
-export interface StorageDriverCore<TNativeClient = unknown> {
+/** The mandatory core: every driver implements it. */
+export interface StorageDriverCore {
   /**
    * Connects to the engine. Kuzzle applies `services.storageEngine`'s init
    * timeout around it.
    */
   init(): Promise<void>;
-
-  /**
-   * The engine's own client, behind `app.storage.storageClient` and
-   * `context.constructors.ESClient`
-   */
-  getNativeClient(): TNativeClient;
 
   info(): Promise<StorageInfo>;
 
@@ -441,18 +430,31 @@ export interface StorageEngineHooks {
  * A storage driver instance: the core, the capability groups it declared in
  * its manifest, and the engine hooks it has.
  */
-export type StorageDriver<TNativeClient = unknown> =
-  StorageDriverCore<TNativeClient> &
-    Partial<
-      StorageUpdateByQuery & StorageMappingUpdates & StorageStatsCapability
-    > &
-    StorageEngineHooks;
+export type StorageDriver = StorageDriverCore &
+  Partial<
+    StorageUpdateByQuery & StorageMappingUpdates & StorageStatsCapability
+  > &
+  StorageEngineHooks;
 
 /**
  * What a driver package exports: Kuzzle builds one instance per storage scope
  * (public and private indexes).
+ *
+ * @typeParam TNativeClient - The engine's own client
+ * @typeParam TConfig - What the driver reads of `services.storageEngine`
  */
-export type StorageDriverClass<TNativeClient = unknown> = new (
-  config: JSONObject,
-  scope: storeScopeEnum,
-) => StorageDriver<TNativeClient>;
+export type StorageDriverClass<
+  TNativeClient = unknown,
+  TConfig extends JSONObject = JSONObject,
+> = {
+  new (config: TConfig, scope: storeScopeEnum): StorageDriver;
+  /**
+   * Builds a new engine client, distinct from the ones the driver instances
+   * use: `app.storage.storageClient`, `app.storage.StorageClient` and
+   * `context.constructors.ESClient` hand it to applications and plugins.
+   *
+   * @param clientConfig - `services.storageEngine.client`, with the overrides
+   *   given to `app.storage.StorageClient`
+   */
+  createNativeClient(clientConfig: JSONObject): TNativeClient;
+};

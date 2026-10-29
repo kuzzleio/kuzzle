@@ -29,20 +29,22 @@ const notImplemented = async (): Promise<never> => {
   throw new Error("not implemented");
 };
 
-export class MemoryDriver implements StorageDriver<NativeClient> {
-  private readonly client: NativeClient = { ping: async () => true };
+export class MemoryDriver implements StorageDriver {
+  private readonly client: NativeClient;
+
+  static createNativeClient(clientConfig: JSONObject): NativeClient {
+    return { ping: async () => clientConfig.offline !== true };
+  }
 
   constructor(
     private readonly config: JSONObject,
     private readonly scope: storeScopeEnum,
-  ) {}
+  ) {
+    this.client = MemoryDriver.createNativeClient(config);
+  }
 
   async init(): Promise<void> {
     await this.client.ping();
-  }
-
-  getNativeClient(): NativeClient {
-    return this.client;
   }
 
   async info(): Promise<StorageInfo> {

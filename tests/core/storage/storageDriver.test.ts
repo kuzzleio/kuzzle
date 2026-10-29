@@ -1,13 +1,18 @@
-/* The storage driver contract (ADR-0003 step 01). Its methods are the ones the
- * storage layer calls today, so the built-in Elasticsearch 7 and 8 classes
- * must satisfy it as they are: step 02 wraps them in thin drivers, which only
- * add the two members below. This file does not compile when the contract
- * drifts from them (`npm run typecheck:tests`). */
+/* The storage driver contract (ADR-0003). Its methods are the ones the
+ * storage layer calls, so the built-in Elasticsearch 7 and 8 drivers satisfy
+ * it with every optional member. This file does not compile when the
+ * contract drifts from them (`npm run typecheck:tests`). */
 
 import { describe, expect, it } from "vitest";
 
-import type { ES7 } from "../../../lib/service/storage/7/elasticsearch";
-import type { ES8 } from "../../../lib/service/storage/8/elasticsearch";
+import type { Client as ClientES7 } from "sdk-es7";
+import type { Client as ClientES8 } from "sdk-es8";
+
+import type {
+  ES7Driver,
+  ES8Driver,
+} from "../../../lib/service/storage/builtInDrivers";
+import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import {
   STORAGE_CAPABILITIES,
   type StorageDriver,
@@ -15,10 +20,7 @@ import {
   type StorageDriverCore,
 } from "../../../lib/types/storage/StorageDriver";
 
-/** What a thin driver adds around a built-in class */
-type Wrapped = "getNativeClient" | "init";
-
-type BuiltIn = Omit<StorageDriver, Wrapped> &
+type BuiltIn = StorageDriver &
   Required<
     Pick<
       StorageDriver,
@@ -33,20 +35,27 @@ type BuiltIn = Omit<StorageDriver, Wrapped> &
   >;
 
 describe("StorageDriver contract", () => {
-  it("is satisfied by the built-in Elasticsearch 7 and 8 classes", () => {
-    const fromEs7 = (es: ES7): BuiltIn => es;
-    const fromEs8 = (es: ES8): BuiltIn => es;
+  it("is fully implemented by the built-in Elasticsearch 7 and 8 drivers", () => {
+    const fromEs7 = (driver: ES7Driver): BuiltIn => driver;
+    const fromEs8 = (driver: ES8Driver): BuiltIn => driver;
+    const es7Class = (
+      Driver: typeof ES7Driver,
+    ): StorageDriverClass<ClientES7, StorageEngineElasticsearch> => Driver;
+    const es8Class = (
+      Driver: typeof ES8Driver,
+    ): StorageDriverClass<ClientES8, StorageEngineElasticsearch> => Driver;
 
-    expect([fromEs7, fromEs8]).toHaveLength(2);
+    expect([fromEs7, fromEs8, es7Class, es8Class]).toHaveLength(4);
   });
 
   it("is implementable with the core only", () => {
     // A driver declaring no capability and having no engine hook.
     const coreOnly = (driver: StorageDriverCore): StorageDriver => driver;
     const asClass = (
-      Driver: new (
+      Driver: (new (
         ...args: ConstructorParameters<StorageDriverClass>
-      ) => StorageDriverCore,
+      ) => StorageDriverCore) &
+        Pick<StorageDriverClass, "createNativeClient">,
     ): StorageDriverClass => Driver;
 
     expect([coreOnly, asClass]).toHaveLength(2);
