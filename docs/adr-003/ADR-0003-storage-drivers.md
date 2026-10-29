@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–02 are done: the `StorageDriver` contract is exported by `kuzzle`, and ES7 / ES8 run as built-in drivers behind `ClientAdapter`. Step 03 is in progress on `feat/adr-0003-step-03-driver-loader`: `services.storageEngine.driver` loads an external driver (manifest checked first), undeclared capabilities are rejected with `services.storage_driver.unsupported_capability`, and a node running another driver is refused at cluster join.
+**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–03 are done: the `StorageDriver` contract is exported by `kuzzle`, ES7 / ES8 run as built-in drivers, and `services.storageEngine.driver` loads an external driver (manifest checked, undeclared capabilities rejected, same driver on every cluster node). Step 04 (conformance kit) is open on `feat/adr-0003-step-04-conformance-kit`.
 
-**Next action:** land step 03 ([detail](steps/03-driver-loader.md)) once the ES7 / ES8 functional matrix and SonarCloud are green; then step 04 (conformance kit).
+**Next action:** settle step 04's design choices ([detail](steps/04-conformance-kit.md)) with the maintainer, then implement the kit and run it against the built-in ES7 / ES8 drivers.
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -102,8 +102,8 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | ✅ Done 2026-09-29 | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
 | 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) | [detail](steps/01-storage-driver-contract.md) |
 | 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ✅ Done 2026-10-29 | [#3100](https://github.com/kuzzleio/kuzzle/pull/3100) | [detail](steps/02-builtin-drivers.md) |
-| 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | 🟦 In progress | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
-| 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | ⬜ To do | — | — |
+| 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ✅ Done 2026-10-29 | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
+| 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | 🟦 In progress | — | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `@kuzzleio/storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc + startup notice) | ⬜ To do | — | — |
 | 06 | OpenSearch 2 / 3 driver(s) (own repo) | ⬜ To do | — | — |
 | 07 | Next major: extract ES7 / ES8, drop `sdk-es7` / `sdk-es8` from the core | ⬜ To do (next major) | — | — |

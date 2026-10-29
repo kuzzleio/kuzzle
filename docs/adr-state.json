@@ -32,11 +32,13 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "active",
-      "statusLabel": "🔵 Active · steps 00–02 done, 03 open",
-      "openStep": "docs/adr-003/steps/03-driver-loader.md",
-      "nextAction": "Merge step 03 PR #3101 (driver loader) once CI and SonarCloud are green, then freeze the step and open step 04 (conformance kit).",
+      "statusLabel": "🔵 Active · steps 00–03 done, 04 open",
+      "openStep": "docs/adr-003/steps/04-conformance-kit.md",
+      "nextAction": "Settle step 04's design choices (kit packaging, where it runs in Kuzzle's CI, capability tags, cross-repo loop), then implement the conformance kit.",
       "blockers": [],
-      "openPoints": []
+      "openPoints": [
+        "Cross-repo CI loop: a contract change in Kuzzle cannot be tested against a driver not yet released for it (step 04)"
+      ]
     },
     {
       "id": "0004",
