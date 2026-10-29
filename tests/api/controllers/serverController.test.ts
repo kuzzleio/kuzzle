@@ -204,6 +204,16 @@ describe("#api/controllers/ServerController", () => {
     });
   });
 
+  // The funnel rejects an action that does not return a thenable
+  it.each(["getConfig", "now", "publicApi"] as const)(
+    "%s returns a Promise",
+    (action) => {
+      vi.spyOn(controller, "_buildApiDefinition").mockReturnValue({});
+
+      expect(controller[action]()).toBeInstanceOf(Promise);
+    },
+  );
+
   describe("#now", () => {
     it("should resolve to a timestamp", async () => {
       const response = await controller.now();
