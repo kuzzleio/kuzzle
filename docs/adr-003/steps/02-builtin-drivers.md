@@ -1,6 +1,6 @@
 # Step 02 — ES7 / ES8 as thin internal drivers
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-29 · **PR:** [#3100](https://github.com/kuzzleio/kuzzle/pull/3100) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done — frozen · **Opened:** 2026-10-29 · **Closed:** 2026-10-29 (merged) · **PR:** [#3100](https://github.com/kuzzleio/kuzzle/pull/3100) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
