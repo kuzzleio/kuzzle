@@ -301,8 +301,11 @@ function readManifest(name: string, root: string): Set<StorageCapability> {
   return declared;
 }
 
+/** Typed for a lookup of any manifest value */
+const KNOWN_CAPABILITIES: ReadonlySet<unknown> = new Set(STORAGE_CAPABILITIES);
+
 function isStorageCapability(value: unknown): value is StorageCapability {
-  return STORAGE_CAPABILITIES.some((capability) => capability === value);
+  return KNOWN_CAPABILITIES.has(value);
 }
 
 /** The class a driver package exports, as its module or its `default` */
