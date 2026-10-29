@@ -24,11 +24,13 @@ const indice = "&nyc-open-data.yellow-taxi";
 export function describeInventory(harness: ESHarness) {
   describe("#constructor", () => {
     it("prefixes public indices with & and private ones with %", () => {
-      const internal = harness.build(storeScopeEnum.PRIVATE);
+      const internal: ESHarness["client"] = harness.build(
+        storeScopeEnum.PRIVATE,
+      ).driver;
 
       expect(harness.es.config).toBe(harness.config);
       expect(harness.client._indexPrefix).toBe("&");
-      expect(internal.client._indexPrefix).toBe("%");
+      expect(internal._indexPrefix).toBe("%");
     });
   });
 

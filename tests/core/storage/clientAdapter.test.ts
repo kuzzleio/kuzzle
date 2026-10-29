@@ -72,7 +72,7 @@ const CACHE_METHODS = [
 
 type Recorder = Record<string, ReturnType<typeof vi.fn>>;
 
-const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
+const { serviceInstances, cacheInstances, StorageServiceMock, IndexCacheMock } =
   vi.hoisted(() => {
     const clientMethods = [
       "addCollection",
@@ -140,28 +140,29 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "snapshotIndexes",
       "snapshotLocks",
     ];
-    const createdEs: unknown[] = [];
+    const createdServices: unknown[] = [];
     const createdCache: unknown[] = [];
 
     return {
-      esInstances: createdEs,
+      serviceInstances: createdServices,
       cacheInstances: createdCache,
-      ElasticsearchMock: class {
-        public client: Record<string, ReturnType<typeof vi.fn>> = {};
+      StorageServiceMock: class {
+        public driver: Record<string, ReturnType<typeof vi.fn>> = {};
         public init = vi.fn(async () => undefined);
 
         constructor(
+          public Driver: unknown,
           public config: unknown,
           public scope: unknown,
         ) {
           for (const m of clientMethods) {
-            this.client[m] = vi.fn(async () => undefined);
+            this.driver[m] = vi.fn(async () => undefined);
           }
-          // The two client calls whose RESULT drives control flow.
-          this.client.getSchema = vi.fn(async () => ({}));
-          this.client.deleteIndexes = vi.fn(async () => [] as string[]);
-          this.client.import = vi.fn(async () => ({ errors: [] }));
-          createdEs.push(this);
+          // The two driver calls whose RESULT drives control flow.
+          this.driver.getSchema = vi.fn(async () => ({}));
+          this.driver.deleteIndexes = vi.fn(async () => [] as string[]);
+          this.driver.import = vi.fn(async () => ({ errors: [] }));
+          createdServices.push(this);
         }
       },
       IndexCacheMock: class {
@@ -175,8 +176,11 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
     };
   });
 
-vi.mock("../../../lib/service/storage/Elasticsearch", () => ({
-  Elasticsearch: ElasticsearchMock,
+vi.mock("../../../lib/service/storage/storageService", () => ({
+  StorageService: StorageServiceMock,
+}));
+vi.mock("../../../lib/service/storage/builtInDrivers", () => ({
+  builtInStorageDriver: vi.fn((majorVersion: string) => `ES${majorVersion}`),
 }));
 vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
@@ -243,7 +247,7 @@ describe("#core/storage/ClientAdapter", () => {
   };
 
   beforeEach(async () => {
-    esInstances.length = 0;
+    serviceInstances.length = 0;
     cacheInstances.length = 0;
     handlers = new Map();
     emitted = [];
@@ -290,7 +294,7 @@ describe("#core/storage/ClientAdapter", () => {
     (globalThis as { kuzzle?: unknown }).kuzzle = {
       config: {
         services: {
-          storageEngine: { generateMissingAliases: false },
+          storageEngine: { generateMissingAliases: false, majorVersion: "7" },
         },
       },
       emit: vi.fn((event: string, payload: unknown) => {
@@ -313,24 +317,31 @@ describe("#core/storage/ClientAdapter", () => {
     adapter = new ClientAdapter(storeScopeEnum.PRIVATE);
     await adapter.init();
 
-    client = adapter.client as unknown as Recorder;
+    client = adapter.driver as unknown as Recorder;
     cache = adapter.cache as unknown as Recorder;
   });
 
   describe("#constructor", () => {
-    it("builds one ES service for the scope, plus an index cache", () => {
-      expect(esInstances).toHaveLength(1);
+    it("builds one storage service for the scope, plus an index cache", () => {
+      expect(serviceInstances).toHaveLength(1);
       expect(cacheInstances).toHaveLength(1);
       expect(adapter.scope).toBe(storeScopeEnum.PRIVATE);
-      expect(adapter.client).toBe(
-        (esInstances[0] as { client: unknown }).client,
+      expect(adapter.driver).toBe(
+        (serviceInstances[0] as { driver: unknown }).driver,
       );
+    });
+
+    it("runs the built-in driver of the configured major version", () => {
+      expect(serviceInstances[0]).toMatchObject({
+        Driver: "ES7",
+        scope: storeScopeEnum.PRIVATE,
+      });
     });
   });
 
   describe("#init", () => {
-    it("initialises the ES service and populates the cache before registering", () => {
-      expect(adapter.es.init).toHaveBeenCalledOnce();
+    it("initialises the storage service and populates the cache before registering", () => {
+      expect(adapter.service.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
       expect(handlers.size).toBe(58);
@@ -774,6 +785,49 @@ describe("#core/storage/ClientAdapter", () => {
       const tabled = rows.map(([event]) => event);
 
       expect(new Set([...tabled, ...dedicated]).size).toBe(handlers.size);
+    });
+  });
+
+  // ------------------------------------------------- optional driver members
+  //
+  // The engine hooks and the capability groups are optional in the
+  // `StorageDriver` contract (ADR-0003).
+  describe("a driver without the optional members", () => {
+    it("skips the engine hooks it lacks", async () => {
+      delete client.generateMissingAliases;
+      delete client.waitForCollectionShards;
+      (
+        globalThis as {
+          kuzzle: {
+            config: {
+              services: { storageEngine: { generateMissingAliases: boolean } };
+            };
+          };
+        }
+      ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
+
+      await expect(adapter.populateCache()).resolves.toBeUndefined();
+      // `kuzzle.ask` awaits the answer: none is a resolved `undefined`.
+      expect(
+        ask("collection:shards:wait", "an-index", "a-collection"),
+      ).toBeUndefined();
+    });
+
+    it.each([
+      ["collection:update", "updateCollection"],
+      ["document:updateByQuery", "updateByQuery"],
+      ["bulk:updateByQuery", "bulkUpdateByQuery"],
+      ["mappings:update", "updateMapping"],
+      ["index:stats", "stats"],
+    ])("%s fails on a driver without %s", (event, method) => {
+      delete client[method];
+
+      expect(() => ask(event, "an-index", "a-collection", {})).toThrow(
+        expect.objectContaining({
+          id: "core.fatal.assertion_failed",
+          message: expect.stringContaining(`"${method}"`),
+        }),
+      );
     });
   });
 

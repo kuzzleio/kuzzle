@@ -25,10 +25,10 @@ export function describeInternals(harness: ESHarness) {
     // Read as `harness.client` is: the cases arm the stubbed ES client's spies.
     const publicES: ESHarness["client"] = harness.build(
       storeScopeEnum.PUBLIC,
-    ).client;
+    ).driver;
     const privateES: ESHarness["client"] = harness.build(
       storeScopeEnum.PRIVATE,
-    ).client;
+    ).driver;
 
     return {
       public: publicES,
