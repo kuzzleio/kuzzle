@@ -15,10 +15,14 @@ usage() {
   cat <<'EOF'
 Usage:
   .ci/scripts/docker-test.sh unit
+  .ci/scripts/docker-test.sh conformance
   .ci/scripts/docker-test.sh functional <http|websocket|legacy:http|legacy:mqtt|legacy:websocket> [-- <cucumber-js args>]
 
 Env vars:
-  ES_VERSION   Elasticsearch major version for functional tests: 7 or 8 (default: 7)
+  ES_VERSION      Elasticsearch major version for the conformance and
+                  functional tests: 7 or 8 (default: 7)
+  STORAGE_DRIVER  core-only: the functional tests run on a storage driver
+                  declaring no optional capability (ADR-0003 step 04)
 
 Examples:
   .ci/scripts/docker-test.sh unit
@@ -50,6 +54,39 @@ run_unit() {
     node bash -lc "npm ci && npm run build && npm run test:unit:vitest"
 }
 
+cluster_file() {
+  case "$ES_VERSION" in
+    7) echo ".ci/test-cluster-7.yml" ;;
+    8) echo ".ci/test-cluster-8.yml" ;;
+    *)
+      echo "Invalid ES_VERSION '$ES_VERSION' (expected 7 or 8)" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# The storage driver conformance kit against the built-in driver of
+# ES_VERSION (ADR-0003 step 04): the test cluster's Elasticsearch only, in a
+# compose project of its own, so that it neither reuses nor tears down a
+# functional test cluster.
+run_conformance() {
+  local yml_file
+  yml_file="$(cluster_file)"
+
+  local compose=(docker compose -p kuzzle-conformance -f "$yml_file" -f .ci/docker-test-node-modules.yml)
+
+  # Expanded now: `compose` is local, and the trap runs after this function
+  # returns. Keeps the node_modules volume, so that the next run is warm.
+  # shellcheck disable=SC2064
+  trap "$(printf '%q ' "${compose[@]}") down" EXIT
+
+  "${compose[@]}" up -d elasticsearch
+  "${compose[@]}" run --rm --no-deps \
+    -e ES_VERSION="$ES_VERSION" \
+    -e KUZZLE_CONFORMANCE_ES_NODE=http://elasticsearch:9200 \
+    kuzzle_node_1 bash -lc "npm ci && npm run test:conformance"
+}
+
 run_functional() {
   local suite="$1"
   shift
@@ -57,20 +94,22 @@ run_functional() {
   local yml_file
   local extra_args=("$@")
 
-  case "$ES_VERSION" in
-    7) yml_file=".ci/test-cluster-7.yml" ;;
-    8) yml_file=".ci/test-cluster-8.yml" ;;
-    *)
-      echo "Invalid ES_VERSION '$ES_VERSION' (expected 7 or 8)" >&2
-      exit 1
-      ;;
-  esac
+  yml_file="$(cluster_file)"
 
   # `node_modules` lives in a named volume here too, NOT in the bind-mounted
   # checkout — same reason as `run_unit` (#2790). The cluster containers must
   # all see the installed tree, so the volume is declared for every Kuzzle
   # service in an overlay rather than passed to one `run`.
   local compose=(docker compose -f "$yml_file" -f .ci/docker-test-node-modules.yml)
+
+  case "${STORAGE_DRIVER:-}" in
+    "") ;;
+    core-only) compose+=(-f .ci/test-cluster-core-only-driver.yml) ;;
+    *)
+      echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only)" >&2
+      exit 1
+      ;;
+  esac
 
   trap '"${compose[@]}" logs --tail=200' ERR
 
@@ -135,6 +174,9 @@ run_functional() {
 case "${1:-}" in
   unit)
     run_unit
+    ;;
+  conformance)
+    run_conformance
     ;;
   functional)
     suite="${2:?Missing functional suite: e.g. http, websocket, legacy:http}"
