@@ -12,13 +12,13 @@ meta:
 
 # Kuzzle 2.60
 
-**Released:** 2026-10-28: [2.60.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.0) and [2.60.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1).
+**Released:** [2.60.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.0) on 2026-10-28 and [2.60.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1) on 2026-10-29.
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.59](/core/2/guides/upgrade-notes/from-2-59).
 
 ## 2.60.1
 
-**Released:** 2026-10-28. [GitHub release](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1).
+**Released:** 2026-10-29. [GitHub release](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1).
 
 A security fix. [`server:getConfig`](/core/2/api/controllers/server/get-config) and [`admin:dump`](/core/2/api/controllers/admin/dump) returned the configuration's secrets in clear: Redis and Elasticsearch passwords, TLS keys, plugin secrets, and in a dump also the environment variables, the `security` section and the vault key. They now show `"***"` in their place.
 
