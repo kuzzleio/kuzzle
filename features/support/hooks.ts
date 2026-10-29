@@ -294,7 +294,8 @@ After({ tags: "@collectionLock" }, async function (this: KuzzleWorld) {
 });
 
 // Scenarios on a core behaviour that only the Elasticsearch 8 storage class
-// implements.
+// implements, or that only the ES8 functional stack configures (Redis with a
+// password, see .ci/test-cluster-8.yml).
 Before({ tags: "@es8" }, async function (this: KuzzleWorld) {
   const { result } = await this.sdk.query({
     action: "info",

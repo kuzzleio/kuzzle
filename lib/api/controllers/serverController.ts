@@ -28,6 +28,7 @@ import packagejson from "../../../package.json";
 
 import * as kerror from "../../kerror";
 import type { ApiRoute } from "../../types/ApiRoute";
+import { toPublicConfig } from "../../util/redactSecrets";
 import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 
@@ -126,21 +127,14 @@ class ServerController extends NativeController {
    *
    * @returns {Promise<Object>}
    */
-  async getConfig() {
-    const config = JSON.parse(JSON.stringify(global.kuzzle.config)); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
+  getConfig() {
+    // Secrets are masked before the JSON clone: the clone turns a `Buffer`
+    // into `{ type, data }`, which would no longer be masked whole (ADR-0004).
+    const publicConfig = toPublicConfig(global.kuzzle.config);
+    const config = JSON.parse(JSON.stringify(publicConfig)); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
 
-    // Already and more appropriately returned by server:info
-    config.http.routes = undefined;
-
-    // Not a good idea to export Kuzzle's salt, hash algorithm
-    // and default rights
-    config.security = undefined;
-
-    if (config.VAULT_KEY) {
-      config.VAULT_KEY = undefined;
-    }
-
-    return config;
+    // A Promise, not a value: the funnel rejects an action that returns none.
+    return Promise.resolve(config);
   }
 
   /**
@@ -200,8 +194,8 @@ class ServerController extends NativeController {
   /**
    * @returns {Promise<Object>}
    */
-  async now() {
-    return { now: Date.now() };
+  now() {
+    return Promise.resolve({ now: Date.now() });
   }
 
   /**
@@ -318,7 +312,7 @@ class ServerController extends NativeController {
     };
   }
 
-  async publicApi() {
+  publicApi() {
     const kuzzleApi = this._buildApiDefinition(
       global.kuzzle.funnel.controllers,
       global.kuzzle.config.http.routes,
@@ -328,7 +322,7 @@ class ServerController extends NativeController {
       global.kuzzle.pluginsManager.routes,
     );
 
-    return { ...kuzzleApi, ...pluginsApi };
+    return Promise.resolve({ ...kuzzleApi, ...pluginsApi });
   }
 
   async openapi(request: KuzzleRequest) {

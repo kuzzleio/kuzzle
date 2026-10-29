@@ -12,15 +12,27 @@ meta:
 
 # Kuzzle 2.60
 
-**Released:** 2026-10-28. [GitHub release](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.0).
+**Released:** 2026-10-28: [2.60.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.0) and [2.60.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.59](/core/2/guides/upgrade-notes/from-2-59).
 
-## In short
+## 2.60.1
+
+**Released:** 2026-10-28. [GitHub release](https://github.com/kuzzleio/kuzzle/releases/tag/v2.60.1).
+
+A security fix. [`server:getConfig`](/core/2/api/controllers/server/get-config) and [`admin:dump`](/core/2/api/controllers/admin/dump) returned the configuration's secrets in clear: Redis and Elasticsearch passwords, TLS keys, plugin secrets, and in a dump also the environment variables, the `security` section and the vault key. They now show `"***"` in their place.
+
+- **What you need to do:** nothing, unless a tool of yours reads a secret back through `server:getConfig` or a dump (it now reads `"***"`), or you set a numeric-looking password through an environment variable (see the [upgrade notes](/core/2/guides/upgrade-notes/from-2-59#_2-60-1)).
+- **Fixed:** a secret set through an environment variable keeps its exact text. A password such as `0123` used to become the number `123`, and the connection failed.
+- **New in the docs:** how to connect Kuzzle to a Redis protected by a password, an ACL user, TLS or Sentinel: [Securing Redis](/core/2/guides/advanced/configuration#securing-redis).
+
+## 2.60.0
+
+### In short
 
 2.60 makes a cluster start and stop reliably. Most fixes target what happens when several nodes start at the same time, or when a node stops or crashes while the cluster starts. It also moves Kuzzle to Node.js 22.12 or later.
 
-## What you need to do
+### What you need to do
 
 - **Use Node.js 22.12 or later.** Node.js 20 is no longer supported. Check the base image of your `Dockerfile`.
 - **Check your log pipeline if it reads error fields.** Errors are now logged under an `err` field.
@@ -28,16 +40,16 @@ The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list eve
 
 Nothing else changes in the API or the TypeScript types.
 
-## What's new
+### What's new
 
 - **`withLock` everywhere.** Every cluster-wide lock Kuzzle takes now lasts as long as the work it protects. Some used to expire after 5 seconds, which let another node start the same work in parallel.
 - **`MutexAcquireError`.** [`withLock`](/core/2/framework/functions/with-lock) now rejects with [this error](/core/2/framework/error-classes/mutex-acquire-error) when it cannot get the lock, so you can tell a busy lock apart.
 - **Delete your own API key by key or fingerprint over HTTP**, with the new `DELETE /api-keys` route.
 - **New type exports.** `StartOptions`, `InstallationConfig`, `ImportConfig` and `SupportConfig` name the options of the startup and of the plugin imports.
 
-## What's fixed
+### What's fixed
 
-### Starting a cluster
+#### Starting a cluster
 
 - Nodes wait for each other's startup imports (mappings, fixtures, permissions) instead of going on while they still run. A changed import is imported once, not at every start.
 - A node that cannot join the cluster (another node has its IP address, the cluster cannot be reached, the join takes too long) now fails its startup with a clear `cluster.join.*` error. It used to keep starting in the background.
@@ -47,7 +59,7 @@ Nothing else changes in the API or the TypeScript types.
 - A node stopped while it starts stops starting: it no longer takes the installations lock and makes the other nodes wait 30 seconds.
 - Several cases where a cluster could stay stuck in a restart loop after a node stopped mid-startup are fixed: an internal setup left half done, a collection whose shards were not ready yet, cluster messages received too early.
 
-### Stopping a node
+#### Stopping a node
 
 - A failed startup now always stops the node and exits with code `1`, so a restart policy restarts it. In production, the node used to stay alive, half started.
 - A shutdown caused by a failure is bounded to 30 seconds. A requested stop (`SIGTERM`, `admin:shutdown`) still waits for the requests in progress, and exits with code `0`.
@@ -55,7 +67,7 @@ Nothing else changes in the API or the TypeScript types.
 - A shutdown that fails now logs why and exits with code `1`. After a requested stop, the node used to stay alive with its network layer already closed.
 - A stop logs `Initiating shutdown...` once, not twice.
 
-### Other fixes
+#### Other fixes
 
 - An empty Kuzzle index no longer keeps a useless extra Elasticsearch index once it has a real collection.
 - A collection configured with `number_of_replicas` but no `number_of_shards` no longer fails the startup in development mode.
@@ -67,7 +79,7 @@ Nothing else changes in the API or the TypeScript types.
 - A few cluster and Elasticsearch 7 errors that were left unhandled are now logged with a clear message. In development mode, they no longer crash the node.
 - Four HTTP routes that pointed to long-removed actions are gone.
 
-### For plugin and application developers
+#### For plugin and application developers
 
 - A plugin request with `triggerEvents` that failed was run a second time, without events. It now fails once.
 - A pipe whose handler throws now rejects with that error, instead of never answering.
@@ -76,6 +88,6 @@ Nothing else changes in the API or the TypeScript types.
 - `Mutex.wait()` works without argument, `Logger.child()` returns a full `Logger`, and `Location` / `Last-Modified` response headers are replaced instead of concatenated.
 - `InternalLogger` and the `Koncorde` class exported by Kuzzle are deprecated (see [Towards Kuzzle 3](/core/2/guides/kuzzle-3)).
 
-## Under the hood
+### Under the hood
 
 Several dependencies moved to a new major version (ioredis 6, aedes 1, protobufjs 8, cookie 2). Each one is configured to behave exactly as before. Production installs carry 23 fewer packages.
