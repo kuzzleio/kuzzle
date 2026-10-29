@@ -103,7 +103,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) | [detail](steps/01-storage-driver-contract.md) |
 | 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ✅ Done 2026-10-29 | [#3100](https://github.com/kuzzleio/kuzzle/pull/3100) | [detail](steps/02-builtin-drivers.md) |
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ✅ Done 2026-10-29 | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
-| 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | 🟦 In progress | — | [detail](steps/04-conformance-kit.md) |
+| 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | 🟦 In progress | [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `@kuzzleio/storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc + startup notice) | ⬜ To do | — | — |
 | 06 | OpenSearch 2 / 3 driver(s) (own repo) | ⬜ To do | — | — |
 | 07 | Next major: extract ES7 / ES8, drop `sdk-es7` / `sdk-es8` from the core | ⬜ To do (next major) | — | — |
