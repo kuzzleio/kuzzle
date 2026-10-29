@@ -682,3 +682,49 @@ Maintenance operations, such as a mapping migration, can **lock a collection aga
 The lock applies to the whole cluster. Clients receiving this error can retry the write once the maintenance operation is over.
 
 With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.
+
+## Storage Drivers
+
+<SinceBadge version="2.61.0" />
+
+Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: by default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
+
+Another storage engine is supported by installing its driver, an npm package, next to `kuzzle` in your application, and naming it in the [configuration](/core/2/guides/advanced/configuration):
+
+```js
+{
+  "services": {
+    "storageEngine": {
+      "driver": "@kuzzleio/storage-es-9",
+      "client": {
+        "node": "http://localhost:9200"
+      }
+    }
+  }
+}
+```
+
+The rest of `services.storageEngine` is handed to the driver; `majorVersion` is ignored when `driver` is set. The API does not change: queries, mappings and search bodies are still written in the Elasticsearch format.
+
+At startup, Kuzzle reads the driver's `manifest.json` before loading its code, and refuses to start when the driver is missing, when its manifest is invalid, or when the Kuzzle version is not in the range its `kuzzleVersion` field states (see the [services.storage_driver](/core/2/api/errors/error-codes/services) errors).
+
+### Capabilities
+
+Some features are optional for a driver, which lists those it implements in the `capabilities` field of its manifest:
+
+| Capability       | Feature                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| `aggregations`   | `aggregations` / `aggs` in a search body                                                     |
+| `mappingUpdates` | changing the mappings or the settings of an existing collection                              |
+| `stats`          | storage statistics (`index:stats`)                                                           |
+| `updateByQuery`  | updating every document matching a query (`document:updateByQuery`, `bulk:updateByQuery`)   |
+
+A request needing a capability the driver does not declare is rejected with a [services.storage_driver.unsupported_capability](/core/2/api/errors/error-codes/services) error. The built-in drivers implement them all.
+
+### Cluster
+
+Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart. The nodes running the built-in Elasticsearch drivers are not compared.
+
+### Integrated client
+
+`app.storage.storageClient`, `app.storage.StorageClient` and the plugins' `context.constructors.ESClient` are built by the driver: with an external driver, they give its engine's own client.

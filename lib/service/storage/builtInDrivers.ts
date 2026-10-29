@@ -68,18 +68,3 @@ export function builtInStorageDriver(
       throw new Error("Invalid Elasticsearch version.");
   }
 }
-
-/**
- * A new native client of the configured engine, for
- * `app.storage.storageClient`, `app.storage.StorageClient` and
- * `context.constructors.ESClient`. Without a `majorVersion`, they have
- * always built an Elasticsearch 7 client.
- */
-export function createNativeStorageClient(
-  config: StorageEngineElasticsearch,
-  clientConfig: JSONObject,
-): ClientES7 | ClientES8 {
-  return builtInStorageDriver(config.majorVersion ?? "7").createNativeClient(
-    clientConfig,
-  );
-}

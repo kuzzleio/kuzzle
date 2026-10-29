@@ -11,7 +11,6 @@ import {
   ES7Driver,
   ES8Driver,
   builtInStorageDriver,
-  createNativeStorageClient,
 } from "../../../lib/service/storage/builtInDrivers";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
@@ -75,29 +74,5 @@ describe("built-in storage drivers", () => {
     expect(() =>
       builtInStorageDriver("6" as StorageEngineElasticsearch["majorVersion"]),
     ).toThrow("Invalid Elasticsearch version.");
-  });
-
-  describe("#createNativeStorageClient", () => {
-    it("builds a client of the configured major version", () => {
-      config.majorVersion = "8";
-
-      expect(
-        createNativeStorageClient(config, { node: "http://es:9200" }),
-      ).toBeInstanceOf(ClientES8);
-    });
-
-    it("builds an Elasticsearch 7 client when no major version is set, as it always has", () => {
-      const withoutVersion = {
-        ...config,
-      } as Partial<StorageEngineElasticsearch>;
-      delete withoutVersion.majorVersion;
-
-      expect(
-        createNativeStorageClient(
-          withoutVersion as StorageEngineElasticsearch,
-          { node: "http://es:9200" },
-        ),
-      ).toBeInstanceOf(ClientES7);
-    });
   });
 });

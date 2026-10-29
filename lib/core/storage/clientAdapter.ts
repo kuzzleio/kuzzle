@@ -22,14 +22,18 @@
 import type { JSONObject } from "../../types/JSONObject";
 import type { ValidatedTarget } from "../../types/Target";
 
-import { builtInStorageDriver } from "../../service/storage/builtInDrivers";
 import { StorageService } from "../../service/storage/storageService";
-import type {
-  StorageDriver,
-  StorageMappingUpdates,
-  StorageStatsCapability,
-  StorageUpdateByQuery,
+import {
+  STORAGE_CAPABILITIES,
+  type StorageCapability,
+  type StorageDriver,
 } from "../../types/storage/StorageDriver";
+import {
+  assertDeclaredCapabilities,
+  CAPABILITY_METHODS,
+  selectStorageDriver,
+  type CapabilityMethod,
+} from "./storageDriverLoader";
 import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
@@ -72,27 +76,46 @@ const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
   refresh: false,
 });
 
-/** The methods of the optional capability groups */
-type CapabilityMethod = keyof (StorageMappingUpdates &
-  StorageStatsCapability &
-  StorageUpdateByQuery);
+const driverError = kerror.wrap("services", "storage_driver");
 
 /**
- * Only the built-in drivers can be selected yet, and they implement every
- * capability: a missing one is a bug until the driver loader turns it into a
- * dedicated error (ADR-0003 step 03).
+ * @throws {services.storage_driver.unsupported_capability} if the driver does
+ *   not declare the capability of `method`
  */
 function assertCapability<TMethod extends CapabilityMethod>(
+  capabilities: ReadonlySet<StorageCapability>,
   driver: StorageDriver,
   method: TMethod,
 ): asserts driver is StorageDriver & Required<Pick<StorageDriver, TMethod>> {
-  if (typeof driver[method] !== "function") {
-    throw kerror.get(
-      "core",
-      "fatal",
-      "assertion_failed",
-      `the storage driver has no "${method}" method`,
-    );
+  const capability = STORAGE_CAPABILITIES.find((name) =>
+    CAPABILITY_METHODS[name].includes(method),
+  );
+
+  // Every capability method has its capability, and the loader checked that
+  // a declared capability has its methods: the first and last tests are what
+  // narrow the types.
+  if (
+    capability === undefined ||
+    !capabilities.has(capability) ||
+    typeof driver[method] !== "function"
+  ) {
+    throw driverError.get("unsupported_capability", capability);
+  }
+}
+
+/**
+ * @throws {services.storage_driver.unsupported_capability} if the search body
+ *   has aggregations the driver does not declare
+ */
+function assertSearchCapabilities(
+  capabilities: ReadonlySet<StorageCapability>,
+  searchBody: JSONObject | undefined,
+): void {
+  if (
+    !capabilities.has("aggregations") &&
+    (searchBody?.aggregations !== undefined || searchBody?.aggs !== undefined)
+  ) {
+    throw driverError.get("unsupported_capability", "aggregations");
   }
 }
 
@@ -104,18 +127,19 @@ class ClientAdapter {
   public service: StorageService;
   /** This scope's storage driver instance */
   public driver: StorageDriver;
+  /** The capability groups the driver declares */
+  public capabilities: ReadonlySet<StorageCapability>;
   public scope: storeScopeEnum;
   public cache: IndexCache;
 
   constructor(scope: storeScopeEnum) {
     const config = global.kuzzle.config.services.storageEngine;
+    const selected = selectStorageDriver(config);
 
-    this.service = new StorageService(
-      builtInStorageDriver(config.majorVersion),
-      config,
-      scope,
-    );
+    this.service = new StorageService(selected.Driver, config, scope);
     this.driver = this.service.driver;
+    this.capabilities = selected.capabilities;
+    assertDeclaredCapabilities(this.driver, selected);
     this.scope = scope;
     this.cache = new IndexCache();
   }
@@ -600,7 +624,7 @@ class ClientAdapter {
       (index: string, collection: string, changes: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        assertCapability(this.driver, "updateCollection");
+        assertCapability(this.capabilities, this.driver, "updateCollection");
         return this.driver.updateCollection(index, collection, changes);
       },
     );
@@ -664,7 +688,7 @@ class ClientAdapter {
      * @returns {Promise.<Object>}
      */
     global.kuzzle.onAsk(`core:storage:${this.scope}:index:stats`, () => {
-      assertCapability(this.driver, "stats");
+      assertCapability(this.capabilities, this.driver, "stats");
       return this.driver.stats();
     });
   }
@@ -1118,6 +1142,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
+        assertSearchCapabilities(this.capabilities, searchBody);
         return this.driver.search({ collection, index, searchBody }, opts);
       },
     );
@@ -1143,6 +1168,7 @@ class ClientAdapter {
           }
         }
 
+        assertSearchCapabilities(this.capabilities, searchBody);
         return this.driver.search({ searchBody, targets }, opts);
       },
     );
@@ -1194,7 +1220,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        assertCapability(this.driver, "updateByQuery");
+        assertCapability(this.capabilities, this.driver, "updateByQuery");
         return this.driver.updateByQuery(
           index,
           collection,
@@ -1227,7 +1253,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        assertCapability(this.driver, "bulkUpdateByQuery");
+        assertCapability(this.capabilities, this.driver, "bulkUpdateByQuery");
         return this.driver.bulkUpdateByQuery(
           index,
           collection,
@@ -1310,7 +1336,7 @@ class ClientAdapter {
       (index: string, collection: string, mappings: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        assertCapability(this.driver, "updateMapping");
+        assertCapability(this.capabilities, this.driver, "updateMapping");
         return this.driver.updateMapping(index, collection, mappings);
       },
     );

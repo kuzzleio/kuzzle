@@ -220,6 +220,7 @@ vi.mock("../../../lib/util/distributedLock", async (importOriginal) => ({
 }));
 
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import { STORAGE_CAPABILITIES } from "../../../lib/types/storage/StorageDriver";
 import * as kerror from "../../../lib/kerror";
 import {
   MutexLockLostError,
@@ -812,22 +813,65 @@ describe("#core/storage/ClientAdapter", () => {
         ask("collection:shards:wait", "an-index", "a-collection"),
       ).toBeUndefined();
     });
+  });
 
+  describe("a driver without every capability", () => {
     it.each([
-      ["collection:update", "updateCollection"],
-      ["document:updateByQuery", "updateByQuery"],
-      ["bulk:updateByQuery", "bulkUpdateByQuery"],
-      ["mappings:update", "updateMapping"],
-      ["index:stats", "stats"],
-    ])("%s fails on a driver without %s", (event, method) => {
-      delete client[method];
+      ["collection:update", "updateCollection", "mappingUpdates"],
+      ["document:updateByQuery", "updateByQuery", "updateByQuery"],
+      ["bulk:updateByQuery", "bulkUpdateByQuery", "updateByQuery"],
+      ["mappings:update", "updateMapping", "mappingUpdates"],
+      ["index:stats", "stats", "stats"],
+    ])(
+      "%s is rejected unless %s's capability is declared",
+      (event, method, capability) => {
+        adapter.capabilities = new Set(
+          STORAGE_CAPABILITIES.filter((name) => name !== capability),
+        );
 
-      expect(() => ask(event, "an-index", "a-collection", {})).toThrow(
-        expect.objectContaining({
-          id: "core.fatal.assertion_failed",
-          message: expect.stringContaining(`"${method}"`),
-        }),
-      );
+        expect(() => ask(event, "an-index", "a-collection", {})).toThrow(
+          expect.objectContaining({
+            id: "services.storage_driver.unsupported_capability",
+            message: expect.stringContaining(`"${capability}"`),
+          }),
+        );
+        expect(client[method]).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["aggregations", "aggs"])(
+      "rejects a search with %s unless aggregations are declared",
+      (field) => {
+        adapter.capabilities = new Set(["stats"]);
+        const searchBody = {
+          [field]: { count: { value_count: { field: "a" } } },
+        };
+        const rejected = expect.objectContaining({
+          id: "services.storage_driver.unsupported_capability",
+          message: expect.stringContaining('"aggregations"'),
+        });
+
+        expect(() => ask("document:search", "i", "c", searchBody, {})).toThrow(
+          rejected,
+        );
+        expect(() =>
+          ask(
+            "document:multiSearch",
+            [{ collections: ["c"], index: "i" }],
+            searchBody,
+            {},
+          ),
+        ).toThrow(rejected);
+        expect(client.search).not.toHaveBeenCalled();
+      },
+    );
+
+    it("searches without aggregations whatever is declared", async () => {
+      adapter.capabilities = new Set();
+
+      await ask("document:search", "i", "c", { query: {} }, {});
+
+      expect(client.search).toHaveBeenCalledOnce();
     });
   });
 
