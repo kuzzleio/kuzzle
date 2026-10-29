@@ -100,7 +100,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | # | Step | Status | PR(s) | Detail |
 | --- | --- | --- | --- | --- |
 | 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | ✅ Done 2026-09-29 | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
-| 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | #PR | [detail](steps/01-storage-driver-contract.md) |
+| 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) | [detail](steps/01-storage-driver-contract.md) |
 | 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ⬜ To do | — | — |
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ⬜ To do | — | — |
 | 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | ⬜ To do | — | — |

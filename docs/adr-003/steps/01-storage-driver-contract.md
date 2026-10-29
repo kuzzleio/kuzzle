@@ -1,6 +1,6 @@
 # Step 01 — The `StorageDriver` contract
 
-**Status:** ✅ Done — frozen · **Opened / merged:** 2026-10-29 · **PR:** #PR · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done — frozen · **Opened / merged:** 2026-10-29 · **PR:** [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
