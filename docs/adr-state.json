@@ -34,7 +34,7 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–02 done, 03 open",
       "openStep": "docs/adr-003/steps/03-driver-loader.md",
-      "nextAction": "Open the step 03 PR (driver loader, branch feat/adr-0003-step-03-driver-loader), get the ES7 / ES8 matrix and SonarCloud green, merge it, then freeze the step and open step 04 (conformance kit).",
+      "nextAction": "Get step 03 PR #3101 (driver loader) the ES7 / ES8 matrix and SonarCloud green, merge it, then freeze the step and open step 04 (conformance kit).",
       "blockers": [],
       "openPoints": []
     },

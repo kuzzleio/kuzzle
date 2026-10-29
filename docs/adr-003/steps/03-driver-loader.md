@@ -1,6 +1,6 @@
 # Step 03 — The driver loader
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-29 · **PR:** — · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** 🟦 In progress · **Opened:** 2026-10-29 · **PR:** [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
