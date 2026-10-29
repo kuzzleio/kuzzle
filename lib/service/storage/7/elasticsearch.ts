@@ -291,7 +291,11 @@ export class ES7 {
     const { body } = await this._client.indices.stats(esRequest);
     const indexes: Record<
       string,
-      { collections: JSONObject[]; name: string; size: number }
+      {
+        collections: { documentCount: number; name: string; size: number }[];
+        name: string;
+        size: number;
+      }
     > = {};
     let size = 0;
 

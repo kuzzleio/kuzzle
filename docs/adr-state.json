@@ -1,7 +1,7 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-10-28",
-  "latestVersion": "2.60.0",
+  "snapshot": "2026-10-29",
+  "latestVersion": "2.60.1",
   "adrs": [
     {
       "id": "0001",
@@ -32,9 +32,9 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "accepted",
-      "statusLabel": "🟡 Accepted · step 00 done",
+      "statusLabel": "🟡 Accepted · steps 00–01 done",
       "openStep": null,
-      "nextAction": "Open step 01: the `StorageDriver` contract, its capability groups and manifest, exported by `kuzzle` and pinned by the typings gate.",
+      "nextAction": "Open step 02: ES7 / ES8 as thin internal drivers implementing `StorageDriver`, `ClientAdapter` consuming the contract, native client delegation; ES7 / ES8 matrix unchanged.",
       "blockers": [],
       "openPoints": []
     },
