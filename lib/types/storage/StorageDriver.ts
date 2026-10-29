@@ -275,6 +275,11 @@ export interface StorageDriverCore {
     fields: string[],
     options?: { refresh?: StorageRefresh; userId?: string | null },
   ): Promise<StorageDocument>;
+  /**
+   * Each document of the `m*` writes is `{ _id?, body }`, but `mUpsert`'s.
+   * A document that cannot be written is reported in `errors`, the others are
+   * written.
+   */
   mCreate(
     index: string,
     collection: string,
@@ -293,6 +298,7 @@ export interface StorageDriverCore {
     documents: JSONObject[],
     options?: StorageMWriteOptions & { retryOnConflict?: number },
   ): Promise<StorageMResult>;
+  /** Each document is `{ _id, changes, default? }` */
   mUpsert(
     index: string,
     collection: string,

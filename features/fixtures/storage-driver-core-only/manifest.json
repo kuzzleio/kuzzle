@@ -1,0 +1,4 @@
+{
+  "kuzzleVersion": ">=2.60.0 <3",
+  "capabilities": []
+}

@@ -66,6 +66,7 @@ Feature: Index Controller
 
   # index:stats =================================================================
 
+  @capability-stats
   Scenario: Check storage stats
     Given an index "index-storage-data"
     And a collection "index-storage-data":"yellow-taxi"

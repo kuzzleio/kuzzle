@@ -257,6 +257,18 @@ jobs:
         run: npm run test:unit:vitest
         shell: bash
 
+      # The storage driver conformance kit's cases only run against a real
+      # engine (ADR-0003 step 04): their coverage comes from this run, against
+      # the built-in Elasticsearch 8 driver. The `storage-conformance` job runs
+      # them against both majors.
+      - name: Conformance kit coverage
+        run: |
+          docker run -d -p 9200:9200 -e indices.id_field_data.enabled=true docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+          npm run test:conformance -- --coverage
+        shell: bash
+        env:
+          ES_VERSION: "8"
+
       # Holds the rule the aggregate gate cannot: every lib/**.ts this PR adds
       # must be executed by at least one spec. SonarCloud's 80% new_coverage is
       # an aggregate over the block, and an aggregate says nothing about its
@@ -313,6 +325,27 @@ jobs:
         uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
+
+  # The storage driver conformance kit (ADR-0003 step 04) against the built-in
+  # driver of each Elasticsearch major: what proves the kit that driver
+  # repositories run against their own engine. Docker only, like the local path.
+  storage-conformance:
+    name: Storage driver conformance
+    needs: [lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        es-version: [7, 8]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Conformance kit against the built-in Elasticsearch ${{ matrix.es-version }} driver
+        run: ./.ci/scripts/docker-test.sh conformance
+        shell: bash
+        env:
+          ES_VERSION: ${{ matrix.es-version }}
 
   build-and-run-kuzzle:
     needs: [lint]

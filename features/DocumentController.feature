@@ -989,6 +989,7 @@ Feature: Document Controller
       | age | 21 |
 
   @mappings
+  @capability-updateByQuery
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:
@@ -1015,6 +1016,7 @@ Feature: Document Controller
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
 
   @mappings
+  @capability-updateByQuery
   Scenario: UpdateByQuery with Koncorde filters
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:
