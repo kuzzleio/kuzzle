@@ -1,6 +1,14 @@
 export type StorageEngineElasticsearch = {
   /**
-   * Elasticsearch major version
+   * The npm package of the storage driver to run on (e.g.
+   * `"@kuzzleio/storage-es-9"`), installed next to `kuzzle`. Not set: the
+   * built-in Elasticsearch driver of `majorVersion`.
+   */
+  driver?: string;
+
+  /**
+   * Elasticsearch major version, which selects the built-in driver when
+   * `driver` is not set
    * @default "7"
    */
   majorVersion: "7" | "8";

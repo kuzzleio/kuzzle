@@ -97,3 +97,16 @@ description: Error codes definitions
 | services.koncorde.elastic_translation_error<br/><pre>0x01050001</pre>  | [BadRequestError](/core/2/api/errors/types#badrequesterror) <pre>(400)</pre> | An error occured while translating a Koncorde filter to an Elasticsearch query: %s | An error occured while translating a Koncorde filter to an Elasticsearch query |
 
 ---
+
+
+### Subdomain: 0x0106: storage_driver
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| services.storage_driver.not_found<br/><pre>0x01060001</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | Cannot find the storage driver "%s": %s. | The package named by services.storageEngine.driver cannot be found. Kuzzle does not start. |
+| services.storage_driver.invalid_manifest<br/><pre>0x01060002</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | Invalid manifest for the storage driver "%s": %s. | The manifest.json of the storage driver named by services.storageEngine.driver is missing or invalid. Kuzzle does not start. |
+| services.storage_driver.version_mismatch<br/><pre>0x01060003</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | The storage driver "%s" requires Kuzzle %s, this is Kuzzle %s. | The storage driver named by services.storageEngine.driver is not compatible with this Kuzzle version (kuzzleVersion in its manifest). Kuzzle does not start. |
+| services.storage_driver.invalid_driver<br/><pre>0x01060004</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | Invalid storage driver "%s": %s. | The storage driver named by services.storageEngine.driver does not export a storage driver class, or lacks a method of a capability its manifest declares. Kuzzle does not start. |
+| services.storage_driver.unsupported_capability<br/><pre>0x01060005</pre>  | [BadRequestError](/core/2/api/errors/types#badrequesterror) <pre>(400)</pre> | The storage engine does not support this request: its driver does not declare the "%s" capability. | The request needs a capability the storage driver does not declare in its manifest (aggregations, mapping updates, statistics or update by query). |
+
+---

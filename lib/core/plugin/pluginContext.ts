@@ -44,7 +44,7 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import { createNativeStorageClient } from "../../service/storage/builtInDrivers";
+import { createNativeStorageClient } from "../storage/storageDriverLoader";
 import { withLock } from "../../util/distributedLock";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";

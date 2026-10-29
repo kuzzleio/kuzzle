@@ -245,6 +245,41 @@ describe("#cluster/ClusterIdCardHandler", () => {
       expect(internals.disposed).toBe(true);
     });
 
+    /* A built-in node writes the card it wrote before the drivers, which is
+     * also what a node of an older Kuzzle reads. */
+    it("should leave the storage driver out of a built-in node's card", async () => {
+      await handler.createIdCard();
+
+      const [, , stored] = bus.ask.mock.calls.find(
+        ([event]) => event === "core:cache:internal:store",
+      )!;
+
+      expect(JSON.parse(stored as string)).not.toHaveProperty("storageDriver");
+    });
+
+    it("should write the node's external storage driver in its card", async () => {
+      handler = new ClusterIdCardHandler(
+        invalid<ConstructorParameters<typeof ClusterIdCardHandler>[0]>({
+          evictSelf,
+          heartbeatDelay: refreshDelay,
+          ip,
+          storageDriver: "@kuzzleio/storage-es-9@1.0.0",
+        }),
+      );
+      internals = handler as unknown as Internals;
+      internals.constructWorker = (path: string) => new WorkerStub(path);
+      vi.spyOn(
+        handler as unknown as { startTemporaryRefresh: () => void },
+        "startTemporaryRefresh",
+      ).mockImplementation(() => {});
+
+      await handler.createIdCard();
+
+      expect(handler.idCard?.serialize()).toMatchObject({
+        storageDriver: "@kuzzleio/storage-es-9@1.0.0",
+      });
+    });
+
     /* A renewal racing the disposal finds the card it renews deleted. */
     it("should not evict the node for an error reported once disposed", async () => {
       await handler.createIdCard();
@@ -329,6 +364,24 @@ describe("#cluster/ClusterIdCardHandler", () => {
       await handler.dispose();
 
       expect(bus.ask).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("IdCard", () => {
+    const fields = { birthdate: 1, id: "id1", ip: "ip1", topology: ["id2"] };
+
+    it("should round-trip the storage driver", () => {
+      const card = new IdCard({ ...fields, storageDriver: "driver@1.0.0" });
+
+      expect(IdCard.unserialize(card.serialize())).toEqual(card);
+      expect(card.serialize().storageDriver).toBe("driver@1.0.0");
+    });
+
+    it("should read a card without a storage driver as a built-in node's", () => {
+      const card = IdCard.unserialize(fields);
+
+      expect(card.storageDriver).toBeUndefined();
+      expect(card.serialize()).toEqual(fields);
     });
   });
 

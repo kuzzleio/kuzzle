@@ -352,6 +352,41 @@
           "class": "BadRequestError"
         }
       }
+    },
+    "storage_driver": {
+      "code": 6,
+      "errors": {
+        "not_found": {
+          "description": "The package named by services.storageEngine.driver cannot be found. Kuzzle does not start.",
+          "code": 1,
+          "message": "Cannot find the storage driver \"%s\": %s.",
+          "class": "InternalError"
+        },
+        "invalid_manifest": {
+          "description": "The manifest.json of the storage driver named by services.storageEngine.driver is missing or invalid. Kuzzle does not start.",
+          "code": 2,
+          "message": "Invalid manifest for the storage driver \"%s\": %s.",
+          "class": "InternalError"
+        },
+        "version_mismatch": {
+          "description": "The storage driver named by services.storageEngine.driver is not compatible with this Kuzzle version (kuzzleVersion in its manifest). Kuzzle does not start.",
+          "code": 3,
+          "message": "The storage driver \"%s\" requires Kuzzle %s, this is Kuzzle %s.",
+          "class": "InternalError"
+        },
+        "invalid_driver": {
+          "description": "The storage driver named by services.storageEngine.driver does not export a storage driver class, or lacks a method of a capability its manifest declares. Kuzzle does not start.",
+          "code": 4,
+          "message": "Invalid storage driver \"%s\": %s.",
+          "class": "InternalError"
+        },
+        "unsupported_capability": {
+          "description": "The request needs a capability the storage driver does not declare in its manifest (aggregations, mapping updates, statistics or update by query).",
+          "code": 5,
+          "message": "The storage engine does not support this request: its driver does not declare the \"%s\" capability.",
+          "class": "BadRequestError"
+        }
+      }
     }
   }
 }

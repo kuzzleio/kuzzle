@@ -44,6 +44,7 @@ import Long from "long";
 import type { JSONObject } from "../types/JSONObject";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import { selectStorageDriver } from "../core/storage/storageDriverLoader";
 import * as kerror from "../kerror";
 import { KuzzleError } from "../kerror/errors/kuzzleError";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
@@ -294,8 +295,18 @@ class ClusterNode {
    */
   public activity: NodeActivity[];
 
+  /**
+   * `<package name>@<version>` of this node's external storage driver,
+   * `undefined` with a built-in one: every node of a cluster must run the
+   * same
+   */
+  public readonly storageDriver?: string;
+
   constructor() {
     this.config = global.kuzzle.config.cluster;
+    this.storageDriver =
+      selectStorageDriver(global.kuzzle.config.services.storageEngine)
+        .identity ?? undefined;
     this.logger = global.kuzzle.log.child("cluster:node");
     this.heartbeatDelay = this.config.heartbeat;
 
@@ -828,6 +839,31 @@ class ClusterNode {
   }
 
   /**
+   * The built-in drivers are not compared, so that an Elasticsearch 7 / 8
+   * cluster joins exactly as it did before the drivers.
+   *
+   * @throws {cluster.join.storage_driver_mismatch} if a node runs another
+   *   storage driver than this one
+   */
+  private assertSameStorageDriver(nodes: IdCard[]): void {
+    const other = nodes.find(
+      (node) => node.storageDriver !== this.storageDriver,
+    );
+
+    if (other) {
+      const describe = (driver?: string) =>
+        driver ?? "a built-in Elasticsearch driver";
+
+      throw joinError.get(
+        "storage_driver_mismatch",
+        describe(this.storageDriver),
+        other.id,
+        describe(other.storageDriver),
+      );
+    }
+  }
+
+  /**
    * Discovers other active nodes from the cluster and, if other nodes exist,
    * starts a handshake procedure to sync this node and to make it able to
    * handle new client requests
@@ -883,6 +919,7 @@ class ClusterNode {
         do {
           nodes = await this.discoverNodes();
           debug("[CLUSTER] %s remote nodes discovered", nodes.length);
+          this.assertSameStorageDriver(nodes);
 
           // No other nodes detected = no handshake required
           if (nodes.length === 0) {

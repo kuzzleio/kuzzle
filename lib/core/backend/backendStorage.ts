@@ -21,7 +21,7 @@
 
 import type { JSONObject } from "../../types/JSONObject";
 
-import { createNativeStorageClient } from "../../service/storage/builtInDrivers";
+import { createNativeStorageClient } from "../storage/storageDriverLoader";
 import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {

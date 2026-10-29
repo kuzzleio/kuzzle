@@ -81,6 +81,16 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
   return { ClusterIdCardHandler: IdCardHandlerStub, IdCard: actual.IdCard };
 });
 
+/** What the storage driver loader answers: a built-in driver unless a case
+ * names an external one before building its node. */
+const storageDriver = vi.hoisted(() => ({
+  identity: null as string | null,
+}));
+
+vi.mock("../../lib/core/storage/storageDriverLoader", () => ({
+  selectStorageDriver: () => ({ identity: storageDriver.identity }),
+}));
+
 vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
   const { withLock } = await import("./nodeFixture");
 
@@ -112,6 +122,7 @@ const idCard = (fields: {
   topology?: string[];
   birthdate?: number;
   ip?: string;
+  storageDriver?: string;
 }) => new IdCard({ birthdate: 0, ip: "0.0.0.0", topology: [], ...fields });
 
 describe("ClusterNode", () => {
@@ -157,7 +168,8 @@ describe("ClusterNode", () => {
 
     kuzzle = stubKuzzle({
       ...bus,
-      config: { cluster: clusterConfig() },
+      // `services.storageEngine` is only handed to the mocked driver loader
+      config: { cluster: clusterConfig(), services: { storageEngine: {} } },
       log: {
         child: () => ({
           debug: vi.fn(),
@@ -171,6 +183,7 @@ describe("ClusterNode", () => {
       state: kuzzleStateEnum.RUNNING,
     });
 
+    storageDriver.identity = null;
     node = new ClusterNode();
   });
 
@@ -815,6 +828,71 @@ describe("ClusterNode", () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    describe("when the nodes run different storage drivers", () => {
+      const es9 = "@kuzzleio/storage-es-9";
+
+      /* The node is built after the driver is chosen: it reads it once. */
+      const nodeRunning = (identity: string | null) => {
+        storageDriver.identity = identity;
+        node = new ClusterNode();
+      };
+
+      const cardsRunning = (driver?: string) =>
+        idCards().map((card) =>
+          idCard({ id: card.id, ip: card.ip, storageDriver: driver }),
+        );
+
+      it("refuses a built-in node in a cluster running an external driver", async () => {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message: `This node runs a built-in Elasticsearch driver, but the cluster node bar runs ${es9}@1.0.0: every cluster node must run the same storage driver.`,
+        });
+
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(node.remoteNodes.size).toBe(0);
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it("refuses an external driver in a built-in cluster", async () => {
+        nodeRunning(`${es9}@1.0.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(cardsRunning());
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+        });
+      });
+
+      it("refuses another version of the same driver", async () => {
+        nodeRunning(`${es9}@1.1.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message: `This node runs ${es9}@1.1.0, but the cluster node bar runs ${es9}@1.0.0: every cluster node must run the same storage driver.`,
+        });
+      });
+
+      it("joins a cluster running the same driver", async () => {
+        nodeRunning(`${es9}@1.0.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        await node.handshake();
+
+        expect(node.command.getFullState).toHaveBeenCalledOnce();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
     });
 
     describe("when another node has this node's IP", () => {

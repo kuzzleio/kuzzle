@@ -37,6 +37,11 @@ export type SerializedIdCard = {
   ip: string;
   birthdate: number;
   topology: string[];
+  /**
+   * `<package name>@<version>` of the node's external storage driver. Not
+   * set with a built-in driver, as on the nodes that predate the drivers.
+   */
+  storageDriver?: string;
 };
 
 export class IdCard {
@@ -68,20 +73,41 @@ export class IdCard {
    */
   public topology: Set<string>;
 
-  constructor({ id, ip, birthdate, topology }: SerializedIdCard) {
+  /**
+   * The node's external storage driver, `<package name>@<version>`;
+   * `undefined` with a built-in one
+   */
+  public readonly storageDriver?: string;
+
+  constructor({
+    id,
+    ip,
+    birthdate,
+    topology,
+    storageDriver,
+  }: SerializedIdCard) {
     this.id = id;
     this.ip = ip;
     this.birthdate = birthdate;
     this.topology = new Set(topology);
+    this.storageDriver = storageDriver;
   }
 
   serialize(): SerializedIdCard {
-    return {
+    const serialized: SerializedIdCard = {
       birthdate: this.birthdate,
       id: this.id,
       ip: this.ip,
       topology: Array.from(this.topology),
     };
+
+    // Left out with a built-in driver: the card stays what it was before the
+    // drivers
+    if (this.storageDriver !== undefined) {
+      serialized.storageDriver = this.storageDriver;
+    }
+
+    return serialized;
   }
 
   static unserialize(serialized: SerializedIdCard): IdCard {
@@ -193,6 +219,7 @@ export class ClusterIdCardHandler {
         birthdate: Date.now(),
         id: this.nodeId,
         ip: this.ip,
+        storageDriver: this.node.storageDriver,
         topology: [],
       });
 

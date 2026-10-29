@@ -32,9 +32,9 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "active",
-      "statusLabel": "🔵 Active · steps 00–01 done, 02 open",
-      "openStep": "docs/adr-003/steps/02-builtin-drivers.md",
-      "nextAction": "Merge step 02 PR #3100 (ES7 / ES8 built-in drivers) once CI and SonarCloud are green, then freeze the step and open step 03 (driver loader).",
+      "statusLabel": "🔵 Active · steps 00–02 done, 03 open",
+      "openStep": "docs/adr-003/steps/03-driver-loader.md",
+      "nextAction": "Merge step 03 PR #3101 (driver loader) once CI and SonarCloud are green, then freeze the step and open step 04 (conformance kit).",
       "blockers": [],
       "openPoints": []
     },
