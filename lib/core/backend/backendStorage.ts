@@ -56,12 +56,10 @@ export class BackendStorage extends ApplicationManager {
   get storageClient(): any {
     const kuzzle = this._kuzzle;
 
-    if (!this._client) {
-      this._client = createNativeStorageClient(
-        kuzzle.config.services.storageEngine,
-        kuzzle.config.services.storageEngine.client,
-      );
-    }
+    this._client ??= createNativeStorageClient(
+      kuzzle.config.services.storageEngine,
+      kuzzle.config.services.storageEngine.client,
+    );
 
     return this._client;
   }

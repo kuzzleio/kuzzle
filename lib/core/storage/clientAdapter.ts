@@ -1466,12 +1466,12 @@ class ClientAdapter {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
 
-        const { errors } = await this.driver.import(
-          index,
-          collection,
-          payload,
-          { refresh },
-        );
+        const imported = this.driver.import(index, collection, payload, {
+          refresh,
+        });
+        // One collection at a time: the first failure stops the load before
+        // the next collection is written.
+        const { errors } = await imported; // NOSONAR
 
         if (errors.length > 0) {
           throw servicesError.get("import_failed", errors);
