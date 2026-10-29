@@ -452,6 +452,7 @@ export type StorageDriver<TNativeClient = unknown> =
  * What a driver package exports: Kuzzle builds one instance per storage scope
  * (public and private indexes).
  */
-export interface StorageDriverClass<TNativeClient = unknown> {
-  new (config: JSONObject, scope: storeScopeEnum): StorageDriver<TNativeClient>;
-}
+export type StorageDriverClass<TNativeClient = unknown> = new (
+  config: JSONObject,
+  scope: storeScopeEnum,
+) => StorageDriver<TNativeClient>;
