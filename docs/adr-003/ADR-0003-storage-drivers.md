@@ -33,7 +33,7 @@ Measured on `2-dev` (2026-09-29):
 4. **Selected by configuration.** `services.storageEngine.driver: "<package name>"` in `.kuzzlerc`; Kuzzle `require()`s it at startup. No auto-discovery (ambiguous with several drivers installed). Without `driver`, the built-in drivers are selected by `majorVersion` exactly as today. `majorVersion` is deprecated when the ES9 driver ships (step 05) — documentation and a startup notice only; it keeps working unchanged until v3.
 5. **The contract is exported by `kuzzle`.** Drivers import `StorageDriver`, the capability types and the conformance kit from `kuzzle` and declare it as a `peerDependency`. Pinned by the typings gate (`tests/typings/`), like the other contract types of ADR-0002.
 6. **One repository per driver.** `kuzzleio/<driver>`, each with its own CI against its real engine.
-7. **Native client through the driver.** Each driver exposes its own typed native client (`getNativeClient()`); `app.storage.storageClient`, `StorageClient` and `ESClient` delegate to it — same names, no break.
+7. **Native client through the driver.** Each driver class builds its own typed native client (`createNativeClient(clientConfig)`); `app.storage.storageClient`, `StorageClient` and `ESClient` delegate to it — same names, same behaviour (a new client each, as today), no break.
 8. **Hard backward-compatibility rule for v2: an existing ES7 or ES8 stack changes nothing** — same `.kuzzlerc`, same `package.json`, no package to add — through every v2 release, including the one that brings ES9. Enforced by the existing ES7 / ES8 functional matrix, run on its untouched configuration.
 9. **Every cluster node runs the same driver.** A node whose driver (package name and version) differs from the cluster's is refused at join, with a dedicated error.
 10. **v2 is non-breaking; extraction is v3.** In v2, ES7 and ES8 become **thin internal drivers** wrapping today's classes as-is (no factorisation of the shared code), still shipped with the core; new engines (ES9 first, then OpenSearch) are external drivers only. The next major moves ES7 and ES8 to their own packages and drops `sdk-es7` / `sdk-es8` from the core's dependencies.
@@ -76,7 +76,7 @@ StorageEngine ── ClientAdapter(PUBLIC)  ──► StorageDriver instance ─
                          │ capability check → dedicated error when undeclared
                 API controllers / Repository / plugins
 
-app.storage.storageClient · StorageClient · context.constructors.ESClient  ──►  driver.getNativeClient()
+app.storage.storageClient · StorageClient · context.constructors.ESClient  ──►  DriverClass.createNativeClient()
 
 v2 built-in drivers : es7, es8 (thin adapters over today's classes)
 external drivers    : ES9 (first), OpenSearch 2 / 3 · SQL at v3
@@ -87,9 +87,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 
 ## Cold start
 
-**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Step 00 (`ESClient` fix) shipped in 2.57.0. Step 01 is done: the `StorageDriver` contract (core, four capability groups, `manifest.json`) is exported by `kuzzle`, and the built-in ES7 / ES8 classes satisfy it as they are.
+**Where we are (2026-10-29):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Step 00 (`ESClient` fix) shipped in 2.57.0. Step 01 is done: the `StorageDriver` contract (core, four capability groups, `manifest.json`) is exported by `kuzzle`. Step 02 is in progress: ES7 / ES8 run as built-in drivers behind `ClientAdapter`, and the raw client surfaces build their client through the driver.
 
-**Next action:** open step 02 (ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract).
+**Next action:** land step 02 ([detail](steps/02-builtin-drivers.md)) once the ES7 / ES8 functional matrix is green.
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -101,7 +101,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | --- | --- | --- | --- | --- |
 | 00 | Fix: `context.constructors.ESClient` built an ES7 client on ES8 deployments | ✅ Done 2026-09-29 | [#2947](https://github.com/kuzzleio/kuzzle/pull/2947) | [detail](steps/00-fix-plugin-esclient.md) |
 | 01 | Contract: `StorageDriver` core + capability groups + manifest, exported by `kuzzle`, pinned by the typings gate | ✅ Done 2026-10-29 | [#3099](https://github.com/kuzzleio/kuzzle/pull/3099) | [detail](steps/01-storage-driver-contract.md) |
-| 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | ⬜ To do | — | — |
+| 02 | ES7 / ES8 as thin internal drivers; `ClientAdapter` consumes the contract; native client delegation; ES7 / ES8 matrix unchanged | 🟦 In progress | — | [detail](steps/02-builtin-drivers.md) |
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ⬜ To do | — | — |
 | 04 | Conformance kit (vitest) exported with the contract; capability tags in the functional suite | ⬜ To do | — | — |
 | 05 | First external driver: `@kuzzleio/storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc + startup notice) | ⬜ To do | — | — |
@@ -134,6 +134,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 - **2026-10-29** — **Contract methods = what `ClientAdapter` calls today, as they are**; what Kuzzle itself needs (scroll, `deleteByQuery`, `mExecute`, `import`) is core. [step 01](steps/01-storage-driver-contract.md)
 - **2026-10-29** — **Capability groups: `aggregations`, `mappingUpdates`, `stats`, `updateByQuery`**; engine hooks (aliases, shard wait) are optional without a capability. [step 01](steps/01-storage-driver-contract.md)
 - **2026-10-29** — **Manifest = `manifest.json` at the package root** (`kuzzleVersion`, `capabilities`), read before the driver's code runs. [step 01](steps/01-storage-driver-contract.md)
+- **2026-10-29** — **The driver class builds the native client** (static `createNativeClient(clientConfig)`, replacing step 01's instance `getNativeClient()`): the raw client surfaces keep building a new client each, as today. [step 02](steps/02-builtin-drivers.md)
 - **2026-09-29** — **Out of scope:** cache engine; data migration between engines; ADR written now, implementation after 2.57 stable.
 
 ---
