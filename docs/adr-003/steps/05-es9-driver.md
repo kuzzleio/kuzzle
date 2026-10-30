@@ -1,6 +1,6 @@
 # Step 05 — The first external driver: Elasticsearch 9
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** [#3103](https://github.com/kuzzleio/kuzzle/pull/3103) (part A) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done 2026-10-30 · **Opened:** 2026-10-30 · **PRs:** [#3103](https://github.com/kuzzleio/kuzzle/pull/3103) (part A), [#3108](https://github.com/kuzzleio/kuzzle/pull/3108) (unscoped name), [#3109](https://github.com/kuzzleio/kuzzle/pull/3109) (part C) · Frozen · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
@@ -23,7 +23,7 @@ changes nothing (decision 8).
 | --- | --- | --- | --- |
 | A | What a driver needs from `kuzzle` and cannot copy: `storageError` (the `services.storage.*` errors); `kuzzle` beta carrying it and the conformance kit | kuzzle | ✅ #3103 merged; `2.61.0-beta.1` published 2026-10-30 |
 | B | The driver: ES8 code adapted to the ES9 client, manifest, conformance kit in its CI on ES9, `1.0.0-beta.1` | storage-es-9 | ✅ `kuzzle-storage-es-9@1.0.0-beta.1` published 2026-10-30; repo pushed, CI green on ES 9.0.8 / 9.5.5 |
-| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc); warning when `driver` and `majorVersion` are both set; docs | kuzzle | 🟦 |
+| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc); warning when `driver` and `majorVersion` are both set; docs | kuzzle | ✅ #3109 merged 2026-10-30 |
 
 - **No startup deprecation notice for `majorVersion` in v2** (maintainer, 2026-10-30): an ES7 / ES8 stack has nothing
   else to use in v2, so the notice would show at every start with no action possible. Kuzzle warns only when `driver`
@@ -71,4 +71,6 @@ changes nothing (decision 8).
 - Driver, conformance kit: 32 / 32 on Elasticsearch 9.0.8 and 9.5.5 (local build of `kuzzle`).
 - Functional websocket suite on ES 9.5.5 with the packed driver (Docker path, `--tags "not @http and not @network"`):
   160 / 164 passed, 3 skipped; the one failure is `Websocket.feature:5`, the Docker path's known localhost limit.
-
+- Part C in CI ([#3109](https://github.com/kuzzleio/kuzzle/pull/3109)): `functional-tests-es9-driver` green on the five
+  suites with `kuzzle-storage-es-9@beta` from npm; the ES7 / ES8 matrix green and unchanged.
+- Left after the freeze, outside this repository: merge `kuzzleio/storage-es-9#1` (manual release trigger) into `beta`.
