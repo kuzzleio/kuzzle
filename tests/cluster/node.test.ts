@@ -831,7 +831,7 @@ describe("ClusterNode", () => {
     });
 
     describe("when the nodes run different storage drivers", () => {
-      const es9 = "@kuzzleio/storage-es-9";
+      const es9 = "kuzzle-storage-es-9";
 
       /* The node is built after the driver is chosen: it reads it once. */
       const nodeRunning = (identity: string | null) => {

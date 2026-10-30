@@ -77,7 +77,7 @@ describe("#core/storage/StorageEngine", () => {
     });
 
     it("logs the external storage driver it runs on", () => {
-      selected.description = selected.identity = "@kuzzleio/storage-es-9@1.0.0";
+      selected.description = selected.identity = "kuzzle-storage-es-9@1.0.0";
       logger.info.mockClear();
 
       try {
@@ -88,7 +88,7 @@ describe("#core/storage/StorageEngine", () => {
       }
 
       expect(logger.info).toHaveBeenCalledExactlyOnceWith(
-        "[ℹ] Storage driver: @kuzzleio/storage-es-9@1.0.0",
+        "[ℹ] Storage driver: kuzzle-storage-es-9@1.0.0",
       );
     });
   });

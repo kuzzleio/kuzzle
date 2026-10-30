@@ -24,9 +24,9 @@ Env vars:
   STORAGE_DRIVER  core-only: the functional tests run on a storage driver
                   declaring no optional capability (ADR-0003 step 04)
                   es9: they run on Elasticsearch 9 with the external driver
-                  @kuzzleio/storage-es-9 (ADR-0003 step 05)
+                  kuzzle-storage-es-9 (ADR-0003 step 05)
   ES9_DRIVER      What npm installs as that driver (default:
-                  @kuzzleio/storage-es-9@beta); a local .tgz works too
+                  kuzzle-storage-es-9@beta); a local .tgz works too
 
 Examples:
   .ci/scripts/docker-test.sh unit
@@ -95,7 +95,7 @@ run_conformance() {
 # Installs the external Elasticsearch 9 driver as an application would
 # (.ci/scripts/stage-es9-driver.sh), in a container: no local npm needed.
 stage_es9_driver() {
-  local spec="${ES9_DRIVER:-@kuzzleio/storage-es-9@beta}"
+  local spec="${ES9_DRIVER:-kuzzle-storage-es-9@beta}"
   local mounts=(-v "$ROOT_DIR:/var/app")
 
   if [ -f "$spec" ]; then
