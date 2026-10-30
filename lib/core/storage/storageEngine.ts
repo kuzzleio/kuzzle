@@ -21,6 +21,7 @@
 
 import { wrap } from "../../kerror";
 import ClientAdapter from "./clientAdapter";
+import { selectStorageDriver } from "./storageDriverLoader";
 import { storeScopeEnum } from "./storeScopeEnum";
 import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
@@ -40,8 +41,14 @@ class StorageEngine {
     this.private = new ClientAdapter(storeScopeEnum.PRIVATE);
     this.logger = global.kuzzle.log.child("core:storage:storageEngine");
 
+    const { description, identity } = selectStorageDriver(
+      global.kuzzle.config.services.storageEngine,
+    );
+
     this.logger.info(
-      `[ℹ] Elasticsearch configuration is set to major version : ${global.kuzzle.config.services.storageEngine.majorVersion}`,
+      identity === null
+        ? `[ℹ] Elasticsearch configuration is set to major version : ${global.kuzzle.config.services.storageEngine.majorVersion}`
+        : `[ℹ] Storage driver: ${description}`,
     );
   }
 

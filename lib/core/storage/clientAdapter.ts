@@ -22,7 +22,18 @@
 import type { JSONObject } from "../../types/JSONObject";
 import type { ValidatedTarget } from "../../types/Target";
 
-import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { StorageService } from "../../service/storage/storageService";
+import {
+  STORAGE_CAPABILITIES,
+  type StorageCapability,
+  type StorageDriver,
+} from "../../types/storage/StorageDriver";
+import {
+  assertDeclaredCapabilities,
+  CAPABILITY_METHODS,
+  selectStorageDriver,
+  type CapabilityMethod,
+} from "./storageDriverLoader";
 import { IndexCache, type CollectionLock } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
@@ -65,32 +76,76 @@ const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
   refresh: false,
 });
 
+const driverError = kerror.wrap("services", "storage_driver");
+
+/**
+ * @throws {services.storage_driver.unsupported_capability} if the driver does
+ *   not declare the capability of `method`
+ */
+function assertCapability<TMethod extends CapabilityMethod>(
+  capabilities: ReadonlySet<StorageCapability>,
+  driver: StorageDriver,
+  method: TMethod,
+): asserts driver is StorageDriver & Required<Pick<StorageDriver, TMethod>> {
+  const capability = STORAGE_CAPABILITIES.find((name) =>
+    CAPABILITY_METHODS[name].includes(method),
+  );
+
+  // Every capability method has its capability, and the loader checked that
+  // a declared capability has its methods: the first and last tests are what
+  // narrow the types.
+  if (
+    capability === undefined ||
+    !capabilities.has(capability) ||
+    typeof driver[method] !== "function"
+  ) {
+    throw driverError.get("unsupported_capability", capability);
+  }
+}
+
+/**
+ * @throws {services.storage_driver.unsupported_capability} if the search body
+ *   has aggregations the driver does not declare
+ */
+function assertSearchCapabilities(
+  capabilities: ReadonlySet<StorageCapability>,
+  searchBody: JSONObject | undefined,
+): void {
+  if (
+    !capabilities.has("aggregations") &&
+    (searchBody?.aggregations !== undefined || searchBody?.aggs !== undefined)
+  ) {
+    throw driverError.get("unsupported_capability", "aggregations");
+  }
+}
+
 /**
  * Storage client adapter to perform validation on index/collection existence
  * and to maintain the index/collection cache.
  */
 class ClientAdapter {
-  public es: Elasticsearch;
-  /**
-   * The version-specific ES service: `ES7 | ES8`, as `Elasticsearch` declares
-   * it. Each call below type-checks against both.
-   */
-  public client: Elasticsearch["client"];
+  public service: StorageService;
+  /** This scope's storage driver instance */
+  public driver: StorageDriver;
+  /** The capability groups the driver declares */
+  public capabilities: ReadonlySet<StorageCapability>;
   public scope: storeScopeEnum;
   public cache: IndexCache;
 
   constructor(scope: storeScopeEnum) {
-    this.es = new Elasticsearch(
-      global.kuzzle.config.services.storageEngine,
-      scope,
-    );
-    this.client = this.es.client;
+    const config = global.kuzzle.config.services.storageEngine;
+    const selected = selectStorageDriver(config);
+
+    this.service = new StorageService(selected.Driver, config, scope);
+    this.driver = this.service.driver;
+    this.capabilities = selected.capabilities;
+    assertDeclaredCapabilities(this.driver, selected);
     this.scope = scope;
     this.cache = new IndexCache();
   }
 
   async init() {
-    await this.es.init();
+    await this.service.init();
     await this.populateCache();
 
     this.registerCollectionEvents();
@@ -128,7 +183,7 @@ class ClientAdapter {
      * @returns {Promise.<Object>}
      */
     global.kuzzle.onAsk(`core:storage:${this.scope}:info:get`, () =>
-      this.client.info(),
+      this.driver.info(),
     );
 
     /**
@@ -139,7 +194,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:translate`,
-      (filters: JSONObject) => this.client.translateKoncordeFilters(filters),
+      (filters: JSONObject) => this.driver.translateKoncordeFilters(filters),
     );
   }
 
@@ -153,7 +208,7 @@ class ClientAdapter {
 
     if (!indexCacheOnly) {
       try {
-        await this.client.createIndex(index);
+        await this.driver.createIndex(index);
       } catch (error) {
         // The index exists in storage but not in this node's cache: a peer
         // created it and its cache broadcast never reached this node (e.g. the
@@ -189,7 +244,7 @@ class ClientAdapter {
     if (!indexCacheOnly) {
       // Creating an existing collection updates its mappings and settings
       this.cache.assertCollectionWritable(index, collection);
-      await this.client.createCollection(index, collection, opts);
+      await this.driver.createCollection(index, collection, opts);
     }
 
     this.cache.addCollection(index, collection);
@@ -207,7 +262,7 @@ class ClientAdapter {
     this.cache.assertIndexExists(index);
     this.cache.assertIndexWritable(index);
 
-    await this.client.deleteIndex(index);
+    await this.driver.deleteIndex(index);
 
     this.cache.removeIndex(index);
 
@@ -223,7 +278,7 @@ class ClientAdapter {
       this.cache.assertIndexWritable(index);
     }
 
-    const deleted = await this.client.deleteIndexes(indexes);
+    const deleted = await this.driver.deleteIndexes(indexes);
 
     if (deleted.length > 0) {
       for (const index of deleted) {
@@ -243,7 +298,7 @@ class ClientAdapter {
     this.cache.assertCollectionExists(index, collection);
     this.cache.assertCollectionWritable(index, collection);
 
-    await this.client.deleteCollection(index, collection);
+    await this.driver.deleteCollection(index, collection);
 
     this.cache.removeCollection(index, collection);
 
@@ -260,29 +315,27 @@ class ClientAdapter {
    */
   async populateCache() {
     if (global.kuzzle.config.services.storageEngine.generateMissingAliases) {
-      await this.client.generateMissingAliases();
+      await this.driver.generateMissingAliases?.();
     }
 
     await this.reloadCache();
   }
 
   /**
-   * Adds the indexes and collections found in storage to the index cache,
-   * then reloads the collection write locks. Unlike `populateCache`, it never
-   * writes to storage.
+   * Replaces the index cache with the indexes and collections found in
+   * storage, then reloads the collection write locks. Unlike `populateCache`,
+   * it never writes to storage.
+   *
+   * Replaced, not merged: an index or a collection a peer deleted before this
+   * node joined the cluster must go too (kuzzle#3040).
    */
   async reloadCache(): Promise<void> {
+    const snapshot = this.cache.snapshotIndexes();
     // `client` is untyped (see the field's comment), so the schema shape is
     // stated here: index name -> its collection names.
-    const schema: Record<string, string[]> = await this.client.getSchema();
+    const schema: Record<string, string[]> = await this.driver.getSchema();
 
-    for (const [index, collections] of Object.entries(schema)) {
-      this.cache.addIndex(index);
-
-      for (const collection of collections) {
-        this.cache.addCollection(index, collection);
-      }
-    }
+    this.cache.replaceIndexes(schema, snapshot);
 
     await this.loadLocks();
   }
@@ -292,19 +345,28 @@ class ClientAdapter {
    * stored in Redis.
    */
   async loadLocks(): Promise<void> {
+    const snapshot = this.cache.snapshotLocks();
     const fields: Record<string, string> | null = await global.kuzzle.ask(
       "core:cache:internal:execute",
       "hgetall",
       this.locksKey,
     );
-
-    this.cache.clearLocks();
+    const stored = new Map<string, Map<string, CollectionLock>>();
 
     for (const [field, value] of Object.entries(fields ?? {})) {
       const [index, collection]: [string, string] = JSON.parse(field);
 
-      this.cache.setLock(index, collection, JSON.parse(value));
+      let collections = stored.get(index);
+
+      if (collections === undefined) {
+        collections = new Map();
+        stored.set(index, collections);
+      }
+
+      collections.set(collection, JSON.parse(value));
     }
+
+    this.cache.replaceLocks(stored, snapshot);
   }
 
   /**
@@ -484,7 +546,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:collection:settings:get`,
       (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.getSettings(index, collection);
+        return this.driver.getSettings(index, collection);
       },
     );
 
@@ -497,7 +559,7 @@ class ClientAdapter {
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:shards:wait`,
       (index: string, collection: string) =>
-        this.client.waitForCollectionShards(index, collection),
+        this.driver.waitForCollectionShards?.(index, collection),
     );
 
     /**
@@ -531,7 +593,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:collection:refresh`,
       (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.refreshCollection(index, collection);
+        return this.driver.refreshCollection(index, collection);
       },
     );
 
@@ -546,7 +608,7 @@ class ClientAdapter {
       (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.truncateCollection(index, collection);
+        return this.driver.truncateCollection(index, collection);
       },
     );
 
@@ -562,7 +624,8 @@ class ClientAdapter {
       (index: string, collection: string, changes: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.updateCollection(index, collection, changes);
+        assertCapability(this.capabilities, this.driver, "updateCollection");
+        return this.driver.updateCollection(index, collection, changes);
       },
     );
   }
@@ -624,9 +687,10 @@ class ClientAdapter {
      * Return detailed storage stats within this adapter's scope
      * @returns {Promise.<Object>}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:stats`, () =>
-      this.client.stats(),
-    );
+    global.kuzzle.onAsk(`core:storage:${this.scope}:index:stats`, () => {
+      assertCapability(this.capabilities, this.driver, "stats");
+      return this.driver.stats();
+    });
   }
 
   registerDocumentEvents() {
@@ -649,7 +713,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.import(index, collection, bulk, opts);
+        return this.driver.import(index, collection, bulk, opts);
       },
     );
 
@@ -665,7 +729,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:count`,
       (index: string, collection: string, query: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.count(index, collection, query);
+        return this.driver.count(index, collection, query);
       },
     );
 
@@ -688,7 +752,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.create(index, collection, content, opts);
+        return this.driver.create(index, collection, content, opts);
       },
     );
 
@@ -713,7 +777,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.createOrReplace(
+        return this.driver.createOrReplace(
           index,
           collection,
           id,
@@ -737,7 +801,7 @@ class ClientAdapter {
       (index: string, collection: string, id: string, opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.delete(index, collection, id, opts);
+        return this.driver.delete(index, collection, id, opts);
       },
     );
 
@@ -760,7 +824,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.deleteByQuery(index, collection, query, opts);
+        return this.driver.deleteByQuery(index, collection, query, opts);
       },
     );
 
@@ -785,7 +849,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.deleteFields(index, collection, id, fields, opts);
+        return this.driver.deleteFields(index, collection, id, fields, opts);
       },
     );
 
@@ -801,7 +865,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:exist`,
       (index: string, collection: string, id: string) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.exists(index, collection, id);
+        return this.driver.exists(index, collection, id);
       },
     );
 
@@ -817,7 +881,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:mExists`,
       (index: string, collection: string, ids: string[]) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.mExists(index, collection, ids);
+        return this.driver.mExists(index, collection, ids);
       },
     );
 
@@ -833,7 +897,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:get`,
       (index: string, collection: string, id: string) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.get(index, collection, id);
+        return this.driver.get(index, collection, id);
       },
     );
 
@@ -867,7 +931,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mCreate(index, collection, documents, opts);
+        return this.driver.mCreate(index, collection, documents, opts);
       },
     );
 
@@ -890,7 +954,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mCreateOrReplace(index, collection, documents, opts);
+        return this.driver.mCreateOrReplace(index, collection, documents, opts);
       },
     );
 
@@ -908,7 +972,7 @@ class ClientAdapter {
       (index: string, collection: string, ids: string[], opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mDelete(index, collection, ids, opts);
+        return this.driver.mDelete(index, collection, ids, opts);
       },
     );
 
@@ -931,7 +995,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mReplace(index, collection, documents, opts);
+        return this.driver.mReplace(index, collection, documents, opts);
       },
     );
 
@@ -954,7 +1018,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mUpdate(index, collection, documents, opts);
+        return this.driver.mUpdate(index, collection, documents, opts);
       },
     );
 
@@ -978,7 +1042,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.mUpsert(index, collection, documents, opts);
+        return this.driver.mUpsert(index, collection, documents, opts);
       },
     );
 
@@ -1002,7 +1066,7 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.mExecute(index, collection, query, callback, opts);
+        return this.driver.mExecute(index, collection, query, callback, opts);
       },
     );
 
@@ -1018,7 +1082,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:mGet`,
       (index: string, collection: string, ids: string[]) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.mGet(index, collection, ids);
+        return this.driver.mGet(index, collection, ids);
       },
     );
 
@@ -1043,7 +1107,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.replace(index, collection, id, content, opts);
+        return this.driver.replace(index, collection, id, content, opts);
       },
     );
 
@@ -1057,7 +1121,7 @@ class ClientAdapter {
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:scroll`,
       (scrollId: string, opts: JSONObject) =>
-        this.client.scroll(scrollId, opts),
+        this.driver.scroll(scrollId, opts),
     );
 
     /**
@@ -1078,7 +1142,8 @@ class ClientAdapter {
         opts: JSONObject,
       ) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.search({ collection, index, searchBody }, opts);
+        assertSearchCapabilities(this.capabilities, searchBody);
+        return this.driver.search({ collection, index, searchBody }, opts);
       },
     );
 
@@ -1103,7 +1168,8 @@ class ClientAdapter {
           }
         }
 
-        return this.client.search({ searchBody, targets }, opts);
+        assertSearchCapabilities(this.capabilities, searchBody);
+        return this.driver.search({ searchBody, targets }, opts);
       },
     );
 
@@ -1128,7 +1194,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.update(index, collection, id, content, opts);
+        return this.driver.update(index, collection, id, content, opts);
       },
     );
 
@@ -1154,7 +1220,8 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.updateByQuery(
+        assertCapability(this.capabilities, this.driver, "updateByQuery");
+        return this.driver.updateByQuery(
           index,
           collection,
           query,
@@ -1186,7 +1253,8 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.bulkUpdateByQuery(
+        assertCapability(this.capabilities, this.driver, "bulkUpdateByQuery");
+        return this.driver.bulkUpdateByQuery(
           index,
           collection,
           query,
@@ -1218,7 +1286,7 @@ class ClientAdapter {
       ) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.upsert(index, collection, id, content, opts);
+        return this.driver.upsert(index, collection, id, content, opts);
       },
     );
   }
@@ -1237,7 +1305,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:mappings:get`,
       (index: string, collection: string, opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.getMapping(index, collection, opts);
+        return this.driver.getMapping(index, collection, opts);
       },
     );
 
@@ -1268,7 +1336,8 @@ class ClientAdapter {
       (index: string, collection: string, mappings: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
-        return this.client.updateMapping(index, collection, mappings);
+        assertCapability(this.capabilities, this.driver, "updateMapping");
+        return this.driver.updateMapping(index, collection, mappings);
       },
     );
   }
@@ -1423,12 +1492,12 @@ class ClientAdapter {
         this.cache.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
 
-        const { errors } = await this.client.import(
-          index,
-          collection,
-          payload,
-          { refresh },
-        );
+        const imported = this.driver.import(index, collection, payload, {
+          refresh,
+        });
+        // One collection at a time: the first failure stops the load before
+        // the next collection is written.
+        const { errors } = await imported; // NOSONAR
 
         if (errors.length > 0) {
           throw servicesError.get("import_failed", errors);
@@ -1523,7 +1592,7 @@ class ClientAdapter {
     );
 
     if (options.refresh && !options.indexCacheOnly) {
-      await this.client.refreshCollection(index, collection);
+      await this.driver.refreshCollection(index, collection);
     }
   }
 }

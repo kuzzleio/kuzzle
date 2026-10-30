@@ -1,8 +1,9 @@
 /**
  * The fixture every `elasticsearch` case group is built on.
  *
- * The subject is `lib/service/storage/Elasticsearch.ts` — a dispatcher that
- * reads `config.majorVersion` and delegates everything to `ES7` or `ES8`. So
+ * The subject is the built-in driver `config.majorVersion` selects — `ES7` or
+ * `ES8` (`lib/service/storage/builtInDrivers.ts`) — run by the
+ * `StorageService` that `ClientAdapter` builds. So
  * the two Mocha twins are not two specs: they are the same spec run with one
  * config value changed, which is why the cases below are shared and the
  * version arrives as a parameter.
@@ -13,7 +14,8 @@
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { loadConfig } from "../../../../lib/config";
-import { Elasticsearch } from "../../../../lib/service/storage/Elasticsearch";
+import { builtInStorageDriver } from "../../../../lib/service/storage/builtInDrivers";
+import { StorageService } from "../../../../lib/service/storage/storageService";
 import { storeScopeEnum } from "../../../../lib/core/storage/storeScopeEnum";
 import { restoreKuzzle, stubKuzzle } from "../../../mocks/kuzzle";
 import {
@@ -28,7 +30,7 @@ export type ESVersion = "7" | "8";
 /**
  * The `_getAliasFromIndice` implementation two case files arm.
  *
- * `harness.client` is `any` — the dispatcher is ES7 or ES8 — so a spy on it
+ * `harness.client` is `any` — the driver is ES7 or ES8 — so a spy on it
  * takes `(...args: unknown[])`, and the indice has to be narrowed rather than
  * declared. The answer is the subject's own type: a NON-EMPTY tuple, because
  * every caller dereferences its first element.
@@ -51,9 +53,9 @@ export interface ESWrapperStub {
 }
 
 export interface ESHarness {
-  /** The dispatcher. Every case drives `harness.es.client`, the real ES7/ES8. */
-  es: Elasticsearch;
-  /** Shorthand for `es.client` — what all 54 action blocks actually call. */
+  /** The service. Every case drives `harness.es.driver`, the real ES7/ES8. */
+  es: StorageService;
+  /** Shorthand for `es.driver` — what all 54 action blocks actually call. */
   client: any;
   clientStub: ESClientStub;
   esWrapper: ESWrapperStub;
@@ -72,7 +74,7 @@ export interface ESHarness {
    */
   sent: (stub: { mock: { calls: unknown[][] } }) => any;
   /** Builds a second instance — `#constructor` is the only case that needs one. */
-  build: (scope?: storeScopeEnum) => Elasticsearch;
+  build: (scope?: storeScopeEnum) => StorageService;
   config: any;
   /**
    * `global.kuzzle.ask`. Every scroll-bearing action keeps its cursor in the
@@ -134,7 +136,11 @@ export function setupElasticsearch(version: ESVersion): ESHarness {
     };
 
     harness.build = (scope = storeScopeEnum.PUBLIC) => {
-      const built = new Elasticsearch(harness.config, scope);
+      const built = new StorageService(
+        builtInStorageDriver(version),
+        harness.config,
+        scope,
+      );
 
       /*
        * ⚠️ Assigning `_client` before `init()` is not a shortcut, it is the
@@ -143,13 +149,13 @@ export function setupElasticsearch(version: ESVersion): ESHarness {
        * `if (this._client) { return; }`, so a preset client is what makes the
        * sequence a no-op.
        */
-      Reflect.set(built.client, "_client", stubESClient());
+      Reflect.set(built.driver, "_client", stubESClient());
 
       return built;
     };
 
     harness.es = harness.build();
-    harness.client = harness.es.client;
+    harness.client = harness.es.driver;
     harness.clientStub = harness.client._client;
 
     await harness.es.init();

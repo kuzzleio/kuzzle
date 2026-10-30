@@ -27,6 +27,17 @@ vi.mock("../../../lib/core/storage/clientAdapter", () => ({
   default: ClientAdapterMock,
 }));
 
+/** What the driver loader answers: a built-in driver unless a case says
+ * otherwise before building the engine. */
+const selected = vi.hoisted(() => ({
+  description: "the built-in Elasticsearch 7 driver",
+  identity: null as string | null,
+}));
+
+vi.mock("../../../lib/core/storage/storageDriverLoader", () => ({
+  selectStorageDriver: () => selected,
+}));
+
 import StorageEngine from "../../../lib/core/storage/storageEngine";
 
 describe("#core/storage/StorageEngine", () => {
@@ -62,6 +73,22 @@ describe("#core/storage/StorageEngine", () => {
     it("logs the configured Elasticsearch major version", () => {
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("major version : 7"),
+      );
+    });
+
+    it("logs the external storage driver it runs on", () => {
+      selected.description = selected.identity = "@kuzzleio/storage-es-9@1.0.0";
+      logger.info.mockClear();
+
+      try {
+        engine = new StorageEngine();
+      } finally {
+        selected.description = "the built-in Elasticsearch 7 driver";
+        selected.identity = null;
+      }
+
+      expect(logger.info).toHaveBeenCalledExactlyOnceWith(
+        "[ℹ] Storage driver: @kuzzleio/storage-es-9@1.0.0",
       );
     });
   });

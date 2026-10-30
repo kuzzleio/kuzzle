@@ -2,6 +2,7 @@ Feature: Collection Controller
 
   # collection:update ==========================================================
 
+  @capability-mappingUpdates
   Scenario: Update a collection mappings and settings
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
@@ -16,6 +17,7 @@ Feature: Collection Controller
     And I should receive a result matching:
       | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
 
+  @capability-mappingUpdates
   Scenario: Update a collection and search document
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
@@ -223,6 +225,7 @@ Feature: Collection Controller
     | collection | "green-taxi" |
     Then The result should be "false"
 
+  @capability-mappingUpdates
   Scenario: Reindex a collection after updating mappings
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:

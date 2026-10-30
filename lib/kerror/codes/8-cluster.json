@@ -32,6 +32,12 @@
           "code": 3,
           "message": "Failed to join the cluster: timed out (joinTimeout: %sms).",
           "class": "InternalError"
+        },
+        "storage_driver_mismatch": {
+          "description": "The joining node runs another storage driver (package name or version) than a node of the cluster: every node must run the same one. The joining node does not start.",
+          "code": 4,
+          "message": "This node runs %s, but the cluster node %s runs %s: every cluster node must run the same storage driver.",
+          "class": "InternalError"
         }
       }
     }

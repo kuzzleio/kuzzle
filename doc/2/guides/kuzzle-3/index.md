@@ -24,9 +24,9 @@ Most of what Kuzzle 3 removes already has a replacement in Kuzzle 2. If you move
 
 ### Storage engines become installable drivers
 
-Today, Elasticsearch 7 and 8 support is built into Kuzzle. In Kuzzle 3, each storage engine will be a separate package (a _driver_) that you install next to Kuzzle. This keeps the core smaller and opens the door to other engines.
+Since 2.61, Kuzzle runs on a storage engine through a _driver_, and can load a driver installed as a separate package (see [Storage Drivers](/core/2/guides/main-concepts/data-storage#storage-drivers)). Elasticsearch 7 and 8 are still built into Kuzzle 2. In Kuzzle 3, they will be separate driver packages too, that you install next to Kuzzle. This keeps the core smaller.
 
-In Kuzzle 2, Elasticsearch 7 and 8 keep working exactly as they do today.
+In Kuzzle 2, Elasticsearch 7 and 8 keep working exactly as they do today, selected by `services.storageEngine.majorVersion`.
 
 ### Kuzzle's types no longer come from the SDK
 

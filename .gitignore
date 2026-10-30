@@ -95,3 +95,6 @@ kuzzle-*.tgz
 vitest.config.js
 
 dist
+
+# ADR-0003 step 05: the external ES9 driver staged for the test cluster
+.ci/storage-driver-es9/

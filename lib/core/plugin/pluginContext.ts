@@ -44,7 +44,7 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { createNativeStorageClient } from "../storage/storageDriverLoader";
 import { withLock } from "../../util/distributedLock";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
@@ -357,9 +357,9 @@ export class PluginContext {
     }
 
     function PluginContextESClient() {
-      return Elasticsearch.buildClient(
+      return createNativeStorageClient(
+        global.kuzzle.config.services.storageEngine,
         global.kuzzle.config.services.storageEngine.client,
-        global.kuzzle.config.services.storageEngine.majorVersion,
       );
     }
 

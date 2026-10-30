@@ -52,17 +52,20 @@ Feature: Kuzzle functional tests
     Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"
     Then The mapping dynamic field of "kuzzle-test-index":"my-collection1" is "the default value"
 
+  @capability-mappingUpdates
   Scenario: Update collection mapping: dynamic field
     When I create a collection "kuzzle-test-index":"my-collection2"
     And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
     Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
 
+  @capability-mappingUpdates
   Scenario: Update collection mapping: properties field
     When I create a collection "kuzzle-test-index":"my-collection3"
     And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
     Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
     Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
 
+  @capability-mappingUpdates
   Scenario: Update collection mapping: _meta field
     When I create a collection "kuzzle-test-index":"my-collection4"
     And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
@@ -174,6 +177,7 @@ Feature: Kuzzle functional tests
     Then I find a document with "Grace" in field "firstName" with scroll "10s"
     And I am able to scroll previous search
 
+  @capability-mappingUpdates
   Scenario: Change mapping
     When I write the document "documentGrace"
     Then I don't find a document with "Grace" in field "firstName"
@@ -376,6 +380,7 @@ Feature: Kuzzle functional tests
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
   @security
+  @capability-mappingUpdates
   Scenario: Role mapping
     Given I get the role mapping
     Then The mapping should contain "controllers" field of type "object"
@@ -397,6 +402,7 @@ Feature: Kuzzle functional tests
     Then I cannot create a profile with an empty set of roles
 
   @security
+  @capability-mappingUpdates
   Scenario: Profile mapping
     Given I get the profile mapping
     Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
@@ -449,6 +455,7 @@ Feature: Kuzzle functional tests
     Then I'm not able to find rights for profile "fake-profile"
 
   @security
+  @capability-mappingUpdates
   Scenario: User mapping
     Given I get the user mapping
     Then The mapping should contain "profileIds" field of type "keyword"

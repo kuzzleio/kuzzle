@@ -221,4 +221,8 @@ export * from "./lib/core/cache/cacheDbEnum";
 
 export * from "./lib/core/storage/storeScopeEnum";
 
+export * from "./lib/core/storage/conformance/storageDriverConformance";
+
+export * from "./lib/core/storage/storageError";
+
 export * from "./lib/service/storage/commons/queryTranslator";
