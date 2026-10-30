@@ -12,6 +12,7 @@ export default defineConfig({
     // report came out empty. Selecting the specs with `include` keeps every
     // path repo-root-relative, like the rest of the tooling.
     include: ["tests/**/*.{test,spec}.ts"],
+    setupFiles: ["tests/helpers/driverPackagesKuzzle.ts"],
     coverage: {
       provider: "v8",
       reporter: ["lcov"],
