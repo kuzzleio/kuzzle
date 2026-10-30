@@ -30,6 +30,11 @@ changes nothing (decision 8).
 - Part A: `storageError` (`lib/core/storage/storageError.ts`) exported by `kuzzle`, `kerror.wrap("services",
   "storage")`: a driver throws Kuzzle's storage errors (class, status, documented message) with no deep import.
   Unit test and typings gate (`tests/typings/consumer/storageDriver.ts`).
+- Part C, ahead of the CI job: `ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional <suite>` runs the
+  cluster on Elasticsearch 9 with the driver installed by `.ci/scripts/stage-es9-driver.sh` (npm spec, default
+  `@kuzzleio/storage-es-9@beta`, or `ES9_DRIVER=<.tgz>`), overlay `.ci/test-cluster-es9-driver.yml`.
+- Part B, local (`~/Code/storage-es-9`, not pushed yet): the ES8 classes copied, imports moved to `kuzzle`'s exports
+  and the ES9 client; only fix the client needed: `indices.updateAliases` takes `actions` at the top level.
 
 ## Local decisions / gotchas
 
@@ -37,8 +42,17 @@ changes nothing (decision 8).
   catalogue lives in `kuzzle`); `QueryTranslator`, `withLock`, `storeScopeEnum`, the error classes are already
   exported, and the small helpers (`didYouMean`, `extractFields`, `assertIsObject`, `isPlainObject`, `debug`) are
   copied into the driver.
+- **In Kuzzle's own cluster, the driver's `require("kuzzle")` must reach the running checkout**, not a copy: Kuzzle
+  checks its errors with `instanceof`. `features/fixtures/kuzzle-self` (at `/node_modules/kuzzle`) re-exports
+  `/var/app/index.ts`, which ts-node already serves.
+- **2-dev's `package.json` keeps the last release's version** (2.60.1), so the staging script opens the staged
+  manifest's `kuzzleVersion` to `*`: the range check is the loader's, unit-tested.
 - **The driver repository needs a `kuzzle` release** carrying the kit and `storageError`: `2.61.0-beta.1`, cut from
   `2-dev` once part A is merged. Until then the driver is developed against a local build of `kuzzle`.
 
 ## Validation
+
+- Driver, conformance kit: 32 / 32 on Elasticsearch 9.0.8 and 9.5.5 (local build of `kuzzle`).
+- Functional websocket suite on ES 9.5.5 with the packed driver (Docker path, `--tags "not @http and not @network"`):
+  160 / 164 passed, 3 skipped; the one failure is `Websocket.feature:5`, the Docker path's known localhost limit.
 

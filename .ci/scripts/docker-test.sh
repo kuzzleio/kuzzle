@@ -23,11 +23,16 @@ Env vars:
                   functional tests: 7 or 8 (default: 7)
   STORAGE_DRIVER  core-only: the functional tests run on a storage driver
                   declaring no optional capability (ADR-0003 step 04)
+                  es9: they run on Elasticsearch 9 with the external driver
+                  @kuzzleio/storage-es-9 (ADR-0003 step 05)
+  ES9_DRIVER      What npm installs as that driver (default:
+                  @kuzzleio/storage-es-9@beta); a local .tgz works too
 
 Examples:
   .ci/scripts/docker-test.sh unit
   .ci/scripts/docker-test.sh functional websocket
   ES_VERSION=8 .ci/scripts/docker-test.sh functional http
+  ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
 
   # Target a single feature file or a tag instead of the whole suite:
   .ci/scripts/docker-test.sh functional websocket -- features/api/document.feature
@@ -87,6 +92,22 @@ run_conformance() {
     kuzzle_node_1 bash -lc "npm ci && npm run test:conformance"
 }
 
+# Installs the external Elasticsearch 9 driver as an application would
+# (.ci/scripts/stage-es9-driver.sh), in a container: no local npm needed.
+stage_es9_driver() {
+  local spec="${ES9_DRIVER:-@kuzzleio/storage-es-9@beta}"
+  local mounts=(-v "$ROOT_DIR:/var/app")
+
+  if [ -f "$spec" ]; then
+    mounts+=(-v "$(cd "$(dirname "$spec")" && pwd)/$(basename "$spec"):/tmp/storage-es-9.tgz:ro")
+    spec=/tmp/storage-es-9.tgz
+  fi
+
+  docker run --rm "${mounts[@]}" -w /var/app \
+    kuzzleio/kuzzle-runner:"${NODE_VERSION:-24}"-trixie-slim \
+    bash .ci/scripts/stage-es9-driver.sh "$spec"
+}
+
 run_functional() {
   local suite="$1"
   shift
@@ -105,8 +126,16 @@ run_functional() {
   case "${STORAGE_DRIVER:-}" in
     "") ;;
     core-only) compose+=(-f .ci/test-cluster-core-only-driver.yml) ;;
+    es9)
+      if [ "$ES_VERSION" != 8 ]; then
+        echo "STORAGE_DRIVER=es9 runs on top of the ES 8 cluster file: set ES_VERSION=8" >&2
+        exit 1
+      fi
+      compose+=(-f .ci/test-cluster-es9-driver.yml)
+      stage_es9_driver
+      ;;
     *)
-      echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only)" >&2
+      echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only or es9)" >&2
       exit 1
       ;;
   esac
