@@ -35,4 +35,9 @@ driver. The next major only drops the two dependencies (step 08).
 - To check in part C: `lib/types/storage/7|8/Elasticsearch.ts` import types from `sdk-es7` / `sdk-es8`, so the two
   SDKs likely stay direct `kuzzle` dependencies through v2 for the public typings; they leave at the next major.
 
+- **A first beta published by hand needs its semantic-release note** (found on `storage-es-9`, 2026-10-30): without
+  it, the next push to `beta` sees no previous release, commits a changelog and fails on `git tag`. Attach
+  `{"channels":["beta"]}` to the tagged **commit** (not the annotated tag object) under
+  `refs/notes/semantic-release-v<version>`, and push that ref. The first publish also sets npm `latest` to the beta.
+
 ## Validation
