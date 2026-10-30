@@ -24,14 +24,25 @@ driver. The next major only drops the two dependencies (step 08).
 
 | Part | What | Where | Status |
 | --- | --- | --- | --- |
-| A | `kuzzle-storage-es-7`: the ES7 code and driver, manifest, conformance kit on ES7 in CI, first beta | storage-es-7 | ⬜ |
-| B | `kuzzle-storage-es-8`: the same for ES8 | storage-es-8 | ⬜ |
+| A | `kuzzle-storage-es-7`: the ES7 code and driver, manifest, conformance kit on ES7 in CI, first beta | storage-es-7 | ✅ `kuzzle-storage-es-7@1.0.0-beta.1` published 2026-10-30 |
+| B | `kuzzle-storage-es-8`: the same for ES8 | storage-es-8 | ✅ `kuzzle-storage-es-8@1.0.0-beta.1` published 2026-10-30 |
 | C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | ⬜ |
 
 ## What was done
 
+- Parts A and B ([`kuzzleio/storage-es-7`](https://github.com/kuzzleio/storage-es-7),
+  [`kuzzleio/storage-es-8`](https://github.com/kuzzleio/storage-es-8)): the scaffolding of `storage-es-9`, and
+  `lib/service/storage/<7|8>/` with their types moved as they are. Only the imports change: `kuzzle`'s exports, the
+  `@elastic/elasticsearch` version Kuzzle pins (7.13.0, 8.17.1), `storageError`, the small helpers copied as for ES9.
+- First betas published by semantic-release itself: the npm trusted publisher declared first, then `master` pushed with
+  a licence-only `chore` commit (a release branch must exist, nothing to release) and `beta` with the `feat` commit.
+  No hand publish, hence no missing note (gotcha below).
+
 ## Local decisions / gotchas
 
+- `@elastic/elasticsearch` 7 exposes its type subpaths (`api/types`) only through the folder mapping `"./": "./"`,
+  which TypeScript's `bundler` resolution ignores: `storage-es-7`'s `tsconfig.json` maps them with `paths`, as Kuzzle does
+  for `sdk-es7`.
 - To check in part C: `lib/types/storage/7|8/Elasticsearch.ts` import types from `sdk-es7` / `sdk-es8`, so the two
   SDKs likely stay direct `kuzzle` dependencies through v2 for the public typings; they leave at the next major.
 
@@ -41,3 +52,6 @@ driver. The next major only drops the two dependencies (step 08).
   `refs/notes/semantic-release-v<version>`, and push that ref. The first publish also sets npm `latest` to the beta.
 
 ## Validation
+
+- Conformance kit 32 / 32: `storage-es-7` on Elasticsearch 7.17.26, `storage-es-8` on 8.17.1, locally and in each
+  repository's CI.

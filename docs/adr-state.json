@@ -34,7 +34,7 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–05 done, 06 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Create kuzzleio/storage-es-7 from lib/service/storage/7/ and ES7Driver as they are, conformance kit on ES7; then storage-es-8, then kuzzle depends on both at pinned versions.",
+      "nextAction": "Step 06 part C: kuzzle depends on kuzzle-storage-es-7 / -8 (1.0.0-beta.1) at pinned versions, loads them lazily, drops lib/service/storage/7 and 8; ES7 / ES8 matrix unchanged.",
       "blockers": [],
       "openPoints": []
     },
