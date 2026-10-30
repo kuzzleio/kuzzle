@@ -150,9 +150,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 ## Open points
 
 - **Package granularity:** one package per engine major (`storage-opensearch-2`, `storage-opensearch-3`) assumed — or one per family with a version option, if OpenSearch 2 and 3 turn out to share one SDK?
-- **Startup notice wording for `majorVersion`** (step 05): informational, must never fail or alter an ES7 / ES8 startup.
 - **Interaction with ADR-0002 step 03** (shared types package): whether the driver contract later moves there.
 - *(v3)* Which subset of ES mappings a non-ES driver must accept.
+- *(v3)* **Without `driver`, once ES7 / ES8 are extracted (step 07):** `driver` becomes mandatory (clear startup error), or a default driver is loaded — and which one (ES9, OpenSearch…)? The core ships no engine SDK at v3, so it cannot fall back to a built-in one.
 
 ---
 
