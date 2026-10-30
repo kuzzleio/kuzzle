@@ -1,3 +1,17 @@
+## [2.61.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.60.1...v2.61.0-beta.1) (2026-10-30)
+
+### Features
+
+* **storage:** add the StorageDriver contract (ADR-0003 step 01) ([eecd7f1](https://github.com/kuzzleio/kuzzle/commit/eecd7f1050d8927ce869a739fd2c6b99d1053fa7))
+* **storage:** export storageError for the storage drivers ([f5c0e8d](https://github.com/kuzzleio/kuzzle/commit/f5c0e8de2c00ea8de83db5834a358114bc1138c7))
+* **storage:** load storage drivers selected by configuration (ADR-0003 step 03) ([d26efc3](https://github.com/kuzzleio/kuzzle/commit/d26efc3d173eab74903669fcba6e24f79cd21179))
+* **storage:** run ES7 / ES8 as built-in storage drivers (ADR-0003 step 02) ([23aa60d](https://github.com/kuzzleio/kuzzle/commit/23aa60d8d7d9507ab20a005460a2a17147865c11))
+* **storage:** storage driver conformance kit (ADR-0003 step 04) ([e06639c](https://github.com/kuzzleio/kuzzle/commit/e06639ceac5a250e51beb00575c9bcf53dcc190d))
+
+### Bug Fixes
+
+* **storage:** replace the index cache on reload instead of merging into it ([8bef63e](https://github.com/kuzzleio/kuzzle/commit/8bef63ed61c744b95ac1b8b5d3c2503b83e4dc70)), closes [#3040](https://github.com/kuzzleio/kuzzle/issues/3040)
+
 ## [2.60.1](https://github.com/kuzzleio/kuzzle/compare/v2.60.0...v2.60.1) (2026-10-29)
 
 ### Bug Fixes
