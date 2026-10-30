@@ -3,9 +3,6 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Client as ClientES7 } from "sdk-es7";
-import { Client as ClientES8 } from "sdk-es8";
-
 import { loadConfig } from "../../../lib/config";
 import {
   assertDeclaredCapabilities,
@@ -13,15 +10,13 @@ import {
   selectStorageDriver,
   type SelectedStorageDriver,
 } from "../../../lib/core/storage/storageDriverLoader";
-import {
-  ES7Driver,
-  ES8Driver,
-} from "../../../lib/service/storage/builtInDrivers";
+import { builtInStorageDriver } from "../../../lib/service/storage/builtInDrivers";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type {
   StorageCapability,
   StorageDriver,
 } from "../../../lib/types/storage/StorageDriver";
+import { builtInDriverClient } from "../../helpers/builtInDriverClient";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 
 /** A driver package written on disk, as `npm install` would leave it */
@@ -103,16 +98,13 @@ describe("#core/storage/storageDriverLoader", () => {
   });
 
   describe("without services.storageEngine.driver", () => {
-    it.each([
-      ["7" as const, ES7Driver],
-      ["8" as const, ES8Driver],
-    ])(
+    it.each([["7" as const], ["8" as const]])(
       "selects the built-in Elasticsearch %s driver",
-      (majorVersion, Driver) => {
+      (majorVersion) => {
         config.majorVersion = majorVersion;
 
         expect(selectStorageDriver(config)).toEqual({
-          Driver,
+          Driver: builtInStorageDriver(majorVersion),
           capabilities: new Set([
             "aggregations",
             "mappingUpdates",
@@ -130,7 +122,7 @@ describe("#core/storage/storageDriverLoader", () => {
 
       expect(
         createNativeStorageClient(config, { node: "http://es:9200" }),
-      ).toBeInstanceOf(ClientES8);
+      ).toBeInstanceOf(builtInDriverClient("8"));
     });
 
     it("builds an Elasticsearch 7 client when no major version is set, as it always has", () => {
@@ -144,7 +136,7 @@ describe("#core/storage/storageDriverLoader", () => {
           withoutVersion as StorageEngineElasticsearch,
           { node: "http://es:9200" },
         ),
-      ).toBeInstanceOf(ClientES7);
+      ).toBeInstanceOf(builtInDriverClient("7"));
     });
   });
 
@@ -307,7 +299,7 @@ describe("#core/storage/storageDriverLoader", () => {
     const selected = (
       capabilities: StorageCapability[],
     ): SelectedStorageDriver => ({
-      Driver: ES7Driver,
+      Driver: builtInStorageDriver("7"),
       capabilities: new Set(capabilities),
       description: "storage-memory@1.2.3",
       identity: "storage-memory@1.2.3",

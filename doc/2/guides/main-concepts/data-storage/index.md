@@ -687,7 +687,7 @@ With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry t
 
 <SinceBadge version="2.61.0" />
 
-Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: by default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
+Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: they are the packages `kuzzle-storage-es-7` and `kuzzle-storage-es-8`, which `kuzzle` depends on and installs with itself. By default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
 
 Another storage engine is supported by installing its driver, an npm package, next to `kuzzle` in your application, and naming it in the [configuration](/core/2/guides/advanced/configuration):
 

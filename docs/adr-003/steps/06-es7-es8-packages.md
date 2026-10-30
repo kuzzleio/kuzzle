@@ -26,7 +26,9 @@ driver. The next major only drops the two dependencies (step 08).
 | --- | --- | --- | --- |
 | A | `kuzzle-storage-es-7`: the ES7 code and driver, manifest, conformance kit on ES7 in CI, first beta | storage-es-7 | ✅ `kuzzle-storage-es-7@1.0.0-beta.1` published 2026-10-30 |
 | B | `kuzzle-storage-es-8`: the same for ES8 | storage-es-8 | ✅ `kuzzle-storage-es-8@1.0.0-beta.1` published 2026-10-30 |
-| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | ⬜ |
+| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | 🟦 PR open |
+| D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | ⬜ |
+| E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | ⬜ |
 
 ## What was done
 
@@ -38,7 +40,22 @@ driver. The next major only drops the two dependencies (step 08).
   a licence-only `chore` commit (a release branch must exist, nothing to release) and `beta` with the `feat` commit.
   No hand publish, hence no missing note (gotcha below).
 
+- Part C: `builtInStorageDriver` `require`s the package on first use. `lib/service/storage/7|8`, their unit suites and
+  `tests/mocks/elasticsearchClient.ts` leave (kept for part D); their Sonar CPD exclusions and S2187 ignores go too.
+
 ## Local decisions / gotchas
+
+- **npm installs a second `kuzzle` in Kuzzle's own trees.** The packages' peer dependency `kuzzle` is auto-installed
+  from npm in this repository and in the Docker image (`node_modules/kuzzle`), where Kuzzle is the application, not a
+  dependency: its error classes would not be the running Kuzzle's (`esWrapper` checks `instanceof KuzzleError`).
+  `builtInStorageDriver` puts the running Kuzzle (`index.ts` or `index.js`, from Node's module cache) in that copy's
+  cache entry before loading the package; a no-op in an application, where the peer *is* the running Kuzzle. npm
+  `overrides` (`file:` resolves against the dependent package) and a self `devDependency` (npm crashes) were tried
+  and dropped. Under vitest, Kuzzle is not in Node's cache: `tests/helpers/driverPackagesKuzzle.ts` gives the
+  packages a stand-in that throws on use, since loading the copy would replace `global.kuzzle`.
+- **Native clients now come from the package's own `@elastic/elasticsearch`** (same pinned versions), no longer from
+  `sdk-es7` / `sdk-es8`: same API, but a different class for `instanceof`. `sdk-es7` / `sdk-es8` stay dependencies for
+  the public typings until v3 (row already in the v3 backlog).
 
 - `@elastic/elasticsearch` 7 exposes its type subpaths (`api/types`) only through the folder mapping `"./": "./"`,
   which TypeScript's `bundler` resolution ignores: `storage-es-7`'s `tsconfig.json` maps them with `paths`, as Kuzzle does
