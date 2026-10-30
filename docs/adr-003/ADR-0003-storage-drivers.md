@@ -87,9 +87,9 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 
 ## Cold start
 
-**Where we are (2026-10-30):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; ES7 / ES8 run as built-in drivers; `services.storageEngine.driver` loads an external driver. The first one, `kuzzle-storage-es-9` ([`kuzzleio/storage-es-9`](https://github.com/kuzzleio/storage-es-9), `1.0.0-beta.1` on npm), runs Kuzzle's functional suites in CI; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Step 06 is open: ES7 / ES8 move to `kuzzle-storage-es-7` / `-8` (names reserved on npm by an empty `0.0.0`).
+**Where we are (2026-10-30):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; ES7 / ES8 run as built-in drivers; `services.storageEngine.driver` loads an external driver. The first one, `kuzzle-storage-es-9` ([`kuzzleio/storage-es-9`](https://github.com/kuzzleio/storage-es-9), `1.0.0-beta.1` on npm), runs Kuzzle's functional suites in CI; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Step 06 is open: ES7 / ES8 are published as `kuzzle-storage-es-7` / `-8` (`1.0.0-beta.1`, own repositories, conformance kit green); `kuzzle` does not use them yet.
 
-**Next action:** create `kuzzleio/storage-es-7` from `lib/service/storage/7/` and `ES7Driver`, as they are, with its conformance kit run on ES7 ([detail](steps/06-es7-es8-packages.md)).
+**Next action:** part C: `kuzzle` depends on `kuzzle-storage-es-7` / `-8` at pinned versions, loads them lazily at storage startup and drops `lib/service/storage/7` / `8`, ES7 / ES8 matrix unchanged ([detail](steps/06-es7-es8-packages.md)).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
