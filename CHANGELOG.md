@@ -1,3 +1,14 @@
+## [2.61.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.1...v2.61.0-beta.2) (2026-10-30)
+
+### Features
+
+* **storage:** run ES7 / ES8 from the kuzzle-storage-es-7 / -8 packages (ADR-0003 step 06) ([7478575](https://github.com/kuzzleio/kuzzle/commit/747857509fd4048ed28557c2e7c689196fd8d501))
+* **storage:** warn when majorVersion is set along with a storage driver ([e5aa782](https://github.com/kuzzleio/kuzzle/commit/e5aa78236f673bb5d9c61cbebc796b6cf60b7d44))
+
+### Bug Fixes
+
+* **storage:** name the ES9 driver kuzzle-storage-es-9, unscoped ([e7aa585](https://github.com/kuzzleio/kuzzle/commit/e7aa5850937970e05901c2c8c6e73ddf582b2ed8))
+
 ## [2.61.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.60.1...v2.61.0-beta.1) (2026-10-30)
 
 ### Features
