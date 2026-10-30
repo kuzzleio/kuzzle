@@ -814,7 +814,9 @@
     //      The major version of the Elasticsearch server.
     //      This value is used to determine which Elasticsearch client to use.
     //      Currently, only Elasticsearch 7.x and 8.x are supported.
-    //      Ignored when a driver is set.
+    //      Ignored when a driver is set (Kuzzle warns at startup if both are
+    //      set). Deprecated: Kuzzle 3 selects the storage engine with driver
+    //      only. It keeps working unchanged in Kuzzle 2.
     //  * backend:
     //      The storage engine to use. Currently, only "elasticsearch" is supported.
     //  * aliases:

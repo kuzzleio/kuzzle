@@ -89,10 +89,18 @@ describe("#config", () => {
 
       expect(rc.load).toHaveBeenCalledTimes(1);
       expect(rc.load.mock.calls[0][0]).toBe("kuzzle");
-      // Minus the token settings' values, applied after (see below).
+      // Minus the token settings' values and majorVersion, applied after
+      // (see below).
+      const storageEngine: JSONObject = {
+        ...defaultConfig.services.storageEngine,
+      };
+
+      delete storageEngine.majorVersion;
+
       expect(rc.load.mock.calls[0][1]).toEqual({
         ...defaultConfig,
         security: { ...defaultConfig.security, authToken: {}, jwt: {} },
+        services: { ...defaultConfig.services, storageEngine },
       });
     });
 
@@ -710,6 +718,63 @@ describe("#config", () => {
    * both ship the same non-null defaults: merged by `rc`, a user's
    * `jwt.expiresIn` could not be told from the packaged one, and was ignored.
    */
+  /*
+   * `majorVersion` has a packaged default: merged by `rc`, a user's value
+   * could not be told from it, and Kuzzle could not warn that a storage
+   * driver makes it ignored.
+   */
+  describe("#resolveStorageEngine", () => {
+    const storageEngine = (overrides: JSONObject) =>
+      (load(overrides).services as JSONObject).storageEngine as JSONObject;
+
+    it("applies the packaged majorVersion", () => {
+      expect(storageEngine({}).majorVersion).toBe("7");
+      expect(load().internal).toMatchObject({ ignoredSettings: [] });
+    });
+
+    it("keeps the majorVersion the configuration sets", () => {
+      const result = load({
+        services: { storageEngine: { majorVersion: "8" } },
+      });
+
+      expect(
+        ((result.services as JSONObject).storageEngine as JSONObject)
+          .majorVersion,
+      ).toBe("8");
+      expect(result.internal).toMatchObject({ ignoredSettings: [] });
+    });
+
+    it("lists majorVersion as ignored when set along with a driver", () => {
+      const result = load({
+        services: {
+          storageEngine: { driver: "kuzzle-storage-es-9", majorVersion: "8" },
+        },
+      });
+
+      expect(result.internal).toMatchObject({
+        ignoredSettings: ["services.storageEngine.majorVersion"],
+      });
+    });
+
+    it("does not list the packaged majorVersion when only a driver is set", () => {
+      const result = load({
+        services: { storageEngine: { driver: "kuzzle-storage-es-9" } },
+      });
+
+      expect(result.internal).toMatchObject({ ignoredSettings: [] });
+      expect(
+        ((result.services as JSONObject).storageEngine as JSONObject)
+          .majorVersion,
+      ).toBe("7");
+    });
+
+    it("leaves the packaged defaults untouched", () => {
+      load({ services: { storageEngine: { majorVersion: "8" } } });
+
+      expect(defaultConfig.services.storageEngine.majorVersion).toBe("7");
+    });
+  });
+
   describe("#mergeTokenSettings", () => {
     const security = (overrides: JSONObject) =>
       load(overrides).security as JSONObject;

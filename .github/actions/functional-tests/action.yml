@@ -13,6 +13,10 @@ inputs:
   es-version:
     description: Elasticsearch version to use
     required: true
+  storage-driver:
+    description: 'External storage driver to run on (es9), on top of the es-version 8 cluster; empty: the built-in driver'
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -24,4 +28,5 @@ runs:
         KUZZLE_FUNCTIONAL_TESTS: ${{ inputs.test-set }}
         NODE_VERSION: ${{ inputs.node-version }}
         ES_VERSION: ${{ inputs.es-version }}
+        STORAGE_DRIVER: ${{ inputs.storage-driver }}
       shell: bash

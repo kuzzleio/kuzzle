@@ -21,9 +21,9 @@ changes nothing (decision 8).
 
 | Part | What | Where | Status |
 | --- | --- | --- | --- |
-| A | What a driver needs from `kuzzle` and cannot copy: `storageError` (the `services.storage.*` errors); `kuzzle` beta carrying it and the conformance kit | kuzzle | 🟦 #3103 merged 2026-10-30; `2.61.0-beta.1` pending |
-| B | The driver: ES8 code adapted to the ES9 client, manifest, conformance kit in its CI on ES9, `1.0.0-beta.1` | storage-es-9 | ⬜ |
-| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc); warning when `driver` and `majorVersion` are both set; docs | kuzzle | ⬜ |
+| A | What a driver needs from `kuzzle` and cannot copy: `storageError` (the `services.storage.*` errors); `kuzzle` beta carrying it and the conformance kit | kuzzle | ✅ #3103 merged; `2.61.0-beta.1` published 2026-10-30 |
+| B | The driver: ES8 code adapted to the ES9 client, manifest, conformance kit in its CI on ES9, `1.0.0-beta.1` | storage-es-9 | ✅ `kuzzle-storage-es-9@1.0.0-beta.1` published 2026-10-30; repo pushed, CI green on ES 9.0.8 / 9.5.5 |
+| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc); warning when `driver` and `majorVersion` are both set; docs | kuzzle | 🟦 |
 
 - **No startup deprecation notice for `majorVersion` in v2** (maintainer, 2026-10-30): an ES7 / ES8 stack has nothing
   else to use in v2, so the notice would show at every start with no action possible. Kuzzle warns only when `driver`
@@ -37,8 +37,16 @@ changes nothing (decision 8).
 - Part C, ahead of the CI job: `ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional <suite>` runs the
   cluster on Elasticsearch 9 with the driver installed by `.ci/scripts/stage-es9-driver.sh` (npm spec, default
   `kuzzle-storage-es-9@beta`, or `ES9_DRIVER=<.tgz>`), overlay `.ci/test-cluster-es9-driver.yml`.
-- Part B, local (`~/Code/storage-es-9`, not pushed yet): the ES8 classes copied, imports moved to `kuzzle`'s exports
-  and the ES9 client; only fix the client needed: `indices.updateAliases` takes `actions` at the top level.
+- Part B: the ES8 classes copied, imports moved to `kuzzle`'s exports and the ES9 client; only fix the client needed:
+  `indices.updateAliases` takes `actions` at the top level. Published as `kuzzle-storage-es-9` (see gotchas); releases
+  by semantic-release (`semantic-release-config-kuzzle` 1.8.0, `master` stable / `beta` prerelease, npm trusted
+  publishing), the first beta published by hand and tagged. PRs target `beta`: a merge into `master` with no stable
+  release yet would publish `1.0.0`.
+- Part C: CI job `functional-tests-es9-driver` (the five suites, Node 24) through `run-test-cluster.sh`
+  `STORAGE_DRIVER=es9` (driver staged from npm `beta`). `majorVersion` deprecated in the docs (data storage guide,
+  ES8 guide, Kuzzle 3 page, `.kuzzlerc.sample.jsonc`), no `@deprecated` tag (same reason as the notice). The warning:
+  `loadConfig` drops the packaged `majorVersion` before `rc` merges, so a user's value shows; set along with `driver`, it
+  lands in `internal.ignoredSettings`, which `StorageEngine` logs as a warning (the `deprecatedSettings` pattern).
 
 ## Local decisions / gotchas
 

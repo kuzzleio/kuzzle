@@ -50,6 +50,14 @@ class StorageEngine {
         ? `[ℹ] Elasticsearch configuration is set to major version : ${global.kuzzle.config.services.storageEngine.majorVersion}`
         : `[ℹ] Storage driver: ${description}`,
     );
+
+    const ignored = global.kuzzle.config.internal?.ignoredSettings;
+
+    if (ignored?.length) {
+      this.logger.warn(
+        `[⚠] Ignored, since "services.storageEngine.driver" selects the storage driver: ${ignored.join(", ")}. Remove it from your configuration.`,
+      );
+    }
   }
 
   /**

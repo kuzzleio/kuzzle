@@ -30,12 +30,18 @@ A rolling upgrade from v2.60 works as before: nodes running the built-in drivers
 
 Setting `services.storageEngine.driver` to the name of a driver package, installed next to `kuzzle`, runs Kuzzle on that driver's engine. In that case:
 
-- `services.storageEngine.majorVersion` is ignored, and the rest of `services.storageEngine` is handed to the driver;
+- `services.storageEngine.majorVersion` is ignored, and the rest of `services.storageEngine` is handed to the driver. If your configuration sets `majorVersion` too, Kuzzle logs a warning at startup: remove it;
 - Kuzzle logs `[ℹ] Storage driver: <name>@<version>` at startup, instead of the Elasticsearch major version;
 - Kuzzle does not start when the driver is missing, when its `manifest.json` is invalid, when its `kuzzleVersion` range excludes this Kuzzle version, or when it lacks a method of a capability it declares (the [`services.storage_driver.*`](/core/2/api/errors/error-codes/services) errors);
 - a request needing a capability the driver does not declare is rejected with [`services.storage_driver.unsupported_capability`](/core/2/api/errors/error-codes/services) (400).
 
 **Action**, only if you use an external driver in a cluster: every node must run the same driver in the same version. A node running another one fails its startup with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster). Upgrading a driver therefore means restarting every node on the new version, not a rolling restart.
+
+### `majorVersion` is deprecated
+
+`services.storageEngine.majorVersion` is deprecated in the documentation: Kuzzle 3 will select the storage engine with `driver` alone. It keeps working unchanged in Kuzzle 2, where it still chooses between the built-in Elasticsearch 7 and 8 drivers, and Kuzzle logs no deprecation warning for it.
+
+To run Elasticsearch 9, install [`kuzzle-storage-es-9`](https://www.npmjs.com/package/kuzzle-storage-es-9) next to `kuzzle` and set `services.storageEngine.driver` to `"kuzzle-storage-es-9"`.
 
 ### Index cache of a joining node
 

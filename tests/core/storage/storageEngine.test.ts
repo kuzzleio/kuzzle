@@ -41,12 +41,15 @@ vi.mock("../../../lib/core/storage/storageDriverLoader", () => ({
 import StorageEngine from "../../../lib/core/storage/storageEngine";
 
 describe("#core/storage/StorageEngine", () => {
-  let logger: { info: ReturnType<typeof vi.fn> };
+  let logger: {
+    info: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+  };
   let engine: StorageEngine;
 
   beforeEach(() => {
     instances.length = 0;
-    logger = { info: vi.fn() };
+    logger = { info: vi.fn(), warn: vi.fn() };
     (globalThis as { kuzzle?: unknown }).kuzzle = {
       config: { services: { storageEngine: { majorVersion: 7 } } },
       log: { child: vi.fn(() => logger) },
@@ -89,6 +92,23 @@ describe("#core/storage/StorageEngine", () => {
 
       expect(logger.info).toHaveBeenCalledExactlyOnceWith(
         "[ℹ] Storage driver: kuzzle-storage-es-9@1.0.0",
+      );
+    });
+
+    it("warns about the settings the configuration ignores", () => {
+      expect(logger.warn).not.toHaveBeenCalled();
+
+      (
+        globalThis as { kuzzle: { config: { internal?: unknown } } }
+      ).kuzzle.config.internal = {
+        ignoredSettings: ["services.storageEngine.majorVersion"],
+      };
+      engine = new StorageEngine();
+
+      expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining(
+          '"services.storageEngine.driver" selects the storage driver: services.storageEngine.majorVersion',
+        ),
       );
     });
   });

@@ -27,7 +27,26 @@ else
     exit 1 
 fi
 
-docker compose -f $YML_FILE down -v
+COMPOSE=(docker compose -f "$YML_FILE")
+
+# STORAGE_DRIVER=es9: Elasticsearch 9 and the external driver
+# kuzzle-storage-es-9 (ADR-0003 step 05), staged from npm (ES9_DRIVER: the npm
+# spec, default kuzzle-storage-es-9@beta) and mounted by an overlay of the ES 8
+# cluster file.
+if [ "${STORAGE_DRIVER:-}" == "es9" ]; then
+  if [ "$ES_VERSION" != "8" ]; then
+    echo "STORAGE_DRIVER=es9 runs on top of the ES 8 cluster file: set ES_VERSION=8"
+    exit 1
+  fi
+
+  COMPOSE+=(-f ./.ci/test-cluster-es9-driver.yml)
+  "$WITH_RETRY" ./.ci/scripts/stage-es9-driver.sh "${ES9_DRIVER:-kuzzle-storage-es-9@beta}"
+elif [ -n "${STORAGE_DRIVER:-}" ]; then
+  echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected es9)"
+  exit 1
+fi
+
+"${COMPOSE[@]}" down -v
 
 echo "Installing dependencies..."
 # NPM_CACHE_DIR (CI sets it to the runner's ~/.npm, which setup-node restores
@@ -42,7 +61,7 @@ fi
 # Retried: the install still has network dependencies (re2 downloads its
 # binary at install time). See .ci/scripts/with-retry.sh (TD-83).
 "$WITH_RETRY" \
-  docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
+  "${COMPOSE[@]}" run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
@@ -51,7 +70,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/dump-cluster-logs.sh"
 
 trap dump_cluster_logs err
 
-docker compose -f $YML_FILE up -d
+"${COMPOSE[@]}" up -d
 
 KUZZLE_PORT=17510 "${WAIT_KUZZLE[@]}"
 KUZZLE_PORT=17511 "${WAIT_KUZZLE[@]}"
