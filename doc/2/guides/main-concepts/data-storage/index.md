@@ -739,27 +739,4 @@ Every node of a cluster must run the **same driver, in the same version**: a nod
 
 ### Writing a driver
 
-A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types, and ships a `manifest.json` at its root. Declare `kuzzle` as a peer dependency.
-
-`kuzzle` also exports the **conformance kit**: a test suite your driver runs against its real engine, covering the mandatory core and each capability your manifest declares. It registers its tests through your test runner's functions (vitest and jest as they are, mocha's `before` / `after` as `beforeAll` / `afterAll`):
-
-```js
-// test/conformance.test.js
-const { afterAll, beforeAll, describe, it } = require("vitest");
-const { describeStorageDriverConformance } = require("kuzzle");
-
-const manifest = require("../manifest.json");
-const MyDriver = require("..");
-
-describeStorageDriverConformance({
-  Driver: MyDriver,
-  capabilities: manifest.capabilities,
-  // merged over Kuzzle's default services.storageEngine configuration
-  config: { client: { node: "http://localhost:9200" } },
-  test: { afterAll, beforeAll, describe, it },
-});
-```
-
-A driver throws Kuzzle's own storage errors, so that a client gets the same error whatever the engine: `kuzzle` exports them as `storageError` (for instance `throw storageError.get("not_found", id, index, collection)`), with the codes listed in the [error codes](/core/2/api/errors/error-codes/services) page.
-
-The kit creates its indexes with a `conformance-` prefix, then deletes them, and runs the driver outside of Kuzzle: what the driver may use of the running Kuzzle instance (its logger, its configuration, its internal cache and the locks taken through it) is provided by the kit.
+A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types and a conformance kit to test it: see the [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide. The official drivers are documented in the [Drivers](/drivers/v2.html) section.
