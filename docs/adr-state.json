@@ -34,7 +34,7 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–05 done, 06 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Step 06: merge part C (#3112), part D (unit suites in storage-es-7#1 / -8#1 / -9#2) and part E (docs: documentation#612 first, then the driver PRs, #3113); then 2.61.0-beta.2.",
+      "nextAction": "Step 06 part F: 2.61.0-beta.2 (release notes, then the 2-dev to beta release PR), then a test iteration on it (template projects on ES7 / ES8 / ES9); drivers stay on beta and docs on next-docs until then.",
       "blockers": [],
       "openPoints": []
     },

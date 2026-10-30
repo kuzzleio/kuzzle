@@ -26,9 +26,10 @@ driver. The next major only drops the two dependencies (step 08).
 | --- | --- | --- | --- |
 | A | `kuzzle-storage-es-7`: the ES7 code and driver, manifest, conformance kit on ES7 in CI, first beta | storage-es-7 | ✅ `kuzzle-storage-es-7@1.0.0-beta.1` published 2026-10-30 |
 | B | `kuzzle-storage-es-8`: the same for ES8 | storage-es-8 | ✅ `kuzzle-storage-es-8@1.0.0-beta.1` published 2026-10-30 |
-| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | 🟦 [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) |
-| D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | 🟦 storage-es-7#1, storage-es-8#1, storage-es-9#2 |
-| E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | 🟦 driver docs in the part D PRs, documentation#612, [#3113](https://github.com/kuzzleio/kuzzle/pull/3113) |
+| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | ✅ [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) merged 2026-10-30 |
+| D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | ✅ storage-es-7#1, storage-es-8#1, storage-es-9#2 merged 2026-10-30 |
+| E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | ✅ merged 2026-10-30 (driver docs in the part D PRs, documentation#612, [#3113](https://github.com/kuzzleio/kuzzle/pull/3113)); on next-docs only |
+| F | Beta test period (maintainer, 2026-10-30): the drivers stay on `beta`, the docs on next-docs; an iteration on 2.61.0-beta.2 (template projects on ES7 / ES8 / ES9) before the drivers' 1.0.0, the docs' move to production and 2.61.0 | all | ⬜ |
 
 ## What was done
 
