@@ -21,7 +21,8 @@
 
 import assert from "node:assert/strict";
 
-import _ from "lodash";
+import get from "lodash/get";
+import has from "lodash/has";
 
 import type { JSONObject } from "../../../types/JSONObject";
 import type {
@@ -107,9 +108,9 @@ export async function rejectsWith(
 
 /** A field of a document or an answer, by its dotted path */
 export function field(object: unknown, path: string): unknown {
-  return _.get(object, path);
+  return get(object, path);
 }
 
 export function hasField(object: unknown, path: string): boolean {
-  return _.has(object, path);
+  return has(object, path);
 }

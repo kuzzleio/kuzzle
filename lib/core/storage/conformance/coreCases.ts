@@ -32,7 +32,9 @@ const WAIT = { refresh: "wait_for" } as const;
 
 /** The `_id`s of search hits or documents, sorted */
 function ids(documents: { _id?: unknown }[]): string[] {
-  return documents.map(({ _id }) => String(_id)).sort();
+  return documents
+    .map(({ _id }) => String(_id))
+    .sort((a, b) => a.localeCompare(b));
 }
 
 export function coreCases(
@@ -50,7 +52,7 @@ export function coreCases(
 
     test.it(
       "translates Koncorde filters, or names the keyword it cannot",
-      async () => {
+      () => {
         assert.equal(
           typeof context.driver.translateKoncordeFilters({
             equals: { city: "Montpellier" },
@@ -70,6 +72,9 @@ export function coreCases(
             type: "operator",
           });
         }
+
+        // The test API takes async callbacks; this case has nothing to await.
+        return Promise.resolve();
       },
     );
   });
@@ -619,12 +624,13 @@ export function coreCases(
           { size: 3 },
         );
 
-        assert.deepEqual(pages.flat().map(String).sort(), [
-          "s1",
-          "s2",
-          "s3",
-          "s4",
-        ]);
+        assert.deepEqual(
+          pages
+            .flat()
+            .map(String)
+            .sort((a, b) => a.localeCompare(b)),
+          ["s1", "s2", "s3", "s4"],
+        );
       },
     );
 
