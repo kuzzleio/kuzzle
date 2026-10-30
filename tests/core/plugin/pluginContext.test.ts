@@ -1,5 +1,3 @@
-import { Client as ClientES7 } from "sdk-es7";
-import { Client as ClientES8 } from "sdk-es8";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -23,6 +21,7 @@ import { TooManyRequestsError } from "../../../lib/kerror/errors/tooManyRequests
 import { UnauthorizedError } from "../../../lib/kerror/errors/unauthorizedError";
 import { MutexLockLostError } from "../../../lib/util/distributedLock";
 import { Mutex } from "../../../lib/util/mutex";
+import { builtInDriverClient } from "../../helpers/builtInDriverClient";
 import { invalid } from "../../helpers/invalid";
 import { present } from "../../helpers/present";
 import { settle } from "../../helpers/settle";
@@ -207,18 +206,17 @@ describe("#core/plugin/pluginContext", () => {
         );
       });
 
-      it.each([
-        ["7" as const, ClientES7],
-        ["8" as const, ClientES8],
-      ])(
+      it.each(["7" as const, "8" as const])(
         "builds a client of the configured major version (%s)",
-        (majorVersion, Client) => {
+        (majorVersion) => {
           global.kuzzle.config.services.storageEngine.majorVersion =
             majorVersion;
 
           const storageClient = new context.constructors.ESClient();
 
-          expect(storageClient).toBeInstanceOf(Client);
+          expect(storageClient).toBeInstanceOf(
+            builtInDriverClient(majorVersion),
+          );
         },
       );
     });

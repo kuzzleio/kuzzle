@@ -1,5 +1,5 @@
 # Overlay on top of `.ci/test-cluster-8.yml`: Elasticsearch 9, and every Kuzzle
-# node runs the external driver @kuzzleio/storage-es-9 (ADR-0003 step 05),
+# node runs the external driver kuzzle-storage-es-9 (ADR-0003 step 05),
 # installed from npm as an application would. `.ci/scripts/docker-test.sh`
 # adds it when STORAGE_DRIVER=es9, after staging the driver in
 # .ci/storage-driver-es9/node_modules.
@@ -10,7 +10,7 @@ x-es9-driver: &es9-driver
     # dependencies, and `kuzzle` (features/fixtures/kuzzle-self): the checkout.
     - ./storage-driver-es9/node_modules:/node_modules:ro
   environment:
-    kuzzle_services__storageEngine__driver: "@kuzzleio/storage-es-9"
+    kuzzle_services__storageEngine__driver: "kuzzle-storage-es-9"
 
 services:
   kuzzle_node_1: *es9-driver

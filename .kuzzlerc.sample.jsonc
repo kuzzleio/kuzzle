@@ -806,7 +806,7 @@
     // currently the only storage layer we support.
     //  * driver:
     //      The npm package of a storage driver to run on instead of the
-    //      built-in Elasticsearch drivers (e.g. "@kuzzleio/storage-es-9"),
+    //      built-in Elasticsearch drivers (e.g. "kuzzle-storage-es-9"),
     //      installed next to kuzzle. Not set by default: the built-in driver
     //      of majorVersion is used. Every cluster node must run the same
     //      driver, same version.
@@ -814,7 +814,9 @@
     //      The major version of the Elasticsearch server.
     //      This value is used to determine which Elasticsearch client to use.
     //      Currently, only Elasticsearch 7.x and 8.x are supported.
-    //      Ignored when a driver is set.
+    //      Ignored when a driver is set (Kuzzle warns at startup if both are
+    //      set). Deprecated: Kuzzle 3 selects the storage engine with driver
+    //      only. It keeps working unchanged in Kuzzle 2.
     //  * backend:
     //      The storage engine to use. Currently, only "elasticsearch" is supported.
     //  * aliases:

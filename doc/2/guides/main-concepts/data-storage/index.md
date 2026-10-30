@@ -687,7 +687,7 @@ With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry t
 
 <SinceBadge version="2.61.0" />
 
-Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: by default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
+Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: they are the packages `kuzzle-storage-es-7` and `kuzzle-storage-es-8`, which `kuzzle` depends on and installs with itself. By default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
 
 Another storage engine is supported by installing its driver, an npm package, next to `kuzzle` in your application, and naming it in the [configuration](/core/2/guides/advanced/configuration):
 
@@ -695,7 +695,7 @@ Another storage engine is supported by installing its driver, an npm package, ne
 {
   "services": {
     "storageEngine": {
-      "driver": "@kuzzleio/storage-es-9",
+      "driver": "kuzzle-storage-es-9",
       "client": {
         "node": "http://localhost:9200"
       }
@@ -705,6 +705,14 @@ Another storage engine is supported by installing its driver, an npm package, ne
 ```
 
 The rest of `services.storageEngine` is handed to the driver; `majorVersion` is ignored when `driver` is set. The API does not change: queries, mappings and search bodies are still written in the Elasticsearch format.
+
+### `majorVersion`
+
+<DeprecatedBadge version="2.61.0"/>
+
+`services.storageEngine.majorVersion` is deprecated: Kuzzle 3 will select the storage engine with `driver` only (see [Towards Kuzzle 3](/core/2/guides/kuzzle-3)). It keeps working unchanged in Kuzzle 2, where it is still the way to choose between the built-in Elasticsearch 7 and 8 drivers: an Elasticsearch 7 or 8 setup has nothing to change, and Kuzzle logs no deprecation warning for it.
+
+When `driver` is set, `majorVersion` is ignored. If your configuration sets both, Kuzzle logs a warning at startup: remove `majorVersion`.
 
 At startup, Kuzzle reads the driver's `manifest.json` before loading its code, and refuses to start when the driver is missing, when its manifest is invalid, or when the Kuzzle version is not in the range its `kuzzleVersion` field states (see the [services.storage_driver](/core/2/api/errors/error-codes/services) errors).
 
@@ -731,27 +739,4 @@ Every node of a cluster must run the **same driver, in the same version**: a nod
 
 ### Writing a driver
 
-A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types, and ships a `manifest.json` at its root. Declare `kuzzle` as a peer dependency.
-
-`kuzzle` also exports the **conformance kit**: a test suite your driver runs against its real engine, covering the mandatory core and each capability your manifest declares. It registers its tests through your test runner's functions (vitest and jest as they are, mocha's `before` / `after` as `beforeAll` / `afterAll`):
-
-```js
-// test/conformance.test.js
-const { afterAll, beforeAll, describe, it } = require("vitest");
-const { describeStorageDriverConformance } = require("kuzzle");
-
-const manifest = require("../manifest.json");
-const MyDriver = require("..");
-
-describeStorageDriverConformance({
-  Driver: MyDriver,
-  capabilities: manifest.capabilities,
-  // merged over Kuzzle's default services.storageEngine configuration
-  config: { client: { node: "http://localhost:9200" } },
-  test: { afterAll, beforeAll, describe, it },
-});
-```
-
-A driver throws Kuzzle's own storage errors, so that a client gets the same error whatever the engine: `kuzzle` exports them as `storageError` (for instance `throw storageError.get("not_found", id, index, collection)`), with the codes listed in the [error codes](/core/2/api/errors/error-codes/services) page.
-
-The kit creates its indexes with a `conformance-` prefix, then deletes them, and runs the driver outside of Kuzzle: what the driver may use of the running Kuzzle instance (its logger, its configuration, its internal cache and the locks taken through it) is provided by the kit.
+A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types and a conformance kit to test it: see the [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide. The official drivers are documented in the [Drivers](/drivers/v2.html) section.

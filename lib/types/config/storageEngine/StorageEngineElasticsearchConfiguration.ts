@@ -1,14 +1,19 @@
 export type StorageEngineElasticsearch = {
   /**
    * The npm package of the storage driver to run on (e.g.
-   * `"@kuzzleio/storage-es-9"`), installed next to `kuzzle`. Not set: the
+   * `"kuzzle-storage-es-9"`), installed next to `kuzzle`. Not set: the
    * built-in Elasticsearch driver of `majorVersion`.
    */
   driver?: string;
 
   /**
    * Elasticsearch major version, which selects the built-in driver when
-   * `driver` is not set
+   * `driver` is not set; ignored otherwise (Kuzzle warns at startup if both
+   * are set).
+   *
+   * Deprecated in the documentation only: Kuzzle 3 selects the storage engine
+   * with `driver` alone, but an ES7 / ES8 stack has nothing else to use in
+   * Kuzzle 2, hence no `@deprecated` tag (see docs/v3-breaking-changes.md).
    * @default "7"
    */
   majorVersion: "7" | "8";

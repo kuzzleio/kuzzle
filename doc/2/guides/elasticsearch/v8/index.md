@@ -28,6 +28,10 @@ We wanted to allow the user to **opt-in** for this feature, so no modification i
 
 The default major version of Elasticsearch will be 7 until Kuzzle v3.
 
+:::info
+Since Kuzzle 2.61, Elasticsearch 9 runs through an installable storage driver, `kuzzle-storage-es-9`, selected with `services.storageEngine.driver` instead of `majorVersion`: see [Storage Drivers](/core/2/guides/main-concepts/data-storage#storage-drivers).
+:::
+
 The new configuration key to change the version supported is available under:
 
 ```json

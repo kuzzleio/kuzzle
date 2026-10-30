@@ -32,9 +32,9 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "active",
-      "statusLabel": "🔵 Active · steps 00–04 done, 05 open",
-      "openStep": "docs/adr-003/steps/05-es9-driver.md",
-      "nextAction": "Publish kuzzle 2.61.0-beta.1 (release PR 2-dev → beta), then push the ES9 driver to kuzzleio/storage-es-9 against it and publish its beta (step 05 part B).",
+      "statusLabel": "🔵 Active · steps 00–05 done, 06 open",
+      "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
+      "nextAction": "Step 06 part F: 2.61.0-beta.2 (release notes, then the 2-dev to beta release PR), then a test iteration on it (template projects on ES7 / ES8 / ES9); drivers stay on beta and docs on next-docs until then.",
       "blockers": [],
       "openPoints": []
     },

@@ -209,6 +209,15 @@ export interface IKuzzleConfiguration {
      * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
      */
     deprecatedSettings?: string[];
+
+    /**
+     * Derived at startup: the configuration keys the user set that Kuzzle
+     * ignores (today, "services.storageEngine.majorVersion" set along with a
+     * storage driver), logged as a warning.
+     *
+     * Optional here for the reason given on {@link IKuzzleConfiguration.version}.
+     */
+    ignoredSettings?: string[];
   };
 
   /**

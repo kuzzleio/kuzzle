@@ -48,7 +48,7 @@ ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket
 # scenarios are skipped, see cucumber.config.cjs):
 STORAGE_DRIVER=core-only .ci/scripts/docker-test.sh functional websocket
 
-# On Elasticsearch 9 with the external driver @kuzzleio/storage-es-9 (from npm,
+# On Elasticsearch 9 with the external driver kuzzle-storage-es-9 (from npm,
 # or ES9_DRIVER=<local .tgz>):
 ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
 ```
