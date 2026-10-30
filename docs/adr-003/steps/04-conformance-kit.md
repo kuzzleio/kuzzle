@@ -1,6 +1,6 @@
 # Step 04 — The conformance kit
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-29 · **PR:** [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done · **Opened:** 2026-10-29 · **Closed:** 2026-10-29 (merged `b783e80db`) · **PR:** [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
