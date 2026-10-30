@@ -407,6 +407,43 @@ jobs:
           node-version: ${{ matrix.node-version }}
           es-version: ${{ matrix.es-version }}
 
+  # Elasticsearch 9 through the external driver kuzzle-storage-es-9 (ADR-0003
+  # step 05), installed from npm (`beta` tag) as an application would. One
+  # Node.js version: the driver does not depend on it, the matrix above covers
+  # both.
+  functional-tests-es9-driver:
+    name: Functional tests on the ES9 driver
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-set:
+          [
+            "http",
+            "websocket",
+            "legacy:mqtt",
+            "legacy:http",
+            "legacy:websocket",
+          ]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Test suit ${{ matrix.test-set }}
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:${{ matrix.test-set }}
+          node-version: 24
+          es-version: 8
+          storage-driver: es9
+
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle]
