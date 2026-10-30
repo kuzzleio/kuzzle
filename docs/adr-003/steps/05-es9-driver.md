@@ -1,6 +1,6 @@
 # Step 05 — The first external driver: Elasticsearch 9
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** — · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** [#3103](https://github.com/kuzzleio/kuzzle/pull/3103) (part A) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
