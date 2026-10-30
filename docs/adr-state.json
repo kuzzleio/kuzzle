@@ -1,6 +1,6 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-10-29",
+  "snapshot": "2026-10-30",
   "latestVersion": "2.60.1",
   "adrs": [
     {
@@ -32,9 +32,9 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "active",
-      "statusLabel": "🔵 Active · steps 00–03 done, 04 open",
-      "openStep": "docs/adr-003/steps/04-conformance-kit.md",
-      "nextAction": "Open the step 04 PR (conformance kit), get CI and SonarCloud green, merge, then freeze the step and open step 05 (ES9 driver).",
+      "statusLabel": "🔵 Active · steps 00–04 done, 05 open",
+      "openStep": "docs/adr-003/steps/05-es9-driver.md",
+      "nextAction": "Land step 05 part A (storageError export), cut kuzzle 2.61.0-beta.1, then write the ES9 driver in kuzzleio/storage-es-9 (part B).",
       "blockers": [],
       "openPoints": []
     },
