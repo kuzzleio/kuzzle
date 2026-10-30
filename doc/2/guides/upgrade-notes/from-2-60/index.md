@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -22,7 +22,9 @@ The changelog is generated from the commits and says what was done. This page sa
 
 ### Elasticsearch 7 and 8 run as built-in storage drivers
 
-Kuzzle now talks to its database through a [storage driver](/core/2/guides/main-concepts/data-storage#storage-drivers). Elasticsearch 7 and 8 are its built-in drivers, still selected by `services.storageEngine.majorVersion`: their behavior, their configuration and their dependencies do not change.
+Kuzzle now talks to its database through a [storage driver](/core/2/guides/main-concepts/data-storage#storage-drivers). Elasticsearch 7 and 8 are its built-in drivers, still selected by `services.storageEngine.majorVersion`: their behavior and their configuration do not change.
+
+Since 2.61.0-beta.2, their code lives in two packages, [`kuzzle-storage-es-7`](/drivers/storage-es-7/1/) and [`kuzzle-storage-es-8`](/drivers/storage-es-8/1/), which `kuzzle` depends on at pinned versions. `npm install` brings them with Kuzzle: there is nothing to add to your `package.json`. `npm ls kuzzle-storage-es-8` shows the version your Kuzzle uses.
 
 A rolling upgrade from v2.60 works as before: nodes running the built-in drivers are not compared when they join the cluster.
 
@@ -51,8 +53,10 @@ A node joining a cluster could keep, in its cache, an index or a collection that
 
 ### Raw storage clients
 
-`app.storage.storageClient`, `app.storage.StorageClient` and `context.constructors.ESClient` are now built by the storage driver. With the built-in drivers, they give the same Elasticsearch client as before. With an external driver, they give that driver's engine client.
+`app.storage.storageClient`, `app.storage.StorageClient` and `context.constructors.ESClient` are now built by the storage driver. With the built-in drivers, they give the same Elasticsearch client as before, in the same version and with the same API. With an external driver, they give that driver's engine client.
+
+Since 2.61.0-beta.2, that client comes from the driver package's own copy of `@elastic/elasticsearch`. **Action**, only if your code checks it with `instanceof` against a `Client` class it imports itself: compare its behavior instead, or import the class from the driver's dependencies. To type it, see the drivers' [TypeScript](/drivers/storage-es-8/1/typescript/) page.
 
 ### New exports
 
-`kuzzle` now exports the `StorageDriver` contract and its types, the conformance kit `describeStorageDriverConformance`, and `storageError`, which builds Kuzzle's `services.storage.*` errors. They are meant for driver authors: see [Writing a driver](/core/2/guides/main-concepts/data-storage#writing-a-driver).
+`kuzzle` now exports the `StorageDriver` contract and its types, the conformance kit `describeStorageDriverConformance`, and `storageError`, which builds Kuzzle's `services.storage.*` errors. They are meant for driver authors: see the [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide.
