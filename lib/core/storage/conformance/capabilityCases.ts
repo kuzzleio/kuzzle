@@ -143,10 +143,12 @@ const CASES: Record<
         WAIT,
       );
       assert.deepEqual(errors, []);
-      assert.deepEqual(successes.map(({ _id }) => String(_id)).sort(), [
-        "u1",
-        "u2",
-      ]);
+      assert.deepEqual(
+        successes
+          .map(({ _id }) => String(_id))
+          .sort((a, b) => a.localeCompare(b)),
+        ["u1", "u2"],
+      );
 
       const { updated } = await driver.bulkUpdateByQuery(
         context.index,

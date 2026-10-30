@@ -97,16 +97,18 @@ function conformanceKuzzle() {
   };
 
   return {
-    ask: async (event: string, ...args: unknown[]) => {
+    ask: (event: string, ...args: unknown[]) => {
       const answer = answers[event];
 
       if (!answer) {
-        throw new Error(
-          `The storage driver conformance kit does not answer "${event}"`,
+        return Promise.reject(
+          new Error(
+            `The storage driver conformance kit does not answer "${event}"`,
+          ),
         );
       }
 
-      return answer(...args);
+      return Promise.resolve(answer(...args));
     },
     config: defaultConfig,
     emit: () => undefined,

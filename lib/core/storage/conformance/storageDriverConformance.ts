@@ -26,7 +26,7 @@
 
 import { randomBytes } from "node:crypto";
 
-import _ from "lodash";
+import merge from "lodash/merge";
 
 import defaultConfig from "../../../config/default.config";
 import { storeScopeEnum } from "../storeScopeEnum";
@@ -108,8 +108,8 @@ export function describeStorageDriverConformance(
     test.beforeAll(async () => {
       removeEnvironment = installConformanceEnvironment();
 
-      const config = _.merge(
-        _.cloneDeep(defaultConfig.services.storageEngine),
+      const config = merge(
+        structuredClone(defaultConfig.services.storageEngine),
         options.config,
       );
       const publicDriver = new options.Driver(config, storeScopeEnum.PUBLIC);
