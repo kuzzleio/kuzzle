@@ -695,7 +695,7 @@ Another storage engine is supported by installing its driver, an npm package, ne
 {
   "services": {
     "storageEngine": {
-      "driver": "@kuzzleio/storage-es-9",
+      "driver": "kuzzle-storage-es-9",
       "client": {
         "node": "http://localhost:9200"
       }

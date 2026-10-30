@@ -263,7 +263,7 @@ describe("#cluster/ClusterIdCardHandler", () => {
           evictSelf,
           heartbeatDelay: refreshDelay,
           ip,
-          storageDriver: "@kuzzleio/storage-es-9@1.0.0",
+          storageDriver: "kuzzle-storage-es-9@1.0.0",
         }),
       );
       internals = handler as unknown as Internals;
@@ -276,7 +276,7 @@ describe("#cluster/ClusterIdCardHandler", () => {
       await handler.createIdCard();
 
       expect(handler.idCard?.serialize()).toMatchObject({
-        storageDriver: "@kuzzleio/storage-es-9@1.0.0",
+        storageDriver: "kuzzle-storage-es-9@1.0.0",
       });
     });
 

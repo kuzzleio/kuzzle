@@ -4,7 +4,7 @@
 
 ## Goal
 
-Elasticsearch 9 runs under Kuzzle 2 through an external driver, `@kuzzleio/storage-es-9`, in its own repository: the
+Elasticsearch 9 runs under Kuzzle 2 through an external driver, `kuzzle-storage-es-9`, in its own repository: the
 first driver written against the contract, the loader and the conformance kit of steps 01–04, outside the core.
 Kuzzle's functional matrix runs on it, and `majorVersion` is deprecated in the documentation. An ES7 / ES8 stack
 changes nothing (decision 8).
@@ -36,11 +36,15 @@ changes nothing (decision 8).
   Unit test and typings gate (`tests/typings/consumer/storageDriver.ts`).
 - Part C, ahead of the CI job: `ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional <suite>` runs the
   cluster on Elasticsearch 9 with the driver installed by `.ci/scripts/stage-es9-driver.sh` (npm spec, default
-  `@kuzzleio/storage-es-9@beta`, or `ES9_DRIVER=<.tgz>`), overlay `.ci/test-cluster-es9-driver.yml`.
+  `kuzzle-storage-es-9@beta`, or `ES9_DRIVER=<.tgz>`), overlay `.ci/test-cluster-es9-driver.yml`.
 - Part B, local (`~/Code/storage-es-9`, not pushed yet): the ES8 classes copied, imports moved to `kuzzle`'s exports
   and the ES9 client; only fix the client needed: `indices.updateAliases` takes `actions` at the top level.
 
 ## Local decisions / gotchas
+
+- **The package is `kuzzle-storage-es-9`, unscoped** (2026-10-30): the first `npm publish` of `@kuzzleio/storage-es-9`
+  failed with a 404, the maintainer's account cannot publish under `@kuzzleio` on npmjs, the scope the private registry
+  (`packages.paas.kuzzle.io`) uses. Kuzzle's public packages are unscoped (`kuzzle`, `kuzzle-sdk`, `kuzzle-types`).
 
 - **What the ES8 driver imports from Kuzzle's internals**: only `services.storage.*` errors need an export (their
   catalogue lives in `kuzzle`); `QueryTranslator`, `withLock`, `storeScopeEnum`, the error classes are already
