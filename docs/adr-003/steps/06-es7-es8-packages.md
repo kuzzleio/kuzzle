@@ -1,6 +1,6 @@
 # Step 06 — Elasticsearch 7 and 8 as packages Kuzzle depends on
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** — · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) (part C) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
@@ -26,9 +26,9 @@ driver. The next major only drops the two dependencies (step 08).
 | --- | --- | --- | --- |
 | A | `kuzzle-storage-es-7`: the ES7 code and driver, manifest, conformance kit on ES7 in CI, first beta | storage-es-7 | ✅ `kuzzle-storage-es-7@1.0.0-beta.1` published 2026-10-30 |
 | B | `kuzzle-storage-es-8`: the same for ES8 | storage-es-8 | ✅ `kuzzle-storage-es-8@1.0.0-beta.1` published 2026-10-30 |
-| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | 🟦 PR open |
-| D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | ⬜ |
-| E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | ⬜ |
+| C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | 🟦 [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) |
+| D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | 🟦 storage-es-7#1, storage-es-8#1, storage-es-9#2 |
+| E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | 🟦 driver docs in the part D PRs, documentation#612, [#3113](https://github.com/kuzzleio/kuzzle/pull/3113) |
 
 ## What was done
 
@@ -42,6 +42,13 @@ driver. The next major only drops the two dependencies (step 08).
 
 - Part C: `builtInStorageDriver` `require`s the package on first use. `lib/service/storage/7|8`, their unit suites and
   `tests/mocks/elasticsearchClient.ts` leave (kept for part D); their Sonar CPD exclusions and S2187 ignores go too.
+
+- Part D: the suite is the same in the three repositories (only the two entry specs name their driver). ES 9 differs
+  from ES 8 by one wire detail, `generateMissingAliases`' alias actions at the root: the envelope's `aliasRequest`.
+  It reaches Kuzzle's `loadConfig` and `StorageService` through the pinned `kuzzle` devDependency's `dist/`.
+- Part E: one template wrote the three READMEs and `doc/1/` sections (getting started, configuration, TypeScript,
+  compatibility, troubleshooting). Each release workflow triggers the doc deploy (`master` → docs.kuzzle.io, `beta` →
+  next-docs). Merge documentation#612 before the driver PRs, whose merge triggers that deploy.
 
 ## Local decisions / gotchas
 
