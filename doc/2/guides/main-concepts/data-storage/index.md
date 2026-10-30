@@ -752,4 +752,6 @@ describeStorageDriverConformance({
 });
 ```
 
+A driver throws Kuzzle's own storage errors, so that a client gets the same error whatever the engine: `kuzzle` exports them as `storageError` (for instance `throw storageError.get("not_found", id, index, collection)`), with the codes listed in the [error codes](/core/2/api/errors/error-codes/services) page.
+
 The kit creates its indexes with a `conformance-` prefix, then deletes them, and runs the driver outside of Kuzzle: what the driver may use of the running Kuzzle instance (its logger, its configuration, its internal cache and the locks taken through it) is provided by the kit.

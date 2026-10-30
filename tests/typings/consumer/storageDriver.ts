@@ -14,7 +14,8 @@ import type {
   StorageSearchResult,
   StorageStats,
 } from "kuzzle";
-import { STORAGE_CAPABILITIES, storeScopeEnum } from "kuzzle";
+import type { KuzzleError } from "kuzzle";
+import { STORAGE_CAPABILITIES, storageError, storeScopeEnum } from "kuzzle";
 
 type NativeClient = { ping(): Promise<boolean> };
 
@@ -75,6 +76,18 @@ export class MemoryDriver implements StorageDriver {
     return false;
   }
 
+  // Kuzzle's own storage errors, whatever the engine
+  async get(index: string, collection: string, id: string): Promise<never> {
+    const error: KuzzleError = storageError.get(
+      "not_found",
+      id,
+      index,
+      collection,
+    );
+
+    throw error;
+  }
+
   async count(): Promise<number> {
     return 0;
   }
@@ -91,7 +104,6 @@ export class MemoryDriver implements StorageDriver {
   refreshCollection = notImplemented;
   getMapping = notImplemented;
   getSettings = notImplemented;
-  get = notImplemented;
   mGet = notImplemented;
   mExists = notImplemented;
   create = notImplemented;
