@@ -36,8 +36,8 @@ Measured on `2-dev` (2026-09-29):
 7. **Native client through the driver.** Each driver class builds its own typed native client (`createNativeClient(clientConfig)`); `app.storage.storageClient`, `StorageClient` and `ESClient` delegate to it — same names, same behaviour (a new client each, as today), no break.
 8. **Hard backward-compatibility rule for v2: an existing ES7 or ES8 stack changes nothing** — same `.kuzzlerc`, same `package.json`, no package to add — through every v2 release, including the one that brings ES9. Enforced by the existing ES7 / ES8 functional matrix, run on its untouched configuration.
 9. **Every cluster node runs the same driver.** A node whose driver (package name and version) differs from the cluster's is refused at join, with a dedicated error.
-10. **v2 is non-breaking; extraction is v3.** In v2, ES7 and ES8 become **thin internal drivers** wrapping today's classes as-is (no factorisation of the shared code), still shipped with the core; new engines (ES9 first, then OpenSearch) are external drivers only. The next major moves ES7 and ES8 to their own packages and drops `sdk-es7` / `sdk-es8` from the core's dependencies.
-11. **The Koncorde → ES DSL translator stays in the core, as an ES-family helper.** `QueryTranslator` (`lib/service/storage/commons/queryTranslator.ts`, publicly exported by `index.ts`) is already shared by the ES7 and ES8 classes; the ES9 and OpenSearch drivers import it from `kuzzle`, like the rest of the contract. It is not part of the mandatory contract: a non-ES driver translates Koncorde filters its own way, but must raise the same `KeywordError` for an untranslatable keyword — `baseController.ts` relies on its shape. It stays in the core at v3 unless step 07 finds a reason to move it.
+10. **v2 is non-breaking; the extraction ships in v2 as dependencies, their removal is v3** (amended 2026-10-30, see register). In v2, ES7 and ES8 become **thin internal drivers** wrapping today's classes as-is (no factorisation of the shared code, step 02), then move as they are to their own packages, `kuzzle-storage-es-7` and `kuzzle-storage-es-8` (step 06): `kuzzle` depends on them at pinned versions and still selects one by `majorVersion`, so an ES7 / ES8 stack installs and runs them with no change. New engines (ES9 first, then OpenSearch) are external drivers only. The next major drops both packages, and with them `sdk-es7` / `sdk-es8`, from the core's dependencies.
+11. **The Koncorde → ES DSL translator stays in the core, as an ES-family helper.** `QueryTranslator` (`lib/service/storage/commons/queryTranslator.ts`, publicly exported by `index.ts`) is already shared by the ES7 and ES8 classes; the ES9 and OpenSearch drivers import it from `kuzzle`, like the rest of the contract. It is not part of the mandatory contract: a non-ES driver translates Koncorde filters its own way, but must raise the same `KeywordError` for an untranslatable keyword — `baseController.ts` relies on its shape. It stays in the core at v3 unless step 08 finds a reason to move it.
 12. **Three validation layers:** a vitest conformance kit shipped with the contract, run by every driver repo against its engine (Docker); Kuzzle's functional suite (cucumber) run with each official driver, capability-dependent scenarios gated by tags; and the existing ES7 / ES8 matrix staying green unchanged — the safety net of the non-breaking rule.
 
 **Out of scope:** the cache engine (Redis) — storage only; data migration between engines (documentation points to the engines' own tools: snapshot / restore, remote reindex); non-ES drivers — **v2 targets the ES / OpenSearch family only** (essentially the same engine); SQL drivers are expected at v3 at the earliest. SQL stays the contract's *design check* (a SQL driver must be implementable against the core + capabilities without touching the public API), which is why the capability groups exist from step 01.
@@ -78,9 +78,9 @@ StorageEngine ── ClientAdapter(PUBLIC)  ──► StorageDriver instance ─
 
 app.storage.storageClient · StorageClient · context.constructors.ESClient  ──►  DriverClass.createNativeClient()
 
-v2 built-in drivers : es7, es8 (thin adapters over today's classes)
+v2 built-in drivers : es7, es8 (thin adapters, then packages kuzzle depends on: step 06)
 external drivers    : ES9 (first), OpenSearch 2 / 3 · SQL at v3
-v3                  : es7 / es8 extracted, core ships no engine SDK
+v3                  : es7 / es8 no longer kuzzle dependencies, core ships no engine SDK
 ```
 
 ---
@@ -105,8 +105,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ✅ Done 2026-10-29 | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
 | 04 | Conformance kit (test-runner-agnostic) exported with the contract; capability tags in the functional suite | ✅ Done 2026-10-29 | [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `kuzzle-storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc; warning only when set with `driver`) | 🟦 In progress | [#3103](https://github.com/kuzzleio/kuzzle/pull/3103) | [detail](steps/05-es9-driver.md) |
-| 06 | OpenSearch 2 / 3 driver(s) (own repo) | ⬜ To do | — | — |
-| 07 | Next major: extract ES7 / ES8, drop `sdk-es7` / `sdk-es8` from the core | ⬜ To do (next major) | — | — |
+| 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | ⬜ To do | — | — |
+| 07 | OpenSearch 2 / 3 driver(s) (own repo) | ⬜ To do | — | — |
+| 08 | Next major: drop `kuzzle-storage-es-7` / `-8` (and `sdk-es7` / `sdk-es8`) from the core's dependencies | ⬜ To do (next major) | — | — |
 
 ---
 
@@ -140,6 +141,7 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 - **2026-10-29** — **Conformance kit in `kuzzle`, test-runner-agnostic** (`describeStorageDriverConformance` takes the runner's `describe` / `it` / hooks, asserts with `node:assert`); Kuzzle runs it on ES7 / ES8 in a dedicated CI job. [step 04](steps/04-conformance-kit.md)
 - **2026-10-30** — **No `majorVersion` deprecation notice at startup in v2** (an ES7 / ES8 stack has no alternative to switch to); Kuzzle only warns when `driver` and `majorVersion` are both set, `majorVersion` being ignored then. Amends decision 4. [step 05](steps/05-es9-driver.md)
 - **2026-10-30** — **Package names unscoped: `kuzzle-storage-<engine>-<major>`**, like Kuzzle's other public packages: on npm, `@kuzzleio` is the private registry's scope (`packages.paas.kuzzle.io`). Amends the 2026-09-29 naming decision. [step 05](steps/05-es9-driver.md)
+- **2026-10-30** — **ES7 / ES8 move to their own packages in v2, as dependencies of `kuzzle`** (new step 06): same driver path for every engine, no change for an ES7 / ES8 stack; v3 only drops the dependencies. Amends decision 10. Names `kuzzle-storage-es-7` / `-8` reserved on npm by an empty `0.0.0`. Built-in drivers load lazily (a driver `require`s `kuzzle`).
 - **2026-10-29** — **Functional scenarios needing a capability are tagged `@capability-<name>`**, excluded from `KUZZLE_STORAGE_CAPABILITIES` (the driver's manifest list). [step 04](steps/04-conformance-kit.md)
 - **2026-10-29** — **Cross-repo loop: the contract only grows within a minor** (optional methods or capabilities), so a released driver stays valid; Kuzzle's matrix tests published drivers, no cross-repo CI. [step 04](steps/04-conformance-kit.md)
 - **2026-10-30** — **The ES9 driver: public repo `kuzzleio/storage-es-9`, a copy of the ES8 driver adapted to the ES9 client; Kuzzle's CI installs it from npm (beta first).** `kuzzle` exports `storageError` so a driver throws Kuzzle's storage errors. [step 05](steps/05-es9-driver.md)
@@ -150,9 +152,9 @@ v3                  : es7 / es8 extracted, core ships no engine SDK
 ## Open points
 
 - **Package granularity:** one package per engine major (`storage-opensearch-2`, `storage-opensearch-3`) assumed — or one per family with a version option, if OpenSearch 2 and 3 turn out to share one SDK?
-- **Startup notice wording for `majorVersion`** (step 05): informational, must never fail or alter an ES7 / ES8 startup.
 - **Interaction with ADR-0002 step 03** (shared types package): whether the driver contract later moves there.
 - *(v3)* Which subset of ES mappings a non-ES driver must accept.
+- *(v3)* **Without `driver`, once ES7 / ES8 are no longer dependencies of `kuzzle` (step 08):** `driver` becomes mandatory (clear startup error), or a default driver is loaded — and which one (ES9, OpenSearch…)? The core ships no engine SDK at v3, so it cannot fall back to a built-in one.
 
 ---
 
