@@ -6,7 +6,7 @@
 
 Elasticsearch 9 runs under Kuzzle 2 through an external driver, `@kuzzleio/storage-es-9`, in its own repository: the
 first driver written against the contract, the loader and the conformance kit of steps 01–04, outside the core.
-Kuzzle's functional matrix runs on it, and `majorVersion` is deprecated (doc + startup notice). An ES7 / ES8 stack
+Kuzzle's functional matrix runs on it, and `majorVersion` is deprecated in the documentation. An ES7 / ES8 stack
 changes nothing (decision 8).
 
 ## Design choices (maintainer, 2026-10-30)
@@ -21,9 +21,13 @@ changes nothing (decision 8).
 
 | Part | What | Where | Status |
 | --- | --- | --- | --- |
-| A | What a driver needs from `kuzzle` and cannot copy: `storageError` (the `services.storage.*` errors); `kuzzle` beta carrying it and the conformance kit | kuzzle | 🟦 |
+| A | What a driver needs from `kuzzle` and cannot copy: `storageError` (the `services.storage.*` errors); `kuzzle` beta carrying it and the conformance kit | kuzzle | 🟦 #3103 merged 2026-10-30; `2.61.0-beta.1` pending |
 | B | The driver: ES8 code adapted to the ES9 client, manifest, conformance kit in its CI on ES9, `1.0.0-beta.1` | storage-es-9 | ⬜ |
-| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc + startup notice); docs | kuzzle | ⬜ |
+| C | Kuzzle's functional matrix on ES9 with the published driver; `majorVersion` deprecated (doc); warning when `driver` and `majorVersion` are both set; docs | kuzzle | ⬜ |
+
+- **No startup deprecation notice for `majorVersion` in v2** (maintainer, 2026-10-30): an ES7 / ES8 stack has nothing
+  else to use in v2, so the notice would show at every start with no action possible. Kuzzle warns only when `driver`
+  and `majorVersion` are both set (`majorVersion` is then ignored); the rest goes in the documentation.
 
 ## What was done
 
