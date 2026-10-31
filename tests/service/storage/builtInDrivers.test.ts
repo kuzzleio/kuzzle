@@ -1,7 +1,7 @@
-import { createRequire } from "node:module";
+import Module, { createRequire } from "node:module";
 import * as path from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { builtInStorageDriver } from "../../../lib/service/storage/builtInDrivers";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
@@ -39,6 +39,36 @@ describe("built-in storage drivers", () => {
         client,
       );
     });
+  });
+
+  it("refuses to start when the driver package is not installed", () => {
+    // `Module._resolveFilename` is what `require.resolve` relies on
+    const loader = Module as unknown as {
+      _resolveFilename: (request: string, ...rest: unknown[]) => string;
+    };
+    const resolve = loader._resolveFilename;
+
+    vi.spyOn(loader, "_resolveFilename").mockImplementation(
+      function resolveFilename(this: unknown, request, ...rest) {
+        if (request === "kuzzle-storage-es-8") {
+          throw new Error("Cannot find module 'kuzzle-storage-es-8'");
+        }
+
+        return resolve.call(this, request, ...rest);
+      },
+    );
+
+    try {
+      expect(() => builtInStorageDriver("8")).toThrow(
+        expect.objectContaining({
+          id: "services.storage_driver.not_found",
+          message:
+            "Cannot find the storage driver \"kuzzle-storage-es-8\": Cannot find module 'kuzzle-storage-es-8'.",
+        }),
+      );
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 
   it("refuses an unknown major version", () => {
