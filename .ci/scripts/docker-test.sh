@@ -26,7 +26,7 @@ Env vars:
                   es9: they run on Elasticsearch 9 with the external driver
                   kuzzle-storage-es-9 (ADR-0003 step 05)
   ES9_DRIVER      What npm installs as that driver (default:
-                  kuzzle-storage-es-9@beta); a local .tgz works too
+                  kuzzle-storage-es-9@latest); a local .tgz works too
 
 Examples:
   .ci/scripts/docker-test.sh unit
@@ -95,7 +95,7 @@ run_conformance() {
 # Installs the external Elasticsearch 9 driver as an application would
 # (.ci/scripts/stage-es9-driver.sh), in a container: no local npm needed.
 stage_es9_driver() {
-  local spec="${ES9_DRIVER:-kuzzle-storage-es-9@beta}"
+  local spec="${ES9_DRIVER:-kuzzle-storage-es-9@latest}"
   local mounts=(-v "$ROOT_DIR:/var/app")
 
   if [ -f "$spec" ]; then

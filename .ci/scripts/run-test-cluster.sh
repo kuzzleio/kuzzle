@@ -31,7 +31,7 @@ COMPOSE=(docker compose -f "$YML_FILE")
 
 # STORAGE_DRIVER=es9: Elasticsearch 9 and the external driver
 # kuzzle-storage-es-9 (ADR-0003 step 05), staged from npm (ES9_DRIVER: the npm
-# spec, default kuzzle-storage-es-9@beta) and mounted by an overlay of the ES 8
+# spec, default kuzzle-storage-es-9@latest) and mounted by an overlay of the ES 8
 # cluster file.
 if [ "${STORAGE_DRIVER:-}" == "es9" ]; then
   if [ "$ES_VERSION" != "8" ]; then
@@ -40,7 +40,7 @@ if [ "${STORAGE_DRIVER:-}" == "es9" ]; then
   fi
 
   COMPOSE+=(-f ./.ci/test-cluster-es9-driver.yml)
-  "$WITH_RETRY" ./.ci/scripts/stage-es9-driver.sh "${ES9_DRIVER:-kuzzle-storage-es-9@beta}"
+  "$WITH_RETRY" ./.ci/scripts/stage-es9-driver.sh "${ES9_DRIVER:-kuzzle-storage-es-9@latest}"
 elif [ -n "${STORAGE_DRIVER:-}" ]; then
   echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected es9)"
   exit 1
