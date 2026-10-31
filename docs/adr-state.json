@@ -34,9 +34,11 @@
       "status": "active",
       "statusLabel": "🔵 Active · steps 00–05 done, 06 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Step 06 part F: finish ES9 on the kiotp / hypervision templates (ES7 / ES8 and ES9 on kuzzle-project are green on 2.61.0-beta.2); then the drivers' 1.0.0 (beta to master in each driver repository), kuzzle pinned to them, docs to production, 2.61.0.",
+      "nextAction": "Step 06 part F: template pass green on 2.61.0-beta.2 (ES7 / ES8 / ES9). Next: the drivers' 1.0.0 (beta to master in each driver repository), kuzzle pinned to them, docs to production, 2.61.0.",
       "blockers": [],
-      "openPoints": []
+      "openPoints": [
+        "The default majorVersion \"7\" is still exposed to plugins when a storage driver is configured (multi-tenancy reads it): decide whether to leave it, document it or change it."
+      ]
     },
     {
       "id": "0004",
