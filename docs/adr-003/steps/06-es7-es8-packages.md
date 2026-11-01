@@ -29,7 +29,7 @@ driver. The next major only drops the two dependencies (step 08).
 | C | `kuzzle` depends on both at pinned versions, loads them lazily, drops `lib/service/storage/7` / `8`; ES7 / ES8 matrix unchanged | kuzzle | ✅ [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) merged 2026-10-30 |
 | D | The ES unit suite (`elasticsearchCases`, `esWrapperCases`, ~6 400 lines) moves out of `kuzzle` to the three driver repositories, ES9 included: every driver has the conformance kit **and** a unit suite (maintainer, 2026-10-30) | storage-es-7 / -8 / -9 | ✅ storage-es-7#1, storage-es-8#1, storage-es-9#2 merged 2026-10-30 |
 | E | Documentation pass (maintainer, 2026-10-30): a detailed README per driver (install, config, compatibility, typings, capabilities, troubleshooting); a "Drivers" category on docs.kuzzle.io next to plugins and modules, validated on next-docs first; a "Write a storage driver" guide in `doc/2/guides/` | drivers, documentation, kuzzle | ✅ merged 2026-10-30 (driver docs in the part D PRs, documentation#612, [#3113](https://github.com/kuzzleio/kuzzle/pull/3113)); on next-docs only |
-| F | Beta test period (maintainer, 2026-10-30): the drivers stay on `beta`, the docs on next-docs; an iteration on 2.61.0-beta.2 (template projects on ES7 / ES8 / ES9) before the drivers' 1.0.0, the docs' move to production and 2.61.0 | all | ⬜ |
+| F | Beta test period (maintainer, 2026-10-30): the drivers stay on `beta`, the docs on next-docs; an iteration on 2.61.0-beta.2 (template projects on ES7 / ES8 / ES9) before the drivers' 1.0.0, the docs' move to production and 2.61.0 | all | 🟦 template pass green on ES7 / ES8 / ES9 (2026-10-31). Next: the drivers' 1.0.0 before 2.61.0 (maintainer, 2026-10-31) |
 
 ## What was done
 
@@ -50,6 +50,15 @@ driver. The next major only drops the two dependencies (step 08).
 - Part E: one template wrote the three READMEs and `doc/1/` sections (getting started, configuration, TypeScript,
   compatibility, troubleshooting). Each release workflow triggers the doc deploy (`master` → docs.kuzzle.io, `beta` →
   next-docs). Merge documentation#612 before the driver PRs, whose merge triggers that deploy.
+
+- Part F, template pass on 2.61.0-beta.2 (2026-10-30/31, the 3-node cluster harness of the 2.60 passes): green on
+  `template-kuzzle-project` (ES 8.17.1, 7.17.26, and 9.5.5 with `kuzzle-storage-es-9@1.0.0-beta.1`),
+  `template-kiotp-project` and `template-hypervision-project` (ES8, then ES9). Functional suites, cluster start /
+  restart, 171 stops during startup, all converged; graceful SIGTERM exits 0. Their plugins (device-manager,
+  multi-tenancy, workflows, IoT / hypervision backends) behave the same on ES9 as on ES8: same mappings, same
+  statuses over their search / get actions. One `kuzzle` in every image, driver errors
+  recognized as `KuzzleError` (404 / 400), no new log line type vs the 2.60 passes. One finding: a missing built-in
+  package failed with a raw `Cannot find module`; it now throws `services.storage_driver.not_found`, as for ES9.
 
 ## Local decisions / gotchas
 
@@ -75,6 +84,13 @@ driver. The next major only drops the two dependencies (step 08).
   it, the next push to `beta` sees no previous release, commits a changelog and fails on `git tag`. Attach
   `{"channels":["beta"]}` to the tagged **commit** (not the annotated tag object) under
   `refs/notes/semantic-release-v<version>`, and push that ref. The first publish also sets npm `latest` to the beta.
+
+- **With a `driver`, plugins still see the default `majorVersion: "7"`** (`lib/config/index.ts`). multi-tenancy
+  (`MultiTenancyPlugin.js`) adds the ES7-only geo_shape `strategy` when `majorVersion` is missing or the number `7`:
+  it compares strictly to the number, so the string `"7"` skips it and ES8 / ES9 work, by accident. Open point.
+- **Upgrading an application to 2.61 can need a lockfile cleanup**: a stale `node_modules/kuzzle` entry (2.56 / 2.59)
+  in the templates' `package-lock.json` kept npm on the old version ("up to date"). Removing the entry, then
+  `npm install --package-lock-only --legacy-peer-deps`, fixed it. Not specific to 2.61.
 
 ## Validation
 
