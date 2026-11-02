@@ -38,6 +38,7 @@ Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or 
 ## What's fixed
 
 - A node joining a cluster could still list an index or a collection that another node had deleted before it joined, and keep a collection lock that was already released. It now replaces its cache with what the storage holds when it loads it.
+- In a cluster, a request served by one node right after another node created an index or a collection could fail with [`services.storage.unknown_index`](/core/2/api/errors/error-codes/services) or [`unknown_collection`](/core/2/api/errors/error-codes/services), or not see it in a list, for a few milliseconds. Likewise, creating an index another node had just deleted could fail with `index_already_exists`. A node now checks the storage before answering so.
 - If the `kuzzle-storage-es-7` or `kuzzle-storage-es-8` package was missing from `node_modules`, Kuzzle stopped with a raw `Cannot find module` error (2.61.0-beta.2). It now stops with the documented [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services) error, as for an external driver (2.61.0-beta.3).
 
 ## Under the hood
