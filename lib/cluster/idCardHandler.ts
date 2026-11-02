@@ -233,19 +233,19 @@ export class ClusterIdCardHandler {
   /**
    * Local node IP address
    */
-  private ip: string;
+  private readonly ip: string;
 
   /**
    * Delay for refreshing the ID Card. The heartbeat timer is run on this delay
    * and the node ID Card should be available on Redis otherwise it will be evicted.
    */
-  private refreshDelay: number;
+  private readonly refreshDelay: number;
 
   /**
    * Multiplier used to ensure the node has enough time to refresh it's ID Card
    * before the ID Card refresh delay
    */
-  private refreshMultiplier = REFRESH_MULTIPLIER;
+  private readonly refreshMultiplier = REFRESH_MULTIPLIER;
 
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
