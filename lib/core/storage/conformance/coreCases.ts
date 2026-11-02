@@ -42,6 +42,38 @@ function ids(documents: { _id?: unknown }[]): string[] {
     .sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * Deletes, without fetching them, the Lyon documents of a new collection
+ * holding `lyon` of them and one Paris document
+ */
+async function deleteLyonUnfetched(
+  context: ConformanceContext,
+  lyon: number,
+  size?: number,
+) {
+  const deleted = await context.collection("deleted-unfetched");
+  await context.driver.mCreate(
+    context.index,
+    deleted,
+    [
+      ...Array.from({ length: lyon }, () => ({ body: { city: "Lyon" } })),
+      { body: { city: "Paris" } },
+    ],
+    WAIT,
+  );
+
+  const result = await context.driver.deleteByQuery(
+    context.index,
+    deleted,
+    { term: { city: "Lyon" } },
+    { fetch: false, ...(size === undefined ? {} : { size }), ...WAIT },
+  );
+
+  assert.equal(await context.driver.count(context.index, deleted), 1);
+
+  return result;
+}
+
 export function coreCases(
   test: ConformanceTestApi,
   context: ConformanceContext,
@@ -873,38 +905,10 @@ export function coreCases(
       },
     );
 
-    /**
-     * Deletes, without fetching them, the Lyon documents of a new collection
-     * holding `lyon` of them and one Paris document
-     */
-    async function deleteLyonUnfetched(lyon: number, size?: number) {
-      const deleted = await context.collection("deleted-unfetched");
-      await context.driver.mCreate(
-        context.index,
-        deleted,
-        [
-          ...Array.from({ length: lyon }, () => ({ body: { city: "Lyon" } })),
-          { body: { city: "Paris" } },
-        ],
-        WAIT,
-      );
-
-      const result = await context.driver.deleteByQuery(
-        context.index,
-        deleted,
-        { term: { city: "Lyon" } },
-        { fetch: false, ...(size === undefined ? {} : { size }), ...WAIT },
-      );
-
-      assert.equal(await context.driver.count(context.index, deleted), 1);
-
-      return result;
-    }
-
     test.it(
       "deletes the documents matching a query without fetching them (fetch: false)",
       async () => {
-        const result = await deleteLyonUnfetched(2);
+        const result = await deleteLyonUnfetched(context, 2);
 
         assert.deepEqual(result.documents, []);
         assert.equal(result.deleted, 2);
@@ -917,7 +921,7 @@ export function coreCases(
     test.it(
       "deletes every document matching a query with no limit (size: -1)",
       async () => {
-        const result = await deleteLyonUnfetched(3, -1);
+        const result = await deleteLyonUnfetched(context, 3, -1);
 
         assert.equal(result.deleted, 3);
       },
