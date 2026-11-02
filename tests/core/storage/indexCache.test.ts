@@ -239,6 +239,57 @@ describe("#core/storage/IndexCache", () => {
     );
   });
 
+  // Tells the cache-miss reads whether anything changed since the last one
+  // (kuzzle#3140)
+  describe("#changes", () => {
+    it.each([
+      ["addIndex", (cache: IndexCache) => cache.addIndex("new")],
+      ["addCollection", (cache: IndexCache) => cache.addCollection("i", "new")],
+      ["removeIndex", (cache: IndexCache) => cache.removeIndex("i")],
+      [
+        "removeCollection",
+        (cache: IndexCache) => cache.removeCollection("i", "c"),
+      ],
+      [
+        "replaceIndexes",
+        (cache: IndexCache) =>
+          cache.replaceIndexes({}, cache.snapshotIndexes()),
+      ],
+      [
+        "learn",
+        (cache: IndexCache) => cache.learn({ peer: [] }, cache.removals),
+      ],
+    ])("counts a change made by %s", (_, change) => {
+      indexCache.addCollection("i", "c");
+      const before = indexCache.changes;
+
+      change(indexCache);
+
+      expect(indexCache.changes).toBeGreaterThan(before);
+    });
+
+    it("counts nothing when nothing changes", () => {
+      indexCache.addCollection("i", "c");
+      const before = indexCache.changes;
+
+      indexCache.addIndex("i");
+      indexCache.addCollection("i", "c");
+      indexCache.learn({ i: ["c"] }, indexCache.removals);
+
+      expect(indexCache.changes).toBe(before);
+    });
+
+    it("leaves the removal counter to removals", () => {
+      const removals = indexCache.removals;
+
+      indexCache.addCollection("i", "c");
+      indexCache.learn({ peer: ["c"] }, removals);
+
+      expect(indexCache.removals).toBe(removals);
+      expect(indexCache.hasIndex("peer")).toBe(true);
+    });
+  });
+
   describe("#assertions", () => {
     it("asserts an index exists", () => {
       indexCache.addIndex("foo");

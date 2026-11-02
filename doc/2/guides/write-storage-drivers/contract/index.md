@@ -55,6 +55,10 @@ Every driver implements these methods. Indexes and collections are Kuzzle's name
 | Several documents | `mGet`, `mExists`, `mCreate`, `mCreateOrReplace`, `mUpdate`, `mUpsert`, `mReplace`, `mDelete`, `import` |
 | Search | `search`, `scroll`, `deleteByQuery`, `mExecute` |
 
+At startup, Kuzzle refuses a driver instance lacking one of them
+([services.storage_driver.invalid_driver](/core/2/api/errors/error-codes/services)), rather than failing on the first
+request needing it.
+
 A few rules hold across them:
 
 - **Search bodies, mappings and settings are in the Elasticsearch format**, as the API receives them: the driver

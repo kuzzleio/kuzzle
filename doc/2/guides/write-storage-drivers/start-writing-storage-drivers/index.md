@@ -133,12 +133,17 @@ cd ../my-application && npm install ../kuzzle-storage-myengine-1/kuzzle-storage-
 }
 ```
 
-Kuzzle resolves the package from the application's directory, checks its manifest, loads it and logs
-`[ℹ] Storage driver: kuzzle-storage-myengine-1@<version>`. Every key of `services.storageEngine` is handed to the
-driver's constructor.
+Kuzzle resolves the package from the current directory (where it also finds `.kuzzlerc`), then from its own location,
+checks its manifest, loads it and logs
+`[ℹ] Storage driver: kuzzle-storage-myengine-1@<version> (<directory it was loaded from>)`. Every key of
+`services.storageEngine` is handed to the driver's constructor.
 
-::: warning
-A driver installed from a directory (`npm link`, or `npm install ../my-driver`, which links it too) resolves `kuzzle`
-from its own location, and gets another copy of Kuzzle than the running one: the errors it throws are then not
-recognized. Install a packed tarball, as above, or the published package.
+`driver` takes a package name, not a path: install the driver first, then name its package. An npm alias
+(`npm install my-engine@npm:kuzzle-storage-myengine-1`, then `"driver": "my-engine"`) works too.
+
+::: tip
+Whichever copy of `kuzzle` the driver's `require("kuzzle")` resolves, Kuzzle hands it the running Kuzzle before
+loading it, so that the errors it throws are recognized: a copy npm installed for the peer dependency, or the one of a
+directory the driver is linked from (`npm link`, `npm install ../my-driver`). A linked driver still runs with its
+directory's own dependencies: try a packed tarball, as above, before publishing.
 :::

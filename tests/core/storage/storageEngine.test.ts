@@ -32,6 +32,7 @@ vi.mock("../../../lib/core/storage/clientAdapter", () => ({
 const selected = vi.hoisted(() => ({
   description: "the built-in Elasticsearch 7 driver",
   identity: null as string | null,
+  location: null as string | null,
 }));
 
 vi.mock("../../../lib/core/storage/storageDriverLoader", () => ({
@@ -81,17 +82,18 @@ describe("#core/storage/StorageEngine", () => {
 
     it("logs the external storage driver it runs on", () => {
       selected.description = selected.identity = "kuzzle-storage-es-9@1.0.0";
+      selected.location = "/app/node_modules/kuzzle-storage-es-9";
       logger.info.mockClear();
 
       try {
         engine = new StorageEngine();
       } finally {
         selected.description = "the built-in Elasticsearch 7 driver";
-        selected.identity = null;
+        selected.identity = selected.location = null;
       }
 
       expect(logger.info).toHaveBeenCalledExactlyOnceWith(
-        "[ℹ] Storage driver: kuzzle-storage-es-9@1.0.0",
+        "[ℹ] Storage driver: kuzzle-storage-es-9@1.0.0 (/app/node_modules/kuzzle-storage-es-9)",
       );
     });
 
@@ -106,9 +108,7 @@ describe("#core/storage/StorageEngine", () => {
       engine = new StorageEngine();
 
       expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
-        expect.stringContaining(
-          '"services.storageEngine.driver" selects the storage driver: services.storageEngine.majorVersion',
-        ),
+        "[⚠] services.storageEngine.majorVersion is ignored because services.storageEngine.driver is set: remove majorVersion.",
       );
     });
   });

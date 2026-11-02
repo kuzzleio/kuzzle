@@ -28,6 +28,9 @@ export function moduleStub(name: string) {
   };
 }
 
+/** The cluster's storage driver check, run before the storage init. */
+export const assertClusterStorageDriver = vi.fn(async () => undefined);
+
 /** Frees the locks taken through `withLock`; see `MutexStub` for the rest. */
 export const releaseAllLocksBeforeExit = vi.fn(async () => undefined);
 
@@ -50,6 +53,8 @@ export function reset(): void {
     init.mockClear();
   }
 
+  assertClusterStorageDriver.mockReset();
+  assertClusterStorageDriver.mockResolvedValue(undefined);
   MutexStub.releaseAllBeforeExit.mockClear();
   releaseAllLocksBeforeExit.mockClear();
 }

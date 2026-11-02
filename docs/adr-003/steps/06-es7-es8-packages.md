@@ -111,6 +111,14 @@ driver. The next major only drops the two dependencies (step 08).
   cached page keeps loading the chunks the deploy deleted. Fixed in kuzdoc#19 (`<path>*`); until it is released, run
   `aws cloudfront create-invalidation --paths "/<deploy path>/*"` by hand (profile with the docs account).
 
+- **Loader hardening (#3132, #3134, #3137, #3142).** External drivers now get the running Kuzzle too
+  (`provideRunningKuzzle`, moved to `lib/service/storage/driverPackage.ts`); the CI copy at `/node_modules/kuzzle`
+  is `features/fixtures/kuzzle-stale-copy`, which throws if loaded, so the es9 / OpenSearch jobs catch a regression.
+  Core methods are checked at startup (`CORE_METHODS`, exhaustive over `StorageDriverCore` by the compiler). Kept
+  cwd-first resolution (`.kuzzlerc` is found from cwd too; Kuzzle's own location is the fallback, and the log now
+  shows the driver's directory); npm aliases supported, paths refused with a hint. New id
+  `services.storage_driver.unsupported_major_version` replaces the plain `Error` for an unknown `majorVersion`.
+
 ## Validation
 
 - Conformance kit 32 / 32: `storage-es-7` on Elasticsearch 7.17.26, `storage-es-8` on 8.17.1, locally and in each
