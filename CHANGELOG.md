@@ -1,3 +1,9 @@
+## [2.61.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.3...v2.61.0-beta.4) (2026-11-02)
+
+### Bug Fixes
+
+* **storage:** check storage before a cluster node reports a missing index or collection ([277fec4](https://github.com/kuzzleio/kuzzle/commit/277fec40906a4d7e7ad8778227b7682dfb2249f9)), closes [#3121](https://github.com/kuzzleio/kuzzle/issues/3121)
+
 ## [2.61.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.2...v2.61.0-beta.3) (2026-11-02)
 
 ### Bug Fixes
