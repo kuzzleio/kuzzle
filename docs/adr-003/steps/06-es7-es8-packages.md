@@ -76,6 +76,9 @@ driver. The next major only drops the two dependencies (step 08).
 - Optional `close()` engine hook (#3141): called once per scope instance on a graceful shutdown, after the funnel
   drains and the locks are freed, bounded to 5 s, a failure only logged; the kit closes its instances and has a
   capability-free case for it. The built-in drivers do not implement it yet (driver repositories' follow-up).
+- #3133 (feature): `context.accessors.getStorageEngine()` / `app.storage.getEngine()` give `{ driver, engine,
+  version }` (driver package, `info().type`, `info().version`); `majorVersion` unchanged. The OpenSearch drivers'
+  `info()` still reports `type: "elasticsearch"`: driver-side fix.
 
 ## Local decisions / gotchas
 

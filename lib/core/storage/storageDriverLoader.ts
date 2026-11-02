@@ -45,6 +45,8 @@ import {
   type StorageDriver,
   type StorageDriverClass,
   type StorageDriverCore,
+  type StorageEngineInfo,
+  type StorageInfo,
   type StorageMappingUpdates,
   type StorageStatsCapability,
   type StorageUpdateByQuery,
@@ -138,6 +140,8 @@ export type SelectedStorageDriver = {
   builtIn: string | null;
   /** The selected driver, for the logs */
   description: string;
+  /** The driver's package name, built-in or external */
+  packageName: string;
   /** The directory an external driver is loaded from, `null` for a built-in one */
   location: string | null;
 };
@@ -192,6 +196,22 @@ export function createNativeStorageClient(
 }
 
 /**
+ * The storage engine Kuzzle runs on: the driver's package, and the engine
+ * family and server version its `info()` reports. Asks the engine, so only
+ * once the storage is initialized.
+ */
+export async function getStorageEngineInfo(): Promise<StorageEngineInfo> {
+  const { packageName } = selectStorageDriver(
+    global.kuzzle.config.services.storageEngine,
+  );
+  const { type, version }: StorageInfo = await global.kuzzle.ask(
+    "core:storage:public:info:get",
+  );
+
+  return { driver: packageName, engine: type, version };
+}
+
+/**
  * Checks that a driver instance has the methods of the core contract, and
  * those of the capabilities its driver declares: at startup, rather than
  * with a `TypeError` on the first request needing a missing one. Done on the
@@ -234,14 +254,18 @@ function selectBuiltInDriver(
   // Without a `majorVersion`, the raw client surfaces have always built an
   // Elasticsearch 7 client.
   const majorVersion = config.majorVersion ?? "7";
+  // Throws first if no built-in driver supports `majorVersion`
+  const Driver = builtInStorageDriver(majorVersion);
+  const packageName = builtInStorageDriverPackage(majorVersion)!;
 
   return {
-    Driver: builtInStorageDriver(majorVersion),
-    builtIn: builtInStorageDriverPackage(majorVersion) ?? null,
+    Driver,
+    builtIn: packageName,
     capabilities: BUILT_IN_CAPABILITIES,
     description: `the built-in Elasticsearch ${majorVersion} driver`,
     identity: null,
     location: null,
+    packageName,
   };
 }
 
@@ -282,6 +306,7 @@ function loadExternalDriver(name: unknown): SelectedStorageDriver {
     description: name === packageName ? identity : `${name} (${identity})`,
     identity,
     location: root,
+    packageName,
   };
 }
 
