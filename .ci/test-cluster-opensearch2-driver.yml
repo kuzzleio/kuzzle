@@ -1,0 +1,27 @@
+# Overlay on top of `.ci/test-cluster-8.yml`: OpenSearch 2, and every Kuzzle
+# node runs the external driver kuzzle-storage-opensearch-2 (ADR-0003 step 07),
+# installed from npm as an application would. `.ci/scripts/docker-test.sh` and
+# `.ci/scripts/run-test-cluster.sh` add it when STORAGE_DRIVER=opensearch2,
+# after staging the driver in .ci/storage-driver-opensearch2/node_modules.
+x-opensearch2-driver: &opensearch2-driver
+  volumes:
+    # Same layout as .ci/test-cluster-es9-driver.yml
+    - ./storage-driver-opensearch2/node_modules:/node_modules:ro
+  environment:
+    kuzzle_services__storageEngine__driver: "kuzzle-storage-opensearch-2"
+
+services:
+  kuzzle_node_1: *opensearch2-driver
+  kuzzle_node_2: *opensearch2-driver
+  kuzzle_node_3: *opensearch2-driver
+  kuzzle_node_prod: *opensearch2-driver
+
+  # The service keeps its name, which the Kuzzle nodes reach it by. Its
+  # environment adds to the base file's (indices.id_field_data.enabled).
+  elasticsearch:
+    image: docker.io/opensearchproject/opensearch:2.19.7
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g

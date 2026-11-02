@@ -476,12 +476,15 @@ app.controller.register("tests", {
       handler: async (request: KuzzleRequest) => {
         const indice = `&${request.getIndex()}.${request.getCollection()}`;
         const aliases = { [`@${indice}`]: {} };
-        const es7 =
-          global.kuzzle.config.services.storageEngine.majorVersion === "7";
+        const { driver, majorVersion } =
+          global.kuzzle.config.services.storageEngine;
+        // The Elasticsearch 7 client, and the OpenSearch one forked from it,
+        // take the request body apart
+        const bodyClient =
+          majorVersion === "7" || /opensearch/.test(String(driver ?? ""));
 
-        // The Elasticsearch 7 client takes the request body apart
         await app.storage.storageClient.indices.create(
-          es7
+          bodyClient
             ? { body: { aliases }, index: indice }
             : { aliases, index: indice },
         );
