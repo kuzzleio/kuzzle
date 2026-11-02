@@ -357,7 +357,7 @@
       "code": 6,
       "errors": {
         "not_found": {
-          "description": "The package named by services.storageEngine.driver cannot be found. Kuzzle does not start.",
+          "description": "The storage driver package cannot be found: the one named by services.storageEngine.driver, or the built-in kuzzle-storage-es-7 / kuzzle-storage-es-8 package of the configured majorVersion. Kuzzle does not start.",
           "code": 1,
           "message": "Cannot find the storage driver \"%s\": %s.",
           "class": "InternalError"

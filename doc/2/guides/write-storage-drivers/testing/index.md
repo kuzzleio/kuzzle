@@ -57,7 +57,7 @@ starting point.
 
 The kit checks behaviour against a real engine; unit tests pin what it cannot reach: the requests sent for each
 action, error translation, edge cases. The Elasticsearch drivers share one unit suite, with a stubbed client:
-`test/unit/` in [storage-es-8](https://github.com/kuzzleio/storage-es-8/tree/beta/test/unit) shows how to run a
+`test/unit/` in [storage-es-8](https://github.com/kuzzleio/storage-es-8/tree/master/test/unit) shows how to run a
 driver through Kuzzle's own `StorageService`, with the `kuzzle` version the driver is developed against.
 
 ## In an application

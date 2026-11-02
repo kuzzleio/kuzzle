@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Status:** in beta since 2026-10-30 (2.61.0-beta.1, then 2.61.0-beta.2).
+**Status:** in beta since 2026-10-30 (2.61.0-beta.1, 2.61.0-beta.2, then 2.61.0-beta.3).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
@@ -30,7 +30,7 @@ Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or 
 - **Capabilities.** A driver may not support every feature (aggregations, mapping changes, statistics, update by query). A request needing one it does not support is rejected with a clear [`services.storage_driver.unsupported_capability`](/core/2/api/errors/error-codes/services) error. The built-in drivers support them all.
 - **Same driver on every cluster node.** A node running another driver, or another version of it, than the rest of the cluster is refused when it joins, with a [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster) error. Nodes running the built-in Elasticsearch drivers are not compared, so an Elasticsearch 7 or 8 cluster joins as before.
 - **Elasticsearch 7 and 8 as packages** (2.61.0-beta.2). The built-in drivers now live in their own packages, [`kuzzle-storage-es-7`](https://www.npmjs.com/package/kuzzle-storage-es-7) and [`kuzzle-storage-es-8`](https://www.npmjs.com/package/kuzzle-storage-es-8), which Kuzzle depends on and installs with itself: same code, same behavior, still selected by `majorVersion`. Your `package.json` does not change.
-- **Elasticsearch 9.** Install the driver [`kuzzle-storage-es-9`](https://www.npmjs.com/package/kuzzle-storage-es-9) (in beta) next to Kuzzle and set `services.storageEngine.driver` to `"kuzzle-storage-es-9"`. It is Kuzzle's Elasticsearch 8 driver on the Elasticsearch 9 client: same mappings, same queries, same errors.
+- **Elasticsearch 9.** Install the driver [`kuzzle-storage-es-9`](https://www.npmjs.com/package/kuzzle-storage-es-9) (`1.0.0`) next to Kuzzle and set `services.storageEngine.driver` to `"kuzzle-storage-es-9"`. It is Kuzzle's Elasticsearch 8 driver on the Elasticsearch 9 client: same mappings, same queries, same errors.
 - **`majorVersion` is deprecated**, in the documentation only: it keeps working unchanged in Kuzzle 2, and Kuzzle 3 will select the storage engine with `driver` alone. Kuzzle warns at startup only if your configuration sets both `driver` and `majorVersion`, since `majorVersion` is then ignored.
 - **For driver authors.** `kuzzle` exports what a driver needs: the `StorageDriver` contract and its types, a conformance kit (`describeStorageDriverConformance`) that tests a driver against its real engine, and `storageError`, so that a driver returns the same errors as Kuzzle. Read the new [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide.
 - **Drivers documentation.** Each official driver has its own documentation (install, configuration, TypeScript, compatibility, troubleshooting) in the new [Drivers](/drivers/v2.html) section.
@@ -38,7 +38,8 @@ Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or 
 ## What's fixed
 
 - A node joining a cluster could still list an index or a collection that another node had deleted before it joined, and keep a collection lock that was already released. It now replaces its cache with what the storage holds when it loads it.
+- If the `kuzzle-storage-es-7` or `kuzzle-storage-es-8` package was missing from `node_modules`, Kuzzle stopped with a raw `Cannot find module` error (2.61.0-beta.2). It now stops with the documented [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services) error, as for an external driver (2.61.0-beta.3).
 
 ## Under the hood
 
-- `kuzzle` depends on `kuzzle-storage-es-7` and `kuzzle-storage-es-8` (`1.0.0-beta.1`), at pinned versions: a new version of a built-in driver reaches you with a Kuzzle release.
+- `kuzzle` depends on `kuzzle-storage-es-7` and `kuzzle-storage-es-8` (`1.0.0`), at pinned versions: a new version of a built-in driver reaches you with a Kuzzle release.

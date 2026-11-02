@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -25,6 +25,8 @@ The changelog is generated from the commits and says what was done. This page sa
 Kuzzle now talks to its database through a [storage driver](/core/2/guides/main-concepts/data-storage#storage-drivers). Elasticsearch 7 and 8 are its built-in drivers, still selected by `services.storageEngine.majorVersion`: their behavior and their configuration do not change.
 
 Since 2.61.0-beta.2, their code lives in two packages, [`kuzzle-storage-es-7`](/drivers/storage-es-7/1/) and [`kuzzle-storage-es-8`](/drivers/storage-es-8/1/), which `kuzzle` depends on at pinned versions. `npm install` brings them with Kuzzle: there is nothing to add to your `package.json`. `npm ls kuzzle-storage-es-8` shows the version your Kuzzle uses.
+
+Since 2.61.0-beta.3, both are pinned to their stable `1.0.0`. If the package of the configured `majorVersion` is missing (a partial install, a pruned `node_modules`), Kuzzle does not start and reports [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services). **Action**, only if you see it: run `npm install` again.
 
 A rolling upgrade from v2.60 works as before: nodes running the built-in drivers are not compared when they join the cluster.
 

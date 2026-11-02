@@ -4,13 +4,13 @@
 # application would, into .ci/storage-driver-es9/node_modules, which
 # .ci/test-cluster-es9-driver.yml mounts at /node_modules on every Kuzzle node.
 #
-# Usage: .ci/scripts/stage-es9-driver.sh [npm spec, default kuzzle-storage-es-9@beta]
+# Usage: .ci/scripts/stage-es9-driver.sh [npm spec, default kuzzle-storage-es-9@latest]
 #
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STAGE="$ROOT_DIR/.ci/storage-driver-es9"
-SPEC="${1:-kuzzle-storage-es-9@beta}"
+SPEC="${1:-kuzzle-storage-es-9@latest}"
 
 rm -rf "$STAGE"
 mkdir -p "$STAGE"

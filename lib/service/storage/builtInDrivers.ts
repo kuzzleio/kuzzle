@@ -29,15 +29,23 @@ import * as path from "node:path";
 import type { Client as ClientES7 } from "sdk-es7";
 import type { Client as ClientES8 } from "sdk-es8";
 
+import * as kerror from "../../kerror";
 import type { StorageEngineElasticsearch } from "../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type { StorageDriverClass } from "../../types/storage/StorageDriver";
+
+const driverError = kerror.wrap("services", "storage_driver");
 
 const PACKAGES = {
   "7": "kuzzle-storage-es-7",
   "8": "kuzzle-storage-es-8",
 } as const;
 
-/** The built-in driver of an Elasticsearch major version */
+/**
+ * The built-in driver of an Elasticsearch major version
+ *
+ * @throws {services.storage_driver.not_found} if its package is not
+ *   installed: Kuzzle does not start
+ */
 export function builtInStorageDriver(
   majorVersion: StorageEngineElasticsearch["majorVersion"],
 ): StorageDriverClass<ClientES7 | ClientES8, StorageEngineElasticsearch> {
@@ -47,12 +55,24 @@ export function builtInStorageDriver(
     throw new Error("Invalid Elasticsearch version.");
   }
 
-  provideRunningKuzzle(packageName);
+  let entry: string;
+
+  try {
+    entry = require.resolve(packageName);
+  } catch (error) {
+    throw driverError.get(
+      "not_found",
+      packageName,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+
+  provideRunningKuzzle(entry);
 
   // Loaded here, not at module load: the package requires `kuzzle`, which
   // has to be loaded first.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require(packageName).default;
+  return require(entry).default;
 }
 
 /**
@@ -62,7 +82,7 @@ export function builtInStorageDriver(
  * that peer dependency, whose error classes the running Kuzzle does not
  * recognize: the running Kuzzle is put in that copy's place.
  */
-function provideRunningKuzzle(packageName: string): void {
+function provideRunningKuzzle(driverEntry: string): void {
   // `index.js` once built, `index.ts` when run from the sources
   const entry = path.join(__dirname, "../../../index");
   const running = require.cache[`${entry}.js`] ?? require.cache[`${entry}.ts`];
@@ -70,7 +90,7 @@ function provideRunningKuzzle(packageName: string): void {
 
   try {
     peer = require.resolve("kuzzle", {
-      paths: [path.dirname(require.resolve(packageName))],
+      paths: [path.dirname(driverEntry)],
     });
   } catch {
     return;
