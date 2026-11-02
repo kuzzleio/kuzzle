@@ -63,6 +63,8 @@ A few rules hold across them:
   language. An Elasticsearch-family driver uses `QueryTranslator`, which `kuzzle` exports.
 - **Writes stamp `_kuzzle_info`** (`author`, `createdAt`, `updater`, `updatedAt`) from the `userId` option, unless
   `injectKuzzleMeta` is `false`, and honour `refresh` (`false`, `true` or `"wait_for"`).
+- **An update meeting a version conflict** retries up to its `retryOnConflict` option, then rejects with
+  `services.storage.too_many_changes`.
 - **The `m*` writes are partial**: a document that cannot be written goes in `errors`, the others are written.
   `mCreateOrReplace` rejects more documents than `limits.documentsWriteCount` with
   `services.storage.write_limit_exceeded`, unless its `limits` option is `false`; `source: false` leaves `_source` out

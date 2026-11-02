@@ -516,6 +516,41 @@ export function coreCases(
       },
     );
 
+    // Twenty concurrent updates of one document, without retries: some meet
+    // a version conflict, which Kuzzle answers as `too_many_changes` (the
+    // error that tells the client to use `retryOnConflict`).
+    test.it(
+      "rejects an update meeting a version conflict with too_many_changes",
+      async () => {
+        await context.driver.create(
+          context.index,
+          collection,
+          {},
+          { id: "conflicting" },
+        );
+
+        const results = await Promise.allSettled(
+          Array.from({ length: 20 }, (_, value) =>
+            context.driver.update(context.index, collection, "conflicting", {
+              [`f${value}`]: value,
+            }),
+          ),
+        );
+        const rejections = results.flatMap((result) =>
+          result.status === "rejected" ? [result.reason] : [],
+        );
+
+        assert.ok(rejections.length > 0, "no update met a version conflict");
+        for (const error of rejections) {
+          assert.equal(
+            field(error, "id"),
+            "services.storage.too_many_changes",
+            `expected services.storage.too_many_changes, got: ${String(error)}`,
+          );
+        }
+      },
+    );
+
     // Each conflict an update meets means another one went through: with five
     // concurrent updates, four retries each are enough.
     test.it(
