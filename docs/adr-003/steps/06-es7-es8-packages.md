@@ -62,6 +62,13 @@ driver. The next major only drops the two dependencies (step 08).
 - Drivers `1.0.0` (2026-10-31): `beta` merged into `master` in each driver repository (storage-es-7#2,
   storage-es-8#2, storage-es-9#3), published by semantic-release on `latest`, back-merged into `beta`; `kuzzle` pins
   es-7 / es-8 `1.0.0` and its ES9 CI stages `kuzzle-storage-es-9@latest` ([#3118](https://github.com/kuzzleio/kuzzle/pull/3118)).
+- 2.61.0-beta.3 published 2026-11-02 ([#3120](https://github.com/kuzzleio/kuzzle/pull/3120), notes
+  [#3119](https://github.com/kuzzleio/kuzzle/pull/3119)). Its CI and #3119's each had one functional scenario fail and
+  pass on rerun: a node not yet knowing an index or a collection another node had just created or deleted. Not a 2.61
+  regression (the cluster cache broadcast never was awaited); fixed for beta.4 by checking storage before such an
+  answer ([#3121](https://github.com/kuzzleio/kuzzle/issues/3121)).
+- The driver docs' home redirect pointed to an absolute path that the framework's `Redirect` appends to the current
+  URL (404): relative in storage-es-7#4, storage-es-8#4, storage-es-9#5.
 
 ## Local decisions / gotchas
 
@@ -95,6 +102,10 @@ driver. The next major only drops the two dependencies (step 08).
 - **Upgrading an application to 2.61 can need a lockfile cleanup**: a stale `node_modules/kuzzle` entry (2.56 / 2.59)
   in the templates' `package-lock.json` kept npm on the old version ("up to date"). Removing the entry, then
   `npm install --package-lock-only --legacy-peer-deps`, fixed it. Not specific to 2.61.
+
+- **A docs deploy invalidates only its section root on CloudFront** (`kuzdoc`): the sub-pages stay cached, and a
+  cached page keeps loading the chunks the deploy deleted. Fixed in kuzdoc#19 (`<path>*`); until it is released, run
+  `aws cloudfront create-invalidation --paths "/<deploy path>/*"` by hand (profile with the docs account).
 
 ## Validation
 

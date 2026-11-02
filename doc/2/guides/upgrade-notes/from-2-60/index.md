@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -50,6 +50,12 @@ To run Elasticsearch 9, install [`kuzzle-storage-es-9`](https://www.npmjs.com/pa
 ### Index cache of a joining node
 
 A node joining a cluster could keep, in its cache, an index or a collection that another node had deleted before it joined, and a collection write lock already released: the deletion was announced to the nodes already in the cluster only. When it loads its cache, a node now replaces it with what the storage holds.
+
+### Index and collection checks in a cluster
+
+Each node keeps the list of indexes and collections in memory, and learns about the ones another node creates or deletes through a cluster message that no request waits for. For a few milliseconds after a creation on one node, another node could answer that the index or the collection does not exist (`services.storage.unknown_index`, `unknown_collection`), leave it out of `index:list` or `collection:list`, or refuse to create an index another node had just deleted (`index_already_exists`).
+
+A node now checks the storage before giving such an answer, and updates its list. As a result, `index:list`, `collection:list` and `index:stats` read the storage on every call, and a request on an index or a collection that does not exist costs one storage read before it fails. Requests on existing indexes and collections are unchanged.
 
 ## Plugin and application developers
 
