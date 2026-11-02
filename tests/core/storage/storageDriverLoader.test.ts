@@ -105,6 +105,7 @@ describe("#core/storage/storageDriverLoader", () => {
 
         expect(selectStorageDriver(config)).toEqual({
           Driver: builtInStorageDriver(majorVersion),
+          builtIn: `kuzzle-storage-es-${majorVersion}`,
           capabilities: new Set([
             "aggregations",
             "mappingUpdates",
@@ -147,6 +148,7 @@ describe("#core/storage/storageDriverLoader", () => {
       const selected = selectStorageDriver(config);
 
       expect(selected).toMatchObject({
+        builtIn: null,
         capabilities: new Set(["stats"]),
         description: "storage-memory@1.2.3",
         identity: "storage-memory@1.2.3",
@@ -300,6 +302,7 @@ describe("#core/storage/storageDriverLoader", () => {
       capabilities: StorageCapability[],
     ): SelectedStorageDriver => ({
       Driver: builtInStorageDriver("7"),
+      builtIn: null,
       capabilities: new Set(capabilities),
       description: "storage-memory@1.2.3",
       identity: "storage-memory@1.2.3",

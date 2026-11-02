@@ -42,7 +42,26 @@ export type SerializedIdCard = {
    * set with a built-in driver, as on the nodes that predate the drivers.
    */
   storageDriver?: string;
+  /**
+   * Package of the node's built-in storage driver (e.g.
+   * `kuzzle-storage-es-7`), without its version. Not set with an external
+   * driver, nor on the nodes that predate 2.61.0: a card with neither field
+   * is a built-in node of unknown major version.
+   */
+  builtInStorageDriver?: string;
 };
+
+/**
+ * How many heartbeats an ID card outlives the last renewal of its node
+ */
+const REFRESH_MULTIPLIER = 2;
+
+/**
+ * How long an ID card outlives the last renewal of its node, in ms
+ */
+export function idCardTtl(heartbeat: number): number {
+  return heartbeat * REFRESH_MULTIPLIER;
+}
 
 export class IdCard {
   /**
@@ -79,18 +98,26 @@ export class IdCard {
    */
   public readonly storageDriver?: string;
 
+  /**
+   * The package of the node's built-in storage driver; `undefined` with an
+   * external one, or on a node older than 2.61.0
+   */
+  public readonly builtInStorageDriver?: string;
+
   constructor({
     id,
     ip,
     birthdate,
     topology,
     storageDriver,
+    builtInStorageDriver,
   }: SerializedIdCard) {
     this.id = id;
     this.ip = ip;
     this.birthdate = birthdate;
     this.topology = new Set(topology);
     this.storageDriver = storageDriver;
+    this.builtInStorageDriver = builtInStorageDriver;
   }
 
   serialize(): SerializedIdCard {
@@ -107,12 +134,86 @@ export class IdCard {
       serialized.storageDriver = this.storageDriver;
     }
 
+    // A field of its own rather than a value of `storageDriver`: a
+    // 2.61.0-beta node reads a card without `storageDriver` as a built-in
+    // node, and must keep joining these
+    if (this.builtInStorageDriver !== undefined) {
+      serialized.builtInStorageDriver = this.builtInStorageDriver;
+    }
+
     return serialized;
   }
 
   static unserialize(serialized: SerializedIdCard): IdCard {
     return new IdCard(serialized);
   }
+}
+
+/**
+ * Retrieves the ID cards of the cluster nodes, but the one stored under
+ * `ownKey`
+ *
+ * Each node store it's ID Card under a specific key name. When Redis database
+ * is growing, searching for those keys can be quite expensive and can slow down
+ * the handshake process.
+ *
+ * We are storing a set containing ID Card's keys under a set so when a new node
+ * is started, it can directly get the other nodes ID Cards with SMEMBERS and
+ * then MGET instead of using SCAN.
+ *
+ * When a new node retrieve the ID Card's keys from the set, it try to get them
+ * with MGET, those who cannot be retrieved are expired ID Cards so the node update
+ * the set accordingly.
+ *
+ * A function rather than a method: a starting node reads the cards before it
+ * has a card, or a `ClusterNode`, of its own (storage driver check).
+ */
+export async function getIdCards(ownKey: string | null): Promise<IdCard[]> {
+  const idCards: IdCard[] = [];
+
+  let keys: string[] = await global.kuzzle.ask(
+    "core:cache:internal:execute",
+    "smembers",
+    REDIS_ID_CARDS_INDEX,
+  );
+
+  keys = keys.filter((nodeIdKey) => nodeIdKey !== ownKey);
+
+  if (keys.length === 0) {
+    return idCards;
+  }
+
+  const rawIdCards: string[] = await global.kuzzle.ask(
+    "core:cache:internal:mget",
+    keys,
+  );
+  const expiredIdCards: string[] = [];
+
+  // `entries()` over the keys: `rawIdCards` is the answer to a mget over
+  // exactly these keys, so the pair is what the loop is really walking.
+  for (const [i, key] of keys.entries()) {
+    // filter keys that might have expired between the key search and their
+    // values retrieval
+    const raw = rawIdCards[i];
+
+    if (raw !== null && raw !== undefined) {
+      idCards.push(IdCard.unserialize(JSON.parse(raw)));
+    } else {
+      expiredIdCards.push(key);
+    }
+  }
+
+  // Clean expired ID Card's keys in the index
+  await Bluebird.map(expiredIdCards, (idCardKey) => {
+    return global.kuzzle.ask(
+      "core:cache:internal:execute",
+      "srem",
+      REDIS_ID_CARDS_INDEX,
+      idCardKey,
+    );
+  });
+
+  return idCards;
 }
 
 /**
@@ -144,7 +245,7 @@ export class ClusterIdCardHandler {
    * Multiplier used to ensure the node has enough time to refresh it's ID Card
    * before the ID Card refresh delay
    */
-  private refreshMultiplier = 2;
+  private refreshMultiplier = REFRESH_MULTIPLIER;
 
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
@@ -187,7 +288,7 @@ export class ClusterIdCardHandler {
    * How long an ID card outlives the last renewal of its node, in ms
    */
   get ttl(): number {
-    return this.refreshDelay * this.refreshMultiplier;
+    return idCardTtl(this.refreshDelay);
   }
 
   /**
@@ -217,6 +318,7 @@ export class ClusterIdCardHandler {
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),
+        builtInStorageDriver: this.node.builtInStorageDriver,
         id: this.nodeId,
         ip: this.ip,
         storageDriver: this.node.storageDriver,
@@ -376,68 +478,10 @@ export class ClusterIdCardHandler {
   }
 
   /**
-   * Retrieves the ID cards from other nodes
-   *
-   * Each node store it's ID Card under a specific key name. When Redis database
-   * is growing, searching for those keys can be quite expensive and can slow down
-   * the handshake process.
-   *
-   * We are storing a set containing ID Card's keys under a set so when a new node
-   * is started, it can directly get the other nodes ID Cards with SMEMBERS and
-   * then MGET instead of using SCAN.
-   *
-   * When a new node retrieve the ID Card's keys from the set, it try to get them
-   * with MGET, those who cannot be retrieved are expired ID Cards so the node update
-   * the set accordingly.
-   *
-   * @return {Array.<IdCard>}
+   * Retrieves the ID cards from other nodes: see `getIdCards()`
    */
-  async getRemoteIdCards(): Promise<IdCard[]> {
-    const idCards: IdCard[] = [];
-
-    let keys: string[] = await global.kuzzle.ask(
-      "core:cache:internal:execute",
-      "smembers",
-      REDIS_ID_CARDS_INDEX,
-    );
-
-    keys = keys.filter((nodeIdKey) => nodeIdKey !== this.nodeIdKey);
-
-    if (keys.length === 0) {
-      return idCards;
-    }
-
-    const rawIdCards: string[] = await global.kuzzle.ask(
-      "core:cache:internal:mget",
-      keys,
-    );
-    const expiredIdCards: string[] = [];
-
-    // `entries()` over the keys: `rawIdCards` is the answer to a mget over
-    // exactly these keys, so the pair is what the loop is really walking.
-    for (const [i, key] of keys.entries()) {
-      // filter keys that might have expired between the key search and their
-      // values retrieval
-      const raw = rawIdCards[i];
-
-      if (raw !== null && raw !== undefined) {
-        idCards.push(IdCard.unserialize(JSON.parse(raw)));
-      } else {
-        expiredIdCards.push(key);
-      }
-    }
-
-    // Clean expired ID Card's keys in the index
-    await Bluebird.map(expiredIdCards, (idCardKey) => {
-      return global.kuzzle.ask(
-        "core:cache:internal:execute",
-        "srem",
-        REDIS_ID_CARDS_INDEX,
-        idCardKey,
-      );
-    });
-
-    return idCards;
+  getRemoteIdCards(): Promise<IdCard[]> {
+    return getIdCards(this.nodeIdKey);
   }
 
   /**

@@ -41,6 +41,16 @@ const PACKAGES = {
 } as const;
 
 /**
+ * The package of the built-in driver of an Elasticsearch major version,
+ * `undefined` for an unknown one
+ */
+export function builtInStorageDriverPackage(
+  majorVersion: StorageEngineElasticsearch["majorVersion"],
+): string | undefined {
+  return PACKAGES[majorVersion];
+}
+
+/**
  * The built-in driver of an Elasticsearch major version
  *
  * @throws {services.storage_driver.not_found} if its package is not
@@ -49,7 +59,7 @@ const PACKAGES = {
 export function builtInStorageDriver(
   majorVersion: StorageEngineElasticsearch["majorVersion"],
 ): StorageDriverClass<ClientES7 | ClientES8, StorageEngineElasticsearch> {
-  const packageName = PACKAGES[majorVersion];
+  const packageName = builtInStorageDriverPackage(majorVersion);
 
   if (!packageName) {
     throw new Error("Invalid Elasticsearch version.");
