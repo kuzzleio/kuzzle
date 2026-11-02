@@ -1,6 +1,6 @@
 # Step 07 — OpenSearch 2 and 3 drivers
 
-**Status:** 🟦 In progress · **Opened:** 2026-11-02 · **PR:** — · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** 🟦 In progress · **Opened:** 2026-11-02 · **PR:** [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
@@ -13,7 +13,7 @@ alongside the ES9 driver. Kuzzle's functional matrix runs on both. An ES7 / ES8 
 - **Two packages, one per OpenSearch major**, as the version ranges given: `>=2.19 <3` and `>=3`. It settles the hub's
   open point on package granularity: the OpenSearch client has one major per server major (client 2.x for OpenSearch
   2, 3.x for OpenSearch 3), as the Elasticsearch drivers do.
-- **Shipped in the current beta** (2.61.0-beta.4), with the ES9 driver: same release path (repositories created by
+- **Shipped in the current beta** (2.61.0-beta.5), with the ES9 driver: same release path (repositories created by
   Claude, `beta` first, npm trusted publishing, docs on next-docs first).
 
 ## Local decisions (Claude, 2026-11-02)
@@ -38,7 +38,7 @@ alongside the ES9 driver. Kuzzle's functional matrix runs on both. An ES7 / ES8 
 | --- | --- | --- | --- |
 | A | `kuzzle-storage-opensearch-2`: the ES7 driver on the OpenSearch 2 client, version check, conformance kit + unit suite in CI on OpenSearch 2.19.0 / 2.19.7, README + `doc/1/`, first beta | storage-opensearch-2 | ✅ `kuzzle-storage-opensearch-2@1.0.0-beta.1` published 2026-11-02 (semantic-release, CI green) |
 | B | `kuzzle-storage-opensearch-3`: the same on the OpenSearch 3 client, CI on 3.0.0 / 3.9.0 | storage-opensearch-3 | ✅ `kuzzle-storage-opensearch-3@1.0.0-beta.1` published 2026-11-02 (semantic-release, CI green) |
-| C | Kuzzle: CI staging generalised, functional matrix on both drivers, docs (data storage guide, changelog, upgrade notes, `.kuzzlerc.sample.jsonc`) | kuzzle | 🟦 branch `feat/opensearch-drivers` |
+| C | Kuzzle: CI staging generalised, functional matrix on both drivers, docs (data storage guide, changelog, upgrade notes, `.kuzzlerc.sample.jsonc`) | kuzzle | ✅ [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) merged, shipped in `2.61.0-beta.5` (published 2026-11-02) |
 | D | docs.kuzzle.io: the two drivers registered in the "Drivers" section (documentation repository), on next-docs first | documentation | ✅ [documentation#613](https://github.com/kuzzleio/documentation/pull/613) merged 2026-11-02, on next-docs |
 
 ## Validation
@@ -46,8 +46,8 @@ alongside the ES9 driver. Kuzzle's functional matrix runs on both. An ES7 / ES8 
 - `kuzzle-storage-opensearch-2`: conformance kit 32 / 32 on OpenSearch 2.19.0 and 2.19.7; unit suite 293 passed
   (the ES7 suite + the version check).
 - `kuzzle-storage-opensearch-3`: conformance kit 32 / 32 on OpenSearch 3.0.0 and 3.9.0; unit suite 292 passed.
-- Kuzzle's functional suites on both drivers: not run locally yet (the Docker test cluster was in use by another
-  session); the CI job runs them once the betas are on npm.
+- Kuzzle's functional suites on both drivers: the 10 CI jobs (5 suites × 2 drivers) green on #3125 with the drivers
+  at `1.0.0-beta.2`, with the rest of the matrix.
 
 ## Gotchas
 
