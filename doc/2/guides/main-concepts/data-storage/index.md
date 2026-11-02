@@ -663,7 +663,9 @@ await storageClient.index(esRequest);
 ```
 
 ::: info
-The client matches the Elasticsearch version Kuzzle is configured for (`services.storageEngine.majorVersion`). The example above uses the Elasticsearch 7 client. With [Elasticsearch 8](/core/2/guides/elasticsearch/v8), requests take the document as `document` instead of `body`, and responses are returned directly instead of being wrapped in a `body` property.
+The client is built by the [storage driver](#storage-drivers) in use, so its API follows the driver, not `majorVersion`. The example above uses the `{ body }` shape of the Elasticsearch 7 client, which the OpenSearch 2 and 3 drivers' client shares. The [Elasticsearch 8](/core/2/guides/elasticsearch/v8) and Elasticsearch 9 clients take the document as `document` instead of `body`, and return responses directly instead of wrapping them in a `body` property. To type the client, see the TypeScript page of your driver (e.g. [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/typescript/)).
+
+With `services.storageEngine.driver` set, `majorVersion` is ignored, yet the configuration still holds a value for it (`"7"` by default): do not use it to guess the client's API.
 :::
 
 ::: warning
@@ -681,7 +683,7 @@ Maintenance operations, such as a mapping migration, can **lock a collection aga
 
 The lock applies to the whole cluster. Clients receiving this error can retry the write once the maintenance operation is over.
 
-With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.
+With the Elasticsearch 8 and 9 drivers, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.
 
 ## Storage Drivers
 
