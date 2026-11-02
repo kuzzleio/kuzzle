@@ -741,7 +741,9 @@ A request needing a capability the driver does not declare is rejected with a [s
 
 ### Cluster
 
-Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart. The nodes running the built-in Elasticsearch drivers are not compared.
+Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. The node checks this before it connects to the storage, so a refused node has written nothing. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart.
+
+The nodes running the built-in Elasticsearch drivers are compared too, by Elasticsearch major version only: a node with `majorVersion: "8"` cannot join nodes with `majorVersion: "7"`. Their package version comes with Kuzzle's, so upgrading Kuzzle node by node keeps working, as do the nodes of a version older than 2.61.0, which are accepted by a node running a built-in driver and refused by a node running an external one.
 
 ### Integrated client
 

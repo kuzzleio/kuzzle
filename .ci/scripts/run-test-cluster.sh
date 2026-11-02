@@ -29,12 +29,20 @@ fi
 
 COMPOSE=(docker compose -f "$YML_FILE")
 
+# STORAGE_DRIVER=core-only: every node runs a storage driver declaring no
+# optional capability (ADR-0003 step 04), and the suite skips the scenarios
+# tagged `@capability-<name>` (cucumber.config.cjs, run from here).
 # STORAGE_DRIVER=es9|opensearch2|opensearch3: Elasticsearch 9 or OpenSearch,
-# and its external driver (ADR-0003 steps 05 and 07), staged from npm
-# (STORAGE_DRIVER_SPEC: the npm spec, default <package>@latest; ES9_DRIVER is
-# still read for es9) and mounted by an overlay of the ES 8 cluster file.
+# and its external driver (ADR-0003 steps 05 and 07), staged from npm at the
+# version .ci/scripts/stage-storage-driver.sh pins (STORAGE_DRIVER_SPEC:
+# another npm spec; ES9_DRIVER is still read for es9) and mounted by an
+# overlay of the ES 8 cluster file.
 case "${STORAGE_DRIVER:-}" in
   "") ;;
+  core-only)
+    COMPOSE+=(-f ./.ci/test-cluster-core-only-driver.yml)
+    export KUZZLE_STORAGE_CAPABILITIES=""
+    ;;
   es9|opensearch2|opensearch3)
     if [ "$ES_VERSION" != "8" ]; then
       echo "STORAGE_DRIVER=$STORAGE_DRIVER runs on top of the ES 8 cluster file: set ES_VERSION=8"
@@ -49,7 +57,7 @@ case "${STORAGE_DRIVER:-}" in
     "$WITH_RETRY" ./.ci/scripts/stage-storage-driver.sh "$STORAGE_DRIVER" ${SPEC:+"$SPEC"}
     ;;
   *)
-    echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected es9, opensearch2 or opensearch3)"
+    echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only, es9, opensearch2 or opensearch3)"
     exit 1
     ;;
 esac

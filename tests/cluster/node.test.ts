@@ -84,11 +84,12 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
 /** What the storage driver loader answers: a built-in driver unless a case
  * names an external one before building its node. */
 const storageDriver = vi.hoisted(() => ({
+  builtIn: null as string | null,
   identity: null as string | null,
 }));
 
 vi.mock("../../lib/core/storage/storageDriverLoader", () => ({
-  selectStorageDriver: () => ({ identity: storageDriver.identity }),
+  selectStorageDriver: () => ({ ...storageDriver }),
 }));
 
 vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
@@ -123,6 +124,7 @@ const idCard = (fields: {
   birthdate?: number;
   ip?: string;
   storageDriver?: string;
+  builtInStorageDriver?: string;
 }) => new IdCard({ birthdate: 0, ip: "0.0.0.0", topology: [], ...fields });
 
 describe("ClusterNode", () => {
@@ -184,6 +186,7 @@ describe("ClusterNode", () => {
     });
 
     storageDriver.identity = null;
+    storageDriver.builtIn = null;
     node = new ClusterNode();
   });
 
@@ -878,6 +881,43 @@ describe("ClusterNode", () => {
           id: "cluster.join.storage_driver_mismatch",
           message: `This node runs ${es9}@1.1.0, but the cluster node bar runs ${es9}@1.0.0: every cluster node must run the same storage driver.`,
         });
+      });
+
+      /* Checked before the storage init too: this is for a node started at
+       * the same time, too late for that first check to see it. */
+      it("refuses an Elasticsearch 8 built-in node in an Elasticsearch 7 cluster", async () => {
+        storageDriver.builtIn = "kuzzle-storage-es-8";
+        node = new ClusterNode();
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          idCards().map((card) =>
+            idCard({
+              builtInStorageDriver: "kuzzle-storage-es-7",
+              id: card.id,
+              ip: card.ip,
+            }),
+          ),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message:
+            "This node runs the built-in driver kuzzle-storage-es-8, but the cluster node bar runs the built-in driver kuzzle-storage-es-7: every cluster node must run the same storage driver.",
+        });
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+      });
+
+      it("joins nodes older than 2.61.0 with a built-in driver", async () => {
+        storageDriver.builtIn = "kuzzle-storage-es-8";
+        node = new ClusterNode();
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(cardsRunning());
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        await node.handshake();
+
+        expect(node.builtInStorageDriver).toBe("kuzzle-storage-es-8");
+        expect(node.storageDriver).toBeUndefined();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
       });
 
       it("joins a cluster running the same driver", async () => {

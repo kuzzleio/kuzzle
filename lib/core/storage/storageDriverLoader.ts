@@ -29,7 +29,10 @@ import * as path from "node:path";
 import * as semver from "semver";
 
 import * as kerror from "../../kerror";
-import { builtInStorageDriver } from "../../service/storage/builtInDrivers";
+import {
+  builtInStorageDriver,
+  builtInStorageDriverPackage,
+} from "../../service/storage/builtInDrivers";
 import {
   notFoundDetail,
   provideRunningKuzzle,
@@ -127,6 +130,12 @@ export type SelectedStorageDriver = {
    * one: what the cluster nodes compare at join.
    */
   identity: string | null;
+  /**
+   * The package of a built-in driver (e.g. `kuzzle-storage-es-7`), `null`
+   * for an external one: compared at cluster join too, without its version,
+   * which comes with Kuzzle's own.
+   */
+  builtIn: string | null;
   /** The selected driver, for the logs */
   description: string;
   /** The directory an external driver is loaded from, `null` for a built-in one */
@@ -228,6 +237,7 @@ function selectBuiltInDriver(
 
   return {
     Driver: builtInStorageDriver(majorVersion),
+    builtIn: builtInStorageDriverPackage(majorVersion) ?? null,
     capabilities: BUILT_IN_CAPABILITIES,
     description: `the built-in Elasticsearch ${majorVersion} driver`,
     identity: null,
@@ -266,6 +276,7 @@ function loadExternalDriver(name: unknown): SelectedStorageDriver {
 
   return {
     Driver: driverClass(identity, exported),
+    builtIn: null,
     capabilities,
     // An npm alias (`npm install <alias>@npm:<package>`) shows both names
     description: name === packageName ? identity : `${name} (${identity})`,

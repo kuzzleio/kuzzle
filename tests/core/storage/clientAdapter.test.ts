@@ -184,6 +184,8 @@ vi.mock("../../../lib/service/storage/storageService", () => ({
 }));
 vi.mock("../../../lib/service/storage/builtInDrivers", () => ({
   builtInStorageDriver: vi.fn((majorVersion: string) => `ES${majorVersion}`),
+  builtInStorageDriverPackage: (majorVersion: string) =>
+    `kuzzle-storage-es-${majorVersion}`,
 }));
 vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
@@ -1008,6 +1010,7 @@ describe("#core/storage/ClientAdapter", () => {
       client.getSchema.mockClear();
       client.getSchema.mockResolvedValue(STORED);
       (cache as unknown as { removals: number }).removals = 7;
+      (cache as unknown as { changes: number }).changes = 0;
     });
 
     it("caches what storage holds before checking the collection", async () => {
@@ -1107,6 +1110,139 @@ describe("#core/storage/ClientAdapter", () => {
       await ask("document:get", "i", "c", "b");
 
       expect(client.getSchema).toHaveBeenCalledTimes(2);
+    });
+
+    // A client looping on a missing index or collection must not cost one
+    // full schema read per request (kuzzle#3140)
+    describe("in a row", () => {
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+        cache.hasCollection.mockReturnValue(false);
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("waits 100ms after the previous read started by default", async () => {
+        await ask("document:get", "i", "c", "a");
+
+        let done = false;
+        const second = Promise.resolve(ask("document:get", "i", "c", "b"));
+        void second.then(() => {
+          done = true;
+        });
+
+        await vi.advanceTimersByTimeAsync(99);
+        expect(client.getSchema).toHaveBeenCalledOnce();
+        expect(done).toBe(false);
+
+        await vi.advanceTimersByTimeAsync(1);
+        await second;
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+        expect(client.get).toHaveBeenCalledTimes(2);
+      });
+
+      it("shares the delayed read between the misses waiting for it", async () => {
+        await ask("document:get", "i", "c", "a");
+
+        const waiting = Promise.all([
+          ask("document:get", "i", "c", "b"),
+          ask("index:exist", "j"),
+          ask("collection:list", "i"),
+        ]);
+
+        await vi.advanceTimersByTimeAsync(100);
+        await waiting;
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("still fails each miss storage does not hold either", async () => {
+        const unknown = new Error("unknown collection");
+        cache.assertCollectionExists.mockImplementation(() => {
+          throw unknown;
+        });
+
+        await expect(ask("document:get", "i", "c", "a")).rejects.toBe(unknown);
+
+        const second = expect(ask("document:get", "i", "c", "b")).rejects.toBe(
+          unknown,
+        );
+        await vi.advanceTimersByTimeAsync(100);
+        await second;
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+        expect(client.get).not.toHaveBeenCalled();
+      });
+
+      it("does not wait once the interval is over", async () => {
+        await ask("document:get", "i", "c", "a");
+        vi.setSystemTime(Date.now() + 100);
+
+        await ask("document:get", "i", "c", "b");
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("reads at once when the cache changed since the last read", async () => {
+        // A creation on this node, or a peer's broadcast: what a request
+        // right after it misses may have been created along with it
+        await ask("document:get", "i", "c", "a");
+        (cache as unknown as { changes: number }).changes = 1;
+
+        await ask("document:get", "i", "c", "b");
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("finds an index a peer created during the wait", async () => {
+        await ask("document:get", "i", "c", "a");
+        const exists = ask("index:exist", "new");
+
+        // Stored, but its broadcast has not reached this node yet
+        client.getSchema.mockResolvedValue({ new: [] });
+        cache.hasIndex.mockImplementation(
+          () => cache.learn.mock.calls.at(-1)?.[0]?.new !== undefined,
+        );
+        await vi.advanceTimersByTimeAsync(100);
+
+        await expect(exists).resolves.toBe(true);
+      });
+
+      it("reads the removal counter when the delayed read starts", async () => {
+        await ask("document:get", "i", "c", "a");
+        const second = ask("document:get", "i", "c", "b");
+
+        // A removal while the read waits: `learn` must compare with it
+        (cache as unknown as { removals: number }).removals = 8;
+        await vi.advanceTimersByTimeAsync(100);
+        await second;
+
+        expect(cache.learn).toHaveBeenLastCalledWith(STORED, 8);
+      });
+
+      it("reads on every miss when configured to", async () => {
+        (
+          globalThis as unknown as {
+            kuzzle: {
+              config: {
+                services: { storageEngine: { cacheMissReadInterval?: number } };
+              };
+            };
+          }
+        ).kuzzle.config.services.storageEngine.cacheMissReadInterval = 0;
+        const eager = new ClientAdapter(storeScopeEnum.PRIVATE);
+        (eager.cache as unknown as Recorder).hasIndex.mockReturnValue(false);
+
+        for (let i = 0; i < 3; i++) {
+          await eager.deleteIndexes(["missing"]);
+        }
+
+        expect(
+          (eager.driver as unknown as Recorder).getSchema,
+        ).toHaveBeenCalledTimes(3);
+      });
     });
 
     it.each([
