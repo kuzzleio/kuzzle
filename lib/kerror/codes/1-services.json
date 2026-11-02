@@ -357,7 +357,7 @@
       "code": 6,
       "errors": {
         "not_found": {
-          "description": "The storage driver package cannot be found: the one named by services.storageEngine.driver, or the built-in kuzzle-storage-es-7 / kuzzle-storage-es-8 package of the configured majorVersion. Kuzzle does not start.",
+          "description": "The storage driver package cannot be found: the one named by services.storageEngine.driver (an npm package name, not a path), or the built-in kuzzle-storage-es-7 / kuzzle-storage-es-8 package of the configured majorVersion; or the installed package has no entry point. Kuzzle does not start.",
           "code": 1,
           "message": "Cannot find the storage driver \"%s\": %s.",
           "class": "InternalError"
@@ -375,7 +375,7 @@
           "class": "InternalError"
         },
         "invalid_driver": {
-          "description": "The storage driver named by services.storageEngine.driver does not export a storage driver class, or lacks a method of a capability its manifest declares. Kuzzle does not start.",
+          "description": "The storage driver named by services.storageEngine.driver does not export a storage driver class, lacks a method of the core contract, or lacks a method of a capability its manifest declares. Kuzzle does not start.",
           "code": 4,
           "message": "Invalid storage driver \"%s\": %s.",
           "class": "InternalError"
@@ -385,6 +385,12 @@
           "code": 5,
           "message": "The storage engine does not support this request: its driver does not declare the \"%s\" capability.",
           "class": "BadRequestError"
+        },
+        "unsupported_major_version": {
+          "description": "No built-in storage driver supports the configured services.storageEngine.majorVersion (built-in: Elasticsearch 7 and 8). Another engine, such as Elasticsearch 9 or OpenSearch, runs through an installable driver named by services.storageEngine.driver. Kuzzle does not start.",
+          "code": 6,
+          "message": "Unsupported services.storageEngine.majorVersion \"%s\" (supported: %s): for Elasticsearch 9 or OpenSearch, set services.storageEngine.driver instead (e.g. \"kuzzle-storage-es-9\").",
+          "class": "InternalError"
         }
       }
     }

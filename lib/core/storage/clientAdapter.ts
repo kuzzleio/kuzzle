@@ -29,7 +29,7 @@ import {
   type StorageDriver,
 } from "../../types/storage/StorageDriver";
 import {
-  assertDeclaredCapabilities,
+  assertDriverContract,
   CAPABILITY_METHODS,
   selectStorageDriver,
   type CapabilityMethod,
@@ -151,7 +151,7 @@ class ClientAdapter {
     this.service = new StorageService(selected.Driver, config, scope);
     this.driver = this.service.driver;
     this.capabilities = selected.capabilities;
-    assertDeclaredCapabilities(this.driver, selected);
+    assertDriverContract(this.driver, selected);
     this.scope = scope;
     this.cache = new IndexCache();
     this.catchUpInterval =

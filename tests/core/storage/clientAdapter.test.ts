@@ -97,6 +97,7 @@ const { serviceInstances, cacheInstances, StorageServiceMock, IndexCacheMock } =
       "getSettings",
       "import",
       "info",
+      "init",
       "mCreate",
       "mCreateOrReplace",
       "mDelete",

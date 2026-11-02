@@ -51,7 +51,9 @@ describe("built-in storage drivers", () => {
     vi.spyOn(loader, "_resolveFilename").mockImplementation(
       function resolveFilename(this: unknown, request, ...rest) {
         if (request === "kuzzle-storage-es-8") {
-          throw new Error("Cannot find module 'kuzzle-storage-es-8'");
+          throw new Error(
+            "Cannot find module 'kuzzle-storage-es-8'\nRequire stack:\n- /var/app/lib/service/storage/builtInDrivers.js",
+          );
         }
 
         return resolve.call(this, request, ...rest);
@@ -63,7 +65,7 @@ describe("built-in storage drivers", () => {
         expect.objectContaining({
           id: "services.storage_driver.not_found",
           message:
-            "Cannot find the storage driver \"kuzzle-storage-es-8\": Cannot find module 'kuzzle-storage-es-8'.",
+            "Cannot find the storage driver \"kuzzle-storage-es-8\": Cannot find module 'kuzzle-storage-es-8'. Install it next to kuzzle: npm install kuzzle-storage-es-8.",
         }),
       );
     } finally {
@@ -71,11 +73,21 @@ describe("built-in storage drivers", () => {
     }
   });
 
-  it("refuses an unknown major version", () => {
-    expect(() =>
-      builtInStorageDriver("6" as StorageEngineElasticsearch["majorVersion"]),
-    ).toThrow("Invalid Elasticsearch version.");
-  });
+  it.each(["6", "9", "toString"])(
+    "refuses an unknown major version (%s), pointing to the drivers",
+    (majorVersion) => {
+      expect(() =>
+        builtInStorageDriver(
+          majorVersion as StorageEngineElasticsearch["majorVersion"],
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          id: "services.storage_driver.unsupported_major_version",
+          message: `Unsupported services.storageEngine.majorVersion "${majorVersion}" (supported: 7, 8): for Elasticsearch 9 or OpenSearch, set services.storageEngine.driver instead (e.g. "kuzzle-storage-es-9").`,
+        }),
+      );
+    },
+  );
 
   describe("the kuzzle a driver package requires", () => {
     const entry = path.join(root, "index.ts");
