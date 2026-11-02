@@ -32,11 +32,11 @@ A rolling upgrade from v2.60 with an unchanged configuration works as before: no
 
 ### Running another storage engine
 
-Setting `services.storageEngine.driver` to the name of a driver package, installed next to `kuzzle`, runs Kuzzle on that driver's engine. In that case:
+Setting `services.storageEngine.driver` to the name of a driver package, installed next to `kuzzle`, runs Kuzzle on that driver's engine. `driver` takes an npm package name or an npm alias, not a path; a driver installed with `npm link` or from a directory works too. In that case:
 
-- `services.storageEngine.majorVersion` is ignored, and the rest of `services.storageEngine` is handed to the driver. If your configuration sets `majorVersion` too, Kuzzle logs a warning at startup: remove it;
-- Kuzzle logs `[ℹ] Storage driver: <name>@<version>` at startup, instead of the Elasticsearch major version;
-- Kuzzle does not start when the driver is missing, when its `manifest.json` is invalid, when its `kuzzleVersion` range excludes this Kuzzle version, or when it lacks a method of the storage contract or of a capability it declares (the [`services.storage_driver.*`](/core/2/api/errors/error-codes/services) errors). These messages say what to do: install the package, or, for `majorVersion: "9"` without a driver, set `driver` ([#3134](https://github.com/kuzzleio/kuzzle/issues/3134), [#3137](https://github.com/kuzzleio/kuzzle/issues/3137));
+- `services.storageEngine.majorVersion` is ignored, and the rest of `services.storageEngine` is handed to the driver. If your configuration sets `majorVersion` too, Kuzzle logs `services.storageEngine.majorVersion is ignored because services.storageEngine.driver is set: remove majorVersion.` at startup;
+- Kuzzle logs `[ℹ] Storage driver: <name>@<version> (<directory>)` at startup, instead of the Elasticsearch major version;
+- Kuzzle does not start when the driver is missing, when its `manifest.json` is invalid, when its `kuzzleVersion` range excludes this Kuzzle version, or when it lacks a method of the storage contract or of a capability it declares (the [`services.storage_driver.*`](/core/2/api/errors/error-codes/services) errors). These messages say what to do, for instance how to install a missing package ([#3134](https://github.com/kuzzleio/kuzzle/issues/3134), [#3137](https://github.com/kuzzleio/kuzzle/issues/3137));
 - the driver always uses the running Kuzzle, even when another copy of `kuzzle` sits in `node_modules`, as in the official Docker image ([#3132](https://github.com/kuzzleio/kuzzle/issues/3132)). Before, such a driver could answer some documented `404` or `400` errors as `500` `unexpected_error`;
 - a request needing a capability the driver does not declare is rejected with [`services.storage_driver.unsupported_capability`](/core/2/api/errors/error-codes/services) (400).
 
@@ -70,6 +70,8 @@ The OpenSearch drivers do not move your data: copy it from Elasticsearch with a 
 ### `majorVersion` is deprecated
 
 `services.storageEngine.majorVersion` is deprecated in the documentation: Kuzzle 3 will select the storage engine with `driver` alone. It keeps working unchanged in Kuzzle 2, where it still chooses between the built-in Elasticsearch 7 and 8 drivers, and Kuzzle logs no deprecation warning for it.
+
+Without `driver`, a `majorVersion` other than `"7"` or `"8"`, such as `"9"`, stops Kuzzle with [`services.storage_driver.unsupported_major_version`](/core/2/api/errors/error-codes/services), which points to `driver` ([#3134](https://github.com/kuzzleio/kuzzle/issues/3134)). Kuzzle 2.60 already refused it, with a plain error.
 
 ### Index cache of a joining node
 
