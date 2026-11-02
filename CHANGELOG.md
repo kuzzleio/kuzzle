@@ -1,3 +1,9 @@
+## [2.61.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.2...v2.61.0-beta.3) (2026-11-02)
+
+### Bug Fixes
+
+* **storage:** throw services.storage_driver.not_found for a missing built-in driver package ([104d654](https://github.com/kuzzleio/kuzzle/commit/104d654cd15bd1c09f57b614a01120b8cc097342)), closes [#3116](https://github.com/kuzzleio/kuzzle/issues/3116)
+
 ## [2.61.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.1...v2.61.0-beta.2) (2026-10-30)
 
 ### Features
