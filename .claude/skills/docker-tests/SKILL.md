@@ -49,8 +49,8 @@ ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket
 STORAGE_DRIVER=core-only .ci/scripts/docker-test.sh functional websocket
 
 # On Elasticsearch 9 or OpenSearch 2 / 3 with an external driver
-# (kuzzle-storage-es-9, -opensearch-2, -opensearch-3; from npm, or
-# STORAGE_DRIVER_SPEC=<local .tgz>):
+# (kuzzle-storage-es-9, -opensearch-2, -opensearch-3; from npm at the version
+# .ci/scripts/stage-storage-driver.sh pins, or STORAGE_DRIVER_SPEC=<local .tgz>):
 ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
 ES_VERSION=8 STORAGE_DRIVER=opensearch2 .ci/scripts/docker-test.sh functional websocket
 ```

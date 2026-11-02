@@ -706,6 +706,8 @@ Another storage engine is supported by installing its driver, an npm package, ne
 
 The rest of `services.storageEngine` is handed to the driver; `majorVersion` is ignored when `driver` is set. The API does not change: queries, mappings and search bodies are still written in the Elasticsearch format.
 
+`driver` is an npm package name (or an npm alias), not a path. Kuzzle looks it up from the current directory, where it also finds its `.kuzzlerc` file, then from its own location, and logs the directory it loaded the driver from. The built-in packages are found from Kuzzle's own location, so `"driver": "kuzzle-storage-es-8"` works without installing it; installing it in the application only pins its version.
+
 The official external drivers:
 
 | Engine                        | Driver                                                                           |
@@ -720,9 +722,9 @@ The official external drivers:
 
 `services.storageEngine.majorVersion` is deprecated: Kuzzle 3 will select the storage engine with `driver` only (see [Towards Kuzzle 3](/core/2/guides/kuzzle-3)). It keeps working unchanged in Kuzzle 2, where it is still the way to choose between the built-in Elasticsearch 7 and 8 drivers: an Elasticsearch 7 or 8 setup has nothing to change, and Kuzzle logs no deprecation warning for it.
 
-When `driver` is set, `majorVersion` is ignored. If your configuration sets both, Kuzzle logs a warning at startup: remove `majorVersion`.
+Without `driver`, `majorVersion` only accepts `"7"` and `"8"`: any other value, such as `"9"`, makes Kuzzle refuse to start, pointing to `driver`. When `driver` is set, `majorVersion` is ignored. If your configuration sets both, Kuzzle logs a warning at startup: remove `majorVersion`.
 
-At startup, Kuzzle reads the driver's `manifest.json` before loading its code, and refuses to start when the driver is missing, when its manifest is invalid, or when the Kuzzle version is not in the range its `kuzzleVersion` field states (see the [services.storage_driver](/core/2/api/errors/error-codes/services) errors).
+At startup, Kuzzle reads the driver's `manifest.json` before loading its code, and refuses to start when the driver is missing, when its manifest is invalid, when the Kuzzle version is not in the range its `kuzzleVersion` field states, or when the driver lacks a method of the [contract](/core/2/guides/write-storage-drivers/contract) (see the [services.storage_driver](/core/2/api/errors/error-codes/services) errors).
 
 ### Capabilities
 
@@ -739,7 +741,9 @@ A request needing a capability the driver does not declare is rejected with a [s
 
 ### Cluster
 
-Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart. The nodes running the built-in Elasticsearch drivers are not compared.
+Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. The node checks this before it connects to the storage, so a refused node has written nothing. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart.
+
+The nodes running the built-in Elasticsearch drivers are compared too, by Elasticsearch major version only: a node with `majorVersion: "8"` cannot join nodes with `majorVersion: "7"`. Their package version comes with Kuzzle's, so upgrading Kuzzle node by node keeps working, as do the nodes of a version older than 2.61.0, which are accepted by a node running a built-in driver and refused by a node running an external one.
 
 ### Integrated client
 

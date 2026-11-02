@@ -29,7 +29,14 @@ import * as path from "node:path";
 import * as semver from "semver";
 
 import * as kerror from "../../kerror";
-import { builtInStorageDriver } from "../../service/storage/builtInDrivers";
+import {
+  builtInStorageDriver,
+  builtInStorageDriverPackage,
+} from "../../service/storage/builtInDrivers";
+import {
+  notFoundDetail,
+  provideRunningKuzzle,
+} from "../../service/storage/driverPackage";
 import type { JSONObject } from "../../types/JSONObject";
 import type { StorageEngineElasticsearch } from "../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import {
@@ -37,6 +44,7 @@ import {
   type StorageCapability,
   type StorageDriver,
   type StorageDriverClass,
+  type StorageDriverCore,
   type StorageMappingUpdates,
   type StorageStatsCapability,
   type StorageUpdateByQuery,
@@ -49,6 +57,58 @@ const driverError = kerror.wrap("services", "storage_driver");
 export type CapabilityMethod = keyof (StorageMappingUpdates &
   StorageStatsCapability &
   StorageUpdateByQuery);
+
+/**
+ * Every method of the core contract, checked off against `StorageDriverCore`
+ * by the compiler: a method missing here or unknown to it does not build.
+ */
+const CORE_METHOD_SET: Readonly<Record<keyof StorageDriverCore, true>> = {
+  count: true,
+  create: true,
+  createCollection: true,
+  createIndex: true,
+  createOrReplace: true,
+  delete: true,
+  deleteByQuery: true,
+  deleteCollection: true,
+  deleteFields: true,
+  deleteIndex: true,
+  deleteIndexes: true,
+  exists: true,
+  get: true,
+  getMapping: true,
+  getSchema: true,
+  getSettings: true,
+  import: true,
+  info: true,
+  init: true,
+  mCreate: true,
+  mCreateOrReplace: true,
+  mDelete: true,
+  mExecute: true,
+  mExists: true,
+  mGet: true,
+  mReplace: true,
+  mUpdate: true,
+  mUpsert: true,
+  refreshCollection: true,
+  replace: true,
+  scroll: true,
+  search: true,
+  translateKoncordeFilters: true,
+  truncateCollection: true,
+  update: true,
+  upsert: true,
+};
+
+/** The methods every driver must have */
+export const CORE_METHODS: readonly (keyof StorageDriverCore)[] = Object.freeze(
+  Object.keys(CORE_METHOD_SET).filter(isCoreMethod),
+);
+
+function isCoreMethod(key: string): key is keyof StorageDriverCore {
+  return Object.hasOwn(CORE_METHOD_SET, key);
+}
 
 /** The methods a driver declaring a capability must have */
 export const CAPABILITY_METHODS: Readonly<
@@ -70,8 +130,16 @@ export type SelectedStorageDriver = {
    * one: what the cluster nodes compare at join.
    */
   identity: string | null;
+  /**
+   * The package of a built-in driver (e.g. `kuzzle-storage-es-7`), `null`
+   * for an external one: compared at cluster join too, without its version,
+   * which comes with Kuzzle's own.
+   */
+  builtIn: string | null;
   /** The selected driver, for the logs */
   description: string;
+  /** The directory an external driver is loaded from, `null` for a built-in one */
+  location: string | null;
 };
 
 /** The built-in drivers implement every capability */
@@ -124,16 +192,29 @@ export function createNativeStorageClient(
 }
 
 /**
- * Checks that a driver instance has the methods of the capabilities its
- * driver declares. Done on the instance rather than on the class: a method
- * can be an instance property.
+ * Checks that a driver instance has the methods of the core contract, and
+ * those of the capabilities its driver declares: at startup, rather than
+ * with a `TypeError` on the first request needing a missing one. Done on the
+ * instance rather than on the class: a method can be an instance property.
  *
  * @throws {services.storage_driver.invalid_driver}
  */
-export function assertDeclaredCapabilities(
+export function assertDriverContract(
   driver: StorageDriver,
   { capabilities, description }: SelectedStorageDriver,
 ): void {
+  const missing = CORE_METHODS.filter(
+    (method) => typeof driver[method] !== "function",
+  );
+
+  if (missing.length > 0) {
+    throw driverError.get(
+      "invalid_driver",
+      description,
+      `it lacks ${missing.length === 1 ? "a method" : "methods"} of the core contract: ${missing.join(", ")}`,
+    );
+  }
+
   for (const capability of capabilities) {
     for (const method of CAPABILITY_METHODS[capability]) {
       if (typeof driver[method] !== "function") {
@@ -156,25 +237,32 @@ function selectBuiltInDriver(
 
   return {
     Driver: builtInStorageDriver(majorVersion),
+    builtIn: builtInStorageDriverPackage(majorVersion) ?? null,
     capabilities: BUILT_IN_CAPABILITIES,
     description: `the built-in Elasticsearch ${majorVersion} driver`,
     identity: null,
+    location: null,
   };
 }
 
-function loadExternalDriver(name: unknown): SelectedStorageDriver {
-  if (typeof name !== "string" || name.length === 0) {
-    throw driverError.get(
-      "not_found",
-      String(name),
-      "services.storageEngine.driver must be an npm package name",
-    );
-  }
+/**
+ * An npm package name, scoped or not: no path, no version, no subpath
+ * (rules of validate-npm-package-name, upper case allowed for older packages)
+ */
+const PACKAGE_NAME =
+  /^(?:@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/i;
 
-  const entry = resolveDriver(name);
-  const { root, version } = findPackageRoot(name, entry);
+function loadExternalDriver(name: unknown): SelectedStorageDriver {
+  assertPackageName(name);
+
+  const lookup = [process.cwd(), __dirname];
+  const entry = resolveDriver(name, lookup);
+  const { packageName, root, version } = findPackageRoot(name, entry);
   const capabilities = readManifest(name, root);
-  const identity = `${name}@${version}`;
+  const identity = `${packageName}@${version}`;
+
+  // Before the driver's code requires `kuzzle`
+  provideRunningKuzzle(entry);
 
   let exported: unknown;
 
@@ -188,40 +276,120 @@ function loadExternalDriver(name: unknown): SelectedStorageDriver {
 
   return {
     Driver: driverClass(identity, exported),
+    builtIn: null,
     capabilities,
-    description: identity,
+    // An npm alias (`npm install <alias>@npm:<package>`) shows both names
+    description: name === packageName ? identity : `${name} (${identity})`,
     identity,
+    location: root,
   };
 }
 
-/**
- * Looked up from the application first, then from Kuzzle itself: the
- * application is what installs the driver, next to `kuzzle`.
- */
-function resolveDriver(name: string): string {
-  try {
-    return require.resolve(name, { paths: [process.cwd(), __dirname] });
-  } catch (error) {
-    throw driverError.get("not_found", name, messageOf(error));
+/** @throws {services.storage_driver.not_found} */
+function assertPackageName(name: unknown): asserts name is string {
+  if (typeof name !== "string" || name.length === 0) {
+    throw driverError.get(
+      "not_found",
+      String(name),
+      "services.storageEngine.driver must be an npm package name",
+    );
   }
+
+  if (PACKAGE_NAME.test(name)) {
+    return;
+  }
+
+  throw driverError.get(
+    "not_found",
+    name,
+    name.startsWith(".") || path.isAbsolute(name) || name.includes("\\")
+      ? `services.storageEngine.driver must be an npm package name, not a path: install the driver (npm install ${name}), then set its package name`
+      : "services.storageEngine.driver must be an npm package name, without a version or a subpath",
+  );
+}
+
+/**
+ * Looked up from the current directory first, as the `.kuzzlerc` file is,
+ * then from Kuzzle itself: the application installs the driver next to
+ * `kuzzle`, which Kuzzle's own location finds whatever the current
+ * directory.
+ *
+ * @throws {services.storage_driver.not_found}
+ */
+function resolveDriver(name: string, lookup: string[]): string {
+  try {
+    return require.resolve(name, { paths: lookup });
+  } catch (error) {
+    const installed = findInstalledVersion(name, lookup);
+
+    throw driverError.get(
+      "not_found",
+      name,
+      installed === null
+        ? notFoundDetail(name, error)
+        : `installed ${name}@${installed} has no entry point`,
+    );
+  }
+}
+
+/**
+ * The version of a package installed in a `node_modules` directory Node
+ * looks into from `lookup`, which `require.resolve` could not load anyway: a
+ * package without an entry point, like a name-reservation placeholder.
+ */
+function findInstalledVersion(name: string, lookup: string[]): string | null {
+  for (const start of lookup) {
+    let dir = start;
+
+    while (true) {
+      const pkg = readJsonQuietly(
+        path.join(dir, "node_modules", name, "package.json"),
+      );
+
+      if (pkg !== null) {
+        return String(pkg.version);
+      }
+
+      const parent = path.dirname(dir);
+
+      if (parent === dir) {
+        break;
+      }
+
+      dir = parent;
+    }
+  }
+
+  return null;
 }
 
 /**
  * The directory of the driver's own `package.json`, found from its entry
  * point: `<name>/package.json` cannot be resolved when the package's
- * `exports` does not list it.
+ * `exports` does not list it. Under an npm alias, that `package.json` names
+ * the aliased package, and the directory is `node_modules/<alias>`.
+ *
+ * @throws {services.storage_driver.not_found}
  */
 function findPackageRoot(
   name: string,
   entry: string,
-): { root: string; version: string } {
+): { packageName: string; root: string; version: string } {
+  const aliasDir = path.sep + path.join("node_modules", name);
   let dir = path.dirname(entry);
 
   while (true) {
     const pkg = readJson(path.join(dir, "package.json"));
 
-    if (pkg?.name === name) {
-      return { root: dir, version: String(pkg.version) };
+    if (
+      typeof pkg?.name === "string" &&
+      (pkg.name === name || dir.endsWith(aliasDir))
+    ) {
+      return {
+        packageName: pkg.name,
+        root: dir,
+        version: String(pkg.version),
+      };
     }
 
     const parent = path.dirname(dir);
@@ -230,7 +398,7 @@ function findPackageRoot(
       throw driverError.get(
         "not_found",
         name,
-        `no package.json named "${name}" above ${entry}`,
+        `${entry} belongs to no package named "${name}"`,
       );
     }
 
@@ -253,7 +421,7 @@ function readManifest(name: string, root: string): Set<StorageCapability> {
     throw driverError.get(
       "invalid_manifest",
       name,
-      `cannot read ${manifestPath}: ${messageOf(error)}`,
+      manifestError(manifestPath, error),
     );
   }
 
@@ -301,6 +469,24 @@ function readManifest(name: string, root: string): Set<StorageCapability> {
   return declared;
 }
 
+/** The path once: Node's file system errors repeat it */
+function manifestError(manifestPath: string, error: unknown): string {
+  if (error instanceof SyntaxError) {
+    return `${manifestPath} is not valid JSON: ${error.message}`;
+  }
+
+  const code =
+    error instanceof Error && "code" in error ? String(error.code) : null;
+
+  if (code === "ENOENT") {
+    return `${manifestPath} does not exist`;
+  }
+
+  return code === null
+    ? `cannot read ${manifestPath}: ${messageOf(error)}`
+    : `cannot read ${manifestPath} (${code})`;
+}
+
 /** Typed for a lookup of any manifest value */
 const KNOWN_CAPABILITIES: ReadonlySet<unknown> = new Set(STORAGE_CAPABILITIES);
 
@@ -331,7 +517,7 @@ function driverClass(
 
 /**
  * What can be checked of a class before building it: the contract of its
- * instances is checked once they exist (`assertDeclaredCapabilities`).
+ * instances is checked once they exist (`assertDriverContract`).
  */
 function isDriverClass(
   value: unknown,
@@ -366,6 +552,15 @@ function readJson(file: string, { required = false } = {}): JSONObject | null {
   }
 
   return JSON.parse(content);
+}
+
+/** The parsed file, or `null` when it cannot be read or parsed */
+function readJsonQuietly(file: string): JSONObject | null {
+  try {
+    return readJson(file);
+  } catch {
+    return null;
+  }
 }
 
 function messageOf(error: unknown): string {

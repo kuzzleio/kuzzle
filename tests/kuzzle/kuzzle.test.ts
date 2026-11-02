@@ -15,7 +15,11 @@ import {
   MutexLockLostError,
   withLock,
 } from "../../lib/util/distributedLock";
-import { MutexStub, releaseAllLocksBeforeExit } from "./kuzzleFixture";
+import {
+  assertClusterStorageDriver,
+  MutexStub,
+  releaseAllLocksBeforeExit,
+} from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -130,6 +134,12 @@ vi.mock("../../lib/cluster", async () => {
   const { moduleStub } = await import("./kuzzleFixture");
 
   return { default: moduleStub("cluster") };
+});
+
+vi.mock("../../lib/cluster/storageDriverCheck", async () => {
+  const fixture = await import("./kuzzleFixture");
+
+  return { assertClusterStorageDriver: fixture.assertClusterStorageDriver };
 });
 
 type Internals = {
@@ -437,6 +447,59 @@ describe("#kuzzle/Kuzzle", () => {
       await kuzzle.start(application, {});
 
       expect(moduleInits.get("cluster")).toHaveBeenCalled();
+    });
+
+    /* #3139: a node refused for its storage driver must not have touched the
+     * storage. */
+    describe("storage driver check", () => {
+      const firstCall = (mock: { mock: { invocationCallOrder: number[] } }) =>
+        mock.mock.invocationCallOrder[0];
+
+      it("compares the storage driver with the cluster once the cache is up, before the storage", async () => {
+        kuzzle.config.cluster.enabled = true;
+
+        await kuzzle.start(application, {});
+
+        const cache = moduleInits.get("cacheEngine");
+        const storage = moduleInits.get("storageEngine");
+
+        present(cache, "the cache engine init");
+        present(storage, "the storage engine init");
+
+        expect(assertClusterStorageDriver).toHaveBeenCalledExactlyOnceWith(
+          kuzzle.config,
+        );
+        expect(firstCall(assertClusterStorageDriver)).toBeGreaterThan(
+          firstCall(cache),
+        );
+        expect(firstCall(assertClusterStorageDriver)).toBeLessThan(
+          firstCall(storage),
+        );
+      });
+
+      it("does not compare it in single node mode", async () => {
+        kuzzle.config.cluster.enabled = false;
+
+        await kuzzle.start(application, {});
+
+        expect(assertClusterStorageDriver).not.toHaveBeenCalled();
+      });
+
+      it("does not start a node the cluster refuses, nor touch the storage", async () => {
+        const exit = vi
+          .spyOn(process, "exit")
+          .mockImplementation((() => undefined) as never);
+        const refused = new Error("storage driver mismatch");
+        kuzzle.config.cluster.enabled = true;
+        assertClusterStorageDriver.mockRejectedValueOnce(refused);
+
+        await expect(kuzzle.start(application, {})).rejects.toBe(refused);
+
+        expect(moduleInits.get("storageEngine")).not.toHaveBeenCalled();
+        expect(kuzzle.internalIndex.init).not.toHaveBeenCalled();
+        expect(moduleInits.get("cluster")).not.toHaveBeenCalled();
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
+      });
     });
 
     /* #3044: a node that joins late must see what a peer created in storage

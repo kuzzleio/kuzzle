@@ -41,21 +41,21 @@ class StorageEngine {
     this.private = new ClientAdapter(storeScopeEnum.PRIVATE);
     this.logger = global.kuzzle.log.child("core:storage:storageEngine");
 
-    const { description, identity } = selectStorageDriver(
+    const { description, identity, location } = selectStorageDriver(
       global.kuzzle.config.services.storageEngine,
     );
 
     this.logger.info(
       identity === null
         ? `[ℹ] Elasticsearch configuration is set to major version : ${global.kuzzle.config.services.storageEngine.majorVersion}`
-        : `[ℹ] Storage driver: ${description}`,
+        : // Where from: the application and Kuzzle may each have a copy
+          `[ℹ] Storage driver: ${description} (${location})`,
     );
 
-    const ignored = global.kuzzle.config.internal?.ignoredSettings;
-
-    if (ignored?.length) {
+    for (const setting of global.kuzzle.config.internal?.ignoredSettings ??
+      []) {
       this.logger.warn(
-        `[⚠] Ignored, since "services.storageEngine.driver" selects the storage driver: ${ignored.join(", ")}. Remove it from your configuration.`,
+        `[⚠] ${setting} is ignored because services.storageEngine.driver is set: remove ${setting.split(".").pop()}.`,
       );
     }
   }

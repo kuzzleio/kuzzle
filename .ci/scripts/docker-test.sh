@@ -28,9 +28,9 @@ Env vars:
                   opensearch2 / opensearch3: on OpenSearch 2 / 3 with
                   kuzzle-storage-opensearch-2 / -3 (ADR-0003 step 07)
   STORAGE_DRIVER_SPEC
-                  What npm installs as that driver (default:
-                  <package>@latest); a local .tgz works too. ES9_DRIVER is
-                  still read for es9
+                  What npm installs as that driver (default: the version
+                  .ci/scripts/stage-storage-driver.sh pins); a local .tgz
+                  works too. ES9_DRIVER is still read for es9
 
 Examples:
   .ci/scripts/docker-test.sh unit
