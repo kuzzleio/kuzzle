@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { inspect } from "node:util";
+
 import { wrap } from "../../kerror";
 import ClientAdapter from "./clientAdapter";
 import { selectStorageDriver } from "./storageDriverLoader";
@@ -28,10 +30,19 @@ import "../../types/Global";
 
 const kerror = wrap("services", "storage");
 
+/**
+ * How long the shutdown waits for a driver's `close()` hook: a requested
+ * shutdown has no other time limit, and a hook that never settles must not
+ * keep the node up
+ */
+const DRIVER_CLOSE_TIMEOUT = 5000;
+
 class StorageEngine {
   public public: ClientAdapter;
   public private: ClientAdapter;
   public logger: Logger;
+  /** The running close, shared by every `close()` call */
+  private closing: Promise<void> | null = null;
 
   constructor() {
     // Storage client for public indexes only
@@ -76,6 +87,55 @@ class StorageEngine {
     }
 
     this.logger.info("[✔] Storage initialized");
+  }
+
+  /**
+   * Closes the driver instances of both scopes on shutdown, once the requests
+   * in flight are done: calls their `close()` hook, when they have one, once.
+   *
+   * Never rejects, nor waits longer than `timeout` for a driver: a failure or
+   * a timeout is logged, and the shutdown goes on.
+   */
+  close(timeout = DRIVER_CLOSE_TIMEOUT): Promise<void> {
+    this.closing ??= Promise.all(
+      [this.public, this.private].map((adapter) =>
+        this.closeDriver(adapter, timeout),
+      ),
+    ).then(() => undefined);
+
+    return this.closing;
+  }
+
+  private async closeDriver(
+    { driver, scope }: ClientAdapter,
+    timeout: number,
+  ): Promise<void> {
+    if (typeof driver.close !== "function") {
+      return;
+    }
+
+    let timer: NodeJS.Timeout | undefined;
+
+    try {
+      await Promise.race([
+        // A hook throwing synchronously is reported as one that rejects
+        (async () => driver.close?.())(),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () => reject(new Error(`not closed after ${timeout}ms`)),
+            timeout,
+          );
+        }),
+      ]);
+    } catch (error) {
+      this.logger.warn(
+        `[⚠] Unable to close the ${scope} storage driver: ${
+          error instanceof Error ? error.message : inspect(error)
+        }`,
+      );
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }
 

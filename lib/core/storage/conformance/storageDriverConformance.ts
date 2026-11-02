@@ -24,6 +24,7 @@
 // through the test runner's own `describe` / `it` / hooks, and asserts with
 // `node:assert`, so `kuzzle` needs no test runner and loads none.
 
+import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 
 import merge from "lodash/merge";
@@ -38,6 +39,7 @@ import type { JSONObject } from "../../../types/JSONObject";
 import type { StorageEngineElasticsearch } from "../../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type {
   StorageCapability,
+  StorageDriver,
   StorageDriverClass,
 } from "../../../types/storage/StorageDriver";
 
@@ -97,23 +99,31 @@ export function describeStorageDriverConformance(
 ): void {
   const { test } = options;
   const suffix = randomBytes(4).toString("hex");
+  let config: StorageEngineElasticsearch | undefined;
   const context = new ConformanceContext(
     `${options.indexPrefix ?? "conformance"}-${suffix}`,
     new Set(options.capabilities),
+    () => {
+      assert.ok(config, "the driver is not initialized");
+      return new options.Driver(config, storeScopeEnum.PUBLIC);
+    },
   );
   let removeEnvironment: () => void = () => undefined;
   let initialized = false;
+  /** Built by the kit, closed at the end of the run, as Kuzzle does */
+  const built: StorageDriver[] = [];
 
   test.describe("Storage driver conformance", () => {
     test.beforeAll(async () => {
       removeEnvironment = installConformanceEnvironment();
 
-      const config = merge(
+      config = merge(
         structuredClone(defaultConfig.services.storageEngine),
         options.config,
       );
       const publicDriver = new options.Driver(config, storeScopeEnum.PUBLIC);
       const privateDriver = new options.Driver(config, storeScopeEnum.PRIVATE);
+      built.push(publicDriver, privateDriver);
 
       await publicDriver.init();
       await privateDriver.init();
@@ -129,7 +139,16 @@ export function describeStorageDriverConformance(
           await context.driver.deleteIndexes([context.index]);
         }
       } finally {
-        removeEnvironment();
+        try {
+          // Even when `init()` failed, as Kuzzle's shutdown does
+          await Promise.all(
+            built.map(async (driver) => {
+              await driver.close?.();
+            }),
+          );
+        } finally {
+          removeEnvironment();
+        }
       }
     });
 

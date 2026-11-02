@@ -73,6 +73,9 @@ driver. The next major only drops the two dependencies (step 08).
   [#3145](https://github.com/kuzzleio/kuzzle/issues/3145). Its docs pass (#3135, the docs part of #3133, the v3 rows
   of #3144) fixed the raw-client pages, the upgrade notes (ES8 → ES9 path, `majorVersion` warning for plugin authors),
   the sample `.kuzzlerc` and this hub's stale names and ranges.
+- Optional `close()` engine hook (#3141): called once per scope instance on a graceful shutdown, after the funnel
+  drains and the locks are freed, bounded to 5 s, a failure only logged; the kit closes its instances and has a
+  capability-free case for it. The built-in drivers do not implement it yet (driver repositories' follow-up).
 - #3133 (feature): `context.accessors.getStorageEngine()` / `app.storage.getEngine()` give `{ driver, engine,
   version }` (driver package, `info().type`, `info().version`); `majorVersion` unchanged. The OpenSearch drivers'
   `info()` still reports `type: "elasticsearch"`: driver-side fix.

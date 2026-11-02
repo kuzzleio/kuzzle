@@ -47,7 +47,8 @@ describeStorageDriverConformance({
 
 The kit runs the driver outside of Kuzzle, in one process: it stands in for what a driver may use of `global.kuzzle`
 (see [the contract](/core/2/guides/write-storage-drivers/contract#what-a-driver-may-use-of-kuzzle)). A driver reaching
-for anything else fails there, before it fails in production.
+for anything else fails there, before it fails in production. At the end of the run, the kit calls the `close()` hook
+of the instances it built, as Kuzzle does on shutdown, so that the test process does not hang on open connections.
 
 Run it in CI against the engine, as a service container. The Elasticsearch drivers do it on every push:
 [storage-es-9's workflow](https://github.com/kuzzleio/storage-es-9/blob/master/.github/workflows/ci.yaml) is a

@@ -17,6 +17,7 @@ import {
 } from "../../lib/util/distributedLock";
 import {
   assertClusterStorageDriver,
+  moduleCloses,
   MutexStub,
   releaseAllLocksBeforeExit,
 } from "./kuzzleFixture";
@@ -860,6 +861,47 @@ describe("#kuzzle/Kuzzle", () => {
         expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
         expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
       }
+    });
+
+    /* #3141: the storage drivers release their connections on shutdown. */
+    it("closes the storage once the funnel is empty and the locks are freed, before exiting", async () => {
+      const close = vi.fn(async () => undefined);
+      const delay = vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        funnelOf(kuzzle).remainingRequests = 0;
+
+        return Bluebird.resolve() as unknown as Bluebird<void>;
+      });
+      Object.assign(kuzzle, { storageEngine: { close } });
+      funnelOf(kuzzle).remainingRequests = 1;
+
+      await kuzzle.shutdown();
+
+      const [closed] = close.mock.invocationCallOrder;
+      expect(close).toHaveBeenCalledOnce();
+      expect(closed).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
+      expect(closed).toBeGreaterThan(
+        releaseAllLocksBeforeExit.mock.invocationCallOrder[0],
+      );
+      expect(closed).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("closes the storage engine the startup built", async () => {
+      kuzzle.install = vi.fn(async () => undefined);
+      kuzzle.loadInitialState = vi.fn(async () => undefined);
+      await kuzzle.start(application, {});
+
+      await kuzzle.shutdown();
+
+      expect(moduleCloses.get("storageEngine")).toHaveBeenCalledOnce();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("has no storage to close when the startup did not reach it", async () => {
+      await kuzzle.shutdown();
+
+      expect(moduleCloses.get("storageEngine")).not.toHaveBeenCalled();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
     });
 
     /* #3017: `process.exit` fires the `exit` handler, which calls `shutdown()`

@@ -130,6 +130,8 @@ class Kuzzle extends KuzzleEventEmitter {
   private shutdownExitCode = 0;
   /** Ends a failure's shutdown that does not finish in time */
   private shutdownWatchdog: NodeJS.Timeout | null = null;
+  /** Built by `start()`; its storage drivers are closed on shutdown */
+  private storageEngine: StorageEngine | null = null;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
@@ -314,7 +316,8 @@ class Kuzzle extends KuzzleEventEmitter {
         this.stopIfShuttingDown();
       }
 
-      await new StorageEngine().init();
+      this.storageEngine = new StorageEngine();
+      await this.storageEngine.init();
       await new RealtimeModule().init();
       this.stopIfShuttingDown();
       await this.internalIndex.init();
@@ -549,6 +552,10 @@ class Kuzzle extends KuzzleEventEmitter {
       releaseAllLocksBeforeExit(),
       Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
     ]);
+
+    // Nothing reads or writes the storage anymore: its drivers may release
+    // their connections (bounded, never rejects)
+    await this.storageEngine?.close();
 
     this.log.info("Halted.");
 

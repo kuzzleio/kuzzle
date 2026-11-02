@@ -979,5 +979,27 @@ export function coreCases(
         );
       },
     );
+
+    test.it(
+      "closes an instance, leaving the others working, when the driver can",
+      async () => {
+        const driver = context.buildDriver();
+
+        if (!driver.close) {
+          return;
+        }
+
+        try {
+          await driver.init();
+          assert.ok(Object.hasOwn(await driver.getSchema(), context.index));
+        } finally {
+          await driver.close();
+        }
+
+        assert.ok(
+          Object.hasOwn(await context.driver.getSchema(), context.index),
+        );
+      },
+    );
   });
 }

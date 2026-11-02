@@ -444,6 +444,15 @@ export interface StorageEngineHooks {
     collection: string,
     timeout?: string,
   ): Promise<void>;
+  /**
+   * Releases the engine connections (e.g. a connection pool) on a graceful
+   * shutdown, once the requests in flight are done. Kuzzle calls it once per
+   * instance, possibly before `init()` resolved (a shutdown during the
+   * startup), never calls the instance again afterwards, and does not wait
+   * for it longer than a few seconds: a failure or a timeout is logged, and
+   * the shutdown goes on.
+   */
+  close?(): Promise<void>;
 }
 
 /**
