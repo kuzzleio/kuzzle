@@ -65,9 +65,9 @@
           "class": "InternalError"
         },
         "version_mismatch": {
-          "description": "The version of the target Elasticsearch is not compatible with this version of Kuzzle",
+          "description": "The version of the target storage engine is not compatible with this version of Kuzzle",
           "code": 13,
-          "message": "Your elasticsearch version is %s: this version is not compatible with this version of Kuzzle",
+          "message": "Your storage engine version is %s: this version is not compatible with this version of Kuzzle",
           "class": "InternalError"
         },
         "unknown_scroll_id": {
@@ -134,7 +134,7 @@
         "not_connected": {
           "description": "Unable to connect to the storage instance",
           "code": 24,
-          "message": "Elasticsearch service is not connected.",
+          "message": "Storage engine is not connected.",
           "class": "ExternalServiceError"
         },
         "too_many_operations": {
@@ -186,19 +186,19 @@
           "class": "ExternalServiceError"
         },
         "unexpected_bad_request": {
-          "description": "Embeds an unexpected bad request error from Elasticsearch",
+          "description": "Embeds an unexpected bad request error from the storage engine",
           "code": 33,
           "message": "%s",
           "class": "BadRequestError"
         },
         "unexpected_not_found": {
-          "description": "Embeds an unexpected notfound error from Elasticsearch",
+          "description": "Embeds an unexpected notfound error from the storage engine",
           "code": 34,
           "message": "%s",
           "class": "NotFoundError"
         },
         "unexpected_error": {
-          "description": "Embeds an unexpected error from Elasticsearch",
+          "description": "Embeds an unexpected error from the storage engine",
           "code": 35,
           "message": "%s",
           "class": "ExternalServiceError"
@@ -255,7 +255,7 @@
         "unknown_query_keyword": {
           "description": "An unknown keyword has been provided in the search query",
           "code": 45,
-          "message": "The keyword \"%s\" is not part of Elasticsearch Query DSL. Are you trying to use a Koncorde query?",
+          "message": "The keyword \"%s\" is not part of the storage engine Query DSL. Are you trying to use a Koncorde query?",
           "class": "BadRequestError"
         },
         "incomplete_update": {
@@ -273,7 +273,7 @@
         "multiple_indice_alias": {
           "description": "The unique association between an indice and its alias has not been respected",
           "code": 48,
-          "message": "An %s is not allowed to be associated with multiple %s. This is probably not linked to this request but rather the consequence of previous actions on ElasticSearch.",
+          "message": "An %s is not allowed to be associated with multiple %s. This is probably not linked to this request but rather the consequence of previous actions on the storage engine.",
           "class": "PreconditionError"
         },
         "invalid_multi_index_collection_usage": {
@@ -346,9 +346,9 @@
       "code": 5,
       "errors": {
         "elastic_translation_error": {
-          "description": "An error occured while translating a Koncorde filter to an Elasticsearch query",
+          "description": "An error occured while translating a Koncorde filter to a storage engine query",
           "code": 1,
-          "message": "An error occured while translating a Koncorde filter to an Elasticsearch query: %s",
+          "message": "An error occured while translating a Koncorde filter to a storage engine query: %s",
           "class": "BadRequestError"
         }
       }

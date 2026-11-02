@@ -240,7 +240,9 @@ class ServerController extends NativeController {
         );
 
         if (response.status !== "yellow" && response.status !== "green") {
-          throw new Error(`ElasticSearch is down: ${JSON.stringify(response)}`);
+          throw new Error(
+            `Storage engine is down: ${JSON.stringify(response)}`,
+          );
         }
 
         result.services.storageEngine = "green";
