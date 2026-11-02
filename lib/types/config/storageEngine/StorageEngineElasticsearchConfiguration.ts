@@ -381,4 +381,17 @@ export type StorageEngineElasticsearch = {
    * Also see https://github.com/kuzzleio/kuzzle/pull/2117
    */
   generateMissingAliases: boolean;
+
+  /**
+   * Minimum delay, in milliseconds, between two storage reads a node makes
+   * when a request names an index or a collection its cache does not hold.
+   *
+   * Such a read lets a node find what a peer has just created, before the
+   * cluster broadcast reaches it. Misses in a row wait for the next read
+   * instead of each costing one: a request on a missing index or collection
+   * may fail up to this delay later. 0 reads on every miss.
+   *
+   * @default 100
+   */
+  cacheMissReadInterval?: number;
 };

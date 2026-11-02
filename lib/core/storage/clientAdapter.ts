@@ -49,6 +49,9 @@ const servicesError = kerror.wrap("services", "storage");
  * cluster-wide source of truth that each node mirrors in its index cache.
  * One field per locked collection: `JSON.stringify([index, collection])`.
  */
+/** See `services.storageEngine.cacheMissReadInterval` */
+const DEFAULT_CACHE_MISS_READ_INTERVAL = 100;
+
 const LOCKS_KEY_PREFIX = "{core/storage}/collection-locks/";
 
 /** Where `createIndex` / `createCollection` / `loadMappings` write, and whether
@@ -133,6 +136,13 @@ class ClientAdapter {
   public cache: IndexCache;
   /** The storage read under way to catch the cache up, shared by its callers */
   private catchingUp: Promise<void> | null = null;
+  /**
+   * When the last catch-up read started, and the cache changes it left: until
+   * something changes, the next one waits `catchUpInterval` after it
+   */
+  private lastCatchUp: { at: number; changes: number } | null = null;
+  /** Minimum delay (ms) between two catch-up reads (kuzzle#3140) */
+  private readonly catchUpInterval: number;
 
   constructor(scope: storeScopeEnum) {
     const config = global.kuzzle.config.services.storageEngine;
@@ -144,6 +154,8 @@ class ClientAdapter {
     assertDeclaredCapabilities(this.driver, selected);
     this.scope = scope;
     this.cache = new IndexCache();
+    this.catchUpInterval =
+      config.cacheMissReadInterval ?? DEFAULT_CACHE_MISS_READ_INTERVAL;
   }
 
   async init() {
@@ -361,14 +373,32 @@ class ClientAdapter {
    * waits for: right after a peer creates an index or a collection, a request
    * this node serves may not find it yet. Storage is asked before such a
    * request fails, or is answered from the cache alone (kuzzle#3121).
+   *
+   * Each caller gets a read that starts after it called, as above, but reads
+   * start at most once per `catchUpInterval` while the cache does not change:
+   * a client looping on a missing index waits instead of costing one full
+   * schema read per request (kuzzle#3140). A cached creation or deletion
+   * (local, or a peer's broadcast) lifts the wait for the next read.
    */
   private catchUpWithStorage(): Promise<void> {
     // Concurrent cache misses share one read
     this.catchingUp ??= (async () => {
-      const removals = this.cache.removals;
-
       try {
+        const last = this.lastCatchUp;
+
+        if (last !== null && last.changes === this.cache.changes) {
+          const wait = last.at + this.catchUpInterval - Date.now();
+
+          if (wait > 0) {
+            await new Promise((resolve) => setTimeout(resolve, wait));
+          }
+        }
+
+        const at = Date.now();
+        const removals = this.cache.removals;
+
         this.cache.learn(await this.driver.getSchema(), removals);
+        this.lastCatchUp = { at, changes: this.cache.changes };
       } finally {
         this.catchingUp = null;
       }
