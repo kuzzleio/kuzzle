@@ -28,7 +28,7 @@ Since 2.61.0-beta.2, their code lives in two packages, [`kuzzle-storage-es-7`](/
 
 Since 2.61.0-beta.3, both are pinned to their stable `1.0.0`. If the package of the configured `majorVersion` is missing (a partial install, a pruned `node_modules`), Kuzzle does not start and reports [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services). **Action**, only if you see it: run `npm install` again.
 
-A rolling upgrade from v2.60 works as before: nodes running the built-in drivers are not compared when they join the cluster.
+A rolling upgrade from v2.60 with an unchanged configuration works as before: nodes running the built-in drivers are compared by Elasticsearch major version only, and a node older than 2.61 counts as a built-in one. **Action**, only if your cluster mixes `majorVersion` values: align them. A `majorVersion: "8"` node is now refused by `"7"` nodes, with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster) ([#3139](https://github.com/kuzzleio/kuzzle/issues/3139)). Such a cluster was splitting its data across two Elasticsearch clusters.
 
 ### Running another storage engine
 
@@ -40,7 +40,7 @@ Setting `services.storageEngine.driver` to the name of a driver package, install
 - the driver always uses the running Kuzzle, even when another copy of `kuzzle` sits in `node_modules`, as in the official Docker image ([#3132](https://github.com/kuzzleio/kuzzle/issues/3132)). Before, such a driver could answer some documented `404` or `400` errors as `500` `unexpected_error`;
 - a request needing a capability the driver does not declare is rejected with [`services.storage_driver.unsupported_capability`](/core/2/api/errors/error-codes/services) (400).
 
-**Action**, only if you use an external driver in a cluster: every node must run the same driver in the same version. A node running another one fails its startup with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster). Upgrading a driver therefore means restarting every node on the new version, not a rolling restart.
+**Action**, only if you use an external driver in a cluster: every node must run the same driver in the same version. A node running another one fails its startup with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster), before it connects to the storage. A node running an external driver also refuses to start next to a node older than 2.61. If the mismatching node may be a stale one (killed without cleaning up, as in a full restart), the starting node logs a warning and waits for its ID card to expire (about 6 seconds by default) before deciding. Upgrading a driver therefore means restarting every node on the new version, not a rolling restart.
 
 ### Running Elasticsearch 9 or OpenSearch
 
@@ -59,7 +59,7 @@ Unlike the built-in drivers, Kuzzle does not pin these: you choose their version
 1. upgrade the Elasticsearch cluster to 9, following Elastic's upgrade guide;
 2. `npm install kuzzle-storage-es-9` in your application;
 3. set `services.storageEngine.driver` to `"kuzzle-storage-es-9"` and remove `majorVersion`;
-4. stop every Kuzzle node, then start them all on the new configuration. A rolling restart does not work: a node running `kuzzle-storage-es-9` is refused by nodes still running the built-in driver ([`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster)). Only nodes running the built-in Elasticsearch 7 and 8 drivers are not compared when they join.
+4. stop every Kuzzle node, then start them all on the new configuration. A rolling restart does not work: a node running `kuzzle-storage-es-9` is refused by nodes still running the built-in driver ([`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster)).
 
 The OpenSearch drivers do not move your data: copy it from Elasticsearch with a snapshot or a remote reindex.
 
