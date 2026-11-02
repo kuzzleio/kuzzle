@@ -77,6 +77,8 @@ Each node keeps the list of indexes and collections in memory, and learns about 
 
 A node now checks the storage before giving such an answer, and updates its list. As a result, `index:list`, `collection:list` and `index:stats` read the storage on every call, and a request on an index or a collection that does not exist costs one storage read before it fails. Requests on existing indexes and collections are unchanged.
 
+These storage reads start at most once every `services.storageEngine.cacheMissReadInterval` milliseconds (default `100`) on each node ([#3140](https://github.com/kuzzleio/kuzzle/issues/3140)): a client looping on a missing index no longer costs one read per request. A miss inside the interval waits for the next read and shares it, so the answer is never stale, and any index or collection created or deleted lifts the wait. As a result, a request on an index or a collection that does not exist can fail up to 100 ms later. **Action**, only if that delay matters to you: set `cacheMissReadInterval` to `0` to read on every miss, as in 2.61.0-beta.4.
+
 ## Plugin and application developers
 
 ### Raw storage clients
