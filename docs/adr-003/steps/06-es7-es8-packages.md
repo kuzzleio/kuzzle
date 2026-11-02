@@ -119,3 +119,5 @@ driver. The next major only drops the two dependencies (step 08).
 
 - Conformance kit 32 / 32: `storage-es-7` on Elasticsearch 7.17.26, `storage-es-8` on 8.17.1, locally and in each
   repository's CI.
+- Kit extended to 43 cases ([#3151](https://github.com/kuzzleio/kuzzle/pull/3151), #3138): 43 / 43 on the built-in
+  drivers at `1.1.0-beta.1` (ES 7.17.26, 8.17.1).
