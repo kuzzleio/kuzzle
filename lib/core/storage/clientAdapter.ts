@@ -282,8 +282,13 @@ class ClientAdapter {
   }
 
   async deleteIndexes(indexes: string[]): Promise<string[]> {
+    // One storage read for all of them, if any is missing from the cache
+    if (indexes.some((index) => !this.cache.hasIndex(index))) {
+      await this.catchUpWithStorage();
+    }
+
     for (const index of indexes) {
-      await this.assertIndexExists(index);
+      this.cache.assertIndexExists(index);
       this.cache.assertIndexWritable(index);
     }
 
@@ -1257,10 +1262,22 @@ class ClientAdapter {
         searchBody: JSONObject,
         opts: JSONObject,
       ) => {
-        for (const target of targets) {
-          for (const collection of target.collections) {
-            await this.assertCollectionExists(target.index, collection);
-          }
+        const searched = targets.flatMap(({ index, collections }) =>
+          collections.map((collection) => [index, collection] as const),
+        );
+
+        // One storage read for all of them, if any is missing from the cache
+        if (
+          searched.some(
+            ([index, collection]) =>
+              !this.cache.hasCollection(index, collection),
+          )
+        ) {
+          await this.catchUpWithStorage();
+        }
+
+        for (const [index, collection] of searched) {
+          this.cache.assertCollectionExists(index, collection);
         }
 
         assertSearchCapabilities(this.capabilities, searchBody);
@@ -1584,7 +1601,8 @@ class ClientAdapter {
       }
 
       for (const [collection, payload] of Object.entries(collections)) {
-        await this.assertCollectionExists(index, collection);
+        // Checked as each collection comes, like its import below
+        await this.assertCollectionExists(index, collection); // NOSONAR
         this.cache.assertCollectionWritable(index, collection);
 
         const imported = this.driver.import(index, collection, payload, {

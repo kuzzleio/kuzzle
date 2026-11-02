@@ -1050,6 +1050,44 @@ describe("#core/storage/ClientAdapter", () => {
       expect(cache.assertIndexExists).toHaveBeenCalledWith("i");
     });
 
+    it("reads storage once for several missing indexes", async () => {
+      cache.hasIndex.mockReturnValue(false);
+
+      await adapter.deleteIndexes(["i", "j"]);
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+      expect(cache.assertIndexExists).toHaveBeenCalledWith("i");
+      expect(cache.assertIndexExists).toHaveBeenCalledWith("j");
+    });
+
+    it("reads storage once for several missing searched collections", async () => {
+      cache.hasCollection.mockReturnValue(false);
+
+      await ask(
+        "document:multiSearch",
+        [{ collections: ["c", "d"], index: "i" }],
+        { query: {} },
+        {},
+      );
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+      expect(cache.assertCollectionExists).toHaveBeenCalledWith("i", "c");
+      expect(cache.assertCollectionExists).toHaveBeenCalledWith("i", "d");
+    });
+
+    it("reads nothing when every searched collection is cached", async () => {
+      cache.hasCollection.mockReturnValue(true);
+
+      await ask(
+        "document:multiSearch",
+        [{ collections: ["c"], index: "i" }],
+        { query: {} },
+        {},
+      );
+
+      expect(client.getSchema).not.toHaveBeenCalled();
+    });
+
     it("shares one storage read between concurrent misses", async () => {
       cache.hasCollection.mockReturnValue(false);
 
