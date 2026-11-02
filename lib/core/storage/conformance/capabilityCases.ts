@@ -40,10 +40,17 @@ async function eventually(
 ): Promise<void> {
   const deadline = Date.now() + 10_000;
 
-  while (!(await condition())) {
+  const poll = async (): Promise<void> => {
+    if (await condition()) {
+      return;
+    }
+
     assert.ok(Date.now() < deadline, `timed out waiting until ${description}`);
     await new Promise((resolve) => setTimeout(resolve, 200));
-  }
+    return poll();
+  };
+
+  return poll();
 }
 
 const IMPLEMENTED =

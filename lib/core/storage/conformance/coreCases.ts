@@ -873,31 +873,41 @@ export function coreCases(
       },
     );
 
+    /**
+     * Deletes, without fetching them, the Lyon documents of a new collection
+     * holding `lyon` of them and one Paris document
+     */
+    async function deleteLyonUnfetched(lyon: number, size?: number) {
+      const deleted = await context.collection("deleted-unfetched");
+      await context.driver.mCreate(
+        context.index,
+        deleted,
+        [
+          ...Array.from({ length: lyon }, () => ({ body: { city: "Lyon" } })),
+          { body: { city: "Paris" } },
+        ],
+        WAIT,
+      );
+
+      const result = await context.driver.deleteByQuery(
+        context.index,
+        deleted,
+        { term: { city: "Lyon" } },
+        { fetch: false, ...(size === undefined ? {} : { size }), ...WAIT },
+      );
+
+      assert.equal(await context.driver.count(context.index, deleted), 1);
+
+      return result;
+    }
+
     test.it(
       "deletes the documents matching a query without fetching them (fetch: false)",
       async () => {
-        const deleted = await context.collection("deleted-unfetched");
-        await context.driver.mCreate(
-          context.index,
-          deleted,
-          [
-            { _id: "y1", body: { city: "Lyon" } },
-            { _id: "y2", body: { city: "Lyon" } },
-            { _id: "y3", body: { city: "Paris" } },
-          ],
-          WAIT,
-        );
-
-        const result = await context.driver.deleteByQuery(
-          context.index,
-          deleted,
-          { term: { city: "Lyon" } },
-          { fetch: false, ...WAIT },
-        );
+        const result = await deleteLyonUnfetched(2);
 
         assert.deepEqual(result.documents, []);
         assert.equal(result.deleted, 2);
-        assert.equal(await context.driver.count(context.index, deleted), 1);
       },
     );
 
@@ -907,28 +917,9 @@ export function coreCases(
     test.it(
       "deletes every document matching a query with no limit (size: -1)",
       async () => {
-        const deleted = await context.collection("deleted-unlimited");
-        await context.driver.mCreate(
-          context.index,
-          deleted,
-          [
-            { _id: "z1", body: { city: "Lyon" } },
-            { _id: "z2", body: { city: "Lyon" } },
-            { _id: "z3", body: { city: "Lyon" } },
-            { _id: "z4", body: { city: "Paris" } },
-          ],
-          WAIT,
-        );
-
-        const result = await context.driver.deleteByQuery(
-          context.index,
-          deleted,
-          { term: { city: "Lyon" } },
-          { fetch: false, size: -1, ...WAIT },
-        );
+        const result = await deleteLyonUnfetched(3, -1);
 
         assert.equal(result.deleted, 3);
-        assert.equal(await context.driver.count(context.index, deleted), 1);
       },
     );
   });
