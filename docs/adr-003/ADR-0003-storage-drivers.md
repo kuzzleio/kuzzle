@@ -25,10 +25,10 @@ Measured on `2-dev` (2026-09-29):
 
 ### Decision
 
-**A storage engine is a driver: an npm package exporting a class that implements a Kuzzle-defined `StorageDriver` contract, selected by configuration and loaded before the storage engine initializes.** `npm install @kuzzleio/<driver>` plus one config line gives a working setup.
+**A storage engine is a driver: an npm package exporting a class that implements a Kuzzle-defined `StorageDriver` contract, selected by configuration and loaded before the storage engine initializes.** `npm install kuzzle-storage-<engine>-<major>` plus one config line gives a working setup.
 
 1. **A dedicated contract, the plugin system's mechanics.** Not a plugin: a driver exports a `StorageDriver` class and ships a manifest in the spirit of `kuzzle.json` (compatible `kuzzleVersion` semver range — the only versioning of the contract, as for plugins — and declared capabilities). Packages are named `kuzzle-storage-<engine>-<major>` (e.g. `kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2`), unscoped like `kuzzle` and `kuzzle-types` (amended 2026-10-30, see register): the `storage-` part sets them apart from plugins. It is loaded by a dedicated loader before `StorageEngine`. A driver that also needs controllers or pipes ships a regular plugin alongside.
-2. **Core + capability groups.** The contract has a mandatory core (CRUD, `m*`, index / collection management, basic search) and optional capability groups (e.g. `scroll`, `aggregations`, `byQuery`, dynamic mappings, aliases) declared in the manifest. Engine-specific mechanics (alias naming, cursors, query translation) stay inside the driver.
+2. **Core + capability groups.** The contract has a mandatory core (CRUD, `m*`, index / collection management, basic search) and optional capability groups (as shipped: `aggregations`, `mappingUpdates`, `stats`, `updateByQuery`) declared in the manifest. Engine-specific mechanics (alias naming, cursors, query translation) stay inside the driver.
 3. **ES DSL stays the lingua franca.** The public API does not change. Each driver translates what it supports; a request using an undeclared capability is rejected with a dedicated, documented error — no silent approximation.
 4. **Selected by configuration.** `services.storageEngine.driver: "<package name>"` in `.kuzzlerc`; Kuzzle `require()`s it at startup. No auto-discovery (ambiguous with several drivers installed). Without `driver`, the built-in drivers are selected by `majorVersion` exactly as today. `majorVersion` is deprecated when the ES9 driver ships (step 05) — in the documentation only, no startup notice (amended 2026-10-30, see register); it keeps working unchanged until v3.
 5. **The contract is exported by `kuzzle`.** Drivers import `StorageDriver`, the capability types and the conformance kit from `kuzzle` and declare it as a `peerDependency`. Pinned by the typings gate (`tests/typings/`), like the other contract types of ADR-0002.
@@ -63,7 +63,7 @@ Measured on `2-dev` (2026-09-29):
 ## Target architecture
 
 ```
-.kuzzlerc  services.storageEngine.driver = "@kuzzleio/<driver>"   (absent → built-in by majorVersion)
+.kuzzlerc  services.storageEngine.driver = "kuzzle-storage-<engine>-<major>"   (absent → built-in by majorVersion)
       │
       ▼
 DriverLoader (before StorageEngine.init)
@@ -105,8 +105,8 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ✅ Done 2026-10-29 | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
 | 04 | Conformance kit (test-runner-agnostic) exported with the contract; capability tags in the functional suite | ✅ Done 2026-10-29 | [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `kuzzle-storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc; warning only when set with `driver`) | ✅ Done 2026-10-30 | [#3103](https://github.com/kuzzleio/kuzzle/pull/3103), [#3108](https://github.com/kuzzleio/kuzzle/pull/3108), [#3109](https://github.com/kuzzleio/kuzzle/pull/3109) | [detail](steps/05-es9-driver.md) |
-| 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | 🟦 In progress | — | [detail](steps/06-es7-es8-packages.md) |
-| 07 | OpenSearch drivers: `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3`), own repos, in Kuzzle's functional matrix, shipped in the 2.61 beta | 🟦 In progress | [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) | [detail](steps/07-opensearch-drivers.md) |
+| 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | 🟦 In progress | [#3112](https://github.com/kuzzleio/kuzzle/pull/3112), [#3118](https://github.com/kuzzleio/kuzzle/pull/3118) | [detail](steps/06-es7-es8-packages.md) |
+| 07 | OpenSearch drivers: `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3 <4`), own repos, in Kuzzle's functional matrix, shipped in the 2.61 beta | 🟦 In progress | [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) | [detail](steps/07-opensearch-drivers.md) |
 | 08 | Next major: drop `kuzzle-storage-es-7` / `-8` (and `sdk-es7` / `sdk-es8`) from the core's dependencies | ⬜ To do (next major) | — | — |
 
 ---
@@ -125,7 +125,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 - **2026-09-29** — **Validation: conformance kit + functional matrix + unchanged ES7 / ES8 non-regression.**
 - **2026-09-29** — **ES9 is the first external driver.**
 - **2026-09-29** — **`ESClient` bug fixed now**, as a standalone fix ahead of step 01: plugins get the client of the configured major.
-- **2026-09-29** — **Package names `@kuzzleio/storage-<engine>-<major>`** — `storage-` sets them apart from plugins.
+- **2026-09-29** — **Package names `@kuzzleio/storage-<engine>-<major>`** — `storage-` sets them apart from plugins. *Superseded by unscoped `kuzzle-storage-<engine>-<major>` (decision 1).*
 - **2026-09-29** — **Contract versioned by the manifest's `kuzzleVersion` range only**, as for plugins.
 - **2026-09-29** — **Same driver mandatory on every cluster node**, checked at join.
 - **2026-09-29** — **v2 = ES / OpenSearch family only; non-ES (SQL) drivers at v3.**
@@ -145,7 +145,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 - **2026-10-29** — **Functional scenarios needing a capability are tagged `@capability-<name>`**, excluded from `KUZZLE_STORAGE_CAPABILITIES` (the driver's manifest list). [step 04](steps/04-conformance-kit.md)
 - **2026-10-29** — **Cross-repo loop: the contract only grows within a minor** (optional methods or capabilities), so a released driver stays valid; Kuzzle's matrix tests published drivers, no cross-repo CI. [step 04](steps/04-conformance-kit.md)
 - **2026-10-30** — **The ES9 driver: public repo `kuzzleio/storage-es-9`, a copy of the ES8 driver adapted to the ES9 client; Kuzzle's CI installs it from npm (beta first).** `kuzzle` exports `storageError` so a driver throws Kuzzle's storage errors. [step 05](steps/05-es9-driver.md)
-- **2026-11-02** — **OpenSearch: one driver per major, `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3`), shipped in the 2.61 beta**; both copy the ES7 driver, whose client envelope the OpenSearch client keeps. Settles the package granularity open point. [step 07](steps/07-opensearch-drivers.md)
+- **2026-11-02** — **OpenSearch: one driver per major, `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3 <4`), shipped in the 2.61 beta**; both copy the ES7 driver, whose client envelope the OpenSearch client keeps. Settles the package granularity open point. [step 07](steps/07-opensearch-drivers.md)
 - **2026-09-29** — **Out of scope:** cache engine; data migration between engines; ADR written now, implementation after 2.57 stable.
 
 ---

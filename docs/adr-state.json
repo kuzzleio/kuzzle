@@ -37,7 +37,8 @@
       "nextAction": "Docs to production (documentation develop → master, the five drivers beta → master with OpenSearch at 1.0.0, kuzdoc#19 released), then 2.61.0 (beta → master) (step 06).",
       "blockers": [],
       "openPoints": [
-        "Step 07 (OpenSearch 2 / 3 drivers) shipped in 2.61.0-beta.5 with the drivers at 1.0.0-beta.2; it closes when they reach 1.0.0 with the other drivers, before 2.61.0."
+        "Step 07 (OpenSearch 2 / 3 drivers) shipped in 2.61.0-beta.5 with the drivers at 1.0.0-beta.2; it closes when they reach 1.0.0 with the other drivers, before 2.61.0.",
+        "2.61.0-beta.5 review findings in #3145: the \"before 2.61.0 stable\" items gate the release."
       ]
     },
     {
