@@ -44,7 +44,11 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import { createNativeStorageClient } from "../storage/storageDriverLoader";
+import type { StorageEngineInfo } from "../../types/storage/StorageDriver";
+import {
+  createNativeStorageClient,
+  getStorageEngineInfo,
+} from "../storage/storageDriverLoader";
 import { withLock } from "../../util/distributedLock";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
@@ -187,6 +191,16 @@ export class PluginContext {
        */
       createCollection(collection: string, mappings: unknown): Promise<void>;
     };
+
+    /**
+     * The storage engine Kuzzle runs on: its driver's package, the engine
+     * family and the engine server's version. What `constructors.ESClient`'s
+     * API follows, unlike `services.storageEngine.majorVersion`.
+     *
+     * Asks the engine: call it once (e.g. in the plugin's `init()`), not on
+     * every request.
+     */
+    getStorageEngine(): Promise<StorageEngineInfo>;
 
     /**
      * Cluster accessor
@@ -400,6 +414,7 @@ export class PluginContext {
     this.accessors = {
       cluster: new BackendCluster(),
       execute,
+      getStorageEngine: getStorageEngineInfo,
       nodeId: global.nodeId,
       sdk: new EmbeddedSDK(),
       storage: {

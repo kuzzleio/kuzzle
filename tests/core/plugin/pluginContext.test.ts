@@ -385,6 +385,7 @@ describe("#core/plugin/pluginContext", () => {
       expect(Object.keys(context.accessors).sort()).toEqual([
         "cluster",
         "execute",
+        "getStorageEngine",
         "nodeId",
         "sdk",
         "storage",
@@ -411,6 +412,24 @@ describe("#core/plugin/pluginContext", () => {
 
     it("exposes this node's id", () => {
       expect(context.accessors.nodeId).toBe(global.nodeId);
+    });
+  });
+
+  describe("#accessors.getStorageEngine", () => {
+    it("tells the driver's package and the engine its info() reports", async () => {
+      global.kuzzle.config.services.storageEngine.majorVersion = "8";
+      ask.mockResolvedValue({
+        status: "green",
+        type: "elasticsearch",
+        version: "8.17.1",
+      });
+
+      await expect(context.accessors.getStorageEngine()).resolves.toEqual({
+        driver: "kuzzle-storage-es-8",
+        engine: "elasticsearch",
+        version: "8.17.1",
+      });
+      expect(ask).toHaveBeenCalledWith("core:storage:public:info:get");
     });
   });
 
