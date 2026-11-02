@@ -192,6 +192,53 @@ describe("#core/storage/IndexCache", () => {
     });
   });
 
+  /* kuzzle#3121: catching up with a peer's creation before its broadcast. */
+  describe("#learn", () => {
+    it("adds the stored indexes and collections it misses", () => {
+      indexCache.addCollection("known", "a");
+
+      indexCache.learn(
+        { known: ["a", "b"], fresh: ["c"], empty: [] },
+        indexCache.removals,
+      );
+
+      expect(indexCache.listCollections("known").sort()).toEqual(["a", "b"]);
+      expect(indexCache.listCollections("fresh")).toEqual(["c"]);
+      expect(indexCache.hasIndex("empty")).toBe(true);
+    });
+
+    it("removes nothing storage does not hold", () => {
+      indexCache.addCollection("cacheOnly", "a");
+
+      indexCache.learn({}, indexCache.removals);
+
+      expect(indexCache.hasCollection("cacheOnly", "a")).toBe(true);
+    });
+
+    it.each([
+      ["removeIndex", (cache: IndexCache) => cache.removeIndex("x")],
+      [
+        "removeCollection",
+        (cache: IndexCache) => cache.removeCollection("x", "y"),
+      ],
+      [
+        "replaceIndexes",
+        (cache: IndexCache) =>
+          cache.replaceIndexes({}, cache.snapshotIndexes()),
+      ],
+    ])(
+      "adds nothing when %s ran during the read: the read may predate it",
+      (_, remove) => {
+        const removals = indexCache.removals;
+
+        remove(indexCache);
+        indexCache.learn({ peer: ["deleted"] }, removals);
+
+        expect(indexCache.hasIndex("peer")).toBe(false);
+      },
+    );
+  });
+
   describe("#assertions", () => {
     it("asserts an index exists", () => {
       indexCache.addIndex("foo");
