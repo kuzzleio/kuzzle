@@ -24,14 +24,13 @@
 // Kuzzle at pinned versions. Dropped from Kuzzle's dependencies at the next
 // major.
 
-import * as path from "node:path";
-
 import type { Client as ClientES7 } from "sdk-es7";
 import type { Client as ClientES8 } from "sdk-es8";
 
 import * as kerror from "../../kerror";
 import type { StorageEngineElasticsearch } from "../../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type { StorageDriverClass } from "../../types/storage/StorageDriver";
+import { notFoundDetail, provideRunningKuzzle } from "./driverPackage";
 
 const driverError = kerror.wrap("services", "storage_driver");
 
@@ -43,17 +42,23 @@ const PACKAGES = {
 /**
  * The built-in driver of an Elasticsearch major version
  *
+ * @throws {services.storage_driver.unsupported_major_version} if no built-in
+ *   driver supports it: Kuzzle does not start
  * @throws {services.storage_driver.not_found} if its package is not
  *   installed: Kuzzle does not start
  */
 export function builtInStorageDriver(
   majorVersion: StorageEngineElasticsearch["majorVersion"],
 ): StorageDriverClass<ClientES7 | ClientES8, StorageEngineElasticsearch> {
-  const packageName = PACKAGES[majorVersion];
-
-  if (!packageName) {
-    throw new Error("Invalid Elasticsearch version.");
+  if (!Object.hasOwn(PACKAGES, majorVersion)) {
+    throw driverError.get(
+      "unsupported_major_version",
+      String(majorVersion),
+      Object.keys(PACKAGES).join(", "),
+    );
   }
+
+  const packageName = PACKAGES[majorVersion];
 
   let entry: string;
 
@@ -63,7 +68,7 @@ export function builtInStorageDriver(
     throw driverError.get(
       "not_found",
       packageName,
-      error instanceof Error ? error.message : String(error),
+      notFoundDetail(packageName, error),
     );
   }
 
@@ -73,31 +78,4 @@ export function builtInStorageDriver(
   // has to be loaded first.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require(entry).default;
-}
-
-/**
- * A driver package requires `kuzzle`, a peer dependency. In an application,
- * that is the running Kuzzle. When Kuzzle is itself the application (its
- * repository, its Docker image), npm installs another copy of `kuzzle` for
- * that peer dependency, whose error classes the running Kuzzle does not
- * recognize: the running Kuzzle is put in that copy's place.
- */
-function provideRunningKuzzle(driverEntry: string): void {
-  // `index.js` once built, `index.ts` when run from the sources
-  const entry = path.join(__dirname, "../../../index");
-  const running = require.cache[`${entry}.js`] ?? require.cache[`${entry}.ts`];
-  let peer: string;
-
-  try {
-    peer = require.resolve("kuzzle", {
-      paths: [path.dirname(driverEntry)],
-    });
-  } catch {
-    return;
-  }
-
-  // Under vitest, Kuzzle is not in Node's module cache: nothing to provide
-  if (running && require.cache[peer] === undefined) {
-    require.cache[peer] = running;
-  }
 }

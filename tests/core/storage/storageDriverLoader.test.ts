@@ -1,11 +1,19 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadConfig } from "../../../lib/config";
 import {
-  assertDeclaredCapabilities,
+  assertDriverContract,
+  CORE_METHODS,
   createNativeStorageClient,
   selectStorageDriver,
   type SelectedStorageDriver,
@@ -22,6 +30,8 @@ import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
 /** A driver package written on disk, as `npm install` would leave it */
 type DriverPackage = {
   name?: string;
+  /** Where it is installed under `node_modules`, `name` by default */
+  dir?: string;
   version?: string;
   /** `manifest.json`, as an object or as raw text; `null` leaves it out */
   manifest?: unknown;
@@ -32,6 +42,8 @@ type DriverPackage = {
   /** Where the entry point lives, relative to the package root */
   main?: string;
 };
+
+const nodeRequire = createRequire(__filename);
 
 const DRIVER_SOURCE = `
 class MemoryDriver {
@@ -52,13 +64,14 @@ describe("#core/storage/storageDriverLoader", () => {
    */
   const install = ({
     name = "storage-memory",
+    dir = name,
     version = "1.2.3",
     manifest = { capabilities: ["stats"], kuzzleVersion: ">=2.0.0 <3" },
     source = DRIVER_SOURCE,
     pkg = {},
     main = "index.js",
   }: DriverPackage = {}) => {
-    const root = path.join(appRoot, "node_modules", name);
+    const root = path.join(appRoot, "node_modules", dir);
 
     mkdirSync(path.dirname(path.join(root, main)), { recursive: true });
     writeFileSync(
@@ -74,13 +87,16 @@ describe("#core/storage/storageDriverLoader", () => {
       );
     }
 
-    config.driver = name;
+    config.driver = dir;
 
     return root;
   };
 
   beforeEach(() => {
-    appRoot = mkdtempSync(path.join(tmpdir(), "kuzzle-storage-driver-"));
+    // What Node resolves to, on macOS too (/var is a symbolic link there)
+    appRoot = realpathSync(
+      mkdtempSync(path.join(tmpdir(), "kuzzle-storage-driver-")),
+    );
     // The loader looks the driver up from the application, first
     vi.spyOn(process, "cwd").mockReturnValue(appRoot);
 
@@ -113,6 +129,7 @@ describe("#core/storage/storageDriverLoader", () => {
           ]),
           description: `the built-in Elasticsearch ${majorVersion} driver`,
           identity: null,
+          location: null,
         });
       },
     );
@@ -150,6 +167,7 @@ describe("#core/storage/storageDriverLoader", () => {
         capabilities: new Set(["stats"]),
         description: "storage-memory@1.2.3",
         identity: "storage-memory@1.2.3",
+        location: path.join(appRoot, "node_modules/storage-memory"),
       });
       expect(selected.Driver.name).toBe("MemoryDriver");
     });
@@ -199,18 +217,68 @@ describe("#core/storage/storageDriverLoader", () => {
       });
     });
 
+    it("accepts an npm alias, identified by the aliased package", () => {
+      install({ dir: "my-storage" });
+
+      expect(selectStorageDriver(config)).toMatchObject({
+        description: "my-storage (storage-memory@1.2.3)",
+        identity: "storage-memory@1.2.3",
+        location: path.join(appRoot, "node_modules/my-storage"),
+      });
+    });
+
+    it("refuses an unknown package, with how to install it and without Node's require stack", () => {
+      config.driver = "storage-nowhere";
+
+      expect(() => selectStorageDriver(config)).toThrow(
+        expect.objectContaining({
+          id: "services.storage_driver.not_found",
+          message:
+            "Cannot find the storage driver \"storage-nowhere\": Cannot find module 'storage-nowhere'. Install it next to kuzzle: npm install storage-nowhere.",
+        }),
+      );
+    });
+
+    it("refuses an installed package without an entry point, naming its version", () => {
+      // A name-reservation placeholder: a bare package.json
+      const root = path.join(appRoot, "node_modules/storage-memory");
+
+      mkdirSync(root, { recursive: true });
+      writeFileSync(
+        path.join(root, "package.json"),
+        JSON.stringify({ name: "storage-memory", version: "0.0.0" }),
+      );
+      config.driver = "storage-memory";
+
+      expect(() => selectStorageDriver(config)).toThrow(
+        expect.objectContaining({
+          id: "services.storage_driver.not_found",
+          message:
+            'Cannot find the storage driver "storage-memory": installed storage-memory@0.0.0 has no entry point.',
+        }),
+      );
+    });
+
     it.each([
-      [
-        "an unknown package",
-        "storage-nowhere",
-        /Cannot find the storage driver "storage-nowhere": Cannot find module/,
-      ],
       [
         "an empty name",
         "",
-        /services\.storageEngine\.driver must be an npm package name/,
+        /services\.storageEngine\.driver must be an npm package name\.$/,
       ],
+      [
+        "a relative path",
+        "./storage-memory",
+        /must be an npm package name, not a path: install the driver \(npm install \.\/storage-memory\), then set its package name/,
+      ],
+      ["an absolute path", "/opt/storage-memory", /not a path/],
+      [
+        "a version",
+        "storage-memory@1.2.3",
+        /must be an npm package name, without a version or a subpath/,
+      ],
+      ["a subpath", "storage-memory/lib", /without a version or a subpath/],
     ])("refuses %s", (_case, name, message) => {
+      install();
       config.driver = name;
 
       expect(() => selectStorageDriver(config)).toThrow(
@@ -222,8 +290,13 @@ describe("#core/storage/storageDriverLoader", () => {
     });
 
     it.each([
-      ["no manifest", null, /cannot read .*manifest\.json/],
-      ["a manifest that is not JSON", "{ nope", /cannot read .*manifest\.json/],
+      // The path once, where Node's error would repeat it
+      ["no manifest", null, /: [^ ]*manifest\.json does not exist\.$/],
+      [
+        "a manifest that is not JSON",
+        "{ nope",
+        /: [^ ]*manifest\.json is not valid JSON: /,
+      ],
       [
         "no kuzzleVersion",
         { capabilities: [] },
@@ -295,7 +368,89 @@ describe("#core/storage/storageDriverLoader", () => {
     });
   });
 
-  describe("#assertDeclaredCapabilities", () => {
+  describe("the kuzzle a driver package requires", () => {
+    // What Node's cache holds once Kuzzle runs from its sources
+    const entry = path.resolve(__dirname, "../../../index.ts");
+    const saved = nodeRequire.cache[entry];
+    const running = { exports: { running: true } } as unknown as NodeJS.Module;
+
+    /** A driver handing out the `kuzzle` it got */
+    const KUZZLE_USER_SOURCE = `
+const kuzzle = require("kuzzle");
+module.exports = class KuzzleUser {
+  static createNativeClient() { return { kuzzle }; }
+};
+`;
+
+    /**
+     * A stale copy of kuzzle next to the driver, as npm installs one for its
+     * peer dependency when Kuzzle is itself the application
+     */
+    const installKuzzleCopy = () => {
+      const root = path.join(appRoot, "node_modules/kuzzle");
+
+      mkdirSync(root, { recursive: true });
+      writeFileSync(
+        path.join(root, "package.json"),
+        JSON.stringify({ main: "index.js", name: "kuzzle", version: "2.0.0" }),
+      );
+      writeFileSync(
+        path.join(root, "index.js"),
+        "globalThis.staleKuzzleLoaded = true; module.exports = { stale: true };",
+      );
+
+      return path.join(root, "index.js");
+    };
+
+    beforeEach(() => {
+      nodeRequire.cache[entry] = running;
+    });
+
+    afterEach(() => {
+      if (saved) {
+        nodeRequire.cache[entry] = saved;
+      } else {
+        delete nodeRequire.cache[entry];
+      }
+
+      for (const file of Object.keys(nodeRequire.cache)) {
+        if (file.startsWith(appRoot)) {
+          delete nodeRequire.cache[file];
+        }
+      }
+
+      delete (globalThis as { staleKuzzleLoaded?: boolean }).staleKuzzleLoaded;
+    });
+
+    it("is the running Kuzzle, not the copy installed next to the driver", () => {
+      installKuzzleCopy();
+      install({ source: KUZZLE_USER_SOURCE });
+
+      expect(createNativeStorageClient(config, {})).toEqual({
+        kuzzle: running.exports,
+      });
+      expect(globalThis).not.toHaveProperty("staleKuzzleLoaded");
+    });
+
+    it("is left alone when already loaded: the running Kuzzle, in an application", () => {
+      const loaded = { exports: { loaded: true } } as unknown as NodeJS.Module;
+
+      nodeRequire.cache[installKuzzleCopy()] = loaded;
+      install({ source: KUZZLE_USER_SOURCE });
+
+      expect(createNativeStorageClient(config, {})).toEqual({
+        kuzzle: loaded.exports,
+      });
+    });
+
+    it("is nothing to provide when no kuzzle is installed next to the driver", () => {
+      install();
+
+      expect(selectStorageDriver(config).Driver.name).toBe("MemoryDriver");
+    });
+  });
+
+  describe("#assertDriverContract", () => {
     const selected = (
       capabilities: StorageCapability[],
     ): SelectedStorageDriver => ({
@@ -303,14 +458,34 @@ describe("#core/storage/storageDriverLoader", () => {
       capabilities: new Set(capabilities),
       description: "storage-memory@1.2.3",
       identity: "storage-memory@1.2.3",
+      location: null,
     });
 
+    /** A driver with every core method, and these */
     const driverWith = (methods: Record<string, unknown>) =>
-      methods as unknown as StorageDriver;
+      ({
+        ...Object.fromEntries(CORE_METHODS.map((method) => [method, () => {}])),
+        ...methods,
+      }) as unknown as StorageDriver;
+
+    it("refuses a driver lacking methods of the core contract", () => {
+      expect(() =>
+        assertDriverContract(
+          driverWith({ mExecute: undefined, scroll: 42 }),
+          selected([]),
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          id: "services.storage_driver.invalid_driver",
+          message:
+            'Invalid storage driver "storage-memory@1.2.3": it lacks methods of the core contract: mExecute, scroll.',
+        }),
+      );
+    });
 
     it("accepts a driver with every method of its capabilities", () => {
       expect(() =>
-        assertDeclaredCapabilities(
+        assertDriverContract(
           // Instance properties count as much as prototype methods
           driverWith({ bulkUpdateByQuery: () => {}, updateByQuery: () => {} }),
           selected(["updateByQuery", "aggregations"]),
@@ -320,7 +495,7 @@ describe("#core/storage/storageDriverLoader", () => {
 
     it("refuses a driver lacking a method of a declared capability", () => {
       expect(() =>
-        assertDeclaredCapabilities(
+        assertDriverContract(
           driverWith({ updateMapping: () => {} }),
           selected(["mappingUpdates"]),
         ),
