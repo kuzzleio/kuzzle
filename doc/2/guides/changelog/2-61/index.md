@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Status:** in beta since 2026-10-30 (2.61.0-beta.1, then 2.61.0-beta.2).
+**Status:** in beta since 2026-10-30 (2.61.0-beta.1, 2.61.0-beta.2, then 2.61.0-beta.3).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
@@ -38,6 +38,7 @@ Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or 
 ## What's fixed
 
 - A node joining a cluster could still list an index or a collection that another node had deleted before it joined, and keep a collection lock that was already released. It now replaces its cache with what the storage holds when it loads it.
+- If the `kuzzle-storage-es-7` or `kuzzle-storage-es-8` package was missing from `node_modules`, Kuzzle stopped with a raw `Cannot find module` error (2.61.0-beta.2). It now stops with the documented [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services) error, as for an external driver (2.61.0-beta.3).
 
 ## Under the hood
 
