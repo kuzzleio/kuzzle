@@ -15,10 +15,12 @@ import {
   assertDriverContract,
   CORE_METHODS,
   createNativeStorageClient,
+  getStorageEngineInfo,
   selectStorageDriver,
   type SelectedStorageDriver,
 } from "../../../lib/core/storage/storageDriverLoader";
 import { builtInStorageDriver } from "../../../lib/service/storage/builtInDrivers";
+import type { JSONObject } from "../../../lib/types/JSONObject";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type {
   StorageCapability,
@@ -131,6 +133,7 @@ describe("#core/storage/storageDriverLoader", () => {
           description: `the built-in Elasticsearch ${majorVersion} driver`,
           identity: null,
           location: null,
+          packageName: `kuzzle-storage-es-${majorVersion}`,
         });
       },
     );
@@ -170,6 +173,7 @@ describe("#core/storage/storageDriverLoader", () => {
         description: "storage-memory@1.2.3",
         identity: "storage-memory@1.2.3",
         location: path.join(appRoot, "node_modules/storage-memory"),
+        packageName: "storage-memory",
       });
       expect(selected.Driver.name).toBe("MemoryDriver");
     });
@@ -226,6 +230,7 @@ describe("#core/storage/storageDriverLoader", () => {
         description: "my-storage (storage-memory@1.2.3)",
         identity: "storage-memory@1.2.3",
         location: path.join(appRoot, "node_modules/my-storage"),
+        packageName: "storage-memory",
       });
     });
 
@@ -452,6 +457,40 @@ module.exports = class KuzzleUser {
     });
   });
 
+  describe("#getStorageEngineInfo", () => {
+    const answerInfo = (info: JSONObject) => {
+      const ask = vi.fn(async () => info);
+
+      global.kuzzle.ask = ask as unknown as typeof global.kuzzle.ask;
+
+      return ask;
+    };
+
+    it("tells the built-in driver's package and the engine it runs on", async () => {
+      config.majorVersion = "8";
+      const ask = answerInfo({ type: "elasticsearch", version: "8.17.1" });
+
+      await expect(getStorageEngineInfo()).resolves.toEqual({
+        driver: "kuzzle-storage-es-8",
+        engine: "elasticsearch",
+        version: "8.17.1",
+      });
+      expect(ask).toHaveBeenCalledWith("core:storage:public:info:get");
+    });
+
+    it("tells an external driver's package, while majorVersion keeps its default", async () => {
+      install({ dir: "my-storage" });
+      answerInfo({ status: "green", type: "opensearch", version: "3.2.0" });
+
+      await expect(getStorageEngineInfo()).resolves.toEqual({
+        driver: "storage-memory",
+        engine: "opensearch",
+        version: "3.2.0",
+      });
+      expect(config.majorVersion).toBe("7");
+    });
+  });
+
   describe("#assertDriverContract", () => {
     const selected = (
       capabilities: StorageCapability[],
@@ -462,6 +501,7 @@ module.exports = class KuzzleUser {
       description: "storage-memory@1.2.3",
       identity: "storage-memory@1.2.3",
       location: null,
+      packageName: "storage-memory",
     });
 
     /** A driver with every core method, and these */

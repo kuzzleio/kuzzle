@@ -134,10 +134,24 @@ export type StorageSearchOptions = {
 };
 
 export type StorageInfo = {
-  /** The engine, e.g. `"elasticsearch"` */
+  /** The engine family, e.g. `"elasticsearch"` or `"opensearch"` */
   type: string;
   version: string;
   status?: string;
+};
+
+/**
+ * The storage engine Kuzzle runs on, as plugins and applications read it
+ * (`context.accessors.getStorageEngine()`, `app.storage.getEngine()`): what
+ * the raw storage client's API follows, unlike `majorVersion`.
+ */
+export type StorageEngineInfo = {
+  /** The driver's package name, e.g. `"kuzzle-storage-es-9"` */
+  driver: string;
+  /** The engine family, from the driver's `info()`, e.g. `"elasticsearch"` */
+  engine: string;
+  /** The engine server's version, e.g. `"9.0.8"` */
+  version: string;
 };
 
 export type StorageStats = {
