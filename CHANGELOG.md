@@ -1,3 +1,9 @@
+## [2.61.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.4...v2.61.0-beta.5) (2026-11-02)
+
+### Features
+
+* **storage:** OpenSearch 2 and 3 drivers in the functional matrix (ADR-0003 step 07) ([4661f5a](https://github.com/kuzzleio/kuzzle/commit/4661f5ae698e161dd3acad4fb19a49c29ccd5624))
+
 ## [2.61.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.3...v2.61.0-beta.4) (2026-11-02)
 
 ### Bug Fixes
