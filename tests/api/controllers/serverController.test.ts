@@ -269,6 +269,10 @@ describe("#api/controllers/ServerController", () => {
       const response = await controller.healthCheck(request);
 
       expect(request.response.error).toBeInstanceOf(ExternalServiceError);
+      // Engine-neutral: the driver may target Elasticsearch or OpenSearch
+      expect(request.response.error?.message).toContain(
+        "Storage engine is down",
+      );
       expect(request.response.status).toBe(500);
       expect(response.status).toBe("red");
       expect(response.services).toMatchObject({
