@@ -32,11 +32,13 @@
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
       "status": "active",
-      "statusLabel": "🔵 Active · steps 00–05 done, 06 open",
+      "statusLabel": "🔵 Active · 00–05 done, 06 + 07 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Step 06: land the cluster cache fix (#3121) and release 2.61.0-beta.4, then the docs to production (documentation, the three drivers and kuzdoc#19 to master) and 2.61.0 (beta to master).",
+      "nextAction": "Once 2.61.0-beta.4 (#3124) is out: merge #3125 and release 2.61.0-beta.5 with the OpenSearch drivers (step 07), then the docs to production and 2.61.0 (step 06).",
       "blockers": [],
-      "openPoints": []
+      "openPoints": [
+        "Step 07 (OpenSearch 2 / 3 drivers, docs/adr-003/steps/07-opensearch-drivers.md) is open alongside step 06: drivers at 1.0.0-beta.1, 1.0.0 with the other drivers before 2.61.0."
+      ]
     },
     {
       "id": "0004",

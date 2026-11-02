@@ -89,7 +89,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 
 **Where we are (2026-11-02):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; `services.storageEngine.driver` loads an external driver; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Step 06 is open, its parts A–F done: the three drivers `kuzzle-storage-es-7` / `-8` / `-9` are `1.0.0` on npm (own repositories, conformance kit and unit suite in each), `kuzzle` pins es-7 / es-8 `1.0.0` and ships them in 2.61.0-beta.3 (2026-11-02); their docs.kuzzle.io sections are on next-docs only.
 
-**Next action:** land the cluster cache fix ([#3121](https://github.com/kuzzleio/kuzzle/issues/3121)) and release 2.61.0-beta.4, then the docs to production (documentation `develop` → `master`, the three drivers `beta` → `master`, kuzdoc#19 released) and 2.61.0 (`beta` → `master`) ([detail](steps/06-es7-es8-packages.md)).
+**Next action:** once 2.61.0-beta.4 is out ([#3124](https://github.com/kuzzleio/kuzzle/pull/3124)), merge [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) and release 2.61.0-beta.5 with the OpenSearch drivers ([step 07](steps/07-opensearch-drivers.md)); then the docs to production (documentation `develop` → `master`, the five drivers `beta` → `master`, kuzdoc#19 released) and 2.61.0 (`beta` → `master`) ([step 06](steps/06-es7-es8-packages.md)).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
