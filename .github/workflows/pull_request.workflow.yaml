@@ -408,9 +408,9 @@ jobs:
           es-version: ${{ matrix.es-version }}
 
   # Elasticsearch 9 through the external driver kuzzle-storage-es-9 (ADR-0003
-  # step 05), installed from npm (`beta` tag) as an application would. One
-  # Node.js version: the driver does not depend on it, the matrix above covers
-  # both.
+  # step 05), installed from npm as an application would, at the version
+  # .ci/scripts/stage-storage-driver.sh pins. One Node.js version: the driver
+  # does not depend on it, the matrix above covers both.
   functional-tests-es9-driver:
     name: Functional tests on the ES9 driver
     needs: [build]
@@ -445,8 +445,9 @@ jobs:
           storage-driver: es9
 
   # OpenSearch 2 and 3 through the external drivers kuzzle-storage-opensearch-2
-  # and -3 (ADR-0003 step 07), installed from npm as an application would: the
-  # `beta` tag until their 1.0.0. Same single Node.js version as above.
+  # and -3 (ADR-0003 step 07), installed from npm as an application would, at
+  # the versions .ci/scripts/stage-storage-driver.sh pins. Same single Node.js
+  # version as above.
   functional-tests-opensearch-drivers:
     name: Functional tests on the ${{ matrix.driver }} driver (${{ matrix.test-set }})
     needs: [build]
@@ -480,7 +481,37 @@ jobs:
           node-version: 24
           es-version: 8
           storage-driver: ${{ matrix.driver }}
-          storage-driver-spec: ${{ matrix.driver == 'opensearch2' && 'kuzzle-storage-opensearch-2@beta' || 'kuzzle-storage-opensearch-3@beta' }}
+
+  # The built-in driver under a manifest declaring no optional capability
+  # (ADR-0003 step 04, #3136): Kuzzle must start and serve everything else,
+  # and the suite skips the `@capability-*` scenarios. The two current
+  # protocols on ES 8 and one Node.js version: the legacy suites and the other
+  # combinations exercise nothing this profile changes.
+  functional-tests-core-only-driver:
+    name: Functional tests on the core-only driver (${{ matrix.test-set }})
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-set: ["http", "websocket"]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Test suit ${{ matrix.test-set }}
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:${{ matrix.test-set }}
+          node-version: 24
+          es-version: 8
+          storage-driver: core-only
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
