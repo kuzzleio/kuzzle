@@ -32,6 +32,7 @@ import { version } from "../../package.json";
 import Funnel from "../api/funnel";
 import { OpenApiManager } from "../api/openapi";
 import Cluster from "../cluster";
+import { assertClusterStorageDriver } from "../cluster/storageDriverCheck";
 import PassportWrapper from "../core/auth/passportWrapper";
 import { TokenManager } from "../core/auth/tokenManager";
 import CacheEngine from "../core/cache/cacheEngine";
@@ -305,6 +306,14 @@ class Kuzzle extends KuzzleEventEmitter {
       });
 
       await new CacheEngine().init();
+
+      // Before the storage, so that a node refused by the cluster has
+      // written nothing to it (#3139)
+      if (this.config.cluster.enabled) {
+        await assertClusterStorageDriver(this.config);
+        this.stopIfShuttingDown();
+      }
+
       await new StorageEngine().init();
       await new RealtimeModule().init();
       this.stopIfShuttingDown();

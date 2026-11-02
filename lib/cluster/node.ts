@@ -44,7 +44,6 @@ import Long from "long";
 import type { JSONObject } from "../types/JSONObject";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
-import { selectStorageDriver } from "../core/storage/storageDriverLoader";
 import * as kerror from "../kerror";
 import { KuzzleError } from "../kerror/errors/kuzzleError";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
@@ -57,6 +56,10 @@ import type { IdCard } from "./idCardHandler";
 import type { Activity } from "./protobuf/commandMessages";
 import ClusterPublisher from "./publisher";
 import ClusterState from "./state";
+import {
+  assertSameStorageDriver,
+  localStorageDriver,
+} from "./storageDriverCheck";
 import ClusterSubscriber from "./subscriber";
 
 const debug = createDebug("kuzzle:cluster:sync");
@@ -302,11 +305,18 @@ class ClusterNode {
    */
   public readonly storageDriver?: string;
 
+  /**
+   * Package of this node's built-in storage driver, `undefined` with an
+   * external one
+   */
+  public readonly builtInStorageDriver?: string;
+
   constructor() {
     this.config = global.kuzzle.config.cluster;
-    this.storageDriver =
-      selectStorageDriver(global.kuzzle.config.services.storageEngine)
-        .identity ?? undefined;
+    ({
+      storageDriver: this.storageDriver,
+      builtInStorageDriver: this.builtInStorageDriver,
+    } = localStorageDriver(global.kuzzle.config.services.storageEngine));
     this.logger = global.kuzzle.log.child("cluster:node");
     this.heartbeatDelay = this.config.heartbeat;
 
@@ -839,28 +849,15 @@ class ClusterNode {
   }
 
   /**
-   * The built-in drivers are not compared, so that an Elasticsearch 7 / 8
-   * cluster joins exactly as it did before the drivers.
+   * Already compared before the storage initialized
+   * (`assertClusterStorageDriver`): checked again for a node that started at
+   * the same time as this one, too late for that first check to see it.
    *
    * @throws {cluster.join.storage_driver_mismatch} if a node runs another
    *   storage driver than this one
    */
   private assertSameStorageDriver(nodes: IdCard[]): void {
-    const other = nodes.find(
-      (node) => node.storageDriver !== this.storageDriver,
-    );
-
-    if (other) {
-      const describe = (driver?: string) =>
-        driver ?? "a built-in Elasticsearch driver";
-
-      throw joinError.get(
-        "storage_driver_mismatch",
-        describe(this.storageDriver),
-        other.id,
-        describe(other.storageDriver),
-      );
-    }
+    assertSameStorageDriver(this, nodes);
   }
 
   /**

@@ -183,6 +183,8 @@ vi.mock("../../../lib/service/storage/storageService", () => ({
 }));
 vi.mock("../../../lib/service/storage/builtInDrivers", () => ({
   builtInStorageDriver: vi.fn((majorVersion: string) => `ES${majorVersion}`),
+  builtInStorageDriverPackage: (majorVersion: string) =>
+    `kuzzle-storage-es-${majorVersion}`,
 }));
 vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
