@@ -67,10 +67,20 @@ A few rules hold across them:
   language. An Elasticsearch-family driver uses `QueryTranslator`, which `kuzzle` exports.
 - **Writes stamp `_kuzzle_info`** (`author`, `createdAt`, `updater`, `updatedAt`) from the `userId` option, unless
   `injectKuzzleMeta` is `false`, and honour `refresh` (`false`, `true` or `"wait_for"`).
+- **An update meeting a version conflict** retries up to its `retryOnConflict` option, then rejects with
+  `services.storage.too_many_changes`.
 - **The `m*` writes are partial**: a document that cannot be written goes in `errors`, the others are written.
+  `mCreateOrReplace` rejects more documents than `limits.documentsWriteCount` with
+  `services.storage.write_limit_exceeded`, unless its `limits` option is `false`; `source: false` leaves `_source` out
+  of its answer.
 - **`scroll`**: a search started with the `scroll` option answers a `scrollId`, which `scroll()` then pages through.
   Keep the cursor's state where every Kuzzle node reads it: the internal cache, through
-  `global.kuzzle.ask("core:cache:internal:store" | "core:cache:internal:get" | "core:cache:internal:del", ...)`.
+  `global.kuzzle.ask("core:cache:internal:store" | "core:cache:internal:get" | "core:cache:internal:del", ...)`. A
+  scroll that is over, expired or unknown rejects with `services.storage.unknown_scroll_id`.
+- **`deleteByQuery`**: a `size` of `-1` is no limit; with `fetch: false`, it answers no `documents`, only the
+  `deleted` count (`bulk:deleteByQuery` asks for both).
+- **`createCollection` on an existing collection** keeps it and its documents (and applies the new mappings, with
+  `mappingUpdates`); `deleteIndexes` skips the indexes that do not exist and answers the ones it deleted.
 
 ## Capabilities
 
