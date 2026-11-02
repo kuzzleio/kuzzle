@@ -100,7 +100,7 @@
     "prettier": "3.9.7",
     "protobufjs-v7": "npm:protobufjs@7.5.4",
     "request-promise": "4.2.6",
-    "semantic-release-config-kuzzle": "1.3.0",
+    "semantic-release-config-kuzzle": "1.8.0",
     "should": "13.2.3",
     "strip-json-comments": "https://github.com/sindresorhus/strip-json-comments/archive/refs/tags/v3.1.1.tar.gz",
     "ts-node": "10.9.2",
