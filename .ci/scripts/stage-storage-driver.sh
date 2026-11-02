@@ -31,9 +31,12 @@ mkdir -p "$STAGE"
 cd "$STAGE"
 
 echo '{ "private": true }' > package.json
-# Its peer dependency, `kuzzle`, is the checkout: not installed from npm
+# Its peer dependency, `kuzzle`, is not installed from npm: in its place, a
+# copy that fails if it is ever loaded. Kuzzle must hand the driver the running
+# Kuzzle (the checkout) instead, as it does for the stale copy npm leaves in its
+# Docker image (kuzzle#3132).
 npm install --legacy-peer-deps --no-audit --no-fund "$SPEC"
-cp -r "$ROOT_DIR/features/fixtures/kuzzle-self" node_modules/kuzzle
+cp -r "$ROOT_DIR/features/fixtures/kuzzle-stale-copy" node_modules/kuzzle
 
 # 2-dev keeps the last release's version until the next release, so the
 # manifest's `kuzzleVersion` range is opened up here: that check is the
