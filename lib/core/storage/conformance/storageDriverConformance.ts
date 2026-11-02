@@ -141,7 +141,11 @@ export function describeStorageDriverConformance(
       } finally {
         try {
           // Even when `init()` failed, as Kuzzle's shutdown does
-          await Promise.all(built.map((driver) => driver.close?.()));
+          await Promise.all(
+            built.map(async (driver) => {
+              await driver.close?.();
+            }),
+          );
         } finally {
           removeEnvironment();
         }
