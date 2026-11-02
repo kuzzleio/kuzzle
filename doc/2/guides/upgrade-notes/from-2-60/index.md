@@ -42,6 +42,10 @@ Setting `services.storageEngine.driver` to the name of a driver package, install
 
 **Action**, only if you use an external driver in a cluster: every node must run the same driver in the same version. A node running another one fails its startup with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster), before it connects to the storage. A node running an external driver also refuses to start next to a node older than 2.61. If the mismatching node may be a stale one (killed without cleaning up, as in a full restart), the starting node logs a warning and waits for its ID card to expire (about 6 seconds by default) before deciding. Upgrading a driver therefore means restarting every node on the new version, not a rolling restart.
 
+### Engine version checked by the driver
+
+Each official driver now refuses to start on an engine it does not support: the built-in Elasticsearch 7 driver on an Elasticsearch 8 cluster, for instance, or an Elasticsearch driver on OpenSearch (which reports itself as Elasticsearch 7.10.2). **Action**, only if Kuzzle no longer starts: point it at the engine its `majorVersion` or `driver` names, or pick the matching driver.
+
 ### Running Elasticsearch 9 or OpenSearch
 
 Install the driver next to `kuzzle` and name it in `services.storageEngine.driver`:
@@ -97,6 +101,12 @@ With `services.storageEngine.driver` set, `services.storageEngine.majorVersion` 
 :::
 
 Since 2.61.0-beta.2, that client comes from the driver package's own copy of `@elastic/elasticsearch`. **Action**, only if your code checks it with `instanceof` against a `Client` class it imports itself: compare its behavior instead, or import the class from the driver's dependencies. To type it, see the drivers' [TypeScript](/drivers/storage-es-8/1/typescript/) page.
+
+### Storage error codes
+
+Since before 2.61, some storage engine errors reached clients as [`services.storage.unexpected_bad_request`](/core/2/api/errors/error-codes/services) or `unexpected_error`: the error mapping expected messages the current engine clients no longer produce. With 2.61 and every official driver, they come back with their documented [`services.storage.*`](/core/2/api/errors/error-codes/services) code: `too_many_operations` (thread pool or indexing pressure rejection), `cannot_change_mapping`, `unexpected_properties`, `invalid_mapping_type`, `too_many_changes` (version conflict) and `unknown_query_keyword`.
+
+**Action**, only if your code or your clients match on `unexpected_bad_request` or `unexpected_error` for these cases: match the specific code instead.
 
 ### New exports
 
