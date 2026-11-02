@@ -69,6 +69,10 @@ driver. The next major only drops the two dependencies (step 08).
   answer ([#3121](https://github.com/kuzzleio/kuzzle/issues/3121)).
 - The driver docs' home redirect pointed to an absolute path that the framework's `Redirect` appends to the current
   URL (404): relative in storage-es-7#4, storage-es-8#4, storage-es-9#5.
+- 2.61.0-beta.5 review (core, driver repos, docs, usability): findings tracked in
+  [#3145](https://github.com/kuzzleio/kuzzle/issues/3145). Its docs pass (#3135, the docs part of #3133, the v3 rows
+  of #3144) fixed the raw-client pages, the upgrade notes (ES8 → ES9 path, `majorVersion` warning for plugin authors),
+  the sample `.kuzzlerc` and this hub's stale names and ranges.
 
 ## Local decisions / gotchas
 

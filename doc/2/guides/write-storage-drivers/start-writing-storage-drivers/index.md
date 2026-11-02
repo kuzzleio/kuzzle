@@ -16,8 +16,10 @@ meta:
 
 Kuzzle stores its data through a **storage driver**: an npm package that exports a class implementing Kuzzle's
 `StorageDriver` contract. The application selects it in its configuration, and Kuzzle loads it at startup, before
-anything else uses the storage. The Elasticsearch 7, 8 and 9 drivers are built this way (see the
-[Drivers](/drivers/v2.html) section); writing another one lets Kuzzle run on another engine, with the same API.
+anything else uses the storage. The five official drivers are built this way: `kuzzle-storage-es-7` and
+`kuzzle-storage-es-8` (built in, installed with Kuzzle), `kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2` and
+`kuzzle-storage-opensearch-3` (see the [Drivers](/drivers/v2.html) section). Writing another one lets Kuzzle run on
+another engine, with the same API.
 
 ::: info
 The public API does not change with the driver: queries, mappings and search bodies stay in the Elasticsearch format,

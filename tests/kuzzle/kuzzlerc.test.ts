@@ -55,4 +55,13 @@ describe(".kuzzlerc.sample.jsonc", () => {
   it("leaves the deprecated security.jwt section out", () => {
     expect(loadSample().security).not.toHaveProperty("jwt");
   });
+
+  // A `majorVersion` copied from the sample next to a storage `driver` would
+  // log the "both set" warning at every startup: the sample shows it commented
+  // out, and "7" is the default anyway.
+  it("leaves services.storageEngine.majorVersion out", () => {
+    expect(loadSample().services.storageEngine).not.toHaveProperty(
+      "majorVersion",
+    );
+  });
 });
