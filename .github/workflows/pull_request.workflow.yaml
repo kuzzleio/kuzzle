@@ -448,7 +448,7 @@ jobs:
   # and -3 (ADR-0003 step 07), installed from npm as an application would: the
   # `beta` tag until their 1.0.0. Same single Node.js version as above.
   functional-tests-opensearch-drivers:
-    name: Functional tests on the ${{ matrix.driver }} driver
+    name: Functional tests on the ${{ matrix.driver }} driver (${{ matrix.test-set }})
     needs: [build]
     strategy:
       fail-fast: false

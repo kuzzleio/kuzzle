@@ -51,6 +51,10 @@ alongside the ES9 driver. Kuzzle's functional matrix runs on both. An ES7 / ES8 
 
 ## Gotchas
 
+- **Kuzzle asks `deleteByQuery` for no limit with `size: -1`** (`bulk:deleteByQuery`): Elasticsearch 7 accepted it,
+  OpenSearch refuses it (`[max_docs] parameter cannot be negative`). Found by the first CI run of the functional suites
+  on both drivers (http and websocket); the drivers omit a negative `size` (storage-opensearch-2#1, -3#1, `1.0.0-beta.2`).
+
 - **A full Docker disk makes OpenSearch refuse index creation** (`cluster create-index blocked`, flood-stage
   watermark): the conformance kit then fails in `createIndex`. Locally, free space or disable
   `cluster.routing.allocation.disk.threshold_enabled`.
