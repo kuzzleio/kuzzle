@@ -23,11 +23,11 @@
 // `services.storageEngine.driver` implements. A mandatory core, plus optional
 // capability groups a driver declares in its manifest.
 //
-// The methods are the ones the storage layer (`ClientAdapter`) calls today,
-// with the same arguments and answers: the built-in Elasticsearch 7 and 8
-// classes satisfy it as they are (tests/core/storage/storageDriver.test.ts).
-// Query, search body and mappings arguments are Elasticsearch DSL, the public
-// API's query language.
+// The methods are the ones the storage layer (`ClientAdapter`) calls, with the
+// same arguments and answers. Every driver, the built-in Elasticsearch 7 and 8
+// packages included, checks that it implements it in its own repository,
+// against the `kuzzle` it depends on. Query, search body and mappings
+// arguments are Elasticsearch DSL, the public API's query language.
 
 import type { storeScopeEnum } from "../../core/storage/storeScopeEnum";
 import type { JSONObject } from "../JSONObject";
@@ -61,7 +61,7 @@ export type StorageDriverManifest = {
   /**
    * Semver range of the Kuzzle versions the driver is compatible with: the
    * only versioning of this contract.
-   * @example ">=2.61.0 <3"
+   * @example ">=2.61.0-0 <3"
    */
   kuzzleVersion: string;
   /** The optional capability groups the driver implements */
