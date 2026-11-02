@@ -30,6 +30,8 @@ function recorder() {
   const tests: string[] = [];
   const beforeAll: (() => Promise<void>)[] = [];
   const afterAll: (() => Promise<void>)[] = [];
+  /** The cases' bodies, by their full name, for the few run here */
+  const bodies = new Map<string, () => Promise<void>>();
   const path: string[] = [];
 
   const api: ConformanceTestApi = {
@@ -41,14 +43,22 @@ function recorder() {
       body();
       path.pop();
     },
-    it: (name) => tests.push([...path, name].join(" > ")),
+    it: (name, body) => {
+      const fullName = [...path, name].join(" > ");
+
+      tests.push(fullName);
+      bodies.set(fullName, body);
+    },
   };
 
-  return { afterAll, api, beforeAll, suites, tests };
+  return { afterAll, api, beforeAll, bodies, suites, tests };
 }
 
+const CLOSE_CASE =
+  "Storage driver conformance > core: engine hooks > closes an instance, leaving the others working, when the driver can";
+
 /** A driver recording its calls, and the scope and config it was built with */
-function fakeDriver(failInit: boolean) {
+function fakeDriver(failInit: boolean, withClose: boolean) {
   const instances: {
     config: StorageEngineElasticsearch;
     scope: storeScopeEnum;
@@ -59,8 +69,28 @@ function fakeDriver(failInit: boolean) {
     static createNativeClient = vi.fn();
     calls: string[] = [];
 
+    close?: () => Promise<void>;
+
     constructor(config: StorageEngineElasticsearch, scope: storeScopeEnum) {
       instances.push({ calls: this.calls, config, scope });
+
+      if (withClose) {
+        this.close = async () => {
+          this.calls.push("close");
+        };
+      }
+    }
+
+    /** Answers the indexes it created */
+    async getSchema() {
+      this.calls.push("getSchema");
+
+      return Object.fromEntries(
+        instances
+          .flatMap(({ calls }) => calls)
+          .filter((call) => call.startsWith("createIndex "))
+          .map((call) => [call.split(" ")[1], []]),
+      );
     }
 
     async init() {
@@ -90,9 +120,12 @@ function fakeDriver(failInit: boolean) {
   };
 }
 
-function register(capabilities: StorageCapability[], failInit = false) {
+function register(
+  capabilities: StorageCapability[],
+  { failInit = false, withClose = false } = {},
+) {
   const recorded = recorder();
-  const fake = fakeDriver(failInit);
+  const fake = fakeDriver(failInit, withClose);
 
   describeStorageDriverConformance({
     Driver: fake.Driver,
@@ -178,12 +211,75 @@ describe("#core/storage/conformance", () => {
     });
 
     it("deletes nothing when the driver failed to initialize", async () => {
-      const { afterAll, beforeAll, instances } = register([], true);
+      const { afterAll, beforeAll, instances } = register([], {
+        failInit: true,
+      });
 
       await expect(beforeAll[0]?.()).rejects.toThrow("down");
       await afterAll[0]?.();
 
       expect(instances[0]?.calls).toEqual([]);
+    });
+
+    /* #3141 */
+    describe("the close() hook", () => {
+      it("closes both instances once the index is deleted, as Kuzzle's shutdown does", async () => {
+        const { afterAll, beforeAll, instances } = register([], {
+          withClose: true,
+        });
+
+        await beforeAll[0]?.();
+        await afterAll[0]?.();
+
+        expect(instances[0]?.calls.slice(2)).toEqual([
+          expect.stringMatching(/^deleteIndexes kit-/),
+          "close",
+        ]);
+        expect(instances[1]?.calls).toEqual(["init", "close"]);
+      });
+
+      it("closes them even when they failed to initialize", async () => {
+        const { afterAll, beforeAll, instances } = register([], {
+          failInit: true,
+          withClose: true,
+        });
+
+        await expect(beforeAll[0]?.()).rejects.toThrow("down");
+        await afterAll[0]?.();
+
+        expect(instances.map(({ calls }) => calls)).toEqual([
+          ["close"],
+          ["close"],
+        ]);
+      });
+
+      it("has a case closing an instance of its own, then checking the others", async () => {
+        const { afterAll, beforeAll, bodies, instances } = register([], {
+          withClose: true,
+        });
+
+        await beforeAll[0]?.();
+        expect(bodies.has(CLOSE_CASE)).toBe(true);
+        await bodies.get(CLOSE_CASE)?.();
+
+        expect(instances).toHaveLength(3);
+        expect(instances[2]?.scope).toBe(storeScopeEnum.PUBLIC);
+        expect(instances[2]?.calls).toEqual(["init", "getSchema", "close"]);
+        expect(instances[0]?.calls.at(-1)).toBe("getSchema");
+
+        await afterAll[0]?.();
+      });
+
+      it("passes that case for a driver without the hook", async () => {
+        const { afterAll, beforeAll, bodies, instances } = register([]);
+
+        await beforeAll[0]?.();
+        expect(bodies.has(CLOSE_CASE)).toBe(true);
+        await bodies.get(CLOSE_CASE)?.();
+
+        expect(instances[2]?.calls).toEqual([]);
+        await afterAll[0]?.();
+      });
     });
   });
 

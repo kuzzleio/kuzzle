@@ -39,7 +39,11 @@ each other's indexes: how the driver keeps them apart on the engine (a prefix, a
 
 Kuzzle also calls the static `createNativeClient(clientConfig)` whenever an application or a plugin asks for the
 engine's own client (`app.storage.storageClient`, `app.storage.StorageClient`, `context.constructors.ESClient`): it
-returns a **new** client each time, built from `services.storageEngine.client`.
+returns a **new** client each time, built from `services.storageEngine.client`. That client belongs to whoever asked
+for it: Kuzzle never closes it.
+
+On a graceful shutdown, once the requests in flight are done, Kuzzle calls the optional `close()` hook of each
+instance (see [Engine hooks](#engine-hooks)): release the engine connections there.
 
 ## The mandatory core
 
@@ -107,6 +111,11 @@ Optional methods Kuzzle calls when the driver has them, and skips otherwise:
 | --- | --- |
 | `generateMissingAliases()` | at startup, when `services.storageEngine.generateMissingAliases` is set: repairs the engine-side naming of existing data |
 | `waitForCollectionShards(index, collection, timeout?)` | before using a collection another node of the cluster has just created: waits, for a bounded time, until it can be written to |
+| `close()` | on a graceful shutdown, once the requests in flight are done: releases the engine connections (a connection pool, a socket...) |
+
+Kuzzle calls `close()` once per instance and never calls that instance again afterwards. It may come before `init()`
+resolved, or after it failed, when Kuzzle stops during its startup: close whatever was opened, and nothing else.
+Kuzzle waits for it for 5 seconds at most; a failure or a timeout is logged as a warning, and the shutdown goes on.
 
 ## What a driver may use of Kuzzle
 

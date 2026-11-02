@@ -40,6 +40,11 @@ export class ConformanceContext {
     /** The index the kit creates in the public scope, then deletes */
     readonly index: string,
     readonly capabilities: ReadonlySet<StorageCapability>,
+    /**
+     * Builds one more public driver instance, with the kit's configuration,
+     * for a case that needs its own (e.g. to close it): that case closes it
+     */
+    readonly buildDriver: () => StorageDriver,
   ) {}
 
   /** The public scope's driver instance, set before any case runs */
