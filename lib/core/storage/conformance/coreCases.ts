@@ -24,7 +24,12 @@
 
 import assert from "node:assert/strict";
 
-import { field, hasField, rejectsWith } from "./conformanceContext";
+import {
+  CONFORMANCE_MAPPINGS,
+  field,
+  hasField,
+  rejectsWith,
+} from "./conformanceContext";
 import type { ConformanceContext } from "./conformanceContext";
 import type { ConformanceTestApi } from "./storageDriverConformance";
 
@@ -153,6 +158,52 @@ export function coreCases(
       assert.deepEqual(await context.driver.deleteIndexes([index]), [index]);
       assert.ok(!Object.hasOwn(await context.driver.getSchema(), index));
     });
+
+    test.it(
+      "deletes indexes, skipping the ones that do not exist",
+      async () => {
+        const index = context.uniqueName(`${context.index}-deleted`);
+        const missing = context.uniqueName(`${context.index}-missing`);
+
+        await context.driver.createIndex(index);
+
+        assert.deepEqual(await context.driver.deleteIndexes([index, missing]), [
+          index,
+        ]);
+        assert.deepEqual(await context.driver.deleteIndexes([missing]), []);
+      },
+    );
+
+    // `collection:create` on an existing collection: Kuzzle calls the driver
+    // as for a new one. What new mappings change there is the
+    // `mappingUpdates` capability's.
+    test.it(
+      "creates a collection that already exists, keeping its documents",
+      async () => {
+        const collection = await context.collection("recreated");
+        await context.driver.create(
+          context.index,
+          collection,
+          { city: "Lyon" },
+          WAIT,
+        );
+
+        await context.driver.createCollection(context.index, collection, {
+          mappings: CONFORMANCE_MAPPINGS,
+        });
+
+        const schema = await context.driver.getSchema();
+        assert.ok(schema[context.index]?.includes(collection));
+        assert.equal(await context.driver.count(context.index, collection), 1);
+        assert.deepEqual(
+          field(
+            await context.driver.getMapping(context.index, collection),
+            "properties.city",
+          ),
+          { type: "keyword" },
+        );
+      },
+    );
   });
 
   test.describe("core: documents", () => {
@@ -375,6 +426,99 @@ export function coreCases(
         false,
       );
     });
+
+    // What `bulk:write` and the document actions run through a pipe do: the
+    // document is written as given, with or without `_kuzzle_info`.
+    test.it(
+      "writes no metadata of its own when told not to (injectKuzzleMeta: false)",
+      async () => {
+        const options = { injectKuzzleMeta: false, userId: "author-kuid" };
+        const source = async (id: string) =>
+          (await context.driver.get(context.index, collection, id))._source;
+
+        await context.driver.create(
+          context.index,
+          collection,
+          { a: 1 },
+          { id: "raw-create", ...options },
+        );
+        assert.ok(!hasField(await source("raw-create"), "_kuzzle_info"));
+
+        await context.driver.update(
+          context.index,
+          collection,
+          "raw-create",
+          { b: 2 },
+          options,
+        );
+        assert.ok(!hasField(await source("raw-create"), "_kuzzle_info"));
+
+        await context.driver.createOrReplace(
+          context.index,
+          collection,
+          "raw-cor",
+          { _kuzzle_info: { author: "given-kuid" }, a: 1 },
+          options,
+        );
+        assert.deepEqual(field(await source("raw-cor"), "_kuzzle_info"), {
+          author: "given-kuid",
+        });
+
+        await context.driver.replace(
+          context.index,
+          collection,
+          "raw-cor",
+          { c: 3 },
+          options,
+        );
+        assert.ok(!hasField(await source("raw-cor"), "_kuzzle_info"));
+
+        await context.driver.upsert(
+          context.index,
+          collection,
+          "raw-upsert",
+          { d: 4 },
+          options,
+        );
+        assert.ok(!hasField(await source("raw-upsert"), "_kuzzle_info"));
+      },
+    );
+
+    // Each conflict an update meets means another one went through: with five
+    // concurrent updates, four retries each are enough.
+    test.it(
+      "retries an update on a version conflict, when asked to (retryOnConflict)",
+      async () => {
+        await context.driver.create(
+          context.index,
+          collection,
+          {},
+          { id: "conflicts" },
+        );
+
+        const fields = ["f0", "f1", "f2", "f3", "f4"];
+        await Promise.all(
+          fields.map((name, value) =>
+            context.driver.update(
+              context.index,
+              collection,
+              "conflicts",
+              { [name]: value },
+              { retryOnConflict: 10 },
+            ),
+          ),
+        );
+
+        const { _source } = await context.driver.get(
+          context.index,
+          collection,
+          "conflicts",
+        );
+        for (const [value, name] of fields.entries()) {
+          assert.equal(field(_source, name), value);
+        }
+      },
+    );
   });
 
   test.describe("core: several documents at once", () => {
@@ -477,6 +621,49 @@ export function coreCases(
 
         assert.deepEqual(ids(documents), ["d1", "d2"]);
         assert.equal(errors.length, 1);
+      },
+    );
+
+    // `bulk:mWrite` writes past the limit (`limits: false`), without
+    // metadata, and does not answer the documents' content (`source: false`).
+    test.it(
+      "applies the write limit to mCreateOrReplace, unless told not to",
+      async () => {
+        const limited = context.uniqueName("limited");
+        await context.driver.createCollection(context.index, limited);
+
+        const total = global.kuzzle.config.limits.documentsWriteCount + 1;
+        const documents = Array.from({ length: total }, (_, n) => ({
+          _id: `l${n}`,
+          body: { n },
+        }));
+
+        await rejectsWith(
+          context.driver.mCreateOrReplace(context.index, limited, documents),
+          "services.storage.write_limit_exceeded",
+        );
+
+        const { errors, items } = await context.driver.mCreateOrReplace(
+          context.index,
+          limited,
+          documents,
+          { injectKuzzleMeta: false, limits: false, source: false, ...WAIT },
+        );
+
+        assert.deepEqual(errors, []);
+        assert.equal(items.length, total);
+        for (const item of items) {
+          assert.equal(field(item, "_source"), undefined);
+        }
+        assert.equal(await context.driver.count(context.index, limited), total);
+
+        const { _source } = await context.driver.get(
+          context.index,
+          limited,
+          "l0",
+        );
+        assert.equal(field(_source, "n"), 0);
+        assert.ok(!hasField(_source, "_kuzzle_info"));
       },
     );
 
@@ -614,6 +801,29 @@ export function coreCases(
     });
 
     test.it(
+      "rejects a scroll that is over, or that it never started",
+      async () => {
+        const first = await context.driver.search(
+          { collection, index: context.index, searchBody: {} },
+          { scroll: "10s", size: 3 },
+        );
+        const scrollId = String(first.scrollId);
+
+        // The last page: the scroll is over
+        await context.driver.scroll(scrollId, { scrollTTL: "10s" });
+
+        await rejectsWith(
+          context.driver.scroll(scrollId, { scrollTTL: "10s" }),
+          "services.storage.unknown_scroll_id",
+        );
+        await rejectsWith(
+          context.driver.scroll("not-a-scroll-id", { scrollTTL: "10s" }),
+          "services.storage.unknown_scroll_id",
+        );
+      },
+    );
+
+    test.it(
       "runs a callback on every page of documents matching a query",
       async () => {
         const pages = await context.driver.mExecute(
@@ -659,6 +869,65 @@ export function coreCases(
         );
 
         assert.deepEqual(ids(documents), ["x1"]);
+        assert.equal(await context.driver.count(context.index, deleted), 1);
+      },
+    );
+
+    test.it(
+      "deletes the documents matching a query without fetching them (fetch: false)",
+      async () => {
+        const deleted = await context.collection("deleted-unfetched");
+        await context.driver.mCreate(
+          context.index,
+          deleted,
+          [
+            { _id: "y1", body: { city: "Lyon" } },
+            { _id: "y2", body: { city: "Lyon" } },
+            { _id: "y3", body: { city: "Paris" } },
+          ],
+          WAIT,
+        );
+
+        const result = await context.driver.deleteByQuery(
+          context.index,
+          deleted,
+          { term: { city: "Lyon" } },
+          { fetch: false, ...WAIT },
+        );
+
+        assert.deepEqual(result.documents, []);
+        assert.equal(result.deleted, 2);
+        assert.equal(await context.driver.count(context.index, deleted), 1);
+      },
+    );
+
+    // What `bulk:deleteByQuery` asks: a negative size is no limit. The first
+    // betas of the OpenSearch drivers handed it to the engine, which refused
+    // it; only the functional suite caught it.
+    test.it(
+      "deletes every document matching a query with no limit (size: -1)",
+      async () => {
+        const deleted = await context.collection("deleted-unlimited");
+        await context.driver.mCreate(
+          context.index,
+          deleted,
+          [
+            { _id: "z1", body: { city: "Lyon" } },
+            { _id: "z2", body: { city: "Lyon" } },
+            { _id: "z3", body: { city: "Lyon" } },
+            { _id: "z4", body: { city: "Paris" } },
+          ],
+          WAIT,
+        );
+
+        const result = await context.driver.deleteByQuery(
+          context.index,
+          deleted,
+          { term: { city: "Lyon" } },
+          { fetch: false, size: -1, ...WAIT },
+        );
+
+        assert.equal(result.deleted, 3);
         assert.equal(await context.driver.count(context.index, deleted), 1);
       },
     );

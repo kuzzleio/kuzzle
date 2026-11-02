@@ -33,6 +33,19 @@ import type { StorageCapability } from "../../../types/storage/StorageDriver";
 
 const WAIT = { refresh: "wait_for" } as const;
 
+/** Polls `condition` until it holds, for at most 10 seconds */
+async function eventually(
+  condition: () => Promise<boolean>,
+  description: string,
+): Promise<void> {
+  const deadline = Date.now() + 10_000;
+
+  while (!(await condition())) {
+    assert.ok(Date.now() < deadline, `timed out waiting until ${description}`);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+}
+
 const IMPLEMENTED =
   "a driver declaring a capability implements its methods (Kuzzle checks it when it loads the driver)";
 
@@ -91,6 +104,57 @@ const CASES: Record<
       assert.deepEqual(field(mapping, "properties.zip"), { type: "keyword" });
       assert.deepEqual(field(mapping, "properties.city"), { type: "keyword" });
     });
+
+    test.it("adds the new fields of a collection created again", async () => {
+      const collection = await context.collection("recreated-mappings");
+
+      await context.driver.createCollection(context.index, collection, {
+        mappings: { properties: { country: { type: "keyword" } } },
+      });
+
+      const mapping = await context.driver.getMapping(
+        context.index,
+        collection,
+      );
+      assert.deepEqual(field(mapping, "properties.country"), {
+        type: "keyword",
+      });
+      assert.deepEqual(field(mapping, "properties.city"), { type: "keyword" });
+    });
+
+    test.it(
+      "makes the documents searchable by a new field (reindexCollection)",
+      async () => {
+        const collection = context.uniqueName("reindexed");
+        await context.driver.createCollection(context.index, collection, {
+          mappings: { dynamic: "false", properties: {} },
+        });
+        await context.driver.create(
+          context.index,
+          collection,
+          { zip: "34000" },
+          { id: "r1", ...WAIT },
+        );
+
+        const { driver } = context;
+        assert.ok(driver.updateCollection, IMPLEMENTED);
+
+        const byZip = { query: { term: { zip: "34000" } } };
+        assert.equal(await driver.count(context.index, collection, byZip), 0);
+
+        await driver.updateCollection(context.index, collection, {
+          mappings: { properties: { zip: { type: "keyword" } } },
+          reindexCollection: true,
+        });
+
+        // The engine may reindex in the background
+        await eventually(
+          async () =>
+            (await driver.count(context.index, collection, byZip)) === 1,
+          "the document is found by its new field",
+        );
+      },
+    );
   },
 
   stats(test, context) {
