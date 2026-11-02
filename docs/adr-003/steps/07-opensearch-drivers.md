@@ -36,10 +36,10 @@ alongside the ES9 driver. Kuzzle's functional matrix runs on both. An ES7 / ES8 
 
 | Part | What | Where | Status |
 | --- | --- | --- | --- |
-| A | `kuzzle-storage-opensearch-2`: the ES7 driver on the OpenSearch 2 client, version check, conformance kit + unit suite in CI on OpenSearch 2.19.0 / 2.19.7, README + `doc/1/`, first beta | storage-opensearch-2 | 🟦 code and docs ready locally (`~/Code/storage-opensearch-2`), repository and npm name to create |
-| B | `kuzzle-storage-opensearch-3`: the same on the OpenSearch 3 client, CI on 3.0.0 / 3.9.0 | storage-opensearch-3 | 🟦 code and docs ready locally (`~/Code/storage-opensearch-3`), repository and npm name to create |
+| A | `kuzzle-storage-opensearch-2`: the ES7 driver on the OpenSearch 2 client, version check, conformance kit + unit suite in CI on OpenSearch 2.19.0 / 2.19.7, README + `doc/1/`, first beta | storage-opensearch-2 | ✅ `kuzzle-storage-opensearch-2@1.0.0-beta.1` published 2026-11-02 (semantic-release, CI green) |
+| B | `kuzzle-storage-opensearch-3`: the same on the OpenSearch 3 client, CI on 3.0.0 / 3.9.0 | storage-opensearch-3 | ✅ `kuzzle-storage-opensearch-3@1.0.0-beta.1` published 2026-11-02 (semantic-release, CI green) |
 | C | Kuzzle: CI staging generalised, functional matrix on both drivers, docs (data storage guide, changelog, upgrade notes, `.kuzzlerc.sample.jsonc`) | kuzzle | 🟦 branch `feat/opensearch-drivers` |
-| D | docs.kuzzle.io: the two drivers registered in the "Drivers" section (documentation repository), on next-docs first | documentation | ⬜ |
+| D | docs.kuzzle.io: the two drivers registered in the "Drivers" section (documentation repository), on next-docs first | documentation | 🟦 [documentation#613](https://github.com/kuzzleio/documentation/pull/613) |
 
 ## Validation
 
