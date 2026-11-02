@@ -102,7 +102,7 @@
     "request-promise": "4.2.6",
     "semantic-release-config-kuzzle": "1.8.0",
     "should": "13.2.3",
-    "strip-json-comments": "https://github.com/sindresorhus/strip-json-comments/archive/refs/tags/v3.1.1.tar.gz",
+    "strip-json-comments": "5.0.3",
     "ts-node": "10.9.2",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
