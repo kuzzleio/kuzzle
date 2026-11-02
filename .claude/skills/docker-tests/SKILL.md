@@ -48,9 +48,11 @@ ES_VERSION=8 .ci/scripts/docker-test.sh functional websocket
 # scenarios are skipped, see cucumber.config.cjs):
 STORAGE_DRIVER=core-only .ci/scripts/docker-test.sh functional websocket
 
-# On Elasticsearch 9 with the external driver kuzzle-storage-es-9 (from npm,
-# or ES9_DRIVER=<local .tgz>):
+# On Elasticsearch 9 or OpenSearch 2 / 3 with an external driver
+# (kuzzle-storage-es-9, -opensearch-2, -opensearch-3; from npm, or
+# STORAGE_DRIVER_SPEC=<local .tgz>):
 ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
+ES_VERSION=8 STORAGE_DRIVER=opensearch2 .ci/scripts/docker-test.sh functional websocket
 ```
 
 This spins up the 3-node Kuzzle cluster + nginx + Elasticsearch + Redis defined

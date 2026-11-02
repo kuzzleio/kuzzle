@@ -706,6 +706,14 @@ Another storage engine is supported by installing its driver, an npm package, ne
 
 The rest of `services.storageEngine` is handed to the driver; `majorVersion` is ignored when `driver` is set. The API does not change: queries, mappings and search bodies are still written in the Elasticsearch format.
 
+The official external drivers:
+
+| Engine                        | Driver                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| Elasticsearch 9               | [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/getting-started)                 |
+| OpenSearch 2.19 and later 2.x | [`kuzzle-storage-opensearch-2`](/drivers/storage-opensearch-2/1/getting-started) |
+| OpenSearch 3                  | [`kuzzle-storage-opensearch-3`](/drivers/storage-opensearch-3/1/getting-started) |
+
 ### `majorVersion`
 
 <DeprecatedBadge version="2.61.0"/>
