@@ -26,7 +26,7 @@ Kuzzle now talks to its database through a [storage driver](/core/2/guides/main-
 
 Since 2.61.0-beta.2, their code lives in two packages, [`kuzzle-storage-es-7`](/drivers/storage-es-7/1/) and [`kuzzle-storage-es-8`](/drivers/storage-es-8/1/), which `kuzzle` depends on at pinned versions. `npm install` brings them with Kuzzle: there is nothing to add to your `package.json`. `npm ls kuzzle-storage-es-8` shows the version your Kuzzle uses.
 
-Since 2.61.0-beta.3, both are pinned to their stable `1.0.0`. If the package of the configured `majorVersion` is missing (a partial install, a pruned `node_modules`), Kuzzle does not start and reports [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services). **Action**, only if you see it: run `npm install` again.
+Since 2.61.0-beta.3, both are pinned to stable versions. If the package of the configured `majorVersion` is missing (a partial install, a pruned `node_modules`), Kuzzle does not start and reports [`services.storage_driver.not_found`](/core/2/api/errors/error-codes/services). **Action**, only if you see it: run `npm install` again.
 
 A rolling upgrade from v2.60 with an unchanged configuration works as before: nodes running the built-in drivers are compared by Elasticsearch major version only, and a node older than 2.61 counts as a built-in one. **Action**, only if your cluster mixes `majorVersion` values: align them. A `majorVersion: "8"` node is now refused by `"7"` nodes, with [`cluster.join.storage_driver_mismatch`](/core/2/api/errors/error-codes/cluster) ([#3139](https://github.com/kuzzleio/kuzzle/issues/3139)). Such a cluster was splitting its data across two Elasticsearch clusters.
 
