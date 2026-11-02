@@ -471,7 +471,9 @@ function manifestError(manifestPath: string, error: unknown): string {
     return `${manifestPath} does not exist`;
   }
 
-  return `cannot read ${manifestPath}${code === null ? `: ${messageOf(error)}` : ` (${code})`}`;
+  return code === null
+    ? `cannot read ${manifestPath}: ${messageOf(error)}`
+    : `cannot read ${manifestPath} (${code})`;
 }
 
 /** Typed for a lookup of any manifest value */
