@@ -51,6 +51,12 @@ To run Elasticsearch 9, install [`kuzzle-storage-es-9`](https://www.npmjs.com/pa
 
 A node joining a cluster could keep, in its cache, an index or a collection that another node had deleted before it joined, and a collection write lock already released: the deletion was announced to the nodes already in the cluster only. When it loads its cache, a node now replaces it with what the storage holds.
 
+### Index and collection checks in a cluster
+
+Each node keeps the list of indexes and collections in memory, and learns about the ones another node creates or deletes through a cluster message that no request waits for. For a few milliseconds after a creation on one node, another node could answer that the index or the collection does not exist (`services.storage.unknown_index`, `unknown_collection`), leave it out of `index:list` or `collection:list`, or refuse to create an index another node had just deleted (`index_already_exists`).
+
+A node now checks the storage before giving such an answer, and updates its list. As a result, `index:list`, `collection:list` and `index:stats` read the storage on every call, and a request on an index or a collection that does not exist costs one storage read before it fails. Requests on existing indexes and collections are unchanged.
+
 ## Plugin and application developers
 
 ### Raw storage clients

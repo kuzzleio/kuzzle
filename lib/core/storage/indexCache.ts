@@ -73,6 +73,13 @@ export class IndexCache {
   private readonly indexes = new Map<string, Set<string>>();
 
   /**
+   * How many times an index or a collection left the cache: `learn` compares
+   * it with the value read before storage was, to tell whether a removal landed
+   * during the read
+   */
+  private removalCount = 0;
+
+  /**
    * Collection write locks, a local copy of the cluster-wide state (see
    * `ClientAdapter`): checking a lock on every write must not cost a round
    * trip to Redis.
@@ -146,6 +153,7 @@ export class IndexCache {
    */
   removeIndex(index: string): void {
     this.indexes.delete(index);
+    this.removalCount++;
   }
 
   /**
@@ -156,6 +164,40 @@ export class IndexCache {
 
     if (collections) {
       collections.delete(collection);
+    }
+
+    this.removalCount++;
+  }
+
+  /**
+   * Removals so far, to pass to `learn` once storage has been read
+   */
+  get removals(): number {
+    return this.removalCount;
+  }
+
+  /**
+   * Add the stored indexes and collections this cache misses, unless one was
+   * removed since `removals` was read: the read may then predate that removal,
+   * and would bring back what a peer deleted (kuzzle#3121).
+   *
+   * Never removes anything: unlike `replaceIndexes`, it only catches up with
+   * creations whose cluster broadcast has not reached this node yet.
+   *
+   * @param stored - Index name -> its collection names, as storage holds them
+   * @param removals - Read from `removals` before storage was
+   */
+  learn(stored: Record<string, string[]>, removals: number): void {
+    if (removals !== this.removalCount) {
+      return;
+    }
+
+    for (const [index, collections] of Object.entries(stored)) {
+      this.addIndex(index);
+
+      for (const collection of collections) {
+        this.addCollection(index, collection);
+      }
     }
   }
 
@@ -192,6 +234,7 @@ export class IndexCache {
     ]);
 
     this.indexes.clear();
+    this.removalCount++;
 
     for (const index of indexes) {
       const storedCollections = new Set(
