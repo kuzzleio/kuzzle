@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -45,7 +45,7 @@ Setting `services.storageEngine.driver` to the name of a driver package, install
 
 `services.storageEngine.majorVersion` is deprecated in the documentation: Kuzzle 3 will select the storage engine with `driver` alone. It keeps working unchanged in Kuzzle 2, where it still chooses between the built-in Elasticsearch 7 and 8 drivers, and Kuzzle logs no deprecation warning for it.
 
-To run Elasticsearch 9, install [`kuzzle-storage-es-9`](https://www.npmjs.com/package/kuzzle-storage-es-9) next to `kuzzle` and set `services.storageEngine.driver` to `"kuzzle-storage-es-9"`.
+To run Elasticsearch 9, install [`kuzzle-storage-es-9`](https://www.npmjs.com/package/kuzzle-storage-es-9) next to `kuzzle` and set `services.storageEngine.driver` to `"kuzzle-storage-es-9"`. OpenSearch works the same way, with [`kuzzle-storage-opensearch-2`](https://www.npmjs.com/package/kuzzle-storage-opensearch-2) (OpenSearch 2.19 and later 2.x) or [`kuzzle-storage-opensearch-3`](https://www.npmjs.com/package/kuzzle-storage-opensearch-3) (OpenSearch 3).
 
 ### Index cache of a joining node
 

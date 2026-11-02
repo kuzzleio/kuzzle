@@ -14,7 +14,11 @@ inputs:
     description: Elasticsearch version to use
     required: true
   storage-driver:
-    description: 'External storage driver to run on (es9), on top of the es-version 8 cluster; empty: the built-in driver'
+    description: 'External storage driver to run on (es9, opensearch2, opensearch3), on top of the es-version 8 cluster; empty: the built-in driver'
+    required: false
+    default: ""
+  storage-driver-spec:
+    description: 'What npm installs as that driver (default: its package@latest)'
     required: false
     default: ""
 
@@ -29,4 +33,5 @@ runs:
         NODE_VERSION: ${{ inputs.node-version }}
         ES_VERSION: ${{ inputs.es-version }}
         STORAGE_DRIVER: ${{ inputs.storage-driver }}
+        STORAGE_DRIVER_SPEC: ${{ inputs.storage-driver-spec }}
       shell: bash

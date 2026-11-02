@@ -29,22 +29,30 @@ fi
 
 COMPOSE=(docker compose -f "$YML_FILE")
 
-# STORAGE_DRIVER=es9: Elasticsearch 9 and the external driver
-# kuzzle-storage-es-9 (ADR-0003 step 05), staged from npm (ES9_DRIVER: the npm
-# spec, default kuzzle-storage-es-9@latest) and mounted by an overlay of the ES 8
-# cluster file.
-if [ "${STORAGE_DRIVER:-}" == "es9" ]; then
-  if [ "$ES_VERSION" != "8" ]; then
-    echo "STORAGE_DRIVER=es9 runs on top of the ES 8 cluster file: set ES_VERSION=8"
-    exit 1
-  fi
+# STORAGE_DRIVER=es9|opensearch2|opensearch3: Elasticsearch 9 or OpenSearch,
+# and its external driver (ADR-0003 steps 05 and 07), staged from npm
+# (STORAGE_DRIVER_SPEC: the npm spec, default <package>@latest; ES9_DRIVER is
+# still read for es9) and mounted by an overlay of the ES 8 cluster file.
+case "${STORAGE_DRIVER:-}" in
+  "") ;;
+  es9|opensearch2|opensearch3)
+    if [ "$ES_VERSION" != "8" ]; then
+      echo "STORAGE_DRIVER=$STORAGE_DRIVER runs on top of the ES 8 cluster file: set ES_VERSION=8"
+      exit 1
+    fi
 
-  COMPOSE+=(-f ./.ci/test-cluster-es9-driver.yml)
-  "$WITH_RETRY" ./.ci/scripts/stage-es9-driver.sh "${ES9_DRIVER:-kuzzle-storage-es-9@latest}"
-elif [ -n "${STORAGE_DRIVER:-}" ]; then
-  echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected es9)"
-  exit 1
-fi
+    COMPOSE+=(-f "./.ci/test-cluster-$STORAGE_DRIVER-driver.yml")
+    SPEC="${STORAGE_DRIVER_SPEC:-}"
+    if [ -z "$SPEC" ] && [ "$STORAGE_DRIVER" == "es9" ]; then
+      SPEC="${ES9_DRIVER:-}"
+    fi
+    "$WITH_RETRY" ./.ci/scripts/stage-storage-driver.sh "$STORAGE_DRIVER" ${SPEC:+"$SPEC"}
+    ;;
+  *)
+    echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected es9, opensearch2 or opensearch3)"
+    exit 1
+    ;;
+esac
 
 "${COMPOSE[@]}" down -v
 

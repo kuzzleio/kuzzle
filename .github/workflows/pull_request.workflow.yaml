@@ -444,6 +444,44 @@ jobs:
           es-version: 8
           storage-driver: es9
 
+  # OpenSearch 2 and 3 through the external drivers kuzzle-storage-opensearch-2
+  # and -3 (ADR-0003 step 07), installed from npm as an application would: the
+  # `beta` tag until their 1.0.0. Same single Node.js version as above.
+  functional-tests-opensearch-drivers:
+    name: Functional tests on the ${{ matrix.driver }} driver (${{ matrix.test-set }})
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        driver: ["opensearch2", "opensearch3"]
+        test-set:
+          [
+            "http",
+            "websocket",
+            "legacy:mqtt",
+            "legacy:http",
+            "legacy:websocket",
+          ]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Test suit ${{ matrix.test-set }}
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:${{ matrix.test-set }}
+          node-version: 24
+          es-version: 8
+          storage-driver: ${{ matrix.driver }}
+          storage-driver-spec: ${{ matrix.driver == 'opensearch2' && 'kuzzle-storage-opensearch-2@beta' || 'kuzzle-storage-opensearch-3@beta' }}
+
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle]

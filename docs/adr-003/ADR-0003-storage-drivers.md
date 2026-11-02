@@ -89,7 +89,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 
 **Where we are (2026-11-02):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; `services.storageEngine.driver` loads an external driver; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Step 06 is open, its parts A–F done: the three drivers `kuzzle-storage-es-7` / `-8` / `-9` are `1.0.0` on npm (own repositories, conformance kit and unit suite in each), `kuzzle` pins es-7 / es-8 `1.0.0` and ships them in 2.61.0-beta.3 (2026-11-02); their docs.kuzzle.io sections are on next-docs only.
 
-**Next action:** land the cluster cache fix ([#3121](https://github.com/kuzzleio/kuzzle/issues/3121)) and release 2.61.0-beta.4, then the docs to production (documentation `develop` → `master`, the three drivers `beta` → `master`, kuzdoc#19 released) and 2.61.0 (`beta` → `master`) ([detail](steps/06-es7-es8-packages.md)).
+**Next action:** once 2.61.0-beta.4 is out ([#3124](https://github.com/kuzzleio/kuzzle/pull/3124)), merge [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) and release 2.61.0-beta.5 with the OpenSearch drivers ([step 07](steps/07-opensearch-drivers.md)); then the docs to production (documentation `develop` → `master`, the five drivers `beta` → `master`, kuzdoc#19 released) and 2.61.0 (`beta` → `master`) ([step 06](steps/06-es7-es8-packages.md)).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -106,7 +106,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 | 04 | Conformance kit (test-runner-agnostic) exported with the contract; capability tags in the functional suite | ✅ Done 2026-10-29 | [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `kuzzle-storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc; warning only when set with `driver`) | ✅ Done 2026-10-30 | [#3103](https://github.com/kuzzleio/kuzzle/pull/3103), [#3108](https://github.com/kuzzleio/kuzzle/pull/3108), [#3109](https://github.com/kuzzleio/kuzzle/pull/3109) | [detail](steps/05-es9-driver.md) |
 | 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | 🟦 In progress | — | [detail](steps/06-es7-es8-packages.md) |
-| 07 | OpenSearch 2 / 3 driver(s) (own repo) | ⬜ To do | — | — |
+| 07 | OpenSearch drivers: `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3`), own repos, in Kuzzle's functional matrix, shipped in the 2.61 beta | 🟦 In progress | — | [detail](steps/07-opensearch-drivers.md) |
 | 08 | Next major: drop `kuzzle-storage-es-7` / `-8` (and `sdk-es7` / `sdk-es8`) from the core's dependencies | ⬜ To do (next major) | — | — |
 
 ---
@@ -145,13 +145,13 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 - **2026-10-29** — **Functional scenarios needing a capability are tagged `@capability-<name>`**, excluded from `KUZZLE_STORAGE_CAPABILITIES` (the driver's manifest list). [step 04](steps/04-conformance-kit.md)
 - **2026-10-29** — **Cross-repo loop: the contract only grows within a minor** (optional methods or capabilities), so a released driver stays valid; Kuzzle's matrix tests published drivers, no cross-repo CI. [step 04](steps/04-conformance-kit.md)
 - **2026-10-30** — **The ES9 driver: public repo `kuzzleio/storage-es-9`, a copy of the ES8 driver adapted to the ES9 client; Kuzzle's CI installs it from npm (beta first).** `kuzzle` exports `storageError` so a driver throws Kuzzle's storage errors. [step 05](steps/05-es9-driver.md)
+- **2026-11-02** — **OpenSearch: one driver per major, `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3`), shipped in the 2.61 beta**; both copy the ES7 driver, whose client envelope the OpenSearch client keeps. Settles the package granularity open point. [step 07](steps/07-opensearch-drivers.md)
 - **2026-09-29** — **Out of scope:** cache engine; data migration between engines; ADR written now, implementation after 2.57 stable.
 
 ---
 
 ## Open points
 
-- **Package granularity:** one package per engine major (`storage-opensearch-2`, `storage-opensearch-3`) assumed — or one per family with a version option, if OpenSearch 2 and 3 turn out to share one SDK?
 - **Interaction with ADR-0002 step 03** (shared types package): whether the driver contract later moves there.
 - *(v3)* Which subset of ES mappings a non-ES driver must accept.
 - *(v3)* **Without `driver`, once ES7 / ES8 are no longer dependencies of `kuzzle` (step 08):** `driver` becomes mandatory (clear startup error), or a default driver is loaded — and which one (ES9, OpenSearch…)? The core ships no engine SDK at v3, so it cannot fall back to a built-in one.

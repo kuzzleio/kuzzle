@@ -25,14 +25,19 @@ Env vars:
                   declaring no optional capability (ADR-0003 step 04)
                   es9: they run on Elasticsearch 9 with the external driver
                   kuzzle-storage-es-9 (ADR-0003 step 05)
-  ES9_DRIVER      What npm installs as that driver (default:
-                  kuzzle-storage-es-9@latest); a local .tgz works too
+                  opensearch2 / opensearch3: on OpenSearch 2 / 3 with
+                  kuzzle-storage-opensearch-2 / -3 (ADR-0003 step 07)
+  STORAGE_DRIVER_SPEC
+                  What npm installs as that driver (default:
+                  <package>@latest); a local .tgz works too. ES9_DRIVER is
+                  still read for es9
 
 Examples:
   .ci/scripts/docker-test.sh unit
   .ci/scripts/docker-test.sh functional websocket
   ES_VERSION=8 .ci/scripts/docker-test.sh functional http
   ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
+  ES_VERSION=8 STORAGE_DRIVER=opensearch2 .ci/scripts/docker-test.sh functional http
 
   # Target a single feature file or a tag instead of the whole suite:
   .ci/scripts/docker-test.sh functional websocket -- features/api/document.feature
@@ -92,20 +97,25 @@ run_conformance() {
     kuzzle_node_1 bash -lc "npm ci && npm run test:conformance"
 }
 
-# Installs the external Elasticsearch 9 driver as an application would
-# (.ci/scripts/stage-es9-driver.sh), in a container: no local npm needed.
-stage_es9_driver() {
-  local spec="${ES9_DRIVER:-kuzzle-storage-es-9@latest}"
+# Installs an external storage driver as an application would
+# (.ci/scripts/stage-storage-driver.sh), in a container: no local npm needed.
+stage_storage_driver() {
+  local name="$1"
+  local spec="${STORAGE_DRIVER_SPEC:-}"
   local mounts=(-v "$ROOT_DIR:/var/app")
 
-  if [ -f "$spec" ]; then
-    mounts+=(-v "$(cd "$(dirname "$spec")" && pwd)/$(basename "$spec"):/tmp/storage-es-9.tgz:ro")
-    spec=/tmp/storage-es-9.tgz
+  if [ -z "$spec" ] && [ "$name" = es9 ]; then
+    spec="${ES9_DRIVER:-}"
+  fi
+
+  if [ -n "$spec" ] && [ -f "$spec" ]; then
+    mounts+=(-v "$(cd "$(dirname "$spec")" && pwd)/$(basename "$spec"):/tmp/storage-driver.tgz:ro")
+    spec=/tmp/storage-driver.tgz
   fi
 
   docker run --rm "${mounts[@]}" -w /var/app \
     kuzzleio/kuzzle-runner:"${NODE_VERSION:-24}"-trixie-slim \
-    bash .ci/scripts/stage-es9-driver.sh "$spec"
+    bash .ci/scripts/stage-storage-driver.sh "$name" ${spec:+"$spec"}
 }
 
 run_functional() {
@@ -126,16 +136,16 @@ run_functional() {
   case "${STORAGE_DRIVER:-}" in
     "") ;;
     core-only) compose+=(-f .ci/test-cluster-core-only-driver.yml) ;;
-    es9)
+    es9|opensearch2|opensearch3)
       if [ "$ES_VERSION" != 8 ]; then
-        echo "STORAGE_DRIVER=es9 runs on top of the ES 8 cluster file: set ES_VERSION=8" >&2
+        echo "STORAGE_DRIVER=$STORAGE_DRIVER runs on top of the ES 8 cluster file: set ES_VERSION=8" >&2
         exit 1
       fi
-      compose+=(-f .ci/test-cluster-es9-driver.yml)
-      stage_es9_driver
+      compose+=(-f ".ci/test-cluster-$STORAGE_DRIVER-driver.yml")
+      stage_storage_driver "$STORAGE_DRIVER"
       ;;
     *)
-      echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only or es9)" >&2
+      echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only, es9, opensearch2 or opensearch3)" >&2
       exit 1
       ;;
   esac
