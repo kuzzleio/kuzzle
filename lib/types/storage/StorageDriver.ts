@@ -23,11 +23,11 @@
 // `services.storageEngine.driver` implements. A mandatory core, plus optional
 // capability groups a driver declares in its manifest.
 //
-// The methods are the ones the storage layer (`ClientAdapter`) calls today,
-// with the same arguments and answers: the built-in Elasticsearch 7 and 8
-// classes satisfy it as they are (tests/core/storage/storageDriver.test.ts).
-// Query, search body and mappings arguments are Elasticsearch DSL, the public
-// API's query language.
+// The methods are the ones the storage layer (`ClientAdapter`) calls, with the
+// same arguments and answers. Every driver, the built-in Elasticsearch 7 and 8
+// packages included, checks that it implements it in its own repository,
+// against the `kuzzle` it depends on. Query, search body and mappings
+// arguments are Elasticsearch DSL, the public API's query language.
 
 import type { storeScopeEnum } from "../../core/storage/storeScopeEnum";
 import type { JSONObject } from "../JSONObject";
@@ -61,7 +61,7 @@ export type StorageDriverManifest = {
   /**
    * Semver range of the Kuzzle versions the driver is compatible with: the
    * only versioning of this contract.
-   * @example ">=2.61.0 <3"
+   * @example ">=2.61.0-0 <3"
    */
   kuzzleVersion: string;
   /** The optional capability groups the driver implements */
@@ -134,10 +134,24 @@ export type StorageSearchOptions = {
 };
 
 export type StorageInfo = {
-  /** The engine, e.g. `"elasticsearch"` */
+  /** The engine family, e.g. `"elasticsearch"` or `"opensearch"` */
   type: string;
   version: string;
   status?: string;
+};
+
+/**
+ * The storage engine Kuzzle runs on, as plugins and applications read it
+ * (`context.accessors.getStorageEngine()`, `app.storage.getEngine()`): what
+ * the raw storage client's API follows, unlike `majorVersion`.
+ */
+export type StorageEngineInfo = {
+  /** The driver's package name, e.g. `"kuzzle-storage-es-9"` */
+  driver: string;
+  /** The engine family, from the driver's `info()`, e.g. `"elasticsearch"` */
+  engine: string;
+  /** The engine server's version, e.g. `"9.0.8"` */
+  version: string;
 };
 
 export type StorageStats = {
@@ -430,6 +444,15 @@ export interface StorageEngineHooks {
     collection: string,
     timeout?: string,
   ): Promise<void>;
+  /**
+   * Releases the engine connections (e.g. a connection pool) on a graceful
+   * shutdown, once the requests in flight are done. Kuzzle calls it once per
+   * instance, possibly before `init()` resolved (a shutdown during the
+   * startup), never calls the instance again afterwards, and does not wait
+   * for it longer than a few seconds: a failure or a timeout is logged, and
+   * the shutdown goes on.
+   */
+  close?(): Promise<void>;
 }
 
 /**

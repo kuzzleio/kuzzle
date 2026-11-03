@@ -34,7 +34,7 @@
           "class": "InternalError"
         },
         "storage_driver_mismatch": {
-          "description": "The joining node runs another storage driver (package name or version) than a node of the cluster: every node must run the same one. The joining node does not start.",
+          "description": "The joining node runs another storage driver than a node of the cluster: an external driver differs by package name or version, a built-in one by Elasticsearch major version, and a node older than 2.61.0 counts as a built-in one. Checked before the joining node connects to the storage: it does not start.",
           "code": 4,
           "message": "This node runs %s, but the cluster node %s runs %s: every cluster node must run the same storage driver.",
           "class": "InternalError"

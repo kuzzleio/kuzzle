@@ -812,22 +812,23 @@
     //      of majorVersion is used. Every cluster node must run the same
     //      driver, same version.
     //  * majorVersion:
-    //      The major version of the Elasticsearch server.
-    //      This value is used to determine which Elasticsearch client to use.
-    //      Currently, only Elasticsearch 7.x and 8.x are supported.
-    //      Ignored when a driver is set (Kuzzle warns at startup if both are
-    //      set). Deprecated: Kuzzle 3 selects the storage engine with driver
-    //      only. It keeps working unchanged in Kuzzle 2.
+    //      The major version of the Elasticsearch server, "7" (default) or
+    //      "8": selects the built-in Elasticsearch driver.
+    //      Ignored when a driver is set: Kuzzle warns at startup if both are
+    //      set, which is why it is commented out below. Deprecated: Kuzzle 3
+    //      selects the storage engine with driver only. It keeps working
+    //      unchanged in Kuzzle 2.
     //  * backend:
-    //      The storage engine to use. Currently, only "elasticsearch" is supported.
+    //      Always "elasticsearch", also with an OpenSearch driver. Not read
+    //      by Kuzzle.
     //  * aliases:
     //      List of aliases for the storageEngine configuration.
     //   * client:
-    //       Elasticsearch constructor options. Use this field to specify your
-    //       Elasticsearch config options, this object is passed through to the
-    //       Elasticsearch constructor and can contain all options/keys outlined
-    //       here:
-    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
+    //       Options of the storage engine client, passed as they are to the
+    //       client of the driver in use: the Elasticsearch client
+    //       (https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html)
+    //       with the built-in drivers and kuzzle-storage-es-9, the OpenSearch
+    //       client with kuzzle-storage-opensearch-2 / -3.
     //   * commonMapping.dynamic:
     //       Default policy against new fields that are not referenced in the
     //       collection mapping.
@@ -840,7 +841,7 @@
     //         - "strict": Rejects document
     //       See https://www.elastic.co/guide/en/elasticsearch/reference/7.4/dynamic-mapping.html
     "storageEngine": {
-      "majorVersion": "7",
+      // "majorVersion": "7",
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
       "client": {
@@ -1008,7 +1009,15 @@
       // This option should be true only for retro-compatibility with Kuzzle < 2.14.0
       //
       // Also see https://github.com/kuzzleio/kuzzle/pull/2117
-      "generateMissingAliases": true
+      "generateMissingAliases": true,
+      // Minimum delay, in milliseconds, between two storage reads a node makes
+      // when a request names an index or a collection its cache does not hold.
+      //
+      // Such a read lets a node find what another node has just created,
+      // before the cluster broadcast reaches it. Misses in a row wait for the
+      // next read instead of each costing one: a request on a missing index
+      // or collection may fail up to this delay later. 0 reads on every miss.
+      "cacheMissReadInterval": 100
     }
   },
   // Configuration of the Kuzzle's internal statistics module

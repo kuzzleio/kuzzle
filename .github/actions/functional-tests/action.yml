@@ -14,11 +14,11 @@ inputs:
     description: Elasticsearch version to use
     required: true
   storage-driver:
-    description: 'External storage driver to run on (es9, opensearch2, opensearch3), on top of the es-version 8 cluster; empty: the built-in driver'
+    description: 'Storage driver to run on: core-only (declares no optional capability), or an external one (es9, opensearch2, opensearch3) on top of the es-version 8 cluster; empty: the built-in driver'
     required: false
     default: ""
   storage-driver-spec:
-    description: 'What npm installs as that driver (default: its package@latest)'
+    description: 'What npm installs as that driver (default: the version .ci/scripts/stage-storage-driver.sh pins)'
     required: false
     default: ""
 

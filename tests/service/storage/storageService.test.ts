@@ -44,13 +44,13 @@ describe("StorageService", () => {
     expect(init).toHaveBeenCalledOnce();
   });
 
-  it("fails as the Elasticsearch service did when the driver outlives the init timeout", async () => {
+  it("fails with an engine-neutral service name when the driver outlives the init timeout", async () => {
     init.mockReturnValue(new Promise<undefined>(() => {}));
     const service = new StorageService(Driver, config, storeScopeEnum.PUBLIC);
 
     await expect(service.init()).rejects.toMatchObject({
       id: "core.fatal.service_timeout",
-      message: expect.stringContaining("elasticsearch"),
+      message: '[FATAL] Service "storageEngine": initialization timeout',
     });
   });
 });

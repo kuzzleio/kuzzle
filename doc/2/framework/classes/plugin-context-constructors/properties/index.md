@@ -18,17 +18,21 @@ Abstract class that allows to define a new custom type for the [Data Validation]
 
 ## `ESClient`
 
-This constructor instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in Kuzzle configuration.  
+This constructor instantiates a client of the storage engine, with the same configuration as the one provided in Kuzzle configuration.  
 
-This client can be used to send raw Elasticsearch request.  
+This client can be used to send raw storage requests.  
 
-See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) for more information.
+<SinceBadge version="2.61.0" />
+
+The client is built by the [storage driver](/core/2/guides/main-concepts/data-storage#storage-drivers) in use: the [Elasticsearch client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) of the configured version with the built-in drivers, the driver's own engine client when `services.storageEngine.driver` is set, whatever `majorVersion` says. The driver's TypeScript page (e.g. [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/typescript/)) tells its API and how to type it. [accessors.getStorageEngine()](/core/2/framework/classes/plugin-context-accessors/get-storage-engine) tells which driver is in use.
 
 ### Arguments
 
 This class constructor takes no argument.
 
 ### Usage
+
+With the Elasticsearch 7 client (also the shape of the OpenSearch drivers' client):
 
 ```js
 const esRequest =  {

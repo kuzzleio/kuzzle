@@ -39,9 +39,9 @@ export class StorageService extends Service<StorageEngineElasticsearch> {
     config: StorageEngineElasticsearch,
     scope: storeScopeEnum,
   ) {
-    // The name the init timeout error reports, unchanged since the storage
-    // engine was Elasticsearch only.
-    super("elasticsearch", config);
+    // The name the init timeout error reports: engine-neutral, as the driver
+    // may target Elasticsearch or OpenSearch (kuzzle#3143)
+    super("storageEngine", config);
 
     this.driver = new Driver(config, scope);
   }

@@ -80,6 +80,12 @@ export class IndexCache {
   private removalCount = 0;
 
   /**
+   * How many times an index or a collection entered or left the cache, to
+   * tell whether anything changed since storage was last read (kuzzle#3140)
+   */
+  private changeCount = 0;
+
+  /**
    * Collection write locks, a local copy of the cluster-wide state (see
    * `ClientAdapter`): checking a lock on every write must not cost a round
    * trip to Redis.
@@ -99,6 +105,7 @@ export class IndexCache {
     }
 
     this.indexes.set(index, new Set());
+    this.changeCount++;
 
     return true;
   }
@@ -109,7 +116,12 @@ export class IndexCache {
   addCollection(index: string, collection: string): void {
     this.addIndex(index);
 
-    this.getCollections(index).add(collection);
+    const collections = this.getCollections(index);
+
+    if (!collections.has(collection)) {
+      collections.add(collection);
+      this.changeCount++;
+    }
   }
 
   /**
@@ -154,6 +166,7 @@ export class IndexCache {
   removeIndex(index: string): void {
     this.indexes.delete(index);
     this.removalCount++;
+    this.changeCount++;
   }
 
   /**
@@ -167,6 +180,7 @@ export class IndexCache {
     }
 
     this.removalCount++;
+    this.changeCount++;
   }
 
   /**
@@ -174,6 +188,13 @@ export class IndexCache {
    */
   get removals(): number {
     return this.removalCount;
+  }
+
+  /**
+   * Changes so far: additions and removals alike
+   */
+  get changes(): number {
+    return this.changeCount;
   }
 
   /**
@@ -235,6 +256,7 @@ export class IndexCache {
 
     this.indexes.clear();
     this.removalCount++;
+    this.changeCount++;
 
     for (const index of indexes) {
       const storedCollections = new Set(

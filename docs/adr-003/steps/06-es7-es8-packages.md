@@ -69,6 +69,16 @@ driver. The next major only drops the two dependencies (step 08).
   answer ([#3121](https://github.com/kuzzleio/kuzzle/issues/3121)).
 - The driver docs' home redirect pointed to an absolute path that the framework's `Redirect` appends to the current
   URL (404): relative in storage-es-7#4, storage-es-8#4, storage-es-9#5.
+- 2.61.0-beta.5 review (core, driver repos, docs, usability): findings tracked in
+  [#3145](https://github.com/kuzzleio/kuzzle/issues/3145). Its docs pass (#3135, the docs part of #3133, the v3 rows
+  of #3144) fixed the raw-client pages, the upgrade notes (ES8 → ES9 path, `majorVersion` warning for plugin authors),
+  the sample `.kuzzlerc` and this hub's stale names and ranges.
+- Optional `close()` engine hook (#3141): called once per scope instance on a graceful shutdown, after the funnel
+  drains and the locks are freed, bounded to 5 s, a failure only logged; the kit closes its instances and has a
+  capability-free case for it. The built-in drivers do not implement it yet (driver repositories' follow-up).
+- #3133 (feature): `context.accessors.getStorageEngine()` / `app.storage.getEngine()` give `{ driver, engine,
+  version }` (driver package, `info().type`, `info().version`); `majorVersion` unchanged. The OpenSearch drivers'
+  `info()` still reports `type: "elasticsearch"`: driver-side fix.
 
 ## Local decisions / gotchas
 
@@ -107,7 +117,17 @@ driver. The next major only drops the two dependencies (step 08).
   cached page keeps loading the chunks the deploy deleted. Fixed in kuzdoc#19 (`<path>*`); until it is released, run
   `aws cloudfront create-invalidation --paths "/<deploy path>/*"` by hand (profile with the docs account).
 
+- **Loader hardening (#3132, #3134, #3137, #3142).** External drivers now get the running Kuzzle too
+  (`provideRunningKuzzle`, moved to `lib/service/storage/driverPackage.ts`); the CI copy at `/node_modules/kuzzle`
+  is `features/fixtures/kuzzle-stale-copy`, which throws if loaded, so the es9 / OpenSearch jobs catch a regression.
+  Core methods are checked at startup (`CORE_METHODS`, exhaustive over `StorageDriverCore` by the compiler). Kept
+  cwd-first resolution (`.kuzzlerc` is found from cwd too; Kuzzle's own location is the fallback, and the log now
+  shows the driver's directory); npm aliases supported, paths refused with a hint. New id
+  `services.storage_driver.unsupported_major_version` replaces the plain `Error` for an unknown `majorVersion`.
+
 ## Validation
 
 - Conformance kit 32 / 32: `storage-es-7` on Elasticsearch 7.17.26, `storage-es-8` on 8.17.1, locally and in each
   repository's CI.
+- Kit extended to 43 cases ([#3151](https://github.com/kuzzleio/kuzzle/pull/3151), #3138): 43 / 43 on the built-in
+  drivers at `1.1.0-beta.1` (ES 7.17.26, 8.17.1).

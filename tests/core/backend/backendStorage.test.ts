@@ -63,6 +63,30 @@ describe("BackendStorage", () => {
     );
   });
 
+  describe("#getEngine", () => {
+    it("tells the driver's package and the engine its info() reports", async () => {
+      global.kuzzle.config.services.storageEngine.majorVersion = "8";
+      const ask = vi
+        .spyOn(global.kuzzle, "ask")
+        .mockResolvedValue({ type: "elasticsearch", version: "8.17.1" });
+
+      await expect(application.storage.getEngine()).resolves.toEqual({
+        driver: "kuzzle-storage-es-8",
+        engine: "elasticsearch",
+        version: "8.17.1",
+      });
+      expect(ask).toHaveBeenCalledWith("core:storage:public:info:get");
+    });
+
+    it("is unavailable before the application starts", async () => {
+      const notStarted = await createBackend();
+
+      await expect(notStarted.storage.getEngine()).rejects.toMatchObject({
+        id: "plugin.runtime.unavailable_before_start",
+      });
+    });
+  });
+
   describe("#storageClient", () => {
     it("builds the client lazily, on first access", () => {
       global.kuzzle.config.services.storageEngine.client.node =
