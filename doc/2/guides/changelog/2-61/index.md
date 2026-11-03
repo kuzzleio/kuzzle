@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.6).
+**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.7).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
