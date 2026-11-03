@@ -561,7 +561,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.funnel.pluginRequests > 0 &&
       Date.now() < pluginRequestsDeadline
     ) {
-      await Bluebird.delay(100);
+      await Bluebird.delay(100); // NOSONAR: sequential polling, by design
     }
 
     if (this.funnel.pluginRequests > 0) {
