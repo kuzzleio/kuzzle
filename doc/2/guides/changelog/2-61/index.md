@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.7).
+**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.8).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
@@ -58,4 +58,5 @@ If your code or your clients match the text of storage error messages, check it:
 ## Under the hood
 
 - `kuzzle` depends on `kuzzle-storage-es-7` and `kuzzle-storage-es-8` at pinned versions: a new version of a built-in driver reaches you with a Kuzzle release.
+- All five official drivers have stable releases (2.61.0-beta.8): `npm install kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2` or `kuzzle-storage-opensearch-3` installs a release, no beta tag needed, and Kuzzle's built-in drivers are their stable releases too.
 - Dependency updates (2.61.0-beta.6): `lodash` 4.18.1 (security fixes: prototype pollution in `_.unset` / `_.omit`, injection in `_.template` imports), `uuid` 14, `zeromq` 6.8.0, and patch or minor updates of `eventemitter3`, `moment`, `pino-pretty`, `semver`, `validator` and `yargs`. No change in behavior.
