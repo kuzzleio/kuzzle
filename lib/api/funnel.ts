@@ -126,6 +126,11 @@ type DocumentEventAliases = EventAliases & {
 class Funnel {
   public overloaded = false;
   public concurrentRequests = 0;
+  /**
+   * Plugin requests running outside `processRequest` (the event-less path of
+   * `executePluginRequest`): not limited, waited for on shutdown (#3160)
+   */
+  public pluginRequests = 0;
   public controllers: Map<string, NativeController> = new Map();
   public pendingRequestsQueue: Deque<string> = new Deque();
   public pendingRequestsById: Map<string, PendingRequest> = new Map();
@@ -931,11 +936,15 @@ class Funnel {
           });
       }
     }
+    this.pluginRequests++;
+
     try {
       return await doAction(this.getController(request), request);
     } catch (e) {
       this.handleErrorDump(causeOf(e));
       throw e;
+    } finally {
+      this.pluginRequests--;
     }
   }
 
