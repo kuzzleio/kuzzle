@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -118,7 +118,7 @@ Since 2.61.0-beta.6, storage error messages say "storage engine" instead of "Ela
 
 ### Storage drivers close their connections on shutdown
 
-Since 2.61.0-beta.6, Kuzzle calls the storage driver's optional `close()` hook on a graceful shutdown, and every official driver closes its engine connections there. A driver whose `close()` fails gets a warning in the logs, and the shutdown carries on. Driver authors: see the [storage driver contract](/core/2/guides/write-storage-drivers/contract).
+Since 2.61.0-beta.6, Kuzzle calls the storage driver's optional `close()` hook on a graceful shutdown, and every official driver closes its engine connections there. A driver whose `close()` fails gets a warning in the logs, and the shutdown carries on. Before closing the storage, the shutdown waits for the client requests still running and, since 2.61.0-beta.7, for the requests plugins run through `context.accessors.sdk` or `app.sdk` too ([#3160](https://github.com/kuzzleio/kuzzle/issues/3160)). That wait lasts 5 seconds at most, as a plugin may run requests in a loop: past it, Kuzzle logs a warning and closes the storage anyway. An unhandled rejection that happens while Kuzzle shuts down is logged and no longer stops it with exit code 1 in development mode: late plugin work failing on the closed storage does not turn a requested shutdown into a failure. Driver authors: see the [storage driver contract](/core/2/guides/write-storage-drivers/contract).
 
 ### New exports
 

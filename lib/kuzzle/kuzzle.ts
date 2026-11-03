@@ -75,6 +75,12 @@ let _kuzzle: Kuzzle | null = null;
  * not keep a failed node alive, which a bare `process.exit(1)` never did
  */
 const FAILURE_SHUTDOWN_TIMEOUT = 30000;
+/**
+ * How long a shutdown waits for the plugin requests still running before it
+ * closes the storage: plugins may run requests in a loop, and nothing refuses
+ * them on shutdown, so the wait is bounded (#3160)
+ */
+const PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT = 5000;
 
 /**
  * Stops the startup sequence once a shutdown has begun (#3045): `start()`
@@ -544,6 +550,24 @@ class Kuzzle extends KuzzleEventEmitter {
         `[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`,
       );
       await Bluebird.delay(1000);
+    }
+
+    // The storage closes below: let the plugin requests in progress finish
+    // (#3160)
+    const pluginRequestsDeadline =
+      Date.now() + PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT;
+
+    while (
+      this.funnel.pluginRequests > 0 &&
+      Date.now() < pluginRequestsDeadline
+    ) {
+      await Bluebird.delay(100); // NOSONAR: sequential polling, by design
+    }
+
+    if (this.funnel.pluginRequests > 0) {
+      this.log.warn(
+        `[shutdown] ${this.funnel.pluginRequests} plugin requests still running after ${PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT}ms: closing the storage anyway`,
+      );
     }
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
@@ -1042,6 +1066,14 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       } else {
         this.log.error(`ERROR: unhandledRejection: ${promise}`);
+      }
+
+      // A shutdown already in progress has closed, or is closing, what late
+      // work may still use (the network, the storage): crashing would turn a
+      // requested shutdown into a failure, so the rejection is only logged
+      // (#3160)
+      if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+        return;
       }
 
       // Crashing on an unhandled rejection is a good idea during development
