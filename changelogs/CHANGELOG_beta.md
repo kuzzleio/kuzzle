@@ -1,3 +1,9 @@
+## [2.61.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.6...v2.61.0-beta.7) (2026-11-03)
+
+### Bug Fixes
+
+* **shutdown:** wait for plugin requests before closing the storage ([11fb1f0](https://github.com/kuzzleio/kuzzle/commit/11fb1f0889bec168c9f8bad0d8c0ec7aeda4d994)), closes [#3160](https://github.com/kuzzleio/kuzzle/issues/3160)
+
 ## [2.61.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.5...v2.61.0-beta.6) (2026-11-03)
 
 ### Dependencies
