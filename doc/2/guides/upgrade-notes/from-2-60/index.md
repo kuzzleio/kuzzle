@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine). If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -99,7 +99,7 @@ With `services.storageEngine.driver` set, `services.storageEngine.majorVersion` 
 | built-in Elasticsearch 7, `kuzzle-storage-opensearch-2`, `kuzzle-storage-opensearch-3` | Elasticsearch 7 shape: `body` in requests, responses wrapped in `{ body }` |
 | built-in Elasticsearch 8, `kuzzle-storage-es-9`                                        | Elasticsearch 8 shape: `document` in requests, flat responses              |
 
-**Action**, for plugin and application authors, before running on an external driver: do not infer the client's API from `majorVersion`; check `services.storageEngine.driver` first.
+**Action**, for plugin and application authors, before running on an external driver: do not infer the client's API from `majorVersion`. Since 2.61.0-beta.6, ask Kuzzle which driver and engine run with [`app.storage.getEngine()`](/core/2/framework/classes/backend-storage/get-engine) or [`context.accessors.getStorageEngine()`](/core/2/framework/classes/plugin-context-accessors/get-storage-engine): its `driver` tells the client's API, its `engine` the engine family (`elasticsearch`, `opensearch`).
 :::
 
 Since 2.61.0-beta.2, that client comes from the driver package's own copy of `@elastic/elasticsearch`. **Action**, only if your code checks it with `instanceof` against a `Client` class it imports itself: compare its behavior instead, or import the class from the driver's dependencies. To type it, see the drivers' [TypeScript](/drivers/storage-es-8/1/typescript/) page.
@@ -109,6 +109,16 @@ Since 2.61.0-beta.2, that client comes from the driver package's own copy of `@e
 Since before 2.61, some storage engine errors reached clients as [`services.storage.unexpected_bad_request`](/core/2/api/errors/error-codes/services) or `unexpected_error`: the error mapping expected messages the current engine clients no longer produce. With 2.61 and every official driver, they come back with their documented [`services.storage.*`](/core/2/api/errors/error-codes/services) code: `too_many_operations` (thread pool or indexing pressure rejection), `cannot_change_mapping`, `unexpected_properties`, `invalid_mapping_type`, `too_many_changes` (version conflict) and `unknown_query_keyword`.
 
 **Action**, only if your code or your clients match on `unexpected_bad_request` or `unexpected_error` for these cases: match the specific code instead.
+
+### Storage error messages
+
+Since 2.61.0-beta.6, storage error messages say "storage engine" instead of "Elasticsearch", also right on OpenSearch ([#3143](https://github.com/kuzzleio/kuzzle/issues/3143)). For instance, `services.storage.not_connected` now reads "Storage engine is not connected.", `services.storage.version_mismatch` "Your storage engine version is …", and the Koncorde and Query DSL keyword errors name "the storage engine Query DSL". A storage initialization timeout now names the service `storageEngine` instead of `elasticsearch` in `core.fatal.service_timeout`. Error ids, codes and statuses do not change.
+
+**Action**, only if your code, your clients or your log alerts match the text of these messages: match the error id instead.
+
+### Storage drivers close their connections on shutdown
+
+Since 2.61.0-beta.6, Kuzzle calls the storage driver's optional `close()` hook on a graceful shutdown, and every official driver closes its engine connections there. A driver whose `close()` fails gets a warning in the logs, and the shutdown carries on. Driver authors: see the [storage driver contract](/core/2/guides/write-storage-drivers/contract).
 
 ### New exports
 
