@@ -1,6 +1,6 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-11-02",
+  "snapshot": "2026-11-03",
   "latestVersion": "2.60.1",
   "adrs": [
     {
@@ -34,11 +34,11 @@
       "status": "active",
       "statusLabel": "🔵 Active · 00–05 done, 06 + 07 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Docs to production (documentation develop → master, the five drivers beta → master with OpenSearch at 1.0.0, kuzdoc#19 released), then 2.61.0 (beta → master) (step 06).",
+      "nextAction": "Docs to production (documentation develop → master, on hold by the maintainer), then 2.61.0 (beta → master) (step 06). The five drivers are stable since 2026-11-03 (es-7 / es-8 / es-9 1.1.0, opensearch-2 / -3 1.0.0), pinned from 2.61.0-beta.8.",
       "blockers": [],
       "openPoints": [
-        "Step 07 (OpenSearch 2 / 3 drivers) shipped in 2.61.0-beta.5 with the drivers at 1.0.0-beta.2; it closes when they reach 1.0.0 with the other drivers, before 2.61.0.",
-        "2.61.0-beta.5 review findings in #3145: the \"before 2.61.0 stable\" items gate the release."
+        "Step 07 (OpenSearch 2 / 3 drivers): 1.0.0 published 2026-11-03; it closes with step 06 at 2.61.0.",
+        "2.61.0 review findings in #3145: all \"before 2.61.0 stable\" items done but the docs to production."
       ]
     },
     {
