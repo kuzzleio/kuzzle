@@ -1,3 +1,9 @@
+## [2.61.0-beta.8](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.7...v2.61.0-beta.8) (2026-11-03)
+
+### Dependencies
+
+* **deps:** storage drivers at their stable releases ([2297fa7](https://github.com/kuzzleio/kuzzle/commit/2297fa725e04c6068ddf884aa30b43426db05553))
+
 ## [2.61.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.6...v2.61.0-beta.7) (2026-11-03)
 
 ### Bug Fixes
