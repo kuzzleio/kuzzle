@@ -62,6 +62,7 @@ Everything marked deprecated in this documentation (look for the deprecated badg
 | The `Koncorde` class exported by `kuzzle` (Koncorde 3 interface)                     | The [`koncorde`](https://www.npmjs.com/package/koncorde) package (Koncorde 4) |
 | `app.sdk.auth.login()`                                                               | Impersonation (`app.sdk.as(user)`)                                            |
 | `Protocol.init(name, entryPoint)`                                                    | `name` in the constructor, `init(entryPoint)`                                 |
+| Reading `services.storageEngine.majorVersion` to know the storage engine             | `context.accessors.getStorageEngine()`, `app.storage.getEngine()`             |
 
 ### API clients
 
@@ -107,4 +108,4 @@ Kuzzle 3 also plans to make multi-document actions (`document:mCreate`, `mUpdate
 
 ## Still under discussion
 
-Some other changes are being considered for Kuzzle 3 and are not decided yet: the true nullability of a few public TypeScript signatures, the default of `vault.newAlgorithm`, `security.authToken.gracePeriod` taking precedence over `security.jwt.gracePeriod`, a few public exports that were never documented (`ObjectRepository`, `Store`, `Connection`…) becoming internal, the response shape of a few `security` actions, and the Redis and MQTT connection defaults of the new library versions. This page will say so once they are decided.
+Some other changes are being considered for Kuzzle 3 and are not decided yet: the true nullability of a few public TypeScript signatures, the default of `vault.newAlgorithm`, `security.authToken.gracePeriod` taking precedence over `security.jwt.gracePeriod`, a few public exports that were never documented (`ObjectRepository`, `Store`, `Connection`…) becoming internal, the response shape of a few `security` actions, the Redis and MQTT connection defaults of the new library versions, and engine-neutral names where the storage engine is still called Elasticsearch: the search actions' `lang: "elasticsearch"` value, the `services.koncorde.elastic_translation_error` error id and the storage engine configuration type. This page will say so once they are decided.

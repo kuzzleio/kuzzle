@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.5).
+**Status:** in beta since 2026-10-30 (2.61.0-beta.1 to 2.61.0-beta.6).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
@@ -24,7 +24,9 @@ The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list eve
 
 Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or its dependencies.
 
-Before you move to another storage engine, check your plugins and your application: with a driver set, `majorVersion` no longer tells which client `app.storage.storageClient` or `context.constructors.ESClient` gives (see [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60#raw-storage-clients)).
+Before you move to another storage engine, check your plugins and your application: with a driver set, `majorVersion` no longer tells which client `app.storage.storageClient` or `context.constructors.ESClient` gives. Ask Kuzzle with `app.storage.getEngine()` or `context.accessors.getStorageEngine()` instead (see [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60#raw-storage-clients)).
+
+If your code or your clients match the text of storage error messages, check it: they no longer say "Elasticsearch" (see [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60#storage-error-messages)).
 
 ## What's new
 
@@ -37,6 +39,9 @@ Before you move to another storage engine, check your plugins and your applicati
 - **`majorVersion` is deprecated**, in the documentation only: it keeps working unchanged in Kuzzle 2, and Kuzzle 3 will select the storage engine with `driver` alone. Kuzzle warns at startup only if your configuration sets both `driver` and `majorVersion`, since `majorVersion` is then ignored.
 - **Clearer storage driver errors.** A missing driver says how to install it, without Node's whole `Require stack`; an installed package that is not a usable driver (such as a name-reservation placeholder) says so; `majorVersion: "9"` without a driver stops Kuzzle with [`services.storage_driver.unsupported_major_version`](/core/2/api/errors/error-codes/services), which points to `services.storageEngine.driver`; the startup log names the directory the driver was loaded from ([#3134](https://github.com/kuzzleio/kuzzle/issues/3134)).
 - **Driver names.** `services.storageEngine.driver` accepts an npm alias, and a driver installed with `npm link` or from a directory now works. A path is refused, with a hint to install the package and name it ([#3142](https://github.com/kuzzleio/kuzzle/issues/3142)).
+- **Which storage engine Kuzzle runs on** (2.61.0-beta.6). Plugins and applications can ask it with [`context.accessors.getStorageEngine()`](/core/2/framework/classes/plugin-context-accessors/get-storage-engine) or [`app.storage.getEngine()`](/core/2/framework/classes/backend-storage/get-engine): the driver package, the engine family (`elasticsearch`, `opensearch`) and the engine server's version. Use it instead of guessing the engine from `majorVersion` ([#3133](https://github.com/kuzzleio/kuzzle/issues/3133)).
+- **Storage connections closed on shutdown** (2.61.0-beta.6). A driver can implement an optional `close()` hook, which Kuzzle calls on a graceful shutdown to release its engine connections; every official driver does. If it fails, Kuzzle logs a warning and carries on shutting down ([#3141](https://github.com/kuzzleio/kuzzle/issues/3141)).
+- **Engine-neutral messages** (2.61.0-beta.6). Storage error messages and logs say "storage engine" instead of "Elasticsearch", which was wrong on OpenSearch. Error ids and codes do not change ([#3143](https://github.com/kuzzleio/kuzzle/issues/3143)).
 - **For driver authors.** `kuzzle` exports what a driver needs: the `StorageDriver` contract and its types, a conformance kit (`describeStorageDriverConformance`) that tests a driver against its real engine, and `storageError`, so that a driver returns the same errors as Kuzzle. Read the new [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide.
 - **Drivers documentation.** Each official driver has its own documentation (install, configuration, TypeScript, compatibility, troubleshooting) in the new [Drivers](/drivers/v2.html) section.
 
@@ -53,3 +58,4 @@ Before you move to another storage engine, check your plugins and your applicati
 ## Under the hood
 
 - `kuzzle` depends on `kuzzle-storage-es-7` and `kuzzle-storage-es-8` at pinned versions: a new version of a built-in driver reaches you with a Kuzzle release.
+- Dependency updates (2.61.0-beta.6): `lodash` 4.18.1 (security fixes: prototype pollution in `_.unset` / `_.omit`, injection in `_.template` imports), `uuid` 14, `zeromq` 6.8.0, and patch or minor updates of `eventemitter3`, `moment`, `pino-pretty`, `semver`, `validator` and `yargs`. No change in behavior.
