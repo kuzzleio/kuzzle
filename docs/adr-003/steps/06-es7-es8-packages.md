@@ -145,7 +145,9 @@ driver. The next major only drops the two dependencies (step 08).
   CI), so the required SonarCloud check never arrives. The back-merge goes through a branch off `master` with one
   empty commit, whose message must not quote the skip marker: GitHub matches it anywhere in the message.
 - **`master`'s branch gate is red** after its first analysis since 2026-05-20 (3 major, 27 minor counted as new
-  code since then); PR gates are unaffected. Not fixed in this step.
+  code: the project's new code was the instance default, a rolling 30 days); PR gates are unaffected. Branch
+  analyses now send the package version, the new code definition becomes "Previous version" (maintainer, on
+  SonarCloud), and the two reliability findings are fixed (#3176): new code starts again at each release.
 
 ## Validation
 
