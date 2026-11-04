@@ -522,19 +522,18 @@ class Funnel {
           processResult,
         );
 
-        return global.kuzzle
-          .pipe("request:afterExecution", {
-            request: _request,
-            result: processResult,
-            success: true,
-          })
-          .then((pipeEvent) => {
-            callback(null, pipeEvent.result);
+        return global.kuzzle.pipe("request:afterExecution", {
+          request: _request,
+          result: processResult,
+          success: true,
+        });
+      })
+      .then((pipeEvent) => {
+        callback(null, pipeEvent.result);
 
-            // disables a bluebird warning in dev. mode triggered when
-            // a promise is created and not returned
-            return null;
-          });
+        // disables a bluebird warning in dev. mode triggered when
+        // a promise is created and not returned
+        return null;
       })
       .catch((err) => {
         debug("Error processing request %s: %a", modifiedRequest.id, err);

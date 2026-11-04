@@ -1684,18 +1684,25 @@ class ClientAdapter {
             );
           }
 
-          for (const [collection, mappings] of Object.entries(collections)) {
-            await this._loadCollectionMappings(
-              index,
-              collection,
-              mappings,
-              options,
-            );
-          }
+          // Sequential by design: one index at a time under the lock
+          await this._loadIndexMappings(index, collections, options); // NOSONAR (S9382)
         }
       },
       { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
     );
+  }
+
+  /**
+   * Loads the mappings of an index's collections, one at a time
+   */
+  private async _loadIndexMappings(
+    index: string,
+    collections: JSONObject,
+    options: LoadMappingsOptions,
+  ): Promise<void> {
+    for (const [collection, mappings] of Object.entries(collections)) {
+      await this._loadCollectionMappings(index, collection, mappings, options); // NOSONAR (S9382)
+    }
   }
 
   /**
