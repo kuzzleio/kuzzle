@@ -15,7 +15,12 @@ import {
   MutexLockLostError,
   withLock,
 } from "../../lib/util/distributedLock";
-import { MutexStub, releaseAllLocksBeforeExit } from "./kuzzleFixture";
+import {
+  assertClusterStorageDriver,
+  moduleCloses,
+  MutexStub,
+  releaseAllLocksBeforeExit,
+} from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
 /**
@@ -132,6 +137,12 @@ vi.mock("../../lib/cluster", async () => {
   return { default: moduleStub("cluster") };
 });
 
+vi.mock("../../lib/cluster/storageDriverCheck", async () => {
+  const fixture = await import("./kuzzleFixture");
+
+  return { assertClusterStorageDriver: fixture.assertClusterStorageDriver };
+});
+
 type Internals = {
   importTypes: Record<
     string,
@@ -145,7 +156,7 @@ type Internals = {
 
 /** `funnel.remainingRequests` is a getter on the real funnel. */
 const funnelOf = (kuzzle: Kuzzle) =>
-  invalid<{ remainingRequests: number }>(kuzzle.funnel);
+  invalid<{ pluginRequests: number; remainingRequests: number }>(kuzzle.funnel);
 
 const internalsOf = (kuzzle: Kuzzle) => invalid<Internals>(kuzzle);
 
@@ -208,6 +219,7 @@ describe("#kuzzle/Kuzzle", () => {
       },
       funnel: {
         init: vi.fn(track("funnel.init")),
+        pluginRequests: 0,
         remainingRequests: 0,
       },
       internalIndex: {
@@ -437,6 +449,59 @@ describe("#kuzzle/Kuzzle", () => {
       await kuzzle.start(application, {});
 
       expect(moduleInits.get("cluster")).toHaveBeenCalled();
+    });
+
+    /* #3139: a node refused for its storage driver must not have touched the
+     * storage. */
+    describe("storage driver check", () => {
+      const firstCall = (mock: { mock: { invocationCallOrder: number[] } }) =>
+        mock.mock.invocationCallOrder[0];
+
+      it("compares the storage driver with the cluster once the cache is up, before the storage", async () => {
+        kuzzle.config.cluster.enabled = true;
+
+        await kuzzle.start(application, {});
+
+        const cache = moduleInits.get("cacheEngine");
+        const storage = moduleInits.get("storageEngine");
+
+        present(cache, "the cache engine init");
+        present(storage, "the storage engine init");
+
+        expect(assertClusterStorageDriver).toHaveBeenCalledExactlyOnceWith(
+          kuzzle.config,
+        );
+        expect(firstCall(assertClusterStorageDriver)).toBeGreaterThan(
+          firstCall(cache),
+        );
+        expect(firstCall(assertClusterStorageDriver)).toBeLessThan(
+          firstCall(storage),
+        );
+      });
+
+      it("does not compare it in single node mode", async () => {
+        kuzzle.config.cluster.enabled = false;
+
+        await kuzzle.start(application, {});
+
+        expect(assertClusterStorageDriver).not.toHaveBeenCalled();
+      });
+
+      it("does not start a node the cluster refuses, nor touch the storage", async () => {
+        const exit = vi
+          .spyOn(process, "exit")
+          .mockImplementation((() => undefined) as never);
+        const refused = new Error("storage driver mismatch");
+        kuzzle.config.cluster.enabled = true;
+        assertClusterStorageDriver.mockRejectedValueOnce(refused);
+
+        await expect(kuzzle.start(application, {})).rejects.toBe(refused);
+
+        expect(moduleInits.get("storageEngine")).not.toHaveBeenCalled();
+        expect(kuzzle.internalIndex.init).not.toHaveBeenCalled();
+        expect(moduleInits.get("cluster")).not.toHaveBeenCalled();
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
+      });
     });
 
     /* #3044: a node that joins late must see what a peer created in storage
@@ -675,6 +740,82 @@ describe("#kuzzle/Kuzzle", () => {
     );
   });
 
+  /* #3160: late work failing once the storage is closed must not turn a
+   * requested shutdown into a failure. */
+  describe("unhandledRejection handler", () => {
+    const handlerOf = (on: ReturnType<typeof vi.spyOn>) => {
+      const call = on.mock.calls.find(
+        ([event]: [string]) => event === "unhandledRejection",
+      );
+
+      present(call, "the unhandledRejection handler");
+
+      return call[1] as (reason: unknown, promise: unknown) => void;
+    };
+
+    let nodeEnv: string | undefined;
+
+    beforeEach(() => {
+      nodeEnv = global.NODE_ENV;
+      global.NODE_ENV = "development";
+    });
+
+    afterEach(() => {
+      global.NODE_ENV = nodeEnv;
+    });
+
+    it("should rethrow in development mode", () => {
+      const on = vi.spyOn(process, "on").mockReturnValue(process);
+      vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+      kuzzle.registerSignalHandlers();
+
+      const error = new Error("not connected");
+
+      expect(() => handlerOf(on)(error, Promise.resolve())).toThrow(error);
+    });
+
+    it("should only log during a shutdown, even in development mode", () => {
+      const on = vi.spyOn(process, "on").mockReturnValue(process);
+      vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+      kuzzle.registerSignalHandlers();
+      invalid<{ _state: kuzzleStateEnum }>(kuzzle)._state =
+        kuzzleStateEnum.SHUTTING_DOWN;
+
+      expect(() =>
+        handlerOf(on)(new Error("not connected"), Promise.resolve()),
+      ).not.toThrow();
+      expect(kuzzle.log.error).toHaveBeenCalledWith(
+        expect.stringContaining("ERROR: unhandledRejection: not connected"),
+      );
+    });
+
+    it("should log what a non-Error reason or the promise contains", () => {
+      const on = vi.spyOn(process, "on").mockReturnValue(process);
+      vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+      kuzzle.registerSignalHandlers();
+      invalid<{ _state: kuzzleStateEnum }>(kuzzle)._state =
+        kuzzleStateEnum.SHUTTING_DOWN;
+      const handler = handlerOf(on);
+
+      handler("plain text", Promise.resolve());
+      handler({ code: 42 }, Promise.resolve());
+      handler(undefined, Promise.resolve("the value"));
+
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        1,
+        "ERROR: unhandledRejection: plain text",
+      );
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        2,
+        "ERROR: unhandledRejection: { code: 42 }",
+      );
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        3,
+        "ERROR: unhandledRejection: Promise { 'the value' }",
+      );
+    });
+  });
+
   describe("#dump", () => {
     it("should delegate to the dump generator", async () => {
       await kuzzle.dump("a-suffix");
@@ -797,6 +938,92 @@ describe("#kuzzle/Kuzzle", () => {
         expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
         expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
       }
+    });
+
+    /* #3141: the storage drivers release their connections on shutdown. */
+    it("closes the storage once the funnel is empty and the locks are freed, before exiting", async () => {
+      const close = vi.fn(async () => undefined);
+      const delay = vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        funnelOf(kuzzle).remainingRequests = 0;
+
+        return Bluebird.resolve() as unknown as Bluebird<void>;
+      });
+      Object.assign(kuzzle, { storageEngine: { close } });
+      funnelOf(kuzzle).remainingRequests = 1;
+
+      await kuzzle.shutdown();
+
+      const [closed] = close.mock.invocationCallOrder;
+      expect(close).toHaveBeenCalledOnce();
+      expect(closed).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
+      expect(closed).toBeGreaterThan(
+        releaseAllLocksBeforeExit.mock.invocationCallOrder[0],
+      );
+      expect(closed).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    /* #3160: plugin requests are not in remainingRequests; closing the
+     * storage under one made it fail, and exit 1 in development mode. */
+    it("waits for the plugin requests still running before closing the storage", async () => {
+      const close = vi.fn(async () => undefined);
+      const delay = vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        funnelOf(kuzzle).pluginRequests = 0;
+
+        return Bluebird.resolve() as unknown as Bluebird<void>;
+      });
+      Object.assign(kuzzle, { storageEngine: { close } });
+      funnelOf(kuzzle).pluginRequests = 1;
+
+      await kuzzle.shutdown();
+
+      expect(delay).toHaveBeenCalledExactlyOnceWith(100);
+      expect(close.mock.invocationCallOrder[0]).toBeGreaterThan(
+        delay.mock.invocationCallOrder[0],
+      );
+      expect(kuzzle.log.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining("plugin requests still running"),
+      );
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("closes the storage anyway when plugin requests are still running after 5s", async () => {
+      const close = vi.fn(async () => undefined);
+      let now = 1_000_000;
+      vi.spyOn(Date, "now").mockImplementation(() => now);
+      vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        now += 1000;
+
+        return Bluebird.resolve() as unknown as Bluebird<void>;
+      });
+      Object.assign(kuzzle, { storageEngine: { close } });
+      funnelOf(kuzzle).pluginRequests = 2;
+
+      await kuzzle.shutdown();
+
+      expect(kuzzle.log.warn).toHaveBeenCalledWith(
+        "[shutdown] 2 plugin requests still running after 5000ms: closing the storage anyway",
+      );
+      expect(close).toHaveBeenCalledOnce();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("closes the storage engine the startup built", async () => {
+      kuzzle.install = vi.fn(async () => undefined);
+      kuzzle.loadInitialState = vi.fn(async () => undefined);
+      await kuzzle.start(application, {});
+
+      await kuzzle.shutdown();
+
+      expect(moduleCloses.get("storageEngine")).toHaveBeenCalledOnce();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("has no storage to close when the startup did not reach it", async () => {
+      await kuzzle.shutdown();
+
+      expect(moduleCloses.get("storageEngine")).not.toHaveBeenCalled();
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
     });
 
     /* #3017: `process.exit` fires the `exit` handler, which calls `shutdown()`

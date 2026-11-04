@@ -3,7 +3,11 @@ import { existsSync } from "node:fs";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ClusterIdCardHandler, IdCard } from "../../lib/cluster/idCardHandler";
+import {
+  ClusterIdCardHandler,
+  getIdCards,
+  IdCard,
+} from "../../lib/cluster/idCardHandler";
 import { invalid } from "../helpers/invalid";
 import { restoreKuzzle, stubAsk, stubKuzzle } from "../mocks/kuzzle";
 
@@ -245,6 +249,68 @@ describe("#cluster/ClusterIdCardHandler", () => {
       expect(internals.disposed).toBe(true);
     });
 
+    /* A built-in node writes the card it wrote before the drivers, which is
+     * also what a node of an older Kuzzle reads. */
+    it("should leave the storage driver out of a built-in node's card", async () => {
+      await handler.createIdCard();
+
+      const [, , stored] = bus.ask.mock.calls.find(
+        ([event]) => event === "core:cache:internal:store",
+      )!;
+
+      expect(JSON.parse(stored as string)).not.toHaveProperty("storageDriver");
+    });
+
+    const handlerRunning = (driver: {
+      storageDriver?: string;
+      builtInStorageDriver?: string;
+    }) => {
+      handler = new ClusterIdCardHandler(
+        invalid<ConstructorParameters<typeof ClusterIdCardHandler>[0]>({
+          evictSelf,
+          heartbeatDelay: refreshDelay,
+          ip,
+          ...driver,
+        }),
+      );
+      internals = handler as unknown as Internals;
+      internals.constructWorker = (path: string) => new WorkerStub(path);
+      vi.spyOn(
+        handler as unknown as { startTemporaryRefresh: () => void },
+        "startTemporaryRefresh",
+      ).mockImplementation(() => {});
+    };
+
+    it("should write the node's external storage driver in its card", async () => {
+      handlerRunning({ storageDriver: "kuzzle-storage-es-9@1.0.0" });
+
+      await handler.createIdCard();
+
+      expect(handler.idCard?.serialize()).toEqual(
+        expect.objectContaining({
+          storageDriver: "kuzzle-storage-es-9@1.0.0",
+        }),
+      );
+      expect(handler.idCard?.serialize()).not.toHaveProperty(
+        "builtInStorageDriver",
+      );
+    });
+
+    /* Its own field: a 2.61.0-beta node compares `storageDriver` only, and
+     * must keep reading this card as a built-in node's. */
+    it("should write the node's built-in storage driver in a field of its own", async () => {
+      handlerRunning({ builtInStorageDriver: "kuzzle-storage-es-8" });
+
+      await handler.createIdCard();
+
+      const serialized = handler.idCard?.serialize();
+
+      expect(serialized).toMatchObject({
+        builtInStorageDriver: "kuzzle-storage-es-8",
+      });
+      expect(serialized).not.toHaveProperty("storageDriver");
+    });
+
     /* A renewal racing the disposal finds the card it renews deleted. */
     it("should not evict the node for an error reported once disposed", async () => {
       await handler.createIdCard();
@@ -332,6 +398,35 @@ describe("#cluster/ClusterIdCardHandler", () => {
     });
   });
 
+  describe("IdCard", () => {
+    const fields = { birthdate: 1, id: "id1", ip: "ip1", topology: ["id2"] };
+
+    it("should round-trip the storage driver", () => {
+      const card = new IdCard({ ...fields, storageDriver: "driver@1.0.0" });
+
+      expect(IdCard.unserialize(card.serialize())).toEqual(card);
+      expect(card.serialize().storageDriver).toBe("driver@1.0.0");
+    });
+
+    it("should round-trip the built-in storage driver", () => {
+      const card = new IdCard({
+        ...fields,
+        builtInStorageDriver: "kuzzle-storage-es-7",
+      });
+
+      expect(IdCard.unserialize(card.serialize())).toEqual(card);
+      expect(card.serialize().builtInStorageDriver).toBe("kuzzle-storage-es-7");
+    });
+
+    it("should read a card without a storage driver as an older node's", () => {
+      const card = IdCard.unserialize(fields);
+
+      expect(card.storageDriver).toBeUndefined();
+      expect(card.builtInStorageDriver).toBeUndefined();
+      expect(card.serialize()).toEqual(fields);
+    });
+  });
+
   describe("#getRemoteIdCards", () => {
     it("should return the other nodes' id cards, and drop the stale keys", async () => {
       const idCard2 = new IdCard({
@@ -381,6 +476,20 @@ describe("#cluster/ClusterIdCardHandler", () => {
         "redis/id4",
       );
       expect(remoteCards).toEqual([idCard2, idCard3]);
+    });
+
+    /* A starting node reads them before it has a card of its own. */
+    it("should return every card to a node with no card yet", async () => {
+      const idCard2 = new IdCard({
+        id: "id2",
+        ip: "ip2",
+        birthdate: 1002,
+        topology: [],
+      });
+      cardsIndex = ["redis/id2"];
+      cards = [JSON.stringify(idCard2.serialize())];
+
+      await expect(getIdCards(null)).resolves.toEqual([idCard2]);
     });
   });
 

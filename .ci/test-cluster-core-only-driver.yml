@@ -1,0 +1,20 @@
+# Overlay on top of `.ci/test-cluster-{7,8}.yml`: every Kuzzle node runs the
+# storage driver of features/fixtures/storage-driver-core-only, which declares
+# no optional capability (ADR-0003 step 04). The functional suite then skips
+# the scenarios tagged `@capability-<name>` (cucumber.config.cjs), and the
+# rest must pass unchanged. `.ci/scripts/docker-test.sh` adds it when
+# STORAGE_DRIVER=core-only.
+x-core-only-driver: &core-only-driver
+  volumes:
+    # Found by walking up from the checkout (/var/app), without touching its
+    # own node_modules, which `npm ci` empties
+    - ../features/fixtures/storage-driver-core-only:/node_modules/kuzzle-storage-core-only:ro
+  environment:
+    kuzzle_services__storageEngine__driver: kuzzle-storage-core-only
+    KUZZLE_STORAGE_CAPABILITIES: ""
+
+services:
+  kuzzle_node_1: *core-only-driver
+  kuzzle_node_2: *core-only-driver
+  kuzzle_node_3: *core-only-driver
+  kuzzle_node_prod: *core-only-driver

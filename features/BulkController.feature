@@ -69,6 +69,7 @@ Feature: Bulk Controller
   # bulk:updateByQuery =========================================================
 
   @mappings
+  @capability-updateByQuery
   Scenario: Bulk update by query
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:

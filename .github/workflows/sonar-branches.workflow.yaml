@@ -1,0 +1,65 @@
+name: SonarCloud branch analysis
+
+# SonarCloud judges a pull request against the last analysis of its target
+# branch. Only pull requests were analysed, so `master` kept its analysis of
+# 2026-05-20: the 2.61.0 release PR (#3167) was compared with it and failed the
+# gate on 26 issues that 2.61 did not add. Analysing each push to the
+# long-lived branches keeps the reference of every PR current.
+on:
+  push:
+    branches:
+      - master
+      - beta
+      - 2-dev
+
+env:
+  NODE_VERSION: "22"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonarqube:
+    name: SonarCloud branch analysis
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: ./.ci/scripts/with-retry.sh npm ci
+        shell: bash
+
+      - name: Build
+        run: npm run build
+        shell: bash
+
+      # Same coverage as the PR analysis (pull_request.workflow.yaml,
+      # `sonarqube` job), so that a branch and its PRs are measured alike
+      - name: Vitest coverage
+        run: npm run test:unit:vitest
+        shell: bash
+
+      - name: Conformance kit coverage
+        run: |
+          docker run -d -p 9200:9200 -e indices.id_field_data.enabled=true docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+          npm run test:conformance -- --coverage
+        shell: bash
+        env:
+          ES_VERSION: "8"
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

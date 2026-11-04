@@ -16,6 +16,7 @@ import type {
   PipeEventHandler,
   PluginHookDefinition,
   PluginPipeDefinition,
+  StorageEngineInfo,
 } from "kuzzle";
 import {
   Backend,
@@ -164,7 +165,10 @@ async function afterStart() {
   const name: string = NameGenerator.generateRandomName();
   const kebab: string = Inflector.kebabCase("FooBar");
 
-  return { answer, documents, kebab, name };
+  // The engine the raw storage client talks to, not `majorVersion`
+  const engine: StorageEngineInfo = await app.storage.getEngine();
+
+  return { answer, documents, engine, kebab, name };
 }
 
 app

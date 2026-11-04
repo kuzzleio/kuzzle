@@ -2,6 +2,7 @@ Feature: Collection Controller
 
   # collection:update ==========================================================
 
+  @capability-mappingUpdates
   Scenario: Update a collection mappings and settings
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
@@ -16,6 +17,7 @@ Feature: Collection Controller
     And I should receive a result matching:
       | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
 
+  @capability-mappingUpdates
   Scenario: Update a collection and search document
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
@@ -223,6 +225,7 @@ Feature: Collection Controller
     | collection | "green-taxi" |
     Then The result should be "false"
 
+  @capability-mappingUpdates
   Scenario: Reindex a collection after updating mappings
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
@@ -260,3 +263,16 @@ Feature: Collection Controller
       """
     And I execute the search query
     Then I should receive a "hits" array containing 1 elements
+
+  # A peer created the collection and its broadcast has not reached the node
+  # serving the next request yet (kuzzle#3121).
+  Scenario: Use a collection that storage holds and the cache does not know yet
+    Given an index "nyc-open-data"
+    And I successfully execute the action "tests":"createCollectionInStorageOnly" with args:
+      | index      | "nyc-open-data" |
+      | collection | "behind-cache"  |
+    Then I should see the collection "nyc-open-data":"behind-cache"
+    And I successfully execute the action "document":"create" with args:
+      | index      | "nyc-open-data"       |
+      | collection | "behind-cache"        |
+      | body       | { "city": "Kutaisi" } |

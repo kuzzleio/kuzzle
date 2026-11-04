@@ -55,21 +55,25 @@ const CACHE_METHODS = [
   "assertCollectionWritable",
   "assertIndexExists",
   "assertIndexWritable",
-  "clearLocks",
   "getLock",
   "hasCollection",
   "hasIndex",
+  "learn",
   "listCollections",
   "listIndexes",
   "removeCollection",
   "removeIndex",
   "removeLock",
+  "replaceIndexes",
+  "replaceLocks",
   "setLock",
+  "snapshotIndexes",
+  "snapshotLocks",
 ] as const;
 
 type Recorder = Record<string, ReturnType<typeof vi.fn>>;
 
-const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
+const { serviceInstances, cacheInstances, StorageServiceMock, IndexCacheMock } =
   vi.hoisted(() => {
     const clientMethods = [
       "addCollection",
@@ -93,6 +97,7 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "getSettings",
       "import",
       "info",
+      "init",
       "mCreate",
       "mCreateOrReplace",
       "mDelete",
@@ -123,39 +128,44 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "assertCollectionWritable",
       "assertIndexExists",
       "assertIndexWritable",
-      "clearLocks",
       "getLock",
       "hasCollection",
       "hasIndex",
+      "learn",
       "listCollections",
       "listIndexes",
       "removeCollection",
       "removeIndex",
       "removeLock",
+      "replaceIndexes",
+      "replaceLocks",
       "setLock",
+      "snapshotIndexes",
+      "snapshotLocks",
     ];
-    const createdEs: unknown[] = [];
+    const createdServices: unknown[] = [];
     const createdCache: unknown[] = [];
 
     return {
-      esInstances: createdEs,
+      serviceInstances: createdServices,
       cacheInstances: createdCache,
-      ElasticsearchMock: class {
-        public client: Record<string, ReturnType<typeof vi.fn>> = {};
+      StorageServiceMock: class {
+        public driver: Record<string, ReturnType<typeof vi.fn>> = {};
         public init = vi.fn(async () => undefined);
 
         constructor(
+          public Driver: unknown,
           public config: unknown,
           public scope: unknown,
         ) {
           for (const m of clientMethods) {
-            this.client[m] = vi.fn(async () => undefined);
+            this.driver[m] = vi.fn(async () => undefined);
           }
-          // The two client calls whose RESULT drives control flow.
-          this.client.getSchema = vi.fn(async () => ({}));
-          this.client.deleteIndexes = vi.fn(async () => [] as string[]);
-          this.client.import = vi.fn(async () => ({ errors: [] }));
-          createdEs.push(this);
+          // The two driver calls whose RESULT drives control flow.
+          this.driver.getSchema = vi.fn(async () => ({}));
+          this.driver.deleteIndexes = vi.fn(async () => [] as string[]);
+          this.driver.import = vi.fn(async () => ({ errors: [] }));
+          createdServices.push(this);
         }
       },
       IndexCacheMock: class {
@@ -169,8 +179,13 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
     };
   });
 
-vi.mock("../../../lib/service/storage/Elasticsearch", () => ({
-  Elasticsearch: ElasticsearchMock,
+vi.mock("../../../lib/service/storage/storageService", () => ({
+  StorageService: StorageServiceMock,
+}));
+vi.mock("../../../lib/service/storage/builtInDrivers", () => ({
+  builtInStorageDriver: vi.fn((majorVersion: string) => `ES${majorVersion}`),
+  builtInStorageDriverPackage: (majorVersion: string) =>
+    `kuzzle-storage-es-${majorVersion}`,
 }));
 vi.mock("../../../lib/core/storage/indexCache", () => ({
   IndexCache: IndexCacheMock,
@@ -210,6 +225,7 @@ vi.mock("../../../lib/util/distributedLock", async (importOriginal) => ({
 }));
 
 import ClientAdapter from "../../../lib/core/storage/clientAdapter";
+import { STORAGE_CAPABILITIES } from "../../../lib/types/storage/StorageDriver";
 import * as kerror from "../../../lib/kerror";
 import {
   MutexLockLostError,
@@ -237,7 +253,7 @@ describe("#core/storage/ClientAdapter", () => {
   };
 
   beforeEach(async () => {
-    esInstances.length = 0;
+    serviceInstances.length = 0;
     cacheInstances.length = 0;
     handlers = new Map();
     emitted = [];
@@ -284,7 +300,7 @@ describe("#core/storage/ClientAdapter", () => {
     (globalThis as { kuzzle?: unknown }).kuzzle = {
       config: {
         services: {
-          storageEngine: { generateMissingAliases: false },
+          storageEngine: { generateMissingAliases: false, majorVersion: "7" },
         },
       },
       emit: vi.fn((event: string, payload: unknown) => {
@@ -307,24 +323,31 @@ describe("#core/storage/ClientAdapter", () => {
     adapter = new ClientAdapter(storeScopeEnum.PRIVATE);
     await adapter.init();
 
-    client = adapter.client as unknown as Recorder;
+    client = adapter.driver as unknown as Recorder;
     cache = adapter.cache as unknown as Recorder;
   });
 
   describe("#constructor", () => {
-    it("builds one ES service for the scope, plus an index cache", () => {
-      expect(esInstances).toHaveLength(1);
+    it("builds one storage service for the scope, plus an index cache", () => {
+      expect(serviceInstances).toHaveLength(1);
       expect(cacheInstances).toHaveLength(1);
       expect(adapter.scope).toBe(storeScopeEnum.PRIVATE);
-      expect(adapter.client).toBe(
-        (esInstances[0] as { client: unknown }).client,
+      expect(adapter.driver).toBe(
+        (serviceInstances[0] as { driver: unknown }).driver,
       );
+    });
+
+    it("runs the built-in driver of the configured major version", () => {
+      expect(serviceInstances[0]).toMatchObject({
+        Driver: "ES7",
+        scope: storeScopeEnum.PRIVATE,
+      });
     });
   });
 
   describe("#init", () => {
-    it("initialises the ES service and populates the cache before registering", () => {
-      expect(adapter.es.init).toHaveBeenCalledOnce();
+    it("initialises the storage service and populates the cache before registering", () => {
+      expect(adapter.service.init).toHaveBeenCalledOnce();
       expect(client.getSchema).toHaveBeenCalledOnce();
       // Every documented ask event is registered.
       expect(handlers.size).toBe(58);
@@ -356,16 +379,23 @@ describe("#core/storage/ClientAdapter", () => {
           }
         ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
         client.getSchema.mockResolvedValue({ peer: ["c"] });
-        cache.addIndex.mockClear();
-        cache.addCollection.mockClear();
+        const snapshot = new Map();
+        cache.snapshotIndexes.mockReturnValue(snapshot);
+        cache.replaceIndexes.mockClear();
         const loadLocks = vi.spyOn(adapter, "loadLocks");
 
         await (trigger === "cache:reload"
           ? ask("cache:reload")
           : pipes.get(trigger)?.());
 
-        expect(cache.addIndex).toHaveBeenCalledWith("peer");
-        expect(cache.addCollection).toHaveBeenCalledWith("peer", "c");
+        // kuzzle#3040: replaced, with what was cached before storage was read.
+        expect(cache.replaceIndexes).toHaveBeenCalledExactlyOnceWith(
+          { peer: ["c"] },
+          snapshot,
+        );
+        expect(cache.snapshotIndexes.mock.invocationCallOrder[0]).toBeLessThan(
+          client.getSchema.mock.invocationCallOrder.at(-1) ?? 0,
+        );
         expect(loadLocks).toHaveBeenCalledOnce();
         // Aliases were generated at init: a reload writes nothing.
         expect(client.generateMissingAliases).not.toHaveBeenCalled();
@@ -388,6 +418,12 @@ describe("#core/storage/ClientAdapter", () => {
     const IDX = "an-index";
     const COL = "a-collection";
     const OPTS = { refresh: "wait_for" };
+
+    // A cache hit: what a miss costs is covered by "a cache miss" below.
+    beforeEach(() => {
+      cache.hasIndex.mockReturnValue(true);
+      cache.hasCollection.mockReturnValue(true);
+    });
 
     type Row = [
       event: string,
@@ -733,7 +769,7 @@ describe("#core/storage/ClientAdapter", () => {
           throw new Error("locked");
         });
 
-        expect(() => ask(event, ...args)).toThrow("locked");
+        await expect(ask(event, ...args)).rejects.toThrow("locked");
         expect(client[method]).not.toHaveBeenCalled();
       },
     );
@@ -761,6 +797,94 @@ describe("#core/storage/ClientAdapter", () => {
       const tabled = rows.map(([event]) => event);
 
       expect(new Set([...tabled, ...dedicated]).size).toBe(handlers.size);
+    });
+  });
+
+  // ------------------------------------------------- optional driver members
+  //
+  // The engine hooks and the capability groups are optional in the
+  // `StorageDriver` contract (ADR-0003).
+  describe("a driver without the optional members", () => {
+    it("skips the engine hooks it lacks", async () => {
+      delete client.generateMissingAliases;
+      delete client.waitForCollectionShards;
+      (
+        globalThis as {
+          kuzzle: {
+            config: {
+              services: { storageEngine: { generateMissingAliases: boolean } };
+            };
+          };
+        }
+      ).kuzzle.config.services.storageEngine.generateMissingAliases = true;
+
+      await expect(adapter.populateCache()).resolves.toBeUndefined();
+      // `kuzzle.ask` awaits the answer: none is a resolved `undefined`.
+      expect(
+        ask("collection:shards:wait", "an-index", "a-collection"),
+      ).toBeUndefined();
+    });
+  });
+
+  describe("a driver without every capability", () => {
+    it.each([
+      ["collection:update", "updateCollection", "mappingUpdates"],
+      ["document:updateByQuery", "updateByQuery", "updateByQuery"],
+      ["bulk:updateByQuery", "bulkUpdateByQuery", "updateByQuery"],
+      ["mappings:update", "updateMapping", "mappingUpdates"],
+      ["index:stats", "stats", "stats"],
+    ])(
+      "%s is rejected unless %s's capability is declared",
+      async (event, method, capability) => {
+        adapter.capabilities = new Set(
+          STORAGE_CAPABILITIES.filter((name) => name !== capability),
+        );
+
+        await expect(async () =>
+          ask(event, "an-index", "a-collection", {}),
+        ).rejects.toThrow(
+          expect.objectContaining({
+            id: "services.storage_driver.unsupported_capability",
+            message: expect.stringContaining(`"${capability}"`),
+          }),
+        );
+        expect(client[method]).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["aggregations", "aggs"])(
+      "rejects a search with %s unless aggregations are declared",
+      async (field) => {
+        adapter.capabilities = new Set(["stats"]);
+        const searchBody = {
+          [field]: { count: { value_count: { field: "a" } } },
+        };
+        const rejected = expect.objectContaining({
+          id: "services.storage_driver.unsupported_capability",
+          message: expect.stringContaining('"aggregations"'),
+        });
+
+        await expect(async () =>
+          ask("document:search", "i", "c", searchBody, {}),
+        ).rejects.toThrow(rejected);
+        await expect(async () =>
+          ask(
+            "document:multiSearch",
+            [{ collections: ["c"], index: "i" }],
+            searchBody,
+            {},
+          ),
+        ).rejects.toThrow(rejected);
+        expect(client.search).not.toHaveBeenCalled();
+      },
+    );
+
+    it("searches without aggregations whatever is declared", async () => {
+      adapter.capabilities = new Set();
+
+      await ask("document:search", "i", "c", { query: {} }, {});
+
+      expect(client.search).toHaveBeenCalledOnce();
     });
   });
 
@@ -874,6 +998,276 @@ describe("#core/storage/ClientAdapter", () => {
   });
 
   // ------------------------------------------------------------ own method logic
+  // ------------------------------------------------------------ cache misses
+  //
+  // The cache follows a peer's creations through broadcasts no request waits
+  // for: storage is asked before a miss fails, or before a list is answered
+  // (kuzzle#3121).
+  describe("a cache miss", () => {
+    const STORED = { i: ["c"] };
+
+    beforeEach(() => {
+      client.getSchema.mockClear();
+      client.getSchema.mockResolvedValue(STORED);
+      (cache as unknown as { removals: number }).removals = 7;
+      (cache as unknown as { changes: number }).changes = 0;
+    });
+
+    it("caches what storage holds before checking the collection", async () => {
+      cache.hasCollection.mockReturnValue(false);
+
+      await ask("document:get", "i", "c", "id");
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+      expect(cache.learn).toHaveBeenCalledWith(STORED, 7);
+      expect(cache.learn.mock.invocationCallOrder[0]).toBeLessThan(
+        cache.assertCollectionExists.mock.invocationCallOrder[0],
+      );
+      expect(client.get).toHaveBeenCalledOnce();
+    });
+
+    it("still fails when storage does not hold it either", async () => {
+      const unknown = new Error("unknown collection");
+      cache.hasCollection.mockReturnValue(false);
+      cache.assertCollectionExists.mockImplementation(() => {
+        throw unknown;
+      });
+
+      await expect(ask("document:get", "i", "c", "id")).rejects.toBe(unknown);
+      expect(client.get).not.toHaveBeenCalled();
+    });
+
+    it("does not read storage on a cache hit", async () => {
+      cache.hasCollection.mockReturnValue(true);
+
+      await ask("document:get", "i", "c", "id");
+
+      expect(client.getSchema).not.toHaveBeenCalled();
+    });
+
+    it("checks a missing index against storage", async () => {
+      cache.hasIndex.mockReturnValue(false);
+
+      await adapter.deleteIndex("i");
+
+      expect(cache.learn).toHaveBeenCalledWith(STORED, 7);
+      expect(cache.assertIndexExists).toHaveBeenCalledWith("i");
+    });
+
+    it("reads storage once for several missing indexes", async () => {
+      cache.hasIndex.mockReturnValue(false);
+
+      await adapter.deleteIndexes(["i", "j"]);
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+      expect(cache.assertIndexExists).toHaveBeenCalledWith("i");
+      expect(cache.assertIndexExists).toHaveBeenCalledWith("j");
+    });
+
+    it("reads storage once for several missing searched collections", async () => {
+      cache.hasCollection.mockReturnValue(false);
+
+      await ask(
+        "document:multiSearch",
+        [{ collections: ["c", "d"], index: "i" }],
+        { query: {} },
+        {},
+      );
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+      expect(cache.assertCollectionExists).toHaveBeenCalledWith("i", "c");
+      expect(cache.assertCollectionExists).toHaveBeenCalledWith("i", "d");
+    });
+
+    it("reads nothing when every searched collection is cached", async () => {
+      cache.hasCollection.mockReturnValue(true);
+
+      await ask(
+        "document:multiSearch",
+        [{ collections: ["c"], index: "i" }],
+        { query: {} },
+        {},
+      );
+
+      expect(client.getSchema).not.toHaveBeenCalled();
+    });
+
+    it("shares one storage read between concurrent misses", async () => {
+      cache.hasCollection.mockReturnValue(false);
+
+      await Promise.all([
+        ask("document:get", "i", "c", "a"),
+        ask("document:get", "i", "c", "b"),
+      ]);
+
+      expect(client.getSchema).toHaveBeenCalledOnce();
+    });
+
+    it("reads storage again once the shared read is over", async () => {
+      cache.hasCollection.mockReturnValue(false);
+
+      await ask("document:get", "i", "c", "a");
+      await ask("document:get", "i", "c", "b");
+
+      expect(client.getSchema).toHaveBeenCalledTimes(2);
+    });
+
+    // A client looping on a missing index or collection must not cost one
+    // full schema read per request (kuzzle#3140)
+    describe("in a row", () => {
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+        cache.hasCollection.mockReturnValue(false);
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("waits 100ms after the previous read started by default", async () => {
+        await ask("document:get", "i", "c", "a");
+
+        let done = false;
+        const second = Promise.resolve(ask("document:get", "i", "c", "b"));
+        void second.then(() => {
+          done = true;
+        });
+
+        await vi.advanceTimersByTimeAsync(99);
+        expect(client.getSchema).toHaveBeenCalledOnce();
+        expect(done).toBe(false);
+
+        await vi.advanceTimersByTimeAsync(1);
+        await second;
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+        expect(client.get).toHaveBeenCalledTimes(2);
+      });
+
+      it("shares the delayed read between the misses waiting for it", async () => {
+        await ask("document:get", "i", "c", "a");
+
+        const waiting = Promise.all([
+          ask("document:get", "i", "c", "b"),
+          ask("index:exist", "j"),
+          ask("collection:list", "i"),
+        ]);
+
+        await vi.advanceTimersByTimeAsync(100);
+        await waiting;
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("still fails each miss storage does not hold either", async () => {
+        const unknown = new Error("unknown collection");
+        cache.assertCollectionExists.mockImplementation(() => {
+          throw unknown;
+        });
+
+        await expect(ask("document:get", "i", "c", "a")).rejects.toBe(unknown);
+
+        const second = expect(ask("document:get", "i", "c", "b")).rejects.toBe(
+          unknown,
+        );
+        await vi.advanceTimersByTimeAsync(100);
+        await second;
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+        expect(client.get).not.toHaveBeenCalled();
+      });
+
+      it("does not wait once the interval is over", async () => {
+        await ask("document:get", "i", "c", "a");
+        vi.setSystemTime(Date.now() + 100);
+
+        await ask("document:get", "i", "c", "b");
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("reads at once when the cache changed since the last read", async () => {
+        // A creation on this node, or a peer's broadcast: what a request
+        // right after it misses may have been created along with it
+        await ask("document:get", "i", "c", "a");
+        (cache as unknown as { changes: number }).changes = 1;
+
+        await ask("document:get", "i", "c", "b");
+
+        expect(client.getSchema).toHaveBeenCalledTimes(2);
+      });
+
+      it("finds an index a peer created during the wait", async () => {
+        await ask("document:get", "i", "c", "a");
+        const exists = ask("index:exist", "new");
+
+        // Stored, but its broadcast has not reached this node yet
+        client.getSchema.mockResolvedValue({ new: [] });
+        cache.hasIndex.mockImplementation(
+          () => cache.learn.mock.calls.at(-1)?.[0]?.new !== undefined,
+        );
+        await vi.advanceTimersByTimeAsync(100);
+
+        await expect(exists).resolves.toBe(true);
+      });
+
+      it("reads the removal counter when the delayed read starts", async () => {
+        await ask("document:get", "i", "c", "a");
+        const second = ask("document:get", "i", "c", "b");
+
+        // A removal while the read waits: `learn` must compare with it
+        (cache as unknown as { removals: number }).removals = 8;
+        await vi.advanceTimersByTimeAsync(100);
+        await second;
+
+        expect(cache.learn).toHaveBeenLastCalledWith(STORED, 8);
+      });
+
+      it("reads on every miss when configured to", async () => {
+        (
+          globalThis as unknown as {
+            kuzzle: {
+              config: {
+                services: { storageEngine: { cacheMissReadInterval?: number } };
+              };
+            };
+          }
+        ).kuzzle.config.services.storageEngine.cacheMissReadInterval = 0;
+        const eager = new ClientAdapter(storeScopeEnum.PRIVATE);
+        (eager.cache as unknown as Recorder).hasIndex.mockReturnValue(false);
+
+        for (let i = 0; i < 3; i++) {
+          await eager.deleteIndexes(["missing"]);
+        }
+
+        expect(
+          (eager.driver as unknown as Recorder).getSchema,
+        ).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    it.each([
+      ["collection:exist", ["i", "c"], "hasCollection"],
+      ["index:exist", ["i"], "hasIndex"],
+    ])("%s answers again once storage is read", async (event, args, method) => {
+      cache[method].mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+      await expect(ask(event, ...args)).resolves.toBe(true);
+      expect(cache.learn).toHaveBeenCalledWith(STORED, 7);
+    });
+
+    it.each([
+      ["collection:list", ["i"], "listCollections"],
+      ["index:list", [], "listIndexes"],
+    ])("%s reads storage first", async (event, args, method) => {
+      await ask(event, ...args);
+
+      expect(cache.learn).toHaveBeenCalledWith(STORED, 7);
+      expect(cache.learn.mock.invocationCallOrder[0]).toBeLessThan(
+        cache[method].mock.invocationCallOrder[0],
+      );
+    });
+  });
+
   describe("#createIndex", () => {
     it("creates, caches and announces the index", async () => {
       cache.hasIndex.mockReturnValue(false);
@@ -888,13 +1282,36 @@ describe("#core/storage/ClientAdapter", () => {
       });
     });
 
-    it("rejects when the index is already cached", async () => {
+    it("rejects when the index is cached and stored", async () => {
       cache.hasIndex.mockReturnValue(true);
+      client.getSchema.mockResolvedValue({ i: [] });
 
       await expect(adapter.createIndex("i")).rejects.toMatchObject({
         id: "services.storage.index_already_exists",
       });
       expect(client.createIndex).not.toHaveBeenCalled();
+    });
+
+    /* kuzzle#3121: a peer deleted it, and its broadcast is not here yet. */
+    it("creates an index that is cached but no longer stored", async () => {
+      cache.hasIndex.mockReturnValue(true);
+      client.getSchema.mockResolvedValue({});
+
+      await adapter.createIndex("i");
+
+      expect(cache.removeIndex).toHaveBeenCalledWith("i");
+      expect(client.createIndex).toHaveBeenCalledWith("i");
+      expect(cache.addIndex).toHaveBeenCalledWith("i");
+    });
+
+    it("rejects a cached index with indexCacheOnly, without reading storage", async () => {
+      cache.hasIndex.mockReturnValue(true);
+      client.getSchema.mockClear();
+
+      await expect(
+        adapter.createIndex("i", { indexCacheOnly: true }),
+      ).rejects.toMatchObject({ id: "services.storage.index_already_exists" });
+      expect(client.getSchema).not.toHaveBeenCalled();
     });
 
     /* kuzzle#3029: a peer created it, and its cache broadcast never came. */
@@ -1077,17 +1494,16 @@ describe("#core/storage/ClientAdapter", () => {
 
   describe("#populateCache", () => {
     it("mirrors the storage schema into the cache", async () => {
+      const snapshot = new Map();
       client.getSchema.mockResolvedValue({ i1: ["c1", "c2"], i2: [] });
-      cache.addIndex.mockClear();
-      cache.addCollection.mockClear();
+      cache.snapshotIndexes.mockReturnValue(snapshot);
 
       await adapter.populateCache();
 
-      expect(cache.addIndex).toHaveBeenCalledWith("i1");
-      expect(cache.addIndex).toHaveBeenCalledWith("i2");
-      expect(cache.addCollection).toHaveBeenCalledWith("i1", "c1");
-      expect(cache.addCollection).toHaveBeenCalledWith("i1", "c2");
-      expect(cache.addCollection).toHaveBeenCalledTimes(2);
+      expect(cache.replaceIndexes).toHaveBeenLastCalledWith(
+        { i1: ["c1", "c2"], i2: [] },
+        snapshot,
+      );
     });
 
     it("generates the missing aliases first when configured to", async () => {
@@ -1251,15 +1667,23 @@ describe("#core/storage/ClientAdapter", () => {
           ]),
         );
 
-        // `init` already loaded them once, from an empty hash.
-        cache.clearLocks.mockClear();
+        const snapshot = new Map();
+        cache.snapshotLocks.mockReturnValue(snapshot);
 
         await adapter.loadLocks();
 
-        expect(cache.clearLocks).toHaveBeenCalledOnce();
-        expect(cache.setLock).toHaveBeenCalledTimes(2);
-        expect(cache.setLock).toHaveBeenCalledWith("i", "c", lock);
-        expect(cache.setLock).toHaveBeenCalledWith("i", "c.d", lock);
+        expect(cache.replaceLocks).toHaveBeenLastCalledWith(
+          new Map([
+            [
+              "i",
+              new Map([
+                ["c", lock],
+                ["c.d", lock],
+              ]),
+            ],
+          ]),
+          snapshot,
+        );
       });
 
       it("keeps each scope's locks apart", async () => {
@@ -1270,7 +1694,10 @@ describe("#core/storage/ClientAdapter", () => {
 
         await adapter.loadLocks();
 
-        expect(cache.setLock).not.toHaveBeenCalled();
+        expect(cache.replaceLocks).toHaveBeenLastCalledWith(
+          new Map(),
+          undefined,
+        );
       });
     });
   });

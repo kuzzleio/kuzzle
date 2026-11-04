@@ -1,7 +1,7 @@
 {
   "$comment": "CURRENT STATE of the ADR efforts, never their history: the hubs under docs/adr-<n>/ carry the narrative, this file is only their structured extract. It feeds the digest injected at every Claude Code session start (.claude/settings.json → `node .ci/scripts/adr-state.ts --digest`). Schema checked in CI (`--check`): status ∈ proposed | accepted | active | closed | abandoned; nextAction = ONE imperative action ≤ 300 chars, never what was just done; blockers ≤ 4 × 200 chars; openPoints ≤ 6 × 200 chars, no ✅ entry (what is done leaves this file); whole file ≤ 8 KB. Replace fields, never append a report to them. Public repository: nothing private here (client projects, private plugins). Detail: kuzzle-adr skill.",
-  "snapshot": "2026-10-28",
-  "latestVersion": "2.60.0",
+  "snapshot": "2026-11-03",
+  "latestVersion": "2.60.1",
   "adrs": [
     {
       "id": "0001",
@@ -31,12 +31,15 @@
       "id": "0003",
       "hub": "docs/adr-003/ADR-0003-storage-drivers.md",
       "title": "Storage engines as installable drivers",
-      "status": "accepted",
-      "statusLabel": "🟡 Accepted · step 00 done",
-      "openStep": null,
-      "nextAction": "Open step 01: the `StorageDriver` contract, its capability groups and manifest, exported by `kuzzle` and pinned by the typings gate.",
+      "status": "active",
+      "statusLabel": "🔵 Active · 00–05 done, 06 + 07 open",
+      "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
+      "nextAction": "Release 2.61.0 (beta → master, #3167): 2.61.0-beta.9 (2026-11-04) carries the SonarCloud fixes (#3168); then back-merge master into 2-dev, close and freeze steps 06 and 07 (step 06). Docs in production since 2026-11-04 (documentation#617).",
       "blockers": [],
-      "openPoints": []
+      "openPoints": [
+        "Step 07 (OpenSearch 2 / 3 drivers): 1.0.0 published 2026-11-03; it closes with step 06 at 2.61.0.",
+        "2.61.0 review findings in #3145: all \"before 2.61.0 stable\" items done; the rest is after 2.61.0."
+      ]
     },
     {
       "id": "0004",

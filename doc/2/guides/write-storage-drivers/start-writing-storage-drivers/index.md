@@ -1,0 +1,149 @@
+---
+code: false
+type: page
+order: 100
+title: Start writing a storage driver | Write storage drivers | Guide
+meta:
+  - name: description
+    content: The package layout and the first steps of a Kuzzle storage driver
+  - name: keywords
+    content: Kuzzle, Documentation, storage driver, manifest, package
+---
+
+# Start Writing a Storage Driver
+
+<SinceBadge version="2.61.0" />
+
+Kuzzle stores its data through a **storage driver**: an npm package that exports a class implementing Kuzzle's
+`StorageDriver` contract. The application selects it in its configuration, and Kuzzle loads it at startup, before
+anything else uses the storage. The five official drivers are built this way: `kuzzle-storage-es-7` and
+`kuzzle-storage-es-8` (built in, installed with Kuzzle), `kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2` and
+`kuzzle-storage-opensearch-3` (see the [Drivers](/drivers/v2.html) section). Writing another one lets Kuzzle run on
+another engine, with the same API.
+
+::: info
+The public API does not change with the driver: queries, mappings and search bodies stay in the Elasticsearch format,
+which each driver translates. A driver for an engine of the Elasticsearch family (OpenSearch...) can translate it all;
+another engine can implement a subset, and declare it (see [Capabilities](/core/2/guides/write-storage-drivers/contract#capabilities)).
+:::
+
+## The package
+
+A driver is an ordinary npm package, named `kuzzle-storage-<engine>-<major>` by convention (`kuzzle-storage-es-9`,
+`kuzzle-storage-opensearch-2`):
+
+```
+kuzzle-storage-myengine-1/
+├── package.json
+├── manifest.json       # read by Kuzzle before it loads the code
+└── dist/index.js       # exports the driver class
+```
+
+`package.json` declares `kuzzle` as a **peer dependency**, never as a dependency: the driver must use the running
+Kuzzle's classes, its error classes in particular.
+
+```json
+{
+  "name": "kuzzle-storage-myengine-1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "manifest.json"],
+  "peerDependencies": {
+    "kuzzle": ">=2.61.0-0 <3"
+  },
+  "devDependencies": {
+    "kuzzle": "2.61.0"
+  }
+}
+```
+
+`manifest.json`, at the package root, states the Kuzzle versions the driver supports and the optional features it
+implements:
+
+```json
+{
+  "kuzzleVersion": ">=2.61.0-0 <3",
+  "capabilities": ["aggregations", "stats"]
+}
+```
+
+| Field | What it is |
+| --- | --- |
+| `kuzzleVersion` | A semver range. Kuzzle refuses to start when its version is out of it: this is the only versioning of the contract. |
+| `capabilities` | The optional capability groups the driver implements: `aggregations`, `mappingUpdates`, `stats`, `updateByQuery`. |
+
+## The driver class
+
+The package exports the class, as its module or as its `default` export. In TypeScript:
+
+```ts
+import {
+  type JSONObject,
+  type StorageDriver,
+  type StorageEngineElasticsearch,
+  storeScopeEnum,
+} from "kuzzle";
+
+import { Client } from "my-engine-client";
+
+export class MyEngineDriver implements StorageDriver {
+  // Builds a new engine client, for app.storage.storageClient and the plugins
+  static createNativeClient(clientConfig: JSONObject): Client {
+    return new Client(clientConfig);
+  }
+
+  private client: Client | null = null;
+
+  constructor(
+    private readonly config: StorageEngineElasticsearch,
+    private readonly scope: storeScopeEnum,
+  ) {}
+
+  async init(): Promise<void> {
+    this.client = MyEngineDriver.createNativeClient(this.config.client);
+    // connect, create what the engine needs...
+  }
+
+  // ...the rest of the contract
+}
+
+export default MyEngineDriver;
+```
+
+The [contract](/core/2/guides/write-storage-drivers/contract) lists what the class implements.
+
+## Try it in an application
+
+Pack the driver and install the tarball next to `kuzzle`, then select it:
+
+```bash
+cd kuzzle-storage-myengine-1 && npm pack
+cd ../my-application && npm install ../kuzzle-storage-myengine-1/kuzzle-storage-myengine-1-1.0.0.tgz
+```
+
+
+```jsonc
+{
+  "services": {
+    "storageEngine": {
+      "driver": "kuzzle-storage-myengine-1",
+      "client": { "node": "http://localhost:9200" }
+    }
+  }
+}
+```
+
+Kuzzle resolves the package from the current directory (where it also finds `.kuzzlerc`), then from its own location,
+checks its manifest, loads it and logs
+`[ℹ] Storage driver: kuzzle-storage-myengine-1@<version> (<directory it was loaded from>)`. Every key of
+`services.storageEngine` is handed to the driver's constructor.
+
+`driver` takes a package name, not a path: install the driver first, then name its package. An npm alias
+(`npm install my-engine@npm:kuzzle-storage-myengine-1`, then `"driver": "my-engine"`) works too.
+
+::: tip
+Whichever copy of `kuzzle` the driver's `require("kuzzle")` resolves, Kuzzle hands it the running Kuzzle before
+loading it, so that the errors it throws are recognized: a copy npm installed for the peer dependency, or the one of a
+directory the driver is linked from (`npm link`, `npm install ../my-driver`). A linked driver still runs with its
+directory's own dependencies: try a packed tarball, as above, before publishing.
+:::

@@ -470,6 +470,29 @@ app.controller.register("tests", {
       },
     },
 
+    // A collection a peer created, whose cluster broadcast has not reached
+    // the other nodes yet: in storage, in no node's cache (kuzzle#3121).
+    createCollectionInStorageOnly: {
+      handler: async (request: KuzzleRequest) => {
+        const indice = `&${request.getIndex()}.${request.getCollection()}`;
+        const aliases = { [`@${indice}`]: {} };
+        const { driver, majorVersion } =
+          global.kuzzle.config.services.storageEngine;
+        // The Elasticsearch 7 client, and the OpenSearch one forked from it,
+        // take the request body apart
+        const bodyClient =
+          majorVersion === "7" || /opensearch/.test(String(driver ?? ""));
+
+        await app.storage.storageClient.indices.create(
+          bodyClient
+            ? { body: { aliases }, index: indice }
+            : { aliases, index: indice },
+        );
+
+        return indice;
+      },
+    },
+
     // Access storage client
     storageClient: {
       handler: async (request: KuzzleRequest) => {
@@ -553,7 +576,20 @@ internalCache.options = {
 app.import.mappings(functionalFixtures.mappings);
 app.import.profiles(functionalFixtures.profiles);
 app.import.roles(functionalFixtures.roles);
-app.import.userMappings(functionalFixtures.userMappings);
+// Changing the users' mappings needs the `mappingUpdates` storage capability,
+// which .ci/test-cluster-core-only-driver.yml's driver does not declare
+// (ADR-0003 step 04, cucumber.config.cjs).
+const storageCapabilities = process.env.KUZZLE_STORAGE_CAPABILITIES;
+
+if (
+  storageCapabilities === undefined ||
+  storageCapabilities
+    .split(",")
+    .map((name) => name.trim())
+    .includes("mappingUpdates")
+) {
+  app.import.userMappings(functionalFixtures.userMappings);
+}
 app.import.users(functionalFixtures.users, { onExistingUsers: "overwrite" });
 
 loadAdditionalPlugins()

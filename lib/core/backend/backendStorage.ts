@@ -20,12 +20,19 @@
  */
 
 import type { JSONObject } from "../../types/JSONObject";
+import type { StorageEngineInfo } from "../../types/storage/StorageDriver";
 
-import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import * as kerror from "../../kerror";
+import {
+  createNativeStorageClient,
+  getStorageEngineInfo,
+} from "../storage/storageDriverLoader";
 import { ApplicationManager } from "./index";
 
+const runtimeError = kerror.wrap("plugin", "runtime");
+
 export class BackendStorage extends ApplicationManager {
-  private _client: ReturnType<typeof Elasticsearch.buildClient> | null = null;
+  private _client: ReturnType<typeof createNativeStorageClient> | null = null;
   private _Client: BackendStorage["StorageClient"] | null = null;
 
   /**
@@ -39,13 +46,10 @@ export class BackendStorage extends ApplicationManager {
     const kuzzle = this._kuzzle;
 
     this._Client ??= function ESClient(clientConfig: JSONObject = {}) {
-      return Elasticsearch.buildClient(
-        {
-          ...kuzzle.config.services.storageEngine.client,
-          ...clientConfig,
-        },
-        kuzzle.config.services.storageEngine.majorVersion,
-      );
+      return createNativeStorageClient(kuzzle.config.services.storageEngine, {
+        ...kuzzle.config.services.storageEngine.client,
+        ...clientConfig,
+      });
     } as unknown as BackendStorage["StorageClient"];
 
     return this._Client;
@@ -59,13 +63,26 @@ export class BackendStorage extends ApplicationManager {
   get storageClient(): any {
     const kuzzle = this._kuzzle;
 
-    if (!this._client) {
-      this._client = Elasticsearch.buildClient(
-        kuzzle.config.services.storageEngine.client,
-        kuzzle.config.services.storageEngine.majorVersion,
-      );
-    }
+    this._client ??= createNativeStorageClient(
+      kuzzle.config.services.storageEngine,
+      kuzzle.config.services.storageEngine.client,
+    );
 
     return this._client;
+  }
+
+  /**
+   * The storage engine Kuzzle runs on: its driver's package, the engine
+   * family and the engine server's version. What the raw client's API
+   * follows, unlike `services.storageEngine.majorVersion`.
+   *
+   * Asks the engine: call it once, not on every request.
+   */
+  async getEngine(): Promise<StorageEngineInfo> {
+    if (!this._application.started) {
+      throw runtimeError.get("unavailable_before_start", "storage.getEngine");
+    }
+
+    return getStorageEngineInfo();
   }
 }

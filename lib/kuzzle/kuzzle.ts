@@ -25,13 +25,16 @@ import { inspect } from "node:util";
 import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
 import { Koncorde } from "koncorde";
-import _ from "lodash";
+import isEmpty from "lodash/isEmpty";
+import merge from "lodash/merge";
+import set from "lodash/set";
 import murmur from "murmurhash";
 
 import { version } from "../../package.json";
 import Funnel from "../api/funnel";
 import { OpenApiManager } from "../api/openapi";
 import Cluster from "../cluster";
+import { assertClusterStorageDriver } from "../cluster/storageDriverCheck";
 import PassportWrapper from "../core/auth/passportWrapper";
 import { TokenManager } from "../core/auth/tokenManager";
 import CacheEngine from "../core/cache/cacheEngine";
@@ -51,7 +54,7 @@ import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { releaseAllLocksBeforeExit, withLock } from "../util/distributedLock";
-import { Mutex } from "../util/mutex";
+import { Mutex } from "../util/mutex"; // NOSONAR: only to free locks taken through the deprecated API, see shutdown()
 import type {
   ImportConfig,
   InstallationConfig,
@@ -74,6 +77,12 @@ let _kuzzle: Kuzzle | null = null;
  * not keep a failed node alive, which a bare `process.exit(1)` never did
  */
 const FAILURE_SHUTDOWN_TIMEOUT = 30000;
+/**
+ * How long a shutdown waits for the plugin requests still running before it
+ * closes the storage: plugins may run requests in a loop, and nothing refuses
+ * them on shutdown, so the wait is bounded (#3160)
+ */
+const PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT = 5000;
 
 /**
  * Stops the startup sequence once a shutdown has begun (#3045): `start()`
@@ -129,6 +138,8 @@ class Kuzzle extends KuzzleEventEmitter {
   private shutdownExitCode = 0;
   /** Ends a failure's shutdown that does not finish in time */
   private shutdownWatchdog: NodeJS.Timeout | null = null;
+  /** Built by `start()`; its storage drivers are closed on shutdown */
+  private storageEngine: StorageEngine | null = null;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
@@ -169,7 +180,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Dump generator
    */
-  private dumpGenerator: DumpGenerator;
+  private readonly dumpGenerator: DumpGenerator;
 
   /**
    * Vault component (will be initialized after bootstrap)
@@ -185,12 +196,12 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Kuzzle internal debugger
    */
-  private debugger: KuzzleDebugger;
+  private readonly debugger: KuzzleDebugger;
 
   /**
    * Kuzzle version
    */
-  private version: string;
+  private readonly version: string;
 
   /**
    * Built by `start()`, from the application's own OpenAPI declaration.
@@ -202,7 +213,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * List of differents imports types and their associated method
    */
-  private importTypes: {
+  private readonly importTypes: {
     [key: string]: (
       config: {
         toImport: ImportConfig;
@@ -305,7 +316,16 @@ class Kuzzle extends KuzzleEventEmitter {
       });
 
       await new CacheEngine().init();
-      await new StorageEngine().init();
+
+      // Before the storage, so that a node refused by the cluster has
+      // written nothing to it (#3139)
+      if (this.config.cluster.enabled) {
+        await assertClusterStorageDriver(this.config);
+        this.stopIfShuttingDown();
+      }
+
+      this.storageEngine = new StorageEngine();
+      await this.storageEngine.init();
       await new RealtimeModule().init();
       this.stopIfShuttingDown();
       await this.internalIndex.init();
@@ -342,7 +362,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.pluginsManager.application = application;
       const pluginImports = await this.pluginsManager.init(options?.plugins);
 
-      const imports = _.merge({}, pluginImports, options?.import);
+      const imports = merge({}, pluginImports, options?.import);
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
@@ -531,7 +551,25 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info(
         `[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`,
       );
-      await Bluebird.delay(1000);
+      await Bluebird.delay(1000); // NOSONAR (S9382): sequential polling, by design
+    }
+
+    // The storage closes below: let the plugin requests in progress finish
+    // (#3160)
+    const pluginRequestsDeadline =
+      Date.now() + PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT;
+
+    while (
+      this.funnel.pluginRequests > 0 &&
+      Date.now() < pluginRequestsDeadline
+    ) {
+      await Bluebird.delay(100); // NOSONAR: sequential polling, by design
+    }
+
+    if (this.funnel.pluginRequests > 0) {
+      this.log.warn(
+        `[shutdown] ${this.funnel.pluginRequests} plugin requests still running after ${PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT}ms: closing the storage anyway`,
+      );
     }
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
@@ -540,6 +578,10 @@ class Kuzzle extends KuzzleEventEmitter {
       releaseAllLocksBeforeExit(),
       Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
     ]);
+
+    // Nothing reads or writes the storage anymore: its drivers may release
+    // their connections (bounded, never rejects)
+    await this.storageEngine?.close();
 
     this.log.info("Halted.");
 
@@ -584,45 +626,58 @@ class Kuzzle extends KuzzleEventEmitter {
           // holding it is done: by then, this one may be shutting down
           this.stopIfShuttingDown();
 
-          const isAlreadyInstalled = await this.ask(
-            "core:storage:private:document:exist",
-            "kuzzle",
-            "installations",
-            installation.id,
-          );
-
-          if (!isAlreadyInstalled) {
-            try {
-              await installation.handler();
-            } catch (error) {
-              throw kerror.get(
-                "plugin",
-                "runtime",
-                "unexpected_installation_error",
-                installation.id,
-                error,
-              );
-            }
-
-            await this.ask(
-              "core:storage:private:document:create",
-              "kuzzle",
-              "installations",
-              {
-                description: installation.description,
-                handler: installation.handler.toString(),
-                installedAt: Date.now(),
-              },
-              { id: installation.id },
-            );
-
-            this.log.info(
-              `[✔] Install code "${installation.id}" successfully executed`,
-            );
-          }
+          // Sequential by design: installations run in their declaration
+          // order, and each one is recorded before the next one starts
+          await this.runInstallation(installation); // NOSONAR (S9382)
         }
       },
       { retryAttempts: Number.POSITIVE_INFINITY },
+    );
+  }
+
+  /**
+   * Runs an installation, unless it is already recorded, then records it
+   */
+  private async runInstallation(
+    installation: InstallationConfig,
+  ): Promise<void> {
+    const isAlreadyInstalled = await this.ask(
+      "core:storage:private:document:exist",
+      "kuzzle",
+      "installations",
+      installation.id,
+    );
+
+    if (isAlreadyInstalled) {
+      return;
+    }
+
+    try {
+      await installation.handler();
+    } catch (error) {
+      throw kerror.get(
+        "plugin",
+        "runtime",
+        "unexpected_installation_error",
+        installation.id,
+        error,
+      );
+    }
+
+    await this.ask(
+      "core:storage:private:document:create",
+      "kuzzle",
+      "installations",
+      {
+        description: installation.description,
+        handler: installation.handler.toString(),
+        installedAt: Date.now(),
+      },
+      { id: installation.id },
+    );
+
+    this.log.info(
+      `[✔] Install code "${installation.id}" successfully executed`,
     );
   }
 
@@ -654,7 +709,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     const toImport = config.toImport;
 
-    if (!_.isEmpty(toImport.userMappings)) {
+    if (!isEmpty(toImport.userMappings)) {
       await this.internalIndex.updateMapping("users", toImport.userMappings);
       await this.internalIndex.refreshCollection("users");
       this.log.info("[✔] User mappings import successful");
@@ -671,7 +726,7 @@ class Kuzzle extends KuzzleEventEmitter {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
-    if (!_.isEmpty(toSupport.mappings) && !_.isEmpty(toImport.mappings)) {
+    if (!isEmpty(toSupport.mappings) && !isEmpty(toImport.mappings)) {
       throw kerror.get(
         "plugin",
         "runtime",
@@ -679,7 +734,7 @@ class Kuzzle extends KuzzleEventEmitter {
         "_support.mappings",
         "import.mappings",
       );
-    } else if (!_.isEmpty(toSupport.mappings)) {
+    } else if (!isEmpty(toSupport.mappings)) {
       await this.ask(
         "core:storage:public:mappings:import",
         toSupport.mappings,
@@ -692,7 +747,7 @@ class Kuzzle extends KuzzleEventEmitter {
         },
       );
       this.log.info("[✔] Mappings import successful");
-    } else if (!_.isEmpty(toImport.mappings)) {
+    } else if (!isEmpty(toImport.mappings)) {
       await this.ask("core:storage:public:mappings:import", toImport.mappings, {
         // Already imported (by this node or another one): only fill the cache
         indexCacheOnly: status.initialized,
@@ -716,7 +771,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     const toSupport = config.toSupport;
 
-    if (!_.isEmpty(toSupport.fixtures)) {
+    if (!isEmpty(toSupport.fixtures)) {
       await this.ask("core:storage:public:document:import", toSupport.fixtures);
       this.log.info("[✔] Fixtures import successful");
     }
@@ -737,16 +792,16 @@ class Kuzzle extends KuzzleEventEmitter {
     const toSupport = config.toSupport;
 
     const isPermissionsToImport = !(
-      _.isEmpty(toImport.profiles) &&
-      _.isEmpty(toImport.roles) &&
-      _.isEmpty(toImport.users)
+      isEmpty(toImport.profiles) &&
+      isEmpty(toImport.roles) &&
+      isEmpty(toImport.users)
     );
     const isPermissionsToSupport =
       toSupport.securities &&
       !(
-        _.isEmpty(toSupport.securities.profiles) &&
-        _.isEmpty(toSupport.securities.roles) &&
-        _.isEmpty(toSupport.securities.users)
+        isEmpty(toSupport.securities.profiles) &&
+        isEmpty(toSupport.securities.roles) &&
+        isEmpty(toSupport.securities.users)
       );
     if (isPermissionsToSupport && isPermissionsToImport) {
       throw kerror.get(
@@ -784,14 +839,14 @@ class Kuzzle extends KuzzleEventEmitter {
     supportConfig: SupportConfig,
   ) {
     if (
-      _.isEmpty(importConfig.mappings) &&
-      _.isEmpty(importConfig.profiles) &&
-      _.isEmpty(importConfig.roles) &&
-      _.isEmpty(importConfig.userMappings) &&
-      _.isEmpty(importConfig.users) &&
-      _.isEmpty(supportConfig.fixtures) &&
-      _.isEmpty(supportConfig.mappings) &&
-      _.isEmpty(supportConfig.securities)
+      isEmpty(importConfig.mappings) &&
+      isEmpty(importConfig.profiles) &&
+      isEmpty(importConfig.roles) &&
+      isEmpty(importConfig.userMappings) &&
+      isEmpty(importConfig.users) &&
+      isEmpty(supportConfig.fixtures) &&
+      isEmpty(supportConfig.mappings) &&
+      isEmpty(supportConfig.securities)
     ) {
       return true;
     }
@@ -879,17 +934,17 @@ class Kuzzle extends KuzzleEventEmitter {
 
       switch (type) {
         case "fixtures":
-          _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
+          set(importPayload, "toSupport.fixtures", toSupport.fixtures);
           break;
         case "mappings":
-          _.set(importPayload, "toSupport.mappings", toSupport.mappings);
-          _.set(importPayload, "toImport.mappings", toImport.mappings);
+          set(importPayload, "toSupport.mappings", toSupport.mappings);
+          set(importPayload, "toImport.mappings", toImport.mappings);
           break;
         case "permissions":
-          _.set(importPayload, "toSupport.securities", toSupport.securities);
-          _.set(importPayload, "toImport.profiles", toImport.profiles);
-          _.set(importPayload, "toImport.roles", toImport.roles);
-          _.set(importPayload, "toImport.users", toImport.users);
+          set(importPayload, "toSupport.securities", toSupport.securities);
+          set(importPayload, "toImport.profiles", toImport.profiles);
+          set(importPayload, "toImport.roles", toImport.roles);
+          set(importPayload, "toImport.users", toImport.users);
           break;
       }
 
@@ -1022,10 +1077,20 @@ class Kuzzle extends KuzzleEventEmitter {
             `ERROR: unhandledRejection: ${reason.message}. Reason: ${reason.stack}`,
           );
         } else {
-          this.log.error(`ERROR: unhandledRejection: ${reason}`);
+          this.log.error(
+            `ERROR: unhandledRejection: ${typeof reason === "string" ? reason : inspect(reason)}`,
+          );
         }
       } else {
-        this.log.error(`ERROR: unhandledRejection: ${promise}`);
+        this.log.error(`ERROR: unhandledRejection: ${inspect(promise)}`);
+      }
+
+      // A shutdown already in progress has closed, or is closing, what late
+      // work may still use (the network, the storage): crashing would turn a
+      // requested shutdown into a failure, so the rejection is only logged
+      // (#3160)
+      if (this._state === kuzzleStateEnum.SHUTTING_DOWN) {
+        return;
       }
 
       // Crashing on an unhandled rejection is a good idea during development

@@ -663,8 +663,24 @@ await storageClient.index(esRequest);
 ```
 
 ::: info
-The client matches the Elasticsearch version Kuzzle is configured for (`services.storageEngine.majorVersion`). The example above uses the Elasticsearch 7 client. With [Elasticsearch 8](/core/2/guides/elasticsearch/v8), requests take the document as `document` instead of `body`, and responses are returned directly instead of being wrapped in a `body` property.
+The client is built by the [storage driver](#storage-drivers) in use, so its API follows the driver, not `majorVersion`. The example above uses the `{ body }` shape of the Elasticsearch 7 client, which the OpenSearch 2 and 3 drivers' client shares. The [Elasticsearch 8](/core/2/guides/elasticsearch/v8) and Elasticsearch 9 clients take the document as `document` instead of `body`, and return responses directly instead of wrapping them in a `body` property. To type the client, see the TypeScript page of your driver (e.g. [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/typescript/)).
+
+With `services.storageEngine.driver` set, `majorVersion` is ignored, yet the configuration still holds a value for it (`"7"` by default): do not use it to guess the client's API. Ask Kuzzle which engine it runs on instead, with [app.storage.getEngine()](/core/2/framework/classes/backend-storage/get-engine) or, in a plugin, [context.accessors.getStorageEngine()](/core/2/framework/classes/plugin-context-accessors/get-storage-engine) (since 2.61.0).
 :::
+
+**Example:** _Pick the client's API from the storage driver_
+
+```js
+const { driver } = await app.storage.getEngine();
+// The built-in Elasticsearch 8 driver, or the Elasticsearch 9 one
+const flat = ['kuzzle-storage-es-8', 'kuzzle-storage-es-9'].includes(driver);
+
+await app.storage.storageClient.index({
+  index: '&nyc-open-data.yellow-taxi',
+  op_type: 'create',
+  ...(flat ? { document: { name: 'Aschen' } } : { body: { name: 'Aschen' } }),
+});
+```
 
 ::: warning
 Kuzzle uses an [internal naming system](/core/2/guides/main-concepts/data-storage#internal-representation) to map Elasticsearch index names with Kuzzle indexes and collections names.
@@ -681,4 +697,74 @@ Maintenance operations, such as a mapping migration, can **lock a collection aga
 
 The lock applies to the whole cluster. Clients receiving this error can retry the write once the maintenance operation is over.
 
-With Elasticsearch 8, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.
+With the Elasticsearch 8 and 9 drivers, Kuzzle also ignores the Elasticsearch indices that carry the `kuzzle-unmanaged` alias: such a tool can build the next version of a collection beside it without Kuzzle treating it as one of its own collections.
+
+## Storage Drivers
+
+<SinceBadge version="2.61.0" />
+
+Kuzzle talks to its database through a **storage driver**. The Elasticsearch 7 and 8 drivers are built in: they are the packages `kuzzle-storage-es-7` and `kuzzle-storage-es-8`, which `kuzzle` depends on and installs with itself. By default, Kuzzle selects one with `services.storageEngine.majorVersion`, and an existing setup needs no change.
+
+Another storage engine is supported by installing its driver, an npm package, next to `kuzzle` in your application, and naming it in the [configuration](/core/2/guides/advanced/configuration):
+
+```js
+{
+  "services": {
+    "storageEngine": {
+      "driver": "kuzzle-storage-es-9",
+      "client": {
+        "node": "http://localhost:9200"
+      }
+    }
+  }
+}
+```
+
+The rest of `services.storageEngine` is handed to the driver; `majorVersion` is ignored when `driver` is set. The API does not change: queries, mappings and search bodies are still written in the Elasticsearch format.
+
+`driver` is an npm package name (or an npm alias), not a path. Kuzzle looks it up from the current directory, where it also finds its `.kuzzlerc` file, then from its own location, and logs the directory it loaded the driver from. The built-in packages are found from Kuzzle's own location, so `"driver": "kuzzle-storage-es-8"` works without installing it; installing it in the application only pins its version.
+
+The official external drivers:
+
+| Engine                        | Driver                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| Elasticsearch 9               | [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/getting-started)                 |
+| OpenSearch 2.19 and later 2.x | [`kuzzle-storage-opensearch-2`](/drivers/storage-opensearch-2/1/getting-started) |
+| OpenSearch 3                  | [`kuzzle-storage-opensearch-3`](/drivers/storage-opensearch-3/1/getting-started) |
+
+### `majorVersion`
+
+<DeprecatedBadge version="2.61.0"/>
+
+`services.storageEngine.majorVersion` is deprecated: Kuzzle 3 will select the storage engine with `driver` only (see [Towards Kuzzle 3](/core/2/guides/kuzzle-3)). It keeps working unchanged in Kuzzle 2, where it is still the way to choose between the built-in Elasticsearch 7 and 8 drivers: an Elasticsearch 7 or 8 setup has nothing to change, and Kuzzle logs no deprecation warning for it.
+
+Without `driver`, `majorVersion` only accepts `"7"` and `"8"`: any other value, such as `"9"`, makes Kuzzle refuse to start, pointing to `driver`. When `driver` is set, `majorVersion` is ignored. If your configuration sets both, Kuzzle logs a warning at startup: remove `majorVersion`.
+
+At startup, Kuzzle reads the driver's `manifest.json` before loading its code, and refuses to start when the driver is missing, when its manifest is invalid, when the Kuzzle version is not in the range its `kuzzleVersion` field states, or when the driver lacks a method of the [contract](/core/2/guides/write-storage-drivers/contract) (see the [services.storage_driver](/core/2/api/errors/error-codes/services) errors).
+
+### Capabilities
+
+Some features are optional for a driver, which lists those it implements in the `capabilities` field of its manifest:
+
+| Capability       | Feature                                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aggregations`   | `aggregations` / `aggs` in a search body                                                                                                                 |
+| `mappingUpdates` | changing the mappings or the settings of an existing collection, including the users' mappings (`security:updateUserMapping`, `app.import.userMappings`) |
+| `stats`          | storage statistics (`index:stats`)                                                                                                                       |
+| `updateByQuery`  | updating every document matching a query (`document:updateByQuery`, `bulk:updateByQuery`)                                                                |
+
+A request needing a capability the driver does not declare is rejected with a [services.storage_driver.unsupported_capability](/core/2/api/errors/error-codes/services) error. The built-in drivers implement them all.
+
+### Cluster
+
+Every node of a cluster must run the **same driver, in the same version**: a node running another one is refused when it joins the cluster, with a [cluster.join.storage_driver_mismatch](/core/2/api/errors/error-codes/cluster) error, and does not start. The node checks this before it connects to the storage, so a refused node has written nothing. Upgrading a driver therefore means restarting every node of the cluster on the new version, not a rolling restart.
+
+The nodes running the built-in Elasticsearch drivers are compared too, by Elasticsearch major version only: a node with `majorVersion: "8"` cannot join nodes with `majorVersion: "7"`. Their package version comes with Kuzzle's, so upgrading Kuzzle node by node keeps working, as do the nodes of a version older than 2.61.0, which are accepted by a node running a built-in driver and refused by a node running an external one.
+
+### Integrated client
+
+`app.storage.storageClient`, `app.storage.StorageClient` and the plugins' `context.constructors.ESClient` are built by the driver: with an external driver, they give its engine's own client.
+
+### Writing a driver
+
+A driver package exports a class implementing the `StorageDriver` contract, which `kuzzle` exports along with its types and a conformance kit to test it: see the [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide. The official drivers are documented in the [Drivers](/drivers/v2.html) section.

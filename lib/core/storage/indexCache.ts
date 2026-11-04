@@ -36,6 +36,34 @@ export interface CollectionLock {
   lockedAt: number;
 }
 
+/**
+ * One index's collections after a reload: the stored ones, except those whose
+ * cached state changed between the snapshot (`was`) and now (`is`), which keep
+ * their current state.
+ */
+function reconcileCollections(
+  stored: Set<string>,
+  was: Set<string> | undefined,
+  is: Set<string> | undefined,
+): Set<string> {
+  const collections = new Set<string>();
+
+  for (const collection of new Set([
+    ...stored,
+    ...(was ?? []),
+    ...(is ?? []),
+  ])) {
+    const wasCached = was?.has(collection) ?? false;
+    const isCached = is?.has(collection) ?? false;
+
+    if (wasCached === isCached ? stored.has(collection) : isCached) {
+      collections.add(collection);
+    }
+  }
+
+  return collections;
+}
+
 export class IndexCache {
   /**
    * Index map: each entry holds a set of collection names
@@ -43,6 +71,19 @@ export class IndexCache {
    * Map<index, Set<collection>>
    */
   private readonly indexes = new Map<string, Set<string>>();
+
+  /**
+   * How many times an index or a collection left the cache: `learn` compares
+   * it with the value read before storage was, to tell whether a removal landed
+   * during the read
+   */
+  private removalCount = 0;
+
+  /**
+   * How many times an index or a collection entered or left the cache, to
+   * tell whether anything changed since storage was last read (kuzzle#3140)
+   */
+  private changeCount = 0;
 
   /**
    * Collection write locks, a local copy of the cluster-wide state (see
@@ -64,6 +105,7 @@ export class IndexCache {
     }
 
     this.indexes.set(index, new Set());
+    this.changeCount++;
 
     return true;
   }
@@ -74,7 +116,12 @@ export class IndexCache {
   addCollection(index: string, collection: string): void {
     this.addIndex(index);
 
-    this.getCollections(index).add(collection);
+    const collections = this.getCollections(index);
+
+    if (!collections.has(collection)) {
+      collections.add(collection);
+      this.changeCount++;
+    }
   }
 
   /**
@@ -118,6 +165,8 @@ export class IndexCache {
    */
   removeIndex(index: string): void {
     this.indexes.delete(index);
+    this.removalCount++;
+    this.changeCount++;
   }
 
   /**
@@ -128,6 +177,109 @@ export class IndexCache {
 
     if (collections) {
       collections.delete(collection);
+    }
+
+    this.removalCount++;
+    this.changeCount++;
+  }
+
+  /**
+   * Removals so far, to pass to `learn` once storage has been read
+   */
+  get removals(): number {
+    return this.removalCount;
+  }
+
+  /**
+   * Changes so far: additions and removals alike
+   */
+  get changes(): number {
+    return this.changeCount;
+  }
+
+  /**
+   * Add the stored indexes and collections this cache misses, unless one was
+   * removed since `removals` was read: the read may then predate that removal,
+   * and would bring back what a peer deleted (kuzzle#3121).
+   *
+   * Never removes anything: unlike `replaceIndexes`, it only catches up with
+   * creations whose cluster broadcast has not reached this node yet.
+   *
+   * @param stored - Index name -> its collection names, as storage holds them
+   * @param removals - Read from `removals` before storage was
+   */
+  learn(stored: Record<string, string[]>, removals: number): void {
+    if (removals !== this.removalCount) {
+      return;
+    }
+
+    for (const [index, collections] of Object.entries(stored)) {
+      this.addIndex(index);
+
+      for (const collection of collections) {
+        this.addCollection(index, collection);
+      }
+    }
+  }
+
+  /**
+   * Return a copy of the cached indexes and collections, to pass to
+   * `replaceIndexes` once storage has been read
+   */
+  snapshotIndexes(): Map<string, Set<string>> {
+    return new Map(
+      Array.from(this.indexes, ([index, collections]) => [
+        index,
+        new Set(collections),
+      ]),
+    );
+  }
+
+  /**
+   * Replace the cached indexes and collections with the stored ones, except
+   * those that changed since `snapshot` was taken: such a change landed while
+   * storage was read, and is newer than the read (kuzzle#3040).
+   *
+   * @param stored - Index name -> its collection names, as storage holds them
+   * @param snapshot - Taken by `snapshotIndexes` before storage was read
+   */
+  replaceIndexes(
+    stored: Record<string, string[]>,
+    snapshot: Map<string, Set<string>>,
+  ): void {
+    const current = this.snapshotIndexes();
+    const indexes = new Set([
+      ...Object.keys(stored),
+      ...snapshot.keys(),
+      ...current.keys(),
+    ]);
+
+    this.indexes.clear();
+    this.removalCount++;
+    this.changeCount++;
+
+    for (const index of indexes) {
+      const storedCollections = new Set(
+        Object.hasOwn(stored, index) ? stored[index] : [],
+      );
+      const was = snapshot.get(index);
+      const is = current.get(index);
+      const indexChanged = (was === undefined) !== (is === undefined);
+
+      // Deleted during the read: its collections went with it.
+      if (indexChanged && is === undefined) {
+        continue;
+      }
+
+      const collections = reconcileCollections(storedCollections, was, is);
+
+      if (
+        indexChanged ||
+        Object.hasOwn(stored, index) ||
+        collections.size > 0
+      ) {
+        this.indexes.set(index, collections);
+      }
     }
   }
 
@@ -196,10 +348,54 @@ export class IndexCache {
   }
 
   /**
-   * Remove every cached collection write lock
+   * Return a copy of the cached collection write locks, to pass to
+   * `replaceLocks` once the stored locks have been read
    */
-  clearLocks(): void {
+  snapshotLocks(): Map<string, Map<string, CollectionLock>> {
+    return new Map(
+      Array.from(this.locks, ([index, collections]) => [
+        index,
+        new Map(collections),
+      ]),
+    );
+  }
+
+  /**
+   * Replace the cached collection write locks with the stored ones, except
+   * those that changed since `snapshot` was taken: such a change landed while
+   * the stored locks were read, and is newer than the read (kuzzle#3040).
+   *
+   * @param stored - The cluster-wide locks
+   * @param snapshot - Taken by `snapshotLocks` before the locks were read
+   */
+  replaceLocks(
+    stored: Map<string, Map<string, CollectionLock>>,
+    snapshot: Map<string, Map<string, CollectionLock>>,
+  ): void {
+    const current = this.snapshotLocks();
+    const indexes = new Set([
+      ...stored.keys(),
+      ...snapshot.keys(),
+      ...current.keys(),
+    ]);
+
     this.locks.clear();
+
+    for (const index of indexes) {
+      for (const collection of new Set([
+        ...(stored.get(index)?.keys() ?? []),
+        ...(snapshot.get(index)?.keys() ?? []),
+        ...(current.get(index)?.keys() ?? []),
+      ])) {
+        const was = snapshot.get(index)?.get(collection);
+        const is = current.get(index)?.get(collection);
+        const lock = was === is ? stored.get(index)?.get(collection) : is;
+
+        if (lock !== undefined) {
+          this.setLock(index, collection, lock);
+        }
+      }
+    }
   }
 
   /**

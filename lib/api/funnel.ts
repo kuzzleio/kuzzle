@@ -126,6 +126,11 @@ type DocumentEventAliases = EventAliases & {
 class Funnel {
   public overloaded = false;
   public concurrentRequests = 0;
+  /**
+   * Plugin requests running outside `processRequest` (the event-less path of
+   * `executePluginRequest`): not limited, waited for on shutdown (#3160)
+   */
+  public pluginRequests = 0;
   public controllers: Map<string, NativeController> = new Map();
   public pendingRequestsQueue: Deque<string> = new Deque();
   public pendingRequestsById: Map<string, PendingRequest> = new Map();
@@ -517,19 +522,18 @@ class Funnel {
           processResult,
         );
 
-        return global.kuzzle
-          .pipe("request:afterExecution", {
-            request: _request,
-            result: processResult,
-            success: true,
-          })
-          .then((pipeEvent) => {
-            callback(null, pipeEvent.result);
+        return global.kuzzle.pipe("request:afterExecution", {
+          request: _request,
+          result: processResult,
+          success: true,
+        });
+      })
+      .then((pipeEvent) => {
+        callback(null, pipeEvent.result);
 
-            // disables a bluebird warning in dev. mode triggered when
-            // a promise is created and not returned
-            return null;
-          });
+        // disables a bluebird warning in dev. mode triggered when
+        // a promise is created and not returned
+        return null;
       })
       .catch((err) => {
         debug("Error processing request %s: %a", modifiedRequest.id, err);
@@ -931,11 +935,15 @@ class Funnel {
           });
       }
     }
+    this.pluginRequests++;
+
     try {
       return await doAction(this.getController(request), request);
     } catch (e) {
       this.handleErrorDump(causeOf(e));
       throw e;
+    } finally {
+      this.pluginRequests--;
     }
   }
 

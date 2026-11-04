@@ -27,7 +27,42 @@ else
     exit 1 
 fi
 
-docker compose -f $YML_FILE down -v
+COMPOSE=(docker compose -f "$YML_FILE")
+
+# STORAGE_DRIVER=core-only: every node runs a storage driver declaring no
+# optional capability (ADR-0003 step 04), and the suite skips the scenarios
+# tagged `@capability-<name>` (cucumber.config.cjs, run from here).
+# STORAGE_DRIVER=es9|opensearch2|opensearch3: Elasticsearch 9 or OpenSearch,
+# and its external driver (ADR-0003 steps 05 and 07), staged from npm at the
+# version .ci/scripts/stage-storage-driver.sh pins (STORAGE_DRIVER_SPEC:
+# another npm spec; ES9_DRIVER is still read for es9) and mounted by an
+# overlay of the ES 8 cluster file.
+case "${STORAGE_DRIVER:-}" in
+  "") ;;
+  core-only)
+    COMPOSE+=(-f ./.ci/test-cluster-core-only-driver.yml)
+    export KUZZLE_STORAGE_CAPABILITIES=""
+    ;;
+  es9|opensearch2|opensearch3)
+    if [ "$ES_VERSION" != "8" ]; then
+      echo "STORAGE_DRIVER=$STORAGE_DRIVER runs on top of the ES 8 cluster file: set ES_VERSION=8"
+      exit 1
+    fi
+
+    COMPOSE+=(-f "./.ci/test-cluster-$STORAGE_DRIVER-driver.yml")
+    SPEC="${STORAGE_DRIVER_SPEC:-}"
+    if [ -z "$SPEC" ] && [ "$STORAGE_DRIVER" == "es9" ]; then
+      SPEC="${ES9_DRIVER:-}"
+    fi
+    "$WITH_RETRY" ./.ci/scripts/stage-storage-driver.sh "$STORAGE_DRIVER" ${SPEC:+"$SPEC"}
+    ;;
+  *)
+    echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only, es9, opensearch2 or opensearch3)"
+    exit 1
+    ;;
+esac
+
+"${COMPOSE[@]}" down -v
 
 echo "Installing dependencies..."
 # NPM_CACHE_DIR (CI sets it to the runner's ~/.npm, which setup-node restores
@@ -42,7 +77,7 @@ fi
 # Retried: the install still has network dependencies (re2 downloads its
 # binary at install time). See .ci/scripts/with-retry.sh (TD-83).
 "$WITH_RETRY" \
-  docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
+  "${COMPOSE[@]}" run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
@@ -51,7 +86,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/dump-cluster-logs.sh"
 
 trap dump_cluster_logs err
 
-docker compose -f $YML_FILE up -d
+"${COMPOSE[@]}" up -d
 
 KUZZLE_PORT=17510 "${WAIT_KUZZLE[@]}"
 KUZZLE_PORT=17511 "${WAIT_KUZZLE[@]}"

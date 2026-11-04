@@ -37,6 +37,7 @@ ES_VERSION=8 KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" ./.ci/scripts/r
 ```bash
 .ci/scripts/docker-test.sh unit
 .ci/scripts/docker-test.sh functional websocket   # or http, legacy:http, legacy:mqtt, legacy:websocket
+.ci/scripts/docker-test.sh conformance            # storage driver conformance kit
 ```
 
 A PR without corresponding unit/functional test coverage will not be accepted

@@ -61,6 +61,7 @@ Feature: Collection write locks
   # An indice built beside a collection (a mapping migration's target) must
   # not be turned into a collection by the startup alias repair.
   @mappings @es8
+  @capability-stats
   Scenario: The alias repair leaves an unmanaged indice alone
     Given I successfully execute the action "tests":"createUnmanagedIndice" with args:
       | index      | "nyc-open-data"         |

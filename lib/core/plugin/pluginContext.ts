@@ -20,8 +20,8 @@
  */
 
 import Bluebird from "bluebird";
-import _ from "lodash";
-import { Koncorde } from "../shared/KoncordeWrapper";
+import isEmpty from "lodash/isEmpty";
+import { Koncorde } from "../shared/KoncordeWrapper"; // NOSONAR: the deprecated API plugins still get, until v3
 import type { JSONObject } from "../../types/JSONObject";
 
 import { KuzzleRequest, RequestContext, RequestInput } from "../../api/request";
@@ -44,9 +44,13 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import type { StorageEngineInfo } from "../../types/storage/StorageDriver";
+import {
+  createNativeStorageClient,
+  getStorageEngineInfo,
+} from "../storage/storageDriverLoader";
 import { withLock } from "../../util/distributedLock";
-import { Mutex } from "../../util/mutex";
+import { Mutex } from "../../util/mutex"; // NOSONAR: the deprecated API plugins still get, until v3
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
 import { BackendCluster } from "../backend/backendCluster";
@@ -189,6 +193,16 @@ export class PluginContext {
     };
 
     /**
+     * The storage engine Kuzzle runs on: its driver's package, the engine
+     * family and the engine server's version. What `constructors.ESClient`'s
+     * API follows, unlike `services.storageEngine.majorVersion`.
+     *
+     * Asks the engine: call it once (e.g. in the plugin's `init()`), not on
+     * every request.
+     */
+    getStorageEngine(): Promise<StorageEngineInfo>;
+
+    /**
      * Cluster accessor
      * @type {BackendCluster}
      */
@@ -219,11 +233,11 @@ export class PluginContext {
     /**
      * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
      */
-    Koncorde: typeof Koncorde;
+    Koncorde: typeof Koncorde; // NOSONAR: the deprecated API plugins still get, until v3
     /**
      * Mutex class
      */
-    Mutex: typeof Mutex;
+    Mutex: typeof Mutex; // NOSONAR: the deprecated API plugins still get, until v3
     /**
      * Plugin private storage space
      */
@@ -357,9 +371,9 @@ export class PluginContext {
     }
 
     function PluginContextESClient() {
-      return Elasticsearch.buildClient(
+      return createNativeStorageClient(
+        global.kuzzle.config.services.storageEngine,
         global.kuzzle.config.services.storageEngine.client,
-        global.kuzzle.config.services.storageEngine.majorVersion,
       );
     }
 
@@ -368,8 +382,8 @@ export class PluginContext {
       // Plain functions called with `new`, like `Request` below: each returns
       // an object, so `new` yields that object.
       ESClient: PluginContextESClient as unknown as ESClientConstructor,
-      Koncorde,
-      Mutex: Mutex,
+      Koncorde, // NOSONAR: the deprecated API plugins still get, until v3
+      Mutex: Mutex, // NOSONAR: the deprecated API plugins still get, until v3
       Repository: PluginContextRepository as unknown as RepositoryConstructor,
       // A plain function called with `new`: it returns an object, so `new`
       // yields that object — which is what plugins have always relied on.
@@ -400,6 +414,7 @@ export class PluginContext {
     this.accessors = {
       cluster: new BackendCluster(),
       execute,
+      getStorageEngine: getStorageEngineInfo,
       nodeId: global.nodeId,
       sdk: new EmbeddedSDK(),
       storage: {
@@ -501,7 +516,7 @@ function execute(
     isPrombackCallback(callback) ? callback : null,
   );
 
-  if (!request || _.isEmpty(request)) {
+  if (!request || isEmpty(request)) {
     return asRequestPromise(
       promback.reject(contextError.get("missing_request")),
       request,

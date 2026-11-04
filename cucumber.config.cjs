@@ -17,6 +17,39 @@ process.env.TS_NODE_PROJECT =
   process.env.TS_NODE_PROJECT ||
   require("path").join(__dirname, "tsconfig.cucumber.json");
 
+// A scenario needing an optional storage capability (ADR-0003) is tagged
+// `@capability-<name>`. KUZZLE_STORAGE_CAPABILITIES lists the capabilities the
+// storage driver under test declares in its manifest, comma-separated, and the
+// scenarios needing another one are skipped. Unset, it is the built-in
+// drivers': all of them. The list is STORAGE_CAPABILITIES
+// (lib/types/storage/StorageDriver.ts), checked by
+// tests/core/storage/conformance/capabilityTags.test.ts.
+const STORAGE_CAPABILITIES = [
+  "aggregations",
+  "mappingUpdates",
+  "stats",
+  "updateByQuery",
+];
+
+function withStorageCapabilities(tags) {
+  const declared = process.env.KUZZLE_STORAGE_CAPABILITIES;
+
+  if (declared === undefined) {
+    return tags;
+  }
+
+  const capabilities = declared.split(",").map((name) => name.trim());
+
+  return [
+    tags,
+    ...STORAGE_CAPABILITIES.filter((name) => !capabilities.includes(name)).map(
+      (name) => `not @capability-${name}`,
+    ),
+  ]
+    .filter(Boolean)
+    .join(" and ");
+}
+
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const defaultConfig = {
   failFast: true,
@@ -28,7 +61,7 @@ const defaultConfig = {
 
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const httpConfig = {
-  tags: "not @realtime",
+  tags: withStorageCapabilities("not @realtime"),
   worldParameters: {
     port: 7512,
     protocol: "http",
@@ -37,7 +70,7 @@ const httpConfig = {
 
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const mqttConfig = {
-  tags: "not @http",
+  tags: withStorageCapabilities("not @http"),
   worldParameters: {
     port: 7512,
     protocol: "mqtt",
@@ -46,7 +79,7 @@ const mqttConfig = {
 
 /** @type {import('@cucumber/cucumber').IConfiguration} */
 const websocketConfig = {
-  tags: "not @http",
+  tags: withStorageCapabilities("not @http"),
   worldParameters: {
     port: 7512,
     protocol: "websocket",

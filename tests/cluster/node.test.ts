@@ -81,6 +81,17 @@ vi.mock("../../lib/cluster/idCardHandler", async () => {
   return { ClusterIdCardHandler: IdCardHandlerStub, IdCard: actual.IdCard };
 });
 
+/** What the storage driver loader answers: a built-in driver unless a case
+ * names an external one before building its node. */
+const storageDriver = vi.hoisted(() => ({
+  builtIn: null as string | null,
+  identity: null as string | null,
+}));
+
+vi.mock("../../lib/core/storage/storageDriverLoader", () => ({
+  selectStorageDriver: () => ({ ...storageDriver }),
+}));
+
 vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
   const { withLock } = await import("./nodeFixture");
 
@@ -112,6 +123,8 @@ const idCard = (fields: {
   topology?: string[];
   birthdate?: number;
   ip?: string;
+  storageDriver?: string;
+  builtInStorageDriver?: string;
 }) => new IdCard({ birthdate: 0, ip: "0.0.0.0", topology: [], ...fields });
 
 describe("ClusterNode", () => {
@@ -157,7 +170,8 @@ describe("ClusterNode", () => {
 
     kuzzle = stubKuzzle({
       ...bus,
-      config: { cluster: clusterConfig() },
+      // `services.storageEngine` is only handed to the mocked driver loader
+      config: { cluster: clusterConfig(), services: { storageEngine: {} } },
       log: {
         child: () => ({
           debug: vi.fn(),
@@ -171,6 +185,8 @@ describe("ClusterNode", () => {
       state: kuzzleStateEnum.RUNNING,
     });
 
+    storageDriver.identity = null;
+    storageDriver.builtIn = null;
     node = new ClusterNode();
   });
 
@@ -815,6 +831,108 @@ describe("ClusterNode", () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    describe("when the nodes run different storage drivers", () => {
+      const es9 = "kuzzle-storage-es-9";
+
+      /* The node is built after the driver is chosen: it reads it once. */
+      const nodeRunning = (identity: string | null) => {
+        storageDriver.identity = identity;
+        node = new ClusterNode();
+      };
+
+      const cardsRunning = (driver?: string) =>
+        idCards().map((card) =>
+          idCard({ id: card.id, ip: card.ip, storageDriver: driver }),
+        );
+
+      it("refuses a built-in node in a cluster running an external driver", async () => {
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message: `This node runs a built-in Elasticsearch driver, but the cluster node bar runs ${es9}@1.0.0: every cluster node must run the same storage driver.`,
+        });
+
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+        expect(node.remoteNodes.size).toBe(0);
+        expect(kuzzle.shutdown).toHaveBeenCalledExactlyOnceWith(1);
+      });
+
+      it("refuses an external driver in a built-in cluster", async () => {
+        nodeRunning(`${es9}@1.0.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(cardsRunning());
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+        });
+      });
+
+      it("refuses another version of the same driver", async () => {
+        nodeRunning(`${es9}@1.1.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message: `This node runs ${es9}@1.1.0, but the cluster node bar runs ${es9}@1.0.0: every cluster node must run the same storage driver.`,
+        });
+      });
+
+      /* Checked before the storage init too: this is for a node started at
+       * the same time, too late for that first check to see it. */
+      it("refuses an Elasticsearch 8 built-in node in an Elasticsearch 7 cluster", async () => {
+        storageDriver.builtIn = "kuzzle-storage-es-8";
+        node = new ClusterNode();
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          idCards().map((card) =>
+            idCard({
+              builtInStorageDriver: "kuzzle-storage-es-7",
+              id: card.id,
+              ip: card.ip,
+            }),
+          ),
+        );
+
+        await expect(node.handshake()).rejects.toMatchObject({
+          id: "cluster.join.storage_driver_mismatch",
+          message:
+            "This node runs the built-in driver kuzzle-storage-es-8, but the cluster node bar runs the built-in driver kuzzle-storage-es-7: every cluster node must run the same storage driver.",
+        });
+        expect(node.command.getFullState).not.toHaveBeenCalled();
+      });
+
+      it("joins nodes older than 2.61.0 with a built-in driver", async () => {
+        storageDriver.builtIn = "kuzzle-storage-es-8";
+        node = new ClusterNode();
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(cardsRunning());
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        await node.handshake();
+
+        expect(node.builtInStorageDriver).toBe("kuzzle-storage-es-8");
+        expect(node.storageDriver).toBeUndefined();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
+
+      it("joins a cluster running the same driver", async () => {
+        nodeRunning(`${es9}@1.0.0`);
+        node.idCardHandler.getRemoteIdCards.mockResolvedValue(
+          cardsRunning(`${es9}@1.0.0`),
+        );
+        node.command.getFullState.mockResolvedValue(fullstate);
+        node.command.broadcastHandshake.mockResolvedValue({});
+
+        await node.handshake();
+
+        expect(node.command.getFullState).toHaveBeenCalledOnce();
+        expect(kuzzle.shutdown).not.toHaveBeenCalled();
+      });
     });
 
     describe("when another node has this node's IP", () => {

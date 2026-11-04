@@ -108,6 +108,39 @@ describe("#api/funnel.executePluginRequest", () => {
     expect(controller.succeed).toHaveBeenCalledWith(request);
   });
 
+  /* #3160: a shutdown waits for them before closing the storage. */
+  it("counts an event-less request in pluginRequests while it runs", async () => {
+    let release = () => {};
+    controller.succeed.mockImplementationOnce(
+      (request: KuzzleRequest) =>
+        new Promise((resolve) => {
+          release = () => resolve(request);
+        }),
+    );
+
+    const running = funnel.executePluginRequest(
+      new KuzzleRequest({ action: "succeed", controller: "testme" }),
+    );
+
+    expect(funnel.pluginRequests).toBe(1);
+    expect(funnel.concurrentRequests).toBe(0);
+
+    release();
+    await running;
+
+    expect(funnel.pluginRequests).toBe(0);
+  });
+
+  it("stops counting an event-less request that fails", async () => {
+    await expect(
+      funnel.executePluginRequest(
+        new KuzzleRequest({ action: "fail", controller: "testme" }),
+      ),
+    ).rejects.toBe(controller.failResult);
+
+    expect(funnel.pluginRequests).toBe(0);
+  });
+
   it("dumps on an error whose type is whitelisted", async () => {
     global.kuzzle.config.dump.enabled = true;
     const logged = vi.spyOn(funnel.logger, "error");

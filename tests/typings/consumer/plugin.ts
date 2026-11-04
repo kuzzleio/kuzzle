@@ -172,6 +172,12 @@ export async function untypedContext(context: PluginContext, raw: unknown) {
   const piped: Mail = await context.accessors.trigger("sent", raw);
   const client: { ping(): Promise<boolean> } =
     new context.constructors.ESClient();
+  const {
+    driver,
+    engine,
+    version,
+  }: { driver: string; engine: string; version: string } =
+    await context.accessors.getStorageEngine();
   const notFound: Error = new context.errors.NotFoundError("gone");
   const wrapped: Error = context.kerror.get("some_error", raw);
   const valid: boolean = await context.accessors.validation.validate(raw);
@@ -205,5 +211,17 @@ export async function untypedContext(context: PluginContext, raw: unknown) {
     log: { ...context.log, info: (message: string) => message.length },
   };
 
-  return { client, found, mail, notFound, piped, stubs, valid, wrapped };
+  return {
+    client,
+    driver,
+    engine,
+    found,
+    mail,
+    notFound,
+    piped,
+    stubs,
+    valid,
+    version,
+    wrapped,
+  };
 }

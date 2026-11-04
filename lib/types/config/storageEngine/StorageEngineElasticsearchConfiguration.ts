@@ -1,6 +1,19 @@
 export type StorageEngineElasticsearch = {
   /**
-   * Elasticsearch major version
+   * The npm package of the storage driver to run on (e.g.
+   * `"kuzzle-storage-es-9"`), installed next to `kuzzle`. Not set: the
+   * built-in Elasticsearch driver of `majorVersion`.
+   */
+  driver?: string;
+
+  /**
+   * Elasticsearch major version, which selects the built-in driver when
+   * `driver` is not set; ignored otherwise (Kuzzle warns at startup if both
+   * are set).
+   *
+   * Deprecated in the documentation only: Kuzzle 3 selects the storage engine
+   * with `driver` alone, but an ES7 / ES8 stack has nothing else to use in
+   * Kuzzle 2, hence no `@deprecated` tag (see docs/v3-breaking-changes.md).
    * @default "7"
    */
   majorVersion: "7" | "8";
@@ -368,4 +381,17 @@ export type StorageEngineElasticsearch = {
    * Also see https://github.com/kuzzleio/kuzzle/pull/2117
    */
   generateMissingAliases: boolean;
+
+  /**
+   * Minimum delay, in milliseconds, between two storage reads a node makes
+   * when a request names an index or a collection its cache does not hold.
+   *
+   * Such a read lets a node find what a peer has just created, before the
+   * cluster broadcast reaches it. Misses in a row wait for the next read
+   * instead of each costing one: a request on a missing index or collection
+   * may fail up to this delay later. 0 reads on every miss.
+   *
+   * @default 100
+   */
+  cacheMissReadInterval?: number;
 };

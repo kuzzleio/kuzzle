@@ -13,6 +13,14 @@ inputs:
   es-version:
     description: Elasticsearch version to use
     required: true
+  storage-driver:
+    description: 'Storage driver to run on: core-only (declares no optional capability), or an external one (es9, opensearch2, opensearch3) on top of the es-version 8 cluster; empty: the built-in driver'
+    required: false
+    default: ""
+  storage-driver-spec:
+    description: 'What npm installs as that driver (default: the version .ci/scripts/stage-storage-driver.sh pins)'
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -24,4 +32,6 @@ runs:
         KUZZLE_FUNCTIONAL_TESTS: ${{ inputs.test-set }}
         NODE_VERSION: ${{ inputs.node-version }}
         ES_VERSION: ${{ inputs.es-version }}
+        STORAGE_DRIVER: ${{ inputs.storage-driver }}
+        STORAGE_DRIVER_SPEC: ${{ inputs.storage-driver-spec }}
       shell: bash

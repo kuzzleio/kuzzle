@@ -28,6 +28,7 @@ import rc from "rc";
 import defaultConfig from "./default.config";
 import { LEGACY_FIRST } from "../core/security/authTokenSettings";
 import type { SecurityConfiguration } from "../types/config/SecurityConfiguration";
+import type { StorageEngineElasticsearch } from "../types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 import type {
   IKuzzleConfiguration,
   PackagedKuzzleConfiguration,
@@ -60,11 +61,18 @@ const wrapped = wrap("core", "configuration");
  */
 type RawConfig = JSONObject;
 
+/** `services.storageEngine` before its default `majorVersion` is applied */
+type UnresolvedStorageEngine = Omit<
+  StorageEngineElasticsearch,
+  "majorVersion"
+> &
+  Partial<Pick<StorageEngineElasticsearch, "majorVersion">>;
+
 export function loadConfig(): IKuzzleConfiguration {
-  let raw: ReturnType<typeof withoutTokenDefaults>;
+  let raw: ReturnType<typeof withoutUnsetDefaults>;
 
   try {
-    raw = rc("kuzzle", withoutTokenDefaults(defaultConfig));
+    raw = rc("kuzzle", withoutUnsetDefaults(defaultConfig));
   } catch (e) {
     throw wrapped.get(
       "cannot_parse",
@@ -78,9 +86,13 @@ export function loadConfig(): IKuzzleConfiguration {
   const { authToken, deprecatedSettings, jwt } = resolveTokenSettings(
     raw.security,
   );
+  const { ignoredSettings, storageEngine } = resolveStorageEngine(
+    raw.services.storageEngine,
+  );
   const loaded: PackagedKuzzleConfiguration = {
     ...raw,
     security: { ...raw.security, authToken, jwt },
+    services: { ...raw.services, storageEngine },
   };
 
   checkLimitsConfig(loaded);
@@ -98,6 +110,7 @@ export function loadConfig(): IKuzzleConfiguration {
         seed: Buffer.from("^m&mOISKBvb1xpl1mRsrylaQXpjb&IJX"),
       },
       deprecatedSettings,
+      ignoredSettings,
       notifiableProtocols: [],
     },
     version: packageJson.version,
@@ -112,20 +125,60 @@ export function loadConfig(): IKuzzleConfiguration {
 }
 
 /**
- * The packaged defaults, minus the values of `security.authToken` and of its
- * deprecated spelling `security.jwt`: both sections ship the same non-null
- * defaults, so once `rc` has merged them nothing tells a user's
- * `jwt.expiresIn` from the packaged one. Left empty here, they hold only what
- * the user set, and {@link resolveTokenSettings} applies the defaults after.
+ * The packaged defaults, minus the ones Kuzzle must tell apart from a value
+ * the user set, applied after `rc` has merged the configuration:
+ *
+ * - the values of `security.authToken` and of its deprecated spelling
+ *   `security.jwt`: both sections ship the same non-null defaults, so once
+ *   merged nothing tells a user's `jwt.expiresIn` from the packaged one. Left
+ *   empty here, they hold only what the user set, and
+ *   {@link resolveTokenSettings} applies the defaults after;
+ * - `services.storageEngine.majorVersion`, ignored when a storage driver is
+ *   set: {@link resolveStorageEngine} reports it then, and applies the default.
  *
  * A shallow copy: the other sections stay the packaged objects `rc` merges
  * into, as before.
  */
-function withoutTokenDefaults(defaults: PackagedKuzzleConfiguration) {
+function withoutUnsetDefaults(defaults: PackagedKuzzleConfiguration) {
   const authToken: JSONObject = {};
   const jwt: JSONObject = {};
+  const storageEngine: UnresolvedStorageEngine = {
+    ...defaults.services.storageEngine,
+  };
 
-  return { ...defaults, security: { ...defaults.security, authToken, jwt } };
+  delete storageEngine.majorVersion;
+
+  return {
+    ...defaults,
+    security: { ...defaults.security, authToken, jwt },
+    services: { ...defaults.services, storageEngine },
+  };
+}
+
+/**
+ * Applies the default `majorVersion`. `ignoredSettings` lists it when the
+ * user set it along with a storage `driver`, which `majorVersion` does not
+ * select: logged as a warning when the storage engine starts.
+ */
+function resolveStorageEngine(storageEngine: UnresolvedStorageEngine): {
+  ignoredSettings: string[];
+  storageEngine: StorageEngineElasticsearch;
+} {
+  const ignoredSettings =
+    storageEngine.driver !== undefined &&
+    storageEngine.majorVersion !== undefined
+      ? ["services.storageEngine.majorVersion"]
+      : [];
+
+  return {
+    ignoredSettings,
+    storageEngine: {
+      ...storageEngine,
+      majorVersion:
+        storageEngine.majorVersion ??
+        defaultConfig.services.storageEngine.majorVersion,
+    },
+  };
 }
 
 /**

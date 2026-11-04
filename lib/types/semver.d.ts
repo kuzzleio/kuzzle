@@ -23,7 +23,7 @@
  * `semver` 7.7.3 ships no types. Declared here rather than depended on through
  * `@types/semver`, the same reasoning as `didyoumean.d.ts`.
  *
- * Kuzzle calls exactly two of its functions; the rest of a large API is left
+ * Kuzzle calls exactly three of its functions; the rest of a large API is left
  * undeclared on purpose, since an unused declaration is a claim nothing checks.
  */
 declare module "semver" {
@@ -54,6 +54,11 @@ declare module "semver" {
     range: string,
     options?: RangeOptions,
   ): boolean;
+
+  /**
+   * @returns the normalized range, or `null` when `range` is not a valid one
+   */
+  function validRange(range: string, options?: RangeOptions): string | null;
 
   /**
    * Coerces a loose version string into a semver.

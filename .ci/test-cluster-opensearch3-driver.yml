@@ -1,0 +1,27 @@
+# Overlay on top of `.ci/test-cluster-8.yml`: OpenSearch 3, and every Kuzzle
+# node runs the external driver kuzzle-storage-opensearch-3 (ADR-0003 step 07),
+# installed from npm as an application would. `.ci/scripts/docker-test.sh` and
+# `.ci/scripts/run-test-cluster.sh` add it when STORAGE_DRIVER=opensearch3,
+# after staging the driver in .ci/storage-driver-opensearch3/node_modules.
+x-opensearch3-driver: &opensearch3-driver
+  volumes:
+    # Same layout as .ci/test-cluster-es9-driver.yml
+    - ./storage-driver-opensearch3/node_modules:/node_modules:ro
+  environment:
+    kuzzle_services__storageEngine__driver: "kuzzle-storage-opensearch-3"
+
+services:
+  kuzzle_node_1: *opensearch3-driver
+  kuzzle_node_2: *opensearch3-driver
+  kuzzle_node_3: *opensearch3-driver
+  kuzzle_node_prod: *opensearch3-driver
+
+  # The service keeps its name, which the Kuzzle nodes reach it by. Its
+  # environment adds to the base file's (indices.id_field_data.enabled).
+  elasticsearch:
+    image: docker.io/opensearchproject/opensearch:3.9.0
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
