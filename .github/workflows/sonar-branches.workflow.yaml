@@ -59,7 +59,18 @@ jobs:
         env:
           ES_VERSION: "8"
 
+      # The version of the last release (package.json, bumped by every release
+      # commit). With the project's new code set to "Previous version" on
+      # SonarCloud, a branch's new code starts again at each release, instead
+      # of a rolling 30 days that kept counting what 2.61 had already shipped.
+      - name: Package version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        shell: bash
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v7.0.0
+        with:
+          args: -Dsonar.projectVersion=${{ steps.version.outputs.version }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
