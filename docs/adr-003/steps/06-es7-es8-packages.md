@@ -133,6 +133,9 @@ driver. The next major only drops the two dependencies (step 08).
   2.61 touched. SonarCloud compared with `master`'s last analysis, from 2026-05-20, as only PRs were analysed.
   Maintainer: fix them rather than accept them (2.61.0-beta.9), analyse pushes to `master` / `beta` / `2-dev`
   (`sonar-branches.workflow.yaml`), and make the SonarCloud check required.
+  Shipped in 2.61.0-beta.9 (#3168, #3169). The first branch analysis failed: SonarCloud's long-lived branch
+  pattern was `*-(dev|stable)`, an invalid regex that rejected every branch analysis but `master`'s. Now
+  `(beta|.*-(dev|stable))` (maintainer, 2026-11-04): `2-dev` and `beta` are analysed as long-lived branches.
 
 ## Validation
 
