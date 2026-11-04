@@ -377,7 +377,7 @@ class ClusterNode {
       );
 
       while (this.countActiveNodes() < this.config.minimumNodes) {
-        await Bluebird.delay(100);
+        await Bluebird.delay(100); // NOSONAR (S9382): sequential polling, by design
       }
     }
 
@@ -497,7 +497,7 @@ class ClusterNode {
    * @param  {Error} [error]
    * @return {void}
    */
-  async evictSelf(reason: string, error: Error | null = null): Promise<void> {
+  evictSelf(reason: string, error: Error | null = null): Promise<void> {
     this.logger.error(`[CLUSTER] ${reason}`);
 
     if (error) {
@@ -521,6 +521,10 @@ class ClusterNode {
     // Exit code 1: this is a failure, and a node that exits 0 is not restarted
     // by an `on-failure` policy (#2785).
     void global.kuzzle.shutdown(1);
+
+    // A promise, as the `ClusterSubscriber` interface declares: nothing above
+    // waits, the shutdown runs on its own
+    return Promise.resolve();
   }
 
   /**
@@ -924,11 +928,12 @@ class ClusterNode {
             return;
           }
 
-          await this.subscribeToNodes(nodes);
+          // Sequential by design: each retry needs the previous round's answer
+          await this.subscribeToNodes(nodes); // NOSONAR (S9382)
 
           debug("[CLUSTER] Successfully subscribed to nodes");
 
-          fullState = await this.command.getFullState(nodes);
+          fullState = await this.command.getFullState(nodes); // NOSONAR (S9382)
 
           if (fullState === null) {
             // Sequential by design: the retry waits for a heartbeat round
@@ -1067,7 +1072,8 @@ class ClusterNode {
         subscriber.dispose();
         this.remoteNodes.delete(nodeId);
       } else {
-        await this.idCardHandler.addNode(nodeId);
+        // One peer at a time, by design: see the `sync()` comment below
+        await this.idCardHandler.addNode(nodeId); // NOSONAR (S9382)
         const nodesStates = fullState.nodesState || [];
         const nodeStatus = nodesStates.find((node) => node.id === nodeId);
 
@@ -1082,7 +1088,7 @@ class ClusterNode {
         // there evicts this node. Fired and forgotten, it used to print
         // "Successfully completed the handshake" 2ms AFTER the eviction that
         // contradicts it — a log describing a state the code is not in.
-        const synced = await subscriber.sync(lastMessageId);
+        const synced = await subscriber.sync(lastMessageId); // NOSONAR (S9382)
 
         if (synced) {
           this.logger.info(
@@ -1715,8 +1721,8 @@ class ClusterNode {
    * @param {string} roomId
    * @return {void}
    */
-  async countRealtimeSubscribers(roomId: string): Promise<number> {
-    return this.fullState.countRealtimeSubscriptions(roomId);
+  countRealtimeSubscribers(roomId: string): Promise<number> {
+    return Promise.resolve(this.fullState.countRealtimeSubscriptions(roomId));
   }
 }
 

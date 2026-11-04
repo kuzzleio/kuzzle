@@ -89,7 +89,7 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 
 **Where we are (2026-11-04):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; `services.storageEngine.driver` loads an external driver; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Steps 06 and 07 are done but not closed: the five drivers are stable on npm (es-7 / es-8 / es-9 `1.1.0`, opensearch-2 / -3 `1.0.0`), `kuzzle` pins es-7 / es-8 `1.1.0` since 2.61.0-beta.8, and the docs, drivers' sections included, are in production on docs.kuzzle.io (documentation#617, 2026-11-04).
 
-**Next action:** release 2.61.0 (`beta` → `master`), merge `master` back into `2-dev`, then close and freeze steps 06 and 07 ([step 06](steps/06-es7-es8-packages.md)). Hardening left for after 2.61.0 is tracked in [#3145](https://github.com/kuzzleio/kuzzle/issues/3145).
+**Next action:** 2.61.0-beta.9 (SonarCloud fixes for the release PR #3167), then release 2.61.0 (`beta` → `master`), merge `master` back into `2-dev`, then close and freeze steps 06 and 07 ([step 06](steps/06-es7-es8-packages.md)). Hardening left for after 2.61.0 is tracked in [#3145](https://github.com/kuzzleio/kuzzle/issues/3145).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 

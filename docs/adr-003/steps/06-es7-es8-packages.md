@@ -129,6 +129,10 @@ driver. The next major only drops the two dependencies (step 08).
   condition bug from documentation#615 skipped every section build; fixed by documentation#616 and shipped by
   documentation#617 (deploy run 41837054685): all sections rebuilt, drivers' sections live, private sections 403
   without sign-in. This was the last item before 2.61.0.
+- **Release PR #3167 failed the SonarCloud gate (2026-11-04)**: 26 issues on lines older than v2.60.1, in files
+  2.61 touched. SonarCloud compared with `master`'s last analysis, from 2026-05-20, as only PRs were analysed.
+  Maintainer: fix them rather than accept them (2.61.0-beta.9), analyse pushes to `master` / `beta` / `2-dev`
+  (`sonar-branches.workflow.yaml`), and make the SonarCloud check required.
 
 ## Validation
 

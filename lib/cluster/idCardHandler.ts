@@ -325,7 +325,8 @@ export class ClusterIdCardHandler {
         topology: [],
       });
 
-      reserved = await this.save({ creation: true });
+      // Sequential by design: retry with a new name until one is free
+      reserved = await this.save({ creation: true }); // NOSONAR (S9382)
     } while (!reserved);
 
     await this.addIdCardToIndex();
