@@ -40,8 +40,16 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
+      # No persisted credentials: actions/checkout stores the workflow's
+      # GITHUB_TOKEN as a git auth header, which takes precedence over the
+      # kuzzlebot token semantic-release puts in the push URL. The release
+      # commit was then pushed as github-actions, which the "SonarCloud quality
+      # gate required" ruleset does not let bypass: the 2.61.0 release was
+      # refused (GH013) on 2026-11-04.
       - name: Checkout project
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Node version 24
         uses: actions/setup-node@v4
