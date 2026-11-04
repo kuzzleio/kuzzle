@@ -788,6 +788,32 @@ describe("#kuzzle/Kuzzle", () => {
         expect.stringContaining("ERROR: unhandledRejection: not connected"),
       );
     });
+
+    it("should log what a non-Error reason or the promise contains", () => {
+      const on = vi.spyOn(process, "on").mockReturnValue(process);
+      vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+      kuzzle.registerSignalHandlers();
+      invalid<{ _state: kuzzleStateEnum }>(kuzzle)._state =
+        kuzzleStateEnum.SHUTTING_DOWN;
+      const handler = handlerOf(on);
+
+      handler("plain text", Promise.resolve());
+      handler({ code: 42 }, Promise.resolve());
+      handler(undefined, Promise.resolve("the value"));
+
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        1,
+        "ERROR: unhandledRejection: plain text",
+      );
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        2,
+        "ERROR: unhandledRejection: { code: 42 }",
+      );
+      expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+        3,
+        "ERROR: unhandledRejection: Promise { 'the value' }",
+      );
+    });
   });
 
   describe("#dump", () => {
