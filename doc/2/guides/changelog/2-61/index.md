@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after eight betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.8).
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
@@ -54,6 +54,7 @@ If your code or your clients match the text of storage error messages, check it:
 - Some storage engine errors reached clients as [`services.storage.unexpected_bad_request`](/core/2/api/errors/error-codes/services) or `unexpected_error` instead of their documented code, since before 2.61: the error mapping expected messages the current engine clients no longer produce. With every official driver, they now come back as `too_many_operations` (thread pool or indexing pressure rejection), `cannot_change_mapping`, `unexpected_properties`, `invalid_mapping_type`, `too_many_changes` (version conflict) and `unknown_query_keyword`.
 - A driver now refuses to start on an engine it does not support: an Elasticsearch driver on another Elasticsearch major (e.g. `kuzzle-storage-es-7` on an 8.x cluster) or on OpenSearch, which reports itself as Elasticsearch 7.10.2. The OpenSearch drivers name OpenSearch, not Elasticsearch, in their logs and messages.
 - A driver missing a method of the storage contract started, then failed with a `500` on the first request using it. Kuzzle now refuses it at startup with [`services.storage_driver.invalid_driver`](/core/2/api/errors/error-codes/services) ([#3137](https://github.com/kuzzleio/kuzzle/issues/3137)).
+- An unhandled rejection whose reason is not an `Error` was logged as `ERROR: unhandledRejection: [object Object]`, or `[object Promise]` with no reason at all. The log now shows the reason's content, or the promise's (2.61.0-beta.9).
 
 ## Under the hood
 
