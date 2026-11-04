@@ -34,11 +34,11 @@
       "status": "active",
       "statusLabel": "🔵 Active · 00–05 done, 06 + 07 open",
       "openStep": "docs/adr-003/steps/06-es7-es8-packages.md",
-      "nextAction": "Docs to production (documentation develop → master, on hold by the maintainer), then 2.61.0 (beta → master) (step 06). The five drivers are stable since 2026-11-03 (es-7 / es-8 / es-9 1.1.0, opensearch-2 / -3 1.0.0), pinned from 2.61.0-beta.8.",
+      "nextAction": "Release 2.61.0 (beta → master), back-merge master into 2-dev, then close and freeze steps 06 and 07 (step 06). Docs in production since 2026-11-04 (documentation#617); the five drivers are stable since 2026-11-03, pinned from 2.61.0-beta.8.",
       "blockers": [],
       "openPoints": [
         "Step 07 (OpenSearch 2 / 3 drivers): 1.0.0 published 2026-11-03; it closes with step 06 at 2.61.0.",
-        "2.61.0 review findings in #3145: all \"before 2.61.0 stable\" items done but the docs to production."
+        "2.61.0 review findings in #3145: all \"before 2.61.0 stable\" items done; the rest is after 2.61.0."
       ]
     },
     {
