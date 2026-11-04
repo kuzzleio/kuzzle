@@ -125,6 +125,11 @@ driver. The next major only drops the two dependencies (step 08).
   shows the driver's directory); npm aliases supported, paths refused with a hint. New id
   `services.storage_driver.unsupported_major_version` replaces the plain `Error` for an unknown `majorVersion`.
 
+- **Docs in production (2026-11-04).** documentation#599 (`develop` → `master`) merged, then a prod job
+  condition bug from documentation#615 skipped every section build; fixed by documentation#616 and shipped by
+  documentation#617 (deploy run 41837054685): all sections rebuilt, drivers' sections live, private sections 403
+  without sign-in. This was the last item before 2.61.0.
+
 ## Validation
 
 - Conformance kit 32 / 32: `storage-es-7` on Elasticsearch 7.17.26, `storage-es-8` on 8.17.1, locally and in each
