@@ -442,7 +442,7 @@ class ClusterPublisher {
     // (don't), then you have to first make a local copy of this.lastMessageId
     // to make sure that the value returned to the caller has not been
     // increased by other calls
-    this.bufferSend(topic, buffer);
+    void this.bufferSend(topic, buffer);
 
     return this.lastMessageId;
   }
