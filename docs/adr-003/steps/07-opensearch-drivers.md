@@ -1,6 +1,6 @@
 # Step 07 — OpenSearch 2 and 3 drivers
 
-**Status:** 🟦 In progress · **Opened:** 2026-11-02 · **PR:** [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done 2026-11-04 (shipped in 2.61.0, frozen) · **Opened:** 2026-11-02 · **PR:** [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
