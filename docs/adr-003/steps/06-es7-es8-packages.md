@@ -1,6 +1,6 @@
 # Step 06 — Elasticsearch 7 and 8 as packages Kuzzle depends on
 
-**Status:** 🟦 In progress · **Opened:** 2026-10-30 · **PR:** [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) (part C) · Back to the [hub](../ADR-0003-storage-drivers.md)
+**Status:** ✅ Done 2026-11-04 (shipped in 2.61.0, frozen) · **Opened:** 2026-10-30 · **PR:** [#3112](https://github.com/kuzzleio/kuzzle/pull/3112) (part C) · Back to the [hub](../ADR-0003-storage-drivers.md)
 
 ## Goal
 
@@ -136,6 +136,16 @@ driver. The next major only drops the two dependencies (step 08).
   Shipped in 2.61.0-beta.9 (#3168, #3169). The first branch analysis failed: SonarCloud's long-lived branch
   pattern was `*-(dev|stable)`, an invalid regex that rejected every branch analysis but `master`'s. Now
   `(beta|.*-(dev|stable))` (maintainer, 2026-11-04): `2-dev` and `beta` are analysed as long-lived branches.
+- **2.61.0 released (2026-11-04)** through #3167 (npm `latest`, GitHub release `v2.61.0`, Docker images). The
+  first release run was refused by the new ruleset (GH013): `actions/checkout` persists the workflow's
+  `GITHUB_TOKEN`, which wins over the bot token in the push URL, so the release commit went out as
+  `github-actions`, not `kuzzlebot` (the ruleset's bypass actor). Ruleset disabled for a rerun, then re-enabled;
+  fixed by `persist-credentials: false` on the release checkout (#3173), proven at the next beta.
+- **Back-merge (#3174, replacing #3172)**: a PR whose head is the release commit gets no checks (the commit skips
+  CI), so the required SonarCloud check never arrives. The back-merge goes through a branch off `master` with one
+  empty commit, whose message must not quote the skip marker: GitHub matches it anywhere in the message.
+- **`master`'s branch gate is red** after its first analysis since 2026-05-20 (3 major, 27 minor counted as new
+  code since then); PR gates are unaffected. Not fixed in this step.
 
 ## Validation
 
