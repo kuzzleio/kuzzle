@@ -200,7 +200,8 @@ class Router {
       request.input.headers = message.headers;
       request.response.configure({ result: {}, status: 200 });
 
-      global.kuzzle.pipe(
+      // With a callback, `pipe` answers through it and returns no promise
+      void global.kuzzle.pipe(
         "http:options",
         request,
         (error: Error | null, result: Request) => {
