@@ -1,3 +1,9 @@
+## [2.61.0-beta.9](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.8...v2.61.0-beta.9) (2026-11-04)
+
+### Bug Fixes
+
+* SonarCloud findings blocking 2.61.0 ([6bfb69c](https://github.com/kuzzleio/kuzzle/commit/6bfb69cecc100cdadcd359b80c0bec4e8428ed9f)), closes [#3167](https://github.com/kuzzleio/kuzzle/issues/3167)
+
 ## [2.61.0-beta.8](https://github.com/kuzzleio/kuzzle/compare/v2.61.0-beta.7...v2.61.0-beta.8) (2026-11-03)
 
 ### Dependencies
