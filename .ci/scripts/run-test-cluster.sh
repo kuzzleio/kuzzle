@@ -62,6 +62,25 @@ case "${STORAGE_DRIVER:-}" in
     ;;
 esac
 
+# CACHE_ENGINE=redis-6|valkey-9: the cache runs on another Redis-compatible
+# server than the cluster file's Redis 8 (doc/2/guides/compatibility), through
+# an overlay of the ES 8 cluster file, which holds the Redis password.
+case "${CACHE_ENGINE:-}" in
+  "") ;;
+  redis-6|valkey-9)
+    if [ "$ES_VERSION" != "8" ]; then
+      echo "CACHE_ENGINE=$CACHE_ENGINE runs on top of the ES 8 cluster file: set ES_VERSION=8"
+      exit 1
+    fi
+
+    COMPOSE+=(-f "./.ci/test-cluster-cache-$CACHE_ENGINE.yml")
+    ;;
+  *)
+    echo "Invalid CACHE_ENGINE '$CACHE_ENGINE' (expected redis-6 or valkey-9)"
+    exit 1
+    ;;
+esac
+
 "${COMPOSE[@]}" down -v
 
 echo "Installing dependencies..."
