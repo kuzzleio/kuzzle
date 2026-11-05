@@ -31,6 +31,8 @@ Env vars:
                   What npm installs as that driver (default: the version
                   .ci/scripts/stage-storage-driver.sh pins); a local .tgz
                   works too. ES9_DRIVER is still read for es9
+  CACHE_ENGINE    redis-6 / valkey-9: the functional tests run with Redis
+                  6.2 / Valkey 9 as the cache instead of Redis 8 (ES_VERSION=8)
 
 Examples:
   .ci/scripts/docker-test.sh unit
@@ -38,6 +40,7 @@ Examples:
   ES_VERSION=8 .ci/scripts/docker-test.sh functional http
   ES_VERSION=8 STORAGE_DRIVER=es9 .ci/scripts/docker-test.sh functional websocket
   ES_VERSION=8 STORAGE_DRIVER=opensearch2 .ci/scripts/docker-test.sh functional http
+  ES_VERSION=8 CACHE_ENGINE=valkey-9 .ci/scripts/docker-test.sh functional websocket
 
   # Target a single feature file or a tag instead of the whole suite:
   .ci/scripts/docker-test.sh functional websocket -- features/api/document.feature
@@ -146,6 +149,21 @@ run_functional() {
       ;;
     *)
       echo "Invalid STORAGE_DRIVER '$STORAGE_DRIVER' (expected core-only, es9, opensearch2 or opensearch3)" >&2
+      exit 1
+      ;;
+  esac
+
+  case "${CACHE_ENGINE:-}" in
+    "") ;;
+    redis-6|valkey-9)
+      if [ "$ES_VERSION" != 8 ]; then
+        echo "CACHE_ENGINE=$CACHE_ENGINE runs on top of the ES 8 cluster file: set ES_VERSION=8" >&2
+        exit 1
+      fi
+      compose+=(-f ".ci/test-cluster-cache-$CACHE_ENGINE.yml")
+      ;;
+    *)
+      echo "Invalid CACHE_ENGINE '$CACHE_ENGINE' (expected redis-6 or valkey-9)" >&2
       exit 1
       ;;
   esac

@@ -1,0 +1,8 @@
+# Overlay on top of `.ci/test-cluster-8.yml` (its Redis password): the cache runs on
+# Redis 6.2, the oldest Redis version doc/2/guides/compatibility lists as
+# supported. `.ci/scripts/docker-test.sh` and `.ci/scripts/run-test-cluster.sh`
+# add it when CACHE_ENGINE=redis-6.
+services:
+  redis:
+    image: redis:6.2
+    command: ["redis-server", "--requirepass", "0123456789"]
