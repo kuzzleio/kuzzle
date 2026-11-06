@@ -100,7 +100,7 @@
     "prettier": "3.9.10",
     "protobufjs-v7": "npm:protobufjs@7.5.4",
     "request-promise": "4.2.6",
-    "semantic-release-config-kuzzle": "1.8.0",
+    "semantic-release-config-kuzzle": "1.9.0",
     "should": "13.2.3",
     "strip-json-comments": "5.0.3",
     "ts-node": "10.9.2",
