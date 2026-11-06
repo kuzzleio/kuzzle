@@ -85,4 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           SEMANTIC_RELEASE_NPM_PUBLISH: "true"
           SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
+          SEMANTIC_RELEASE_KOURIER_URL: ${{ secrets.SEMANTIC_RELEASE_KOURIER_URL }}
+          SEMANTIC_RELEASE_KOURIER_TOKEN: ${{ secrets.SEMANTIC_RELEASE_KOURIER_TOKEN }}
         run: npx semantic-release
