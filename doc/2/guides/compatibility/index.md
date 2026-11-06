@@ -76,6 +76,6 @@ The CI runs on a single server. Kuzzle also connects to a Sentinel setup, to a R
 
 ### On Valkey
 
-[server:info](/core/2/api/controllers/server/info) shows the cache as `redis`, with version `7.2.4`: that is the Redis version Valkey announces for compatibility, not its own.
+[server:info](/core/2/api/controllers/server/info) describes the cache in `services.internalCache` and `services.memoryStorage`, with `type: "redis"` whichever server it runs on. Their `server` field tells which one answers (`redis` or `valkey`), and `version` is that server's own version, as in [server:capabilities](/core/2/api/controllers/server/capabilities). Kuzzle 2.61.0 and older have no `server` field, and give Valkey's version as `7.2.4`: the Redis version Valkey announces for compatibility.
 
 The [memory storage](/core/2/api/controllers/memory-storage) only offers commands that both Redis and Valkey support. Plugins that send commands directly to the cache must check that their commands exist on the server they run on.

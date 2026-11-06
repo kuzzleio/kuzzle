@@ -70,6 +70,8 @@ interface RedisInfo {
   memoryPeak: string;
   memoryUsed: string;
   mode: string;
+  /** The server answering, from its own report: Redis, or a fork of it */
+  server: "redis" | "valkey";
   type: "redis";
   version: string;
 }
@@ -288,12 +290,18 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       }
     }
 
+    // Valkey reports `redis_version:7.2.4` whatever its own version, for the
+    // clients that check it: its version is `valkey_version`. Valkey 9 also
+    // renamed `redis_mode` to `server_mode`.
+    const isValkey = info.server_name === "valkey";
+
     return {
       memoryPeak: info.used_memory_peak_human ?? "",
       memoryUsed: info.used_memory_human ?? "",
-      mode: info.redis_mode ?? "",
+      mode: info.redis_mode ?? info.server_mode ?? "",
+      server: isValkey ? "valkey" : "redis",
       type: "redis",
-      version: info.redis_version ?? "",
+      version: (isValkey ? info.valkey_version : info.redis_version) ?? "",
     };
   }
 
