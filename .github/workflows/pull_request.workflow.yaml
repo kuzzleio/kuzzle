@@ -513,6 +513,37 @@ jobs:
           es-version: 8
           storage-driver: core-only
 
+  # The cache on the two ends of the Redis / Valkey compatibility matrix
+  # (doc/2/guides/compatibility) that the main matrix's Redis 8 does not
+  # cover: Redis 6.2, the oldest supported, and Valkey 9. The websocket suite
+  # on ES 8 and one Node.js version: the cache does not depend on the
+  # protocol, the storage engine or Node.js.
+  functional-tests-cache-engines:
+    name: Functional tests on ${{ matrix.cache-engine }}
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        cache-engine: ["redis-6", "valkey-9"]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Node version 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Test suit websocket
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:websocket
+          node-version: 24
+          es-version: 8
+          cache-engine: ${{ matrix.cache-engine }}
+
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle]

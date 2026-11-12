@@ -1,6 +1,6 @@
 # ADR-0003: Storage engines as installable drivers
 
-**Status:** Accepted (2026-09-29)
+**Status:** Accepted — implemented (2026-11-04, 2.61.0); step 08 waits for Kuzzle 3
 **Date:** 2026-09-29
 **Deciders:** Kuzzle core team (Ricky — nriquelmebareiro@kuzzle.io)
 **Scope:** `services.storageEngine` — how Kuzzle talks to its database (`lib/service/storage/`, `lib/core/storage/`), how a storage engine is packaged, selected and loaded, and the public surfaces that expose the raw client
@@ -87,9 +87,9 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 
 ## Cold start
 
-**Where we are (2026-11-04):** ADR **accepted** ([#2948](https://github.com/kuzzleio/kuzzle/pull/2948)). Steps 00–05 are done: the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; `services.storageEngine.driver` loads an external driver; `majorVersion` is deprecated in the docs, with a warning only when set along with `driver`. Steps 06 and 07 are done but not closed: the five drivers are stable on npm (es-7 / es-8 / es-9 `1.1.0`, opensearch-2 / -3 `1.0.0`), `kuzzle` pins es-7 / es-8 `1.1.0` since 2.61.0-beta.8, and the docs, drivers' sections included, are in production on docs.kuzzle.io (documentation#617, 2026-11-04).
+**Where we are (2026-11-04):** steps 00–07 are done and frozen, shipped in **2.61.0** (2026-11-04): the `StorageDriver` contract, the conformance kit and `storageError` are exported by `kuzzle`; `services.storageEngine.driver` loads an external driver; ES7 / ES8 run through `kuzzle-storage-es-7` / `-8` `1.1.0`, dependencies of `kuzzle`; ES9 and OpenSearch 2 / 3 have their own drivers (`1.1.0` / `1.0.0`). Docs in production (documentation#617).
 
-**Next action:** release 2.61.0 (`beta` → `master`, #3167; 2.61.0-beta.9 carries the SonarCloud fixes), merge `master` back into `2-dev`, then close and freeze steps 06 and 07 ([step 06](steps/06-es7-es8-packages.md)). Hardening left for after 2.61.0 is tracked in [#3145](https://github.com/kuzzleio/kuzzle/issues/3145).
+**Next action:** none in v2. Step 08 (drop the ES7 / ES8 dependencies) is breaking and waits for Kuzzle 3; post-2.61.0 hardening is tracked in [#3145](https://github.com/kuzzleio/kuzzle/issues/3145).
 
 **Conventions** (same as ADR-0001 / 0002): base branch `2-dev`; non-breaking only in v2; unit tests in Docker; Claude cannot merge — it hands the maintainer `!` commands.
 
@@ -105,8 +105,8 @@ v3                  : es7 / es8 no longer kuzzle dependencies, core ships no eng
 | 03 | Loader: `services.storageEngine.driver`, manifest check, capability errors, same-driver check at cluster join (+ error-code docs), config & upgrade docs | ✅ Done 2026-10-29 | [#3101](https://github.com/kuzzleio/kuzzle/pull/3101) | [detail](steps/03-driver-loader.md) |
 | 04 | Conformance kit (test-runner-agnostic) exported with the contract; capability tags in the functional suite | ✅ Done 2026-10-29 | [#3102](https://github.com/kuzzleio/kuzzle/pull/3102) | [detail](steps/04-conformance-kit.md) |
 | 05 | First external driver: `kuzzle-storage-es-9` (own repo), in Kuzzle's functional matrix; `majorVersion` deprecated (doc; warning only when set with `driver`) | ✅ Done 2026-10-30 | [#3103](https://github.com/kuzzleio/kuzzle/pull/3103), [#3108](https://github.com/kuzzleio/kuzzle/pull/3108), [#3109](https://github.com/kuzzleio/kuzzle/pull/3109) | [detail](steps/05-es9-driver.md) |
-| 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | 🟦 In progress | [#3112](https://github.com/kuzzleio/kuzzle/pull/3112), [#3118](https://github.com/kuzzleio/kuzzle/pull/3118) | [detail](steps/06-es7-es8-packages.md) |
-| 07 | OpenSearch drivers: `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3 <4`), own repos, in Kuzzle's functional matrix, shipped in the 2.61 beta | 🟦 In progress | [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) | [detail](steps/07-opensearch-drivers.md) |
+| 06 | ES7 / ES8 moved as they are to `kuzzle-storage-es-7` / `kuzzle-storage-es-8` (own repos), dependencies of `kuzzle` at pinned versions, loaded at storage startup; ES7 / ES8 matrix unchanged | ✅ Done 2026-11-04 (2.61.0) | [#3112](https://github.com/kuzzleio/kuzzle/pull/3112), [#3118](https://github.com/kuzzleio/kuzzle/pull/3118), [#3167](https://github.com/kuzzleio/kuzzle/pull/3167) | [detail](steps/06-es7-es8-packages.md) |
+| 07 | OpenSearch drivers: `kuzzle-storage-opensearch-2` (`>=2.19 <3`) and `-3` (`>=3 <4`), own repos, in Kuzzle's functional matrix, shipped in the 2.61 beta | ✅ Done 2026-11-04 (2.61.0) | [#3125](https://github.com/kuzzleio/kuzzle/pull/3125) | [detail](steps/07-opensearch-drivers.md) |
 | 08 | Next major: drop `kuzzle-storage-es-7` / `-8` (and `sdk-es7` / `sdk-es8`) from the core's dependencies | ⬜ To do (next major) | — | — |
 
 ---

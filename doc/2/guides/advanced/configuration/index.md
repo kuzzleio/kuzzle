@@ -125,7 +125,7 @@ Before Kuzzle 2.60, `security.authToken.gracePeriod` was ignored, and `security.
 
 ### Securing Redis
 
-Kuzzle uses Redis for its internal cache (`services.internalCache`) and for the [memory storage](/core/2/api/controllers/memory-storage) (`services.memoryStorage`). By default it connects without credentials, which is only acceptable on a private network that nothing else can reach.
+Kuzzle uses Redis for its internal cache (`services.internalCache`) and for the [memory storage](/core/2/api/controllers/memory-storage) (`services.memoryStorage`). By default it connects without credentials, which is only acceptable on a private network that nothing else can reach. Everything in this section applies to [Valkey](/core/2/guides/compatibility#cache-redis-and-valkey) as well.
 
 The `options` object of both sections is handed as-is to the [ioredis](https://github.com/redis/ioredis) client, so authentication and encryption need no Kuzzle-specific setting:
 
