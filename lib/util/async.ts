@@ -79,3 +79,28 @@ export function promiseAllN<T>(
 
   return pendingPromise;
 }
+
+/**
+ * Settles like `pending`, or rejects with an `Error("timeout")` once `ms`
+ * have elapsed. The timer is cleared either way, so a settled race leaves
+ * nothing armed.
+ *
+ * For calls to a server that may stop answering without closing the
+ * connection: ioredis then keeps the command queued until the OS gives up on
+ * the socket, about 10 minutes (#3181).
+ */
+export async function withTimeout<T>(
+  pending: Promise<T>,
+  ms: number,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("timeout")), ms);
+  });
+
+  try {
+    return await Promise.race([pending, expired]);
+  } finally {
+    clearTimeout(timer);
+  }
+}

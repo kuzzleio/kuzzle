@@ -51,6 +51,7 @@ import StorageEngine from "../core/storage/storageEngine";
 import Validation from "../core/validation/validation";
 import * as kerror from "../kerror";
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import { withTimeout } from "../util/async";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { releaseAllLocksBeforeExit, withLock } from "../util/distributedLock";
@@ -83,6 +84,11 @@ const FAILURE_SHUTDOWN_TIMEOUT = 30000;
  * them on shutdown, so the wait is bounded (#3160)
  */
 const PLUGIN_REQUESTS_SHUTDOWN_TIMEOUT = 5000;
+
+/**
+ * How long a shutdown tries to give its locks back to redis, in ms
+ */
+const LOCKS_RELEASE_SHUTDOWN_TIMEOUT = 2000;
 
 /**
  * Stops the startup sequence once a shutdown has begun (#3045): `start()`
@@ -573,11 +579,22 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     // The other nodes may be waiting on a lock this one holds: a node leaving
-    // mid-startup is often in the middle of one (F-13).
-    await Promise.all([
-      releaseAllLocksBeforeExit(),
-      Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
-    ]);
+    // mid-startup is often in the middle of one (F-13). Bounded: a node often
+    // leaves because redis stopped answering, and a lock that cannot be freed
+    // still expires with its TTL (#3181)
+    try {
+      await withTimeout(
+        Promise.all([
+          releaseAllLocksBeforeExit(),
+          Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
+        ]),
+        LOCKS_RELEASE_SHUTDOWN_TIMEOUT,
+      );
+    } catch {
+      this.log.warn(
+        `[shutdown] Locks still held after ${LOCKS_RELEASE_SHUTDOWN_TIMEOUT}ms: they expire with their TTL`,
+      );
+    }
 
     // Nothing reads or writes the storage anymore: its drivers may release
     // their connections (bounded, never rejects)
