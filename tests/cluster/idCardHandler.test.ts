@@ -391,6 +391,31 @@ describe("#cluster/ClusterIdCardHandler", () => {
       );
     });
 
+    /* #3181: on the shutdown a failed renewal starts, redis is likely mute,
+     * and the delete stalled until the 30s failure watchdog killed the node. */
+    it("should give up on the delete after one refresh delay when redis does not answer", async () => {
+      await handler.createIdCard();
+      vi.useFakeTimers();
+
+      try {
+        bus.ask.mockImplementation((event: string) =>
+          event === "core:cache:internal:del"
+            ? new Promise(() => {})
+            : Promise.resolve(),
+        );
+
+        const disposal = handler.dispose();
+        await vi.advanceTimersByTimeAsync(refreshDelay);
+
+        await expect(disposal).resolves.toBeUndefined();
+        expect(internals.logger.warn).toHaveBeenCalledWith(
+          `Could not delete the ID card {cluster/node}/${handler.nodeId}: it expires in ${refreshDelay * 2}ms (timeout)`,
+        );
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("should have nothing to delete before the card was created", async () => {
       await handler.dispose();
 
