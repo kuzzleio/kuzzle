@@ -1,3 +1,9 @@
+## [2.61.1-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.1-beta.1...v2.61.1-beta.2) (2026-11-12)
+
+### Bug Fixes
+
+* **cluster:** bound the Redis calls of the shutdown a failed renewal starts ([180210c](https://github.com/kuzzleio/kuzzle/commit/180210c2abbf3654290ca125800c34a09773b81c)), closes [#3182](https://github.com/kuzzleio/kuzzle/issues/3182) [#3181](https://github.com/kuzzleio/kuzzle/issues/3181)
+
 ## [2.61.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.0...v2.61.1-beta.1) (2026-11-12)
 
 ### Bug Fixes
