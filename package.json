@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.61.0",
+  "version": "2.61.1-beta.2",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
     "build": "rm -Rf ./dist && tsc && node -r ts-node/register/transpile-only ./bin/copy-binaries.ts",
@@ -52,8 +52,8 @@
     "kuzzle-logger": "1.7.0",
     "kuzzle-plugin-auth-passport-local": "6.4.1",
     "kuzzle-sdk": ">=7.17.1 <8.0.0",
-    "kuzzle-storage-es-7": "1.1.0",
-    "kuzzle-storage-es-8": "1.1.0",
+    "kuzzle-storage-es-7": "1.1.1",
+    "kuzzle-storage-es-8": "1.1.1",
     "kuzzle-types": "^1.0.0",
     "kuzzle-vault": "2.2.0",
     "lodash": "4.18.1",
@@ -100,7 +100,7 @@
     "prettier": "3.9.10",
     "protobufjs-v7": "npm:protobufjs@7.5.4",
     "request-promise": "4.2.6",
-    "semantic-release-config-kuzzle": "1.8.0",
+    "semantic-release-config-kuzzle": "1.9.0",
     "should": "13.2.3",
     "strip-json-comments": "5.0.3",
     "ts-node": "10.9.2",

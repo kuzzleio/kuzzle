@@ -24,9 +24,9 @@ In this guide we will use Docker and Docker Compose to run those services.
 |---|---|---|
 | Node.js | 22.12 or later, up to 24 | 22 and 24 |
 | Elasticsearch | 7 (default) and 8 | 7.17 (`kuzzleio/elasticsearch:7` image) and 8.17 |
-| Redis | 8 | 8 |
+| Redis | 6.2 to 8, or Valkey 7.2 to 9 | Redis 6.2 and 8, Valkey 9 |
 
-Kuzzle uses Elasticsearch 7 by default. To use Elasticsearch 8, see [Elasticsearch 8](/core/2/guides/elasticsearch/v8).
+Kuzzle uses Elasticsearch 7 by default. To use Elasticsearch 8, see [Elasticsearch 8](/core/2/guides/elasticsearch/v8). For every supported version, including Elasticsearch 9, OpenSearch and Valkey, see the [Compatibility matrix](/core/2/guides/compatibility).
 
 ### Prerequisites
 

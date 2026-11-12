@@ -1,3 +1,7 @@
+import { createServer } from "node:net";
+import type { Server, Socket } from "node:net";
+
+import IORedis from "ioredis";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IDCardRenewer } from "../../../lib/cluster/workers/IDCardRenewer";
@@ -286,6 +290,47 @@ describe("ClusterIDCardRenewer", () => {
       });
     });
 
+    /* #3181: a redis that drops packets without closing the socket leaves
+     * the command pending until the OS gives up on TCP (~10 min). */
+    it("should report a timeout when redis does not answer before the next renewal is due", async () => {
+      vi.useFakeTimers();
+
+      try {
+        vi.mocked(idCardRenewer.dispose).mockImplementation(async () => {
+          idCardRenewer.disposed = true;
+        });
+        redis.commands.pexpire.mockReturnValue(new Promise<number>(() => {}));
+
+        const renewal = idCardRenewer.renewIDCard();
+
+        await vi.advanceTimersByTimeAsync(99);
+        expect(idCardRenewer.dispose).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        await renewal;
+
+        expect(idCardRenewer.dispose).toHaveBeenCalledOnce();
+        expect(send).toHaveBeenLastCalledWith({
+          error: "Failed to refresh ID Card: timeout",
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("should leave no timer armed once redis has answered", async () => {
+      vi.useFakeTimers();
+
+      try {
+        await idCardRenewer.renewIDCard();
+
+        // the interval was armed before the fake clock: only the race could count
+        expect(vi.getTimerCount()).toBe(0);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("should do nothing if already disposed", async () => {
       redis.commands.pexpire.mockClear();
       idCardRenewer.disposed = true;
@@ -351,6 +396,27 @@ describe("ClusterIDCardRenewer", () => {
       );
     });
 
+    it("should give up on the delete when redis does not answer", async () => {
+      vi.useFakeTimers();
+
+      try {
+        const consoleError = vi
+          .spyOn(console, "error")
+          .mockImplementation(() => undefined);
+        redis.commands.del.mockReturnValue(new Promise(() => {}));
+
+        const disposal = idCardRenewer.dispose();
+        await vi.advanceTimersByTimeAsync(100);
+
+        await expect(disposal).resolves.toBeUndefined();
+        expect(consoleError).toHaveBeenCalledWith(
+          "Could not delete key 'foo' from redis: timeout",
+        );
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("should do nothing when already disposed", async () => {
       idCardRenewer.disposed = true;
 
@@ -369,6 +435,69 @@ describe("ClusterIDCardRenewer", () => {
 
       expect(pristine.disposed).toBe(true);
       expect(clearIntervalSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  /* #3181, end to end on a real ioredis client: a server that accepts the
+   * connection and never answers is what a NetworkPolicy dropping packets
+   * looks like from the worker. */
+  describe("against a mute redis", () => {
+    let server: Server;
+    const sockets: Socket[] = [];
+    let client: IORedis;
+
+    beforeEach(async () => {
+      server = createServer((socket) => {
+        sockets.push(socket);
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve),
+      );
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+
+      client = new IORedis({
+        enableOfflineQueue: true,
+        enableReadyCheck: false,
+        host: "127.0.0.1",
+        maxRetriesPerRequest: null,
+        port,
+      });
+    });
+
+    afterEach(async () => {
+      client.disconnect();
+      for (const socket of sockets) {
+        socket.destroy();
+      }
+      await new Promise((resolve) => server.close(resolve));
+    });
+
+    it("should evict the node within one refresh delay", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const idCardRenewer = new IDCardRenewer();
+      idCardRenewer.initRedis = vi.fn().mockImplementation(async () => {
+        idCardRenewer.redis = { commands: client };
+      });
+
+      const started = Date.now();
+      await idCardRenewer.init({
+        nodeIdKey: "foo",
+        redis: undefined,
+        refreshDelay: 200,
+        refreshMultiplier: 2,
+      });
+      // init() renews eagerly, so it returns once that renewal has failed;
+      // the bounded delete in dispose() adds at most one more delay.
+      const elapsed = Date.now() - started;
+
+      expect(send).toHaveBeenCalledWith({
+        error: "Failed to refresh ID Card: timeout",
+      });
+      expect(idCardRenewer.disposed).toBe(true);
+      expect(idCardRenewer.refreshTimer).toBeNull();
+      expect(elapsed).toBeGreaterThanOrEqual(190);
+      expect(elapsed).toBeLessThan(1000);
     });
   });
 });

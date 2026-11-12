@@ -12,15 +12,30 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9).
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patch [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12.
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
-## In short
+## 2.61.1
+
+**Released:** [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) on 2026-11-12, after two betas (2.61.1-beta.1 and 2.61.1-beta.2, both on 2026-11-12).
+
+Three fixes, for clusters, Valkey and the startup of the storage. No new feature, no configuration change.
+
+- **What you need to do:** nothing. If a monitoring tool reads the cache version in [`server:info`](/core/2/api/controllers/server/info) on Valkey, it now gets Valkey's own version (see the [upgrade notes](/core/2/guides/upgrade-notes/from-2-60#_2-61-1)).
+- **Fixed: a node whose Redis stops answering leaves the cluster within seconds.** When Redis stopped answering without closing the connection (a network policy or a partition dropping packets, a failover that does not reset connections), a node took about 10 minutes to notice, while its cluster registration had expired after 4 seconds. Meanwhile `/_healthcheck` answered `200` and every request touching Redis hung. The node now gives up on a heartbeat Redis has not answered within `cluster.heartbeat` (2 seconds by default), leaves the cluster and exits with code `1`, so that your orchestrator restarts it ([#3181](https://github.com/kuzzleio/kuzzle/issues/3181)).
+- **Fixed: the storage engine no longer fails silently at startup** (built-in drivers 1.1.1). With a certificate the driver does not trust, a host name missing from the certificate or a wrong password, Kuzzle stayed on `Trying to connect to Elasticsearch...` until the init timeout (2 minutes by default), then stopped with a generic [`core.fatal.service_timeout`](/core/2/api/errors/error-codes/core) error, with nothing in its logs telling why. It now logs why the engine does not answer yet, as a warning, and stops at once, with a [`services.storage.unexpected_error`](/core/2/api/errors/error-codes/services) error naming the cause, on a TLS failure or refused credentials (401, 403). A cluster that is not up yet is still waited for. The external drivers carry the same fix: `kuzzle-storage-es-9` 1.1.1, `kuzzle-storage-opensearch-2` and `kuzzle-storage-opensearch-3` 1.0.1 ([storage-es-8#9](https://github.com/kuzzleio/storage-es-8/issues/9)).
+- **Fixed: [`server:info`](/core/2/api/controllers/server/info) on Valkey** gave every Valkey server the version `7.2.4`, the Redis version Valkey announces for compatibility, and an empty mode on Valkey 9. It now gives Valkey's own version and mode, and a new `server` field tells which server answers (`redis` or `valkey`). [`server:capabilities`](/core/2/api/controllers/server/capabilities) gives the real version too.
+- **New in the docs:** a [compatibility matrix](/core/2/guides/compatibility): the Node.js versions, systems, storage engines and cache servers (Redis 6.2 or later, Valkey 7.2 or later) Kuzzle runs on, and which ones the CI tests.
+- **Under the hood:** `kuzzle-storage-es-7` and `kuzzle-storage-es-8` 1.1.1.
+
+## 2.61.0
+
+### In short
 
 2.61 opens Kuzzle to other storage engines. A storage engine can now come as a separate npm package, a _storage driver_, that you install next to Kuzzle and name in the configuration. Elasticsearch 7 and 8 keep working exactly as before: they are now Kuzzle's built-in drivers, shipped as packages Kuzzle installs with itself.
 
-## What you need to do
+### What you need to do
 
 Nothing. An Elasticsearch 7 or 8 setup needs no change, in its configuration or its dependencies.
 
@@ -28,7 +43,7 @@ Before you move to another storage engine, check your plugins and your applicati
 
 If your code or your clients match the text of storage error messages, check it: they no longer say "Elasticsearch" (see [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60#storage-error-messages)).
 
-## What's new
+### What's new
 
 - **Storage drivers.** Set `services.storageEngine.driver` to the name of a driver package to run Kuzzle on another storage engine. Kuzzle checks the driver at startup and refuses to start if it is missing, invalid or not made for this Kuzzle version. The API does not change: queries and mappings are still written in the Elasticsearch format. Read [Storage Drivers](/core/2/guides/main-concepts/data-storage#storage-drivers).
 - **Capabilities.** A driver may not support every feature (aggregations, mapping changes, statistics, update by query). A request needing one it does not support is rejected with a clear [`services.storage_driver.unsupported_capability`](/core/2/api/errors/error-codes/services) error. The built-in drivers support them all.
@@ -45,7 +60,7 @@ If your code or your clients match the text of storage error messages, check it:
 - **For driver authors.** `kuzzle` exports what a driver needs: the `StorageDriver` contract and its types, a conformance kit (`describeStorageDriverConformance`) that tests a driver against its real engine, and `storageError`, so that a driver returns the same errors as Kuzzle. Read the new [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide.
 - **Drivers documentation.** Each official driver has its own documentation (install, configuration, TypeScript, compatibility, troubleshooting) in the new [Drivers](/drivers/v2.html) section.
 
-## What's fixed
+### What's fixed
 
 - A node joining a cluster could still list an index or a collection that another node had deleted before it joined, and keep a collection lock that was already released. It now replaces its cache with what the storage holds when it loads it.
 - In a cluster, a request served by one node right after another node created an index or a collection could fail with [`services.storage.unknown_index`](/core/2/api/errors/error-codes/services) or [`unknown_collection`](/core/2/api/errors/error-codes/services), or not see it in a list, for a few milliseconds. Likewise, creating an index another node had just deleted could fail with `index_already_exists`. A node now checks the storage before answering so. Those checks start at most once every `services.storageEngine.cacheMissReadInterval` (default 100 ms, `0` to check on every miss), so a request on a missing index or collection can fail up to 100 ms later ([#3140](https://github.com/kuzzleio/kuzzle/issues/3140)).
@@ -56,7 +71,7 @@ If your code or your clients match the text of storage error messages, check it:
 - A driver missing a method of the storage contract started, then failed with a `500` on the first request using it. Kuzzle now refuses it at startup with [`services.storage_driver.invalid_driver`](/core/2/api/errors/error-codes/services) ([#3137](https://github.com/kuzzleio/kuzzle/issues/3137)).
 - An unhandled rejection whose reason is not an `Error` was logged as `ERROR: unhandledRejection: [object Object]`, or `[object Promise]` with no reason at all. The log now shows the reason's content, or the promise's (2.61.0-beta.9).
 
-## Under the hood
+### Under the hood
 
 - `kuzzle` depends on `kuzzle-storage-es-7` and `kuzzle-storage-es-8` at pinned versions: a new version of a built-in driver reaches you with a Kuzzle release.
 - All five official drivers have stable releases (2.61.0-beta.8): `npm install kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2` or `kuzzle-storage-opensearch-3` installs a release, no beta tag needed, and Kuzzle's built-in drivers are their stable releases too.

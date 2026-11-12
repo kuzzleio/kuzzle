@@ -393,8 +393,61 @@ describe("#service/cache/Redis", () => {
         memoryPeak: "19.33M",
         memoryUsed: "919.52K",
         mode: "standalone",
+        server: "redis",
         type: "redis",
         version: "3.0.7",
+      });
+    });
+
+    // Valkey 9.1.3's own report: `redis_version` is the Redis version it
+    // announces for compatibility, and `redis_mode` is now `server_mode`.
+    it("should answer Valkey's own version and mode", async () => {
+      await redis.init();
+
+      invalid<{ info: ReturnType<typeof vi.fn> }>(redis.commands).info = vi
+        .fn()
+        .mockResolvedValue(
+          [
+            "# Server",
+            "redis_version:7.2.4",
+            "server_name:valkey",
+            "valkey_version:9.1.3",
+            "server_mode:standalone",
+            "",
+            "# Memory",
+            "used_memory_human:1.02M",
+            "used_memory_peak_human:1.20M",
+          ].join("\r\n"),
+        );
+
+      await expect(redis.info()).resolves.toEqual({
+        memoryPeak: "1.20M",
+        memoryUsed: "1.02M",
+        mode: "standalone",
+        server: "valkey",
+        type: "redis",
+        version: "9.1.3",
+      });
+    });
+
+    it("should answer the mode of a Valkey 7.2 server, still named redis_mode", async () => {
+      await redis.init();
+
+      invalid<{ info: ReturnType<typeof vi.fn> }>(redis.commands).info = vi
+        .fn()
+        .mockResolvedValue(
+          [
+            "redis_version:7.2.4",
+            "server_name:valkey",
+            "valkey_version:7.2.15",
+            "redis_mode:cluster",
+          ].join("\r\n"),
+        );
+
+      await expect(redis.info()).resolves.toMatchObject({
+        mode: "cluster",
+        server: "valkey",
+        version: "7.2.15",
       });
     });
   });

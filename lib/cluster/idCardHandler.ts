@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import { withTimeout } from "../util/async";
 import { NameGenerator } from "../util/name-generator";
 import { fork } from "node:child_process";
 import { extname } from "node:path";
@@ -459,14 +460,24 @@ export class ClusterIdCardHandler {
     // The worker deletes the card too, but nothing waits for it: the process
     // usually exits first, and the card then outlives it by a TTL, long
     // enough for a node restarted on this IP to take it for a live duplicate
+    //
+    // Bounded like each renewal (#3181): this runs on the shutdown that a
+    // failed renewal starts, and the redis that made it fail is likely mute
     if (this.nodeIdKey !== null) {
+      const nodeIdKey = this.nodeIdKey;
+
       try {
-        await global.kuzzle.ask("core:cache:internal:del", this.nodeIdKey);
-        await global.kuzzle.ask(
-          "core:cache:internal:execute",
-          "srem",
-          REDIS_ID_CARDS_INDEX,
-          this.nodeIdKey,
+        await withTimeout(
+          (async () => {
+            await global.kuzzle.ask("core:cache:internal:del", nodeIdKey);
+            await global.kuzzle.ask(
+              "core:cache:internal:execute",
+              "srem",
+              REDIS_ID_CARDS_INDEX,
+              nodeIdKey,
+            );
+          })(),
+          this.refreshDelay,
         );
       } catch (error) {
         this.logger.warn(

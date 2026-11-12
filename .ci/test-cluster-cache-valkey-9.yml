@@ -1,0 +1,8 @@
+# Overlay on top of `.ci/test-cluster-8.yml` (its Redis password): the cache runs on
+# Valkey 9 instead of Redis 8, to keep the Redis / Valkey compatibility matrix
+# of doc/2/guides/compatibility true. `.ci/scripts/docker-test.sh` and
+# `.ci/scripts/run-test-cluster.sh` add it when CACHE_ENGINE=valkey-9.
+services:
+  redis:
+    image: valkey/valkey:9
+    command: ["valkey-server", "--requirepass", "0123456789"]

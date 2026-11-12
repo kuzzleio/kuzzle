@@ -940,6 +940,30 @@ describe("#kuzzle/Kuzzle", () => {
       }
     });
 
+    /* #3181: the node often leaves because redis stopped answering, and
+     * releasing a lock then stalled the shutdown until the 30s watchdog. */
+    it("gives up on its locks after 2s, and still closes the storage and exits", async () => {
+      vi.useFakeTimers();
+
+      try {
+        const close = vi.fn(async () => undefined);
+        Object.assign(kuzzle, { storageEngine: { close } });
+        releaseAllLocksBeforeExit.mockReturnValueOnce(new Promise(() => {}));
+
+        const shutdown = kuzzle.shutdown(1);
+        await vi.advanceTimersByTimeAsync(2000);
+        await shutdown;
+
+        expect(kuzzle.log.warn).toHaveBeenCalledWith(
+          "[shutdown] Locks still held after 2000ms: they expire with their TTL",
+        );
+        expect(close).toHaveBeenCalledOnce();
+        expect(exit).toHaveBeenCalledExactlyOnceWith(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     /* #3141: the storage drivers release their connections on shutdown. */
     it("closes the storage once the funnel is empty and the locks are freed, before exiting", async () => {
       const close = vi.fn(async () => undefined);

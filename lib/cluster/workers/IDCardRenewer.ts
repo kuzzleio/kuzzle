@@ -7,6 +7,7 @@ import type { JSONObject } from "../../types/JSONObject";
 // reaching this module dies on "Cannot find module". It type-checks against
 // `export =` under `esModuleInterop`. See ADR-0001, TD-49 (#2739).
 import Redis from "../../service/cache/redis";
+import { withTimeout } from "../../util/async";
 
 /**
  * `redis.ts` uses `export =`, so it cannot also export this type. Deriving it
@@ -65,6 +66,16 @@ class IDCardRenewer {
 
   /** Disposed until `init()` says otherwise. */
   public disposed = true;
+
+  /**
+   * How long a single redis command may take, in ms. Renewals are spaced by
+   * `refreshDelay`: one still pending when the next is due is already late,
+   * and since the card outlives its last renewal by `refreshMultiplier` (≥ 2)
+   * delays, giving up then reports the failure no later than the card expires.
+   */
+  get commandTimeout(): number {
+    return this.refreshDelay;
+  }
 
   async init(config: IDCardRenewerConfig): Promise<void> {
     if (!this.disposed) {
@@ -146,9 +157,15 @@ class IDCardRenewer {
     }
 
     try {
-      const refreshed = await this.redis.commands.pexpire(
-        this.nodeIdKey,
-        this.refreshDelay * this.refreshMultiplier,
+      // Bounded (#3181): a redis that stops answering without closing the
+      // socket leaves the command queued until the OS gives up on the TCP
+      // connection, about 10 minutes, while the card expires within seconds.
+      const refreshed = await withTimeout(
+        this.redis.commands.pexpire(
+          this.nodeIdKey,
+          this.refreshDelay * this.refreshMultiplier,
+        ),
+        this.commandTimeout,
       );
       // Unable to refresh the key in time before it expires
       // => this node is too slow, we need to remove it from the cluster
@@ -193,7 +210,12 @@ class IDCardRenewer {
     }
 
     try {
-      await this.redis.commands.del(this.nodeIdKey);
+      // Bounded too: a failed renewal is reported to the parent only once
+      // this returns, and the redis that made it fail is likely still mute.
+      await withTimeout(
+        this.redis.commands.del(this.nodeIdKey),
+        this.commandTimeout,
+      );
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(

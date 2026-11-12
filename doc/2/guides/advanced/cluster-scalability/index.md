@@ -136,7 +136,7 @@ A node that cannot join the cluster fails its startup: `app.start()` rejects wit
 
 Whatever the cause, and whatever the value of `NODE_ENV`, **a node whose startup fails shuts down and exits with code `1`**. This includes a failure of an [app.install](/core/2/framework/classes/backend/install) handler or of a startup import. The error is still returned by `app.start()` before the process exits, so you can log it.
 
-A running node also exits with code `1` when it leaves the cluster because of a failure: it is evicted by the other nodes, it cannot reach them anymore (network split), or it is too slow to stay synchronized. A shutdown caused by a failure is bounded to 30 seconds. A requested shutdown (`SIGTERM`, `SIGINT`, [admin:shutdown](/core/2/api/controllers/admin/shutdown)) exits with code `0`.
+A running node also exits with code `1` when it leaves the cluster because of a failure: it is evicted by the other nodes, it cannot reach them anymore (network split), it is too slow to stay synchronized, or Redis has not answered a heartbeat within `cluster.heartbeat` milliseconds (even when the connection stays open, as when a network policy drops packets). A shutdown caused by a failure is bounded to 30 seconds. A requested shutdown (`SIGTERM`, `SIGINT`, [admin:shutdown](/core/2/api/controllers/admin/shutdown)) exits with code `0`.
 
 ::: info
 Use a restart policy that restarts on failure (e.g. `restart: on-failure` or `restart: always` with Docker Compose, or the default policy of a Kubernetes Deployment): a failed node is then restarted and joins the cluster again.

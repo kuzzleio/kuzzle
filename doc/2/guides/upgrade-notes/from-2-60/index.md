@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. The [2.61.1](#_2-61-1) patch is at the end of this page. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -123,3 +123,25 @@ Since 2.61.0-beta.6, Kuzzle calls the storage driver's optional `close()` hook o
 ### New exports
 
 `kuzzle` now exports the `StorageDriver` contract and its types, the conformance kit `describeStorageDriverConformance`, and `storageError`, which builds Kuzzle's `services.storage.*` errors. They are meant for driver authors: see the [Write storage drivers](/core/2/guides/write-storage-drivers/start-writing-storage-drivers) guide.
+
+## 2.61.1
+
+Three fixes. Nothing to change in your configuration.
+
+### A node whose Redis stops answering leaves the cluster
+
+Each cluster node renews its registration in Redis every `cluster.heartbeat` milliseconds (2 seconds by default). A renewal Redis has not answered within that delay now fails: the node leaves the cluster, shuts down and exits with code `1`. It used to wait until the operating system gave up on the connection, about 10 minutes when Redis stopped answering without closing it (packets dropped by a network policy or a partition, a failover that does not reset connections), while `/_healthcheck` kept answering `200` and every request touching Redis hung ([#3181](https://github.com/kuzzleio/kuzzle/issues/3181)). On its way out, the node also stops waiting on Redis to delete its registration (after `cluster.heartbeat`) and to free the locks it holds (after 2 seconds, on any shutdown): what it could not delete expires on its own. Requests still waiting on Redis keep the node up until the 30-second limit of a failure shutdown.
+
+**Action:** none if your orchestrator restarts a node that exits on failure (see [Startup failures](/core/2/guides/advanced/cluster-scalability#startup-failures)). A Redis that is alive but answers slower than `cluster.heartbeat` now makes nodes leave the cluster: its registration would have expired anyway, and the other nodes would have evicted it.
+
+### Storage engine errors at startup
+
+The built-in drivers `kuzzle-storage-es-7` and `kuzzle-storage-es-8` move to 1.1.1. While Kuzzle waits for the storage engine at startup, they log why it does not answer yet, as a warning (`[⚠] Elasticsearch is not reachable yet: <reason>`), when the reason changes and every 30 attempts. A TLS failure (untrusted or expired certificate, host name missing from the certificate) or credentials the engine refuses (401, 403) stop the startup at once with a [`services.storage.unexpected_error`](/core/2/api/errors/error-codes/services) error naming the cause, so the node exits with code `1` right away, instead of after `services.storageEngine.initTimeout` (2 minutes by default) with a generic `core.fatal.service_timeout` error and no clue in the logs. A refused connection, a timeout or a `503` are still retried until `services.storageEngine.initTimeout`.
+
+**Action:** if you run `kuzzle-storage-es-9`, `kuzzle-storage-opensearch-2` or `kuzzle-storage-opensearch-3`, upgrade it (1.1.1, 1.0.1 and 1.0.1) to get the same behavior. If a deployment used to start late because the engine's certificate or credentials were provisioned after Kuzzle, it now fails, and is restarted, until they are in place.
+
+### Valkey in `server:info`
+
+[`server:info`](/core/2/api/controllers/server/info) describes Valkey with its own version and mode, instead of `7.2.4` (the Redis version Valkey announces for compatibility) and, on Valkey 9, an empty mode. `services.internalCache` and `services.memoryStorage` get a new `server` field, `redis` or `valkey`; `type` stays `redis`. [`server:capabilities`](/core/2/api/controllers/server/capabilities) gives the real version too.
+
+**Action:** if a monitoring tool or a plugin compares the cache version with Redis versions, check it on Valkey: it now reads Valkey's version (e.g. `9.0.0`).
