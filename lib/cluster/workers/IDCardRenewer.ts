@@ -7,6 +7,7 @@ import type { JSONObject } from "../../types/JSONObject";
 // reaching this module dies on "Cannot find module". It type-checks against
 // `export =` under `esModuleInterop`. See ADR-0001, TD-49 (#2739).
 import Redis from "../../service/cache/redis";
+import { withTimeout } from "../../util/async";
 
 /**
  * `redis.ts` uses `export =`, so it cannot also export this type. Deriving it
@@ -26,23 +27,6 @@ type RedisServiceConfig = ConstructorParameters<typeof Redis>[0];
  */
 function messageOf(thrown: unknown): string {
   return thrown instanceof Error ? thrown.message : inspect(thrown);
-}
-
-/**
- * Settles like `pending`, or rejects with `timeout` once `ms` have elapsed.
- * The timer is cleared either way, so a settled race leaves nothing armed.
- */
-async function withTimeout<T>(pending: Promise<T>, ms: number): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  const expired = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error("timeout")), ms);
-  });
-
-  try {
-    return await Promise.race([pending, expired]);
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 export type IDCardRenewerConfig = {
