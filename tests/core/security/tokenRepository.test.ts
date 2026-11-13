@@ -1,6 +1,8 @@
+import jwt from "jsonwebtoken";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { TokenRepository } from "../../../lib/core/security/tokenRepository";
+import * as kerror from "../../../lib/kerror";
 import type { JSONObject } from "../../../lib/types/JSONObject";
 import { restoreKuzzle, stubAsk, stubKuzzle } from "../../mocks/kuzzle";
 
@@ -74,5 +76,37 @@ describe("#core/security/TokenRepository", () => {
     expect(new TokenRepository()).toBeInstanceOf(TokenRepository);
 
     expect(kuzzle.log.warn).not.toHaveBeenCalled();
+  });
+
+  describe("#verifyToken", () => {
+    function verifyWithCacheError(error: Error) {
+      kuzzle.secret = "secret";
+      kuzzle.ask.mockImplementation(async (event: string) => {
+        if (event === "core:cache:internal:get") {
+          throw error;
+        }
+
+        throw new Error(`unexpected ask("${event}")`);
+      });
+
+      const token = jwt.sign({ _id: "userId" }, "secret");
+
+      return new TokenRepository().verifyToken(token);
+    }
+
+    // The cache server not answering (opt-in ioredis commandTimeout) is a
+    // 503 the client can retry: up to 2.61.2-beta.1 it reached the client as
+    // a 500 verification_error
+    it("answers a cache timeout as services.cache.timeout", async () => {
+      await expect(
+        verifyWithCacheError(kerror.get("services", "cache", "timeout", 500)),
+      ).rejects.toMatchObject({ id: "services.cache.timeout", status: 503 });
+    });
+
+    it("still wraps any other cache failure into verification_error", async () => {
+      await expect(
+        verifyWithCacheError(new Error("boom")),
+      ).rejects.toMatchObject({ id: "security.token.verification_error" });
+    });
   });
 });
