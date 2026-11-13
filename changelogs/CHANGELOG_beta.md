@@ -1,3 +1,9 @@
+## [2.61.2-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.2-beta.1...v2.61.2-beta.2) (2026-11-13)
+
+### Bug Fixes
+
+* **security:** answer a cache timeout during token check as services.cache.timeout (503) ([44aa64b](https://github.com/kuzzleio/kuzzle/commit/44aa64be81316bbcda9b3f60b75a18a900df4f3a))
+
 ## [2.61.2-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.1...v2.61.2-beta.1) (2026-11-13)
 
 ### Bug Fixes
