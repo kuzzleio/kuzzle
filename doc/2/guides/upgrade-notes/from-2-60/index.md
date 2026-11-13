@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. The [2.61.1](#_2-61-1) patch is at the end of this page. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. The [2.61.1](#_2-61-1) and [2.61.2](#_2-61-2) patches are at the end of this page. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -145,3 +145,17 @@ The built-in drivers `kuzzle-storage-es-7` and `kuzzle-storage-es-8` move to 1.1
 [`server:info`](/core/2/api/controllers/server/info) describes Valkey with its own version and mode, instead of `7.2.4` (the Redis version Valkey announces for compatibility) and, on Valkey 9, an empty mode. `services.internalCache` and `services.memoryStorage` get a new `server` field, `redis` or `valkey`; `type` stays `redis`. [`server:capabilities`](/core/2/api/controllers/server/capabilities) gives the real version too.
 
 **Action:** if a monitoring tool or a plugin compares the cache version with Redis versions, check it on Valkey: it now reads Valkey's version (e.g. `9.0.0`).
+
+## 2.61.2
+
+Two fixes and one opt-in setting. Nothing to change in your configuration.
+
+### Redis `commandTimeout`
+
+With 2.61.1, a node whose Redis stops answering leaves the cluster within seconds. But the requests already waiting on Redis keep the node up until the 30-second limit of a failure shutdown. The ioredis `commandTimeout` option, which Kuzzle already passed to its Redis client, ends that wait. Set it in milliseconds on both `services.internalCache.options` and `services.memoryStorage.options`. A command Redis has not answered within that delay then fails, and so does the request that sent it, with a [`services.cache.timeout`](/core/2/api/errors/error-codes/services) error (503). Before 2.61.2, the error was `core.fatal.unexpected_error` (500). The failure shutdown then runs to its end instead of waiting for the 30-second limit.
+
+**Action:** none, it is not set by default. Before you set it, read [When Redis stops answering](/core/2/guides/advanced/configuration#when-redis-stops-answering). It applies to every Redis command, so pick a value well above your slowest legitimate one and above `cluster.heartbeat`. A write that timed out may still have been applied by Redis.
+
+### Failed Redis key scans
+
+Kuzzle scans Redis keys to list or expire authentication tokens and for statistics. If such a scan failed midway (a `commandTimeout`, a lost connection), the error was not handled. The process crashed, or the operation never finished. The scan now fails with an error, which the caller handles like any other Redis error.

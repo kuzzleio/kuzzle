@@ -328,6 +328,12 @@
           "code": 4,
           "message": "Cache write fail: %s",
           "class": "InternalError"
+        },
+        "timeout": {
+          "description": "The cache server did not answer within the ioredis commandTimeout",
+          "code": 5,
+          "message": "The cache server did not answer within %sms.",
+          "class": "ServiceUnavailableError"
         }
       }
     },
