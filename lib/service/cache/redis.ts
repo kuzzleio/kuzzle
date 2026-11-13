@@ -375,9 +375,12 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    */
   private _cacheError(error: unknown): unknown {
     if (error instanceof Error && error.message === "Command timed out") {
+      // A number from a .kuzzlerc, a string from an environment variable
+      const delay = this._config.options?.commandTimeout;
+
       return kerror.get(
         "timeout",
-        String(this._config.options?.commandTimeout ?? "?"),
+        typeof delay === "number" || typeof delay === "string" ? delay : "?",
       );
     }
 
