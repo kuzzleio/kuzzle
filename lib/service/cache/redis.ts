@@ -340,7 +340,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   }
 
   private _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
-    return new Bluebird((resolve) => {
+    return new Bluebird((resolve, reject) => {
       let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
 
@@ -351,6 +351,11 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       stream.on("end", () => {
         resolve([...new Set(keys)]);
       });
+
+      // A failed `SCAN` (a `commandTimeout`, a connection lost midway)
+      // is an `error` event: unheard, it crashed the process, and the
+      // promise never settled
+      stream.on("error", reject);
     });
   }
 

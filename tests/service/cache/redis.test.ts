@@ -1,3 +1,6 @@
+import { EventEmitter } from "node:events";
+import { createServer, type Socket } from "node:net";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Redis from "../../../lib/service/cache/redis";
@@ -333,6 +336,59 @@ describe("#service/cache/Redis", () => {
         "s8",
         "s9",
       ]);
+    });
+
+    it("should reject when the scan fails, instead of crashing the process", async () => {
+      await redis.init();
+
+      clientOf(redis).scanStream = () => {
+        const stream = new EventEmitter();
+        setTimeout(() => stream.emit("error", new Error("Command timed out")));
+        return stream;
+      };
+
+      await expect(redis.searchKeys("s*")).rejects.toThrow("Command timed out");
+    });
+
+    /**
+     * The documented way to stop requests from hanging on a redis that no
+     * longer answers: ioredis' `commandTimeout`, passed through `options`.
+     * A real client, against a server that accepts and never answers.
+     */
+    it("should reject once commandTimeout expires against a mute redis", async () => {
+      const { default: RealRedis } =
+        await vi.importActual<typeof import("ioredis")>("ioredis");
+      const sockets: Socket[] = [];
+      const server = createServer((socket) => sockets.push(socket));
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve),
+      );
+      const address = server.address();
+      const client = new RealRedis({
+        commandTimeout: 200,
+        enableReadyCheck: false,
+        host: "127.0.0.1",
+        port: typeof address === "object" && address ? address.port : 0,
+      });
+
+      try {
+        const internals = invalid<{
+          _searchNodeKeys: (
+            node: unknown,
+            pattern: string,
+          ) => Promise<string[]>;
+        }>(redis);
+
+        await expect(internals._searchNodeKeys(client, "s*")).rejects.toThrow(
+          "Command timed out",
+        );
+      } finally {
+        client.disconnect();
+        for (const socket of sockets) {
+          socket.destroy();
+        }
+        await new Promise((resolve) => server.close(resolve));
+      }
     });
   });
 
