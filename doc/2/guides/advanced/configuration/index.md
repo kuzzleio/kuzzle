@@ -160,7 +160,7 @@ export kuzzle_services__internalCache__options__commandTimeout=5000
 export kuzzle_services__memoryStorage__options__commandTimeout=5000
 ```
 
-A command Redis has not answered within this delay fails, and so does the request that sent it. Before you set it:
+A command Redis has not answered within this delay fails, and so does the request that sent it, with a [`services.cache.timeout`](/core/2/api/errors/error-codes/services) error (503). Before you set it:
 
 - It applies to every command, in normal operation too. Choose a value well above your slowest legitimate command (large `SCAN`, `MGET` or memory storage operations), and above `cluster.heartbeat` (2 seconds by default).
 - A write that timed out may still have been applied by Redis.

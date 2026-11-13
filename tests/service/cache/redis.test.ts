@@ -347,7 +347,10 @@ describe("#service/cache/Redis", () => {
         return stream;
       };
 
-      await expect(redis.searchKeys("s*")).rejects.toThrow("Command timed out");
+      await expect(redis.searchKeys("s*")).rejects.toMatchObject({
+        id: "services.cache.timeout",
+        status: 503,
+      });
     });
 
     /**
@@ -371,6 +374,11 @@ describe("#service/cache/Redis", () => {
         port: typeof address === "object" && address ? address.port : 0,
       });
 
+      redis = new Redis(
+        invalid({ ...config, options: { commandTimeout: 200 } }),
+        "internalCache",
+      );
+
       try {
         const internals = invalid<{
           _searchNodeKeys: (
@@ -379,9 +387,12 @@ describe("#service/cache/Redis", () => {
           ) => Promise<string[]>;
         }>(redis);
 
-        await expect(internals._searchNodeKeys(client, "s*")).rejects.toThrow(
-          "Command timed out",
-        );
+        await expect(
+          internals._searchNodeKeys(client, "s*"),
+        ).rejects.toMatchObject({
+          id: "services.cache.timeout",
+          message: "The cache server did not answer within 200ms.",
+        });
       } finally {
         client.disconnect();
         for (const socket of sockets) {
@@ -416,6 +427,22 @@ describe("#service/cache/Redis", () => {
       await expect(redis.mExecute(commands)).resolves.toEqual(answers);
 
       expect(clientOf(redis).multi).toHaveBeenCalledWith(commands);
+    });
+
+    it("should answer a commandTimeout as the cache not answering", async () => {
+      await redis.init();
+
+      invalid<{ multi: ReturnType<typeof vi.fn> }>(redis.client).multi = vi
+        .fn()
+        .mockReturnValue({
+          exec: async () => {
+            throw new Error("Command timed out");
+          },
+        });
+
+      await expect(redis.mExecute([["get", "a"]])).rejects.toMatchObject({
+        id: "services.cache.timeout",
+      });
     });
 
     it("should do nothing when handed no command at all", async () => {
@@ -562,6 +589,30 @@ describe("#service/cache/Redis", () => {
       await expect(redis.exec("get", "foo")).resolves.toBeUndefined();
 
       expect(clientOf(redis).get).toHaveBeenCalledWith("foo");
+    });
+
+    /**
+     * ioredis' opt-in `commandTimeout` rejects with a plain error, which the
+     * API answered as a Kuzzle bug (`core.fatal.unexpected_error`, 500)
+     */
+    it("should answer a commandTimeout as the cache not answering (503)", async () => {
+      invalid<{ get: ReturnType<typeof vi.fn> }>(
+        redis.client,
+      ).get.mockRejectedValueOnce(new Error("Command timed out"));
+
+      await expect(redis.exec("get", "foo")).rejects.toMatchObject({
+        id: "services.cache.timeout",
+        status: 503,
+      });
+    });
+
+    it("should let any other command error through", async () => {
+      const error = new Error("WRONGTYPE");
+      invalid<{ get: ReturnType<typeof vi.fn> }>(
+        redis.client,
+      ).get.mockRejectedValueOnce(error);
+
+      await expect(redis.exec("get", "foo")).rejects.toBe(error);
     });
 
     it("should reject a command the client does not have", () => {
