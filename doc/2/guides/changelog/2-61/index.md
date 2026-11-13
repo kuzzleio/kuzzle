@@ -18,7 +18,7 @@ The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list eve
 
 ## 2.61.2
 
-**Status:** in beta since 2026-11-13 (2.61.2-beta.1).
+**Status:** in beta since 2026-11-13 (2.61.2-beta.1, then 2.61.2-beta.2 for the token check below).
 
 Two fixes for a Redis that stops answering, and a new opt-in setting for it. Nothing changes until you set it.
 
