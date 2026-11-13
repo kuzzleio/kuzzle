@@ -1,3 +1,12 @@
+## [2.61.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.0...v2.61.1) (2026-11-12)
+
+### Bug Fixes
+
+* **cache:** report Valkey's own version and mode in server:info ([4300c1f](https://github.com/kuzzleio/kuzzle/commit/4300c1fea52895227d2543ee3658d3122ff562a5))
+* **cluster:** bound each ID card renewal by the heartbeat delay ([5217227](https://github.com/kuzzleio/kuzzle/commit/5217227ebbfe53e592be317a93828199022bca76)), closes [#3181](https://github.com/kuzzleio/kuzzle/issues/3181)
+* **cluster:** bound the Redis calls of the shutdown a failed renewal starts ([180210c](https://github.com/kuzzleio/kuzzle/commit/180210c2abbf3654290ca125800c34a09773b81c)), closes [#3182](https://github.com/kuzzleio/kuzzle/issues/3182) [#3181](https://github.com/kuzzleio/kuzzle/issues/3181)
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.1.1 ([64bbca4](https://github.com/kuzzleio/kuzzle/commit/64bbca47052a0d67fd4605404363e3902ee9443e)), closes [kuzzleio/storage-es-8#9](https://github.com/kuzzleio/storage-es-8/issues/9)
+
 ## [2.61.0](https://github.com/kuzzleio/kuzzle/compare/v2.60.1...v2.61.0) (2026-11-04)
 
 ### Dependencies
