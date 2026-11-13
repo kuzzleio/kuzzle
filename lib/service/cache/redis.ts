@@ -262,7 +262,11 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
         // job caught in `funnel.doAction`, reintroduced here by hoisting
         // the lookup out of the call — see `pluginsManager`'s note on the
         // same line.
-        return Reflect.apply(implementation, client, args);
+        try {
+          return await Reflect.apply(implementation, client, args);
+        } catch (error) {
+          throw this._cacheError(error);
+        }
       };
     }
   }
@@ -336,11 +340,16 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       return Bluebird.resolve([]);
     }
 
-    return this.connectedClient.multi(commands as unknown[][]).exec();
+    return this.connectedClient
+      .multi(commands as unknown[][])
+      .exec()
+      .catch((error: unknown) => {
+        throw this._cacheError(error);
+      });
   }
 
   private _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
-    return new Bluebird((resolve) => {
+    return new Bluebird((resolve, reject) => {
       let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
 
@@ -351,7 +360,31 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       stream.on("end", () => {
         resolve([...new Set(keys)]);
       });
+
+      // A failed `SCAN` (a `commandTimeout`, a connection lost midway)
+      // is an `error` event: unheard, it crashed the process, and the
+      // promise never settled
+      stream.on("error", (error) => reject(this._cacheError(error)));
     });
+  }
+
+  /**
+   * ioredis rejects a command its `commandTimeout` (opt-in) expired on with
+   * a plain error, which the API answered as a Kuzzle bug (500): it is the
+   * cache server not answering (503)
+   */
+  private _cacheError(error: unknown): unknown {
+    if (error instanceof Error && error.message === "Command timed out") {
+      // A number from a .kuzzlerc, a string from an environment variable
+      const delay = this._config.options?.commandTimeout;
+
+      return kerror.get(
+        "timeout",
+        typeof delay === "number" || typeof delay === "string" ? delay : "?",
+      );
+    }
+
+    return error;
   }
 
   private _buildClient(options: Record<string, unknown>): IORedis {

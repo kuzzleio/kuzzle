@@ -565,6 +565,10 @@
     //       Kuzzle 2 keeps the ioredis 5 defaults for "protocol" (2, i.e. RESP2)
     //       and "keepAlive" (0), which can be overridden here, and for
     //       "retryStrategy" (a function, so only settable from code).
+    //       Not set by default: "commandTimeout" (ms), which makes a command
+    //       a Redis that stopped answering never answers fail instead of
+    //       hanging. See "When Redis stops answering" in the configuration
+    //       guide.
     //   * (optional) pingKeepAlive (default: 0):
     //       The amount of time (in milliseconds) after which a PING command will be issued
     //       to the Redis server to keep the connection alive.
