@@ -21,6 +21,7 @@
 
 import type { JSONObject } from "../../types/JSONObject";
 import * as kerror from "../../kerror";
+import { isCacheTimeout } from "../../kerror/isCacheTimeout";
 import { cacheDbEnum } from "../cache/cacheDbEnum";
 
 /**
@@ -236,6 +237,12 @@ export class ObjectRepository<TObject extends { _id: string | null }> {
 
       return await this.fromDTO({ ...JSON.parse(response) });
     } catch (err) {
+      // The cache server not answering is a 503 the client can retry, not
+      // a read failure (500)
+      if (isCacheTimeout(err)) {
+        throw err;
+      }
+
       throw kerror.get(
         "services",
         "cache",
