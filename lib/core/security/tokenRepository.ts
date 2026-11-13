@@ -26,6 +26,7 @@ import ms from "ms";
 
 import * as kerror from "../../kerror";
 import { UnauthorizedError } from "../../kerror/errors";
+import { isCacheTimeout } from "../../kerror/isCacheTimeout";
 import { Token } from "../../model/security/token";
 import type { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
@@ -384,7 +385,9 @@ export class TokenRepository extends ObjectRepository<Token> {
     try {
       return await this.loadForUser(userId, token);
     } catch (err) {
-      if (err instanceof UnauthorizedError) {
+      // The cache server not answering is a 503 the client can retry, not
+      // a verification failure (500)
+      if (err instanceof UnauthorizedError || isCacheTimeout(err)) {
         throw err;
       }
 
