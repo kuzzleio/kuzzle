@@ -149,6 +149,24 @@ A password set through an environment variable is kept as text, even when it loo
 Kuzzle hands the `services.internalCache` configuration to a worker process as JSON. A `Buffer` set from code reaches it as a plain `{ type, data }` object, and functions (such as an ioredis `retryStrategy`) are dropped. Give TLS keys and certificates as PEM text, and do not rely on functions in options the internal cache needs.
 :::
 
+#### When Redis stops answering
+
+If Redis stops answering while the connection stays open (a network policy or a partition dropping packets, a failover that does not reset connections), ioredis waits for an answer until the operating system closes the connection, which can take several minutes. In a cluster, the node notices within `cluster.heartbeat` and shuts down. But the API requests already waiting on Redis keep waiting, and the node only exits after 30 seconds.
+
+To make these requests fail instead, set the ioredis `commandTimeout` option (in milliseconds) on both sections:
+
+```bash
+export kuzzle_services__internalCache__options__commandTimeout=5000
+export kuzzle_services__memoryStorage__options__commandTimeout=5000
+```
+
+A command Redis has not answered within this delay fails, and so does the request that sent it. Before you set it:
+
+- It applies to every command, in normal operation too. Choose a value well above your slowest legitimate command (large `SCAN`, `MGET` or memory storage operations), and above `cluster.heartbeat` (2 seconds by default).
+- A write that timed out may still have been applied by Redis.
+
+Kuzzle does not set it by default.
+
 #### Secrets in API answers and dumps
 
 [server:getConfig](/core/2/api/controllers/server/get-config) and [admin:dump](/core/2/api/controllers/admin/dump) never return a secret: the value of any key named like one (`password`, `passphrase`, `secret`, `token`, `apiKey`, `credentials`, `privateKey`, `key`, `pfx`, `auth`...) is replaced with `"***"`, the key itself is kept so that one can still tell whether it is set, and credentials in URLs (`https://user:password@host`) become `https://user:***@host`. This applies to plugin and application configuration too. The `security` section and `http.routes` are not returned at all. The dump masks the environment variables (`nodejs.json`) with the same rule.
