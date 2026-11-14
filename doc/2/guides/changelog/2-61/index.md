@@ -12,9 +12,20 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patch [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12.
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12 and [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14.
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
+
+## 2.61.2
+
+**Released:** [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14, after two betas (2.61.2-beta.1 on 2026-11-13, then 2.61.2-beta.2 the same day for the token check below).
+
+Two fixes for a Redis that stops answering, and a new opt-in setting for it. Nothing changes until you set it.
+
+- **What you need to do:** nothing. To make requests fail instead of waiting on a Redis that stopped answering, set `commandTimeout` (see below).
+- **New: requests can stop waiting on a Redis that stopped answering.** Since 2.61.1, a node whose Redis stops answering leaves the cluster within seconds. But the API requests already waiting on Redis kept waiting, and the node only exited after 30 seconds. Set the ioredis `commandTimeout` option on `services.internalCache.options` and `services.memoryStorage.options`, for instance to `5000` milliseconds. A command Redis has not answered within that delay then fails, and so does its request. It is not set by default, as it applies to every Redis command: read [When Redis stops answering](/core/2/guides/advanced/configuration#when-redis-stops-answering) before you set it.
+- **Fixed: a command that timed out is reported as the cache not answering.** It used to reach the client as `core.fatal.unexpected_error` (500), which reads as a Kuzzle bug. It is now a [`services.cache.timeout`](/core/2/api/errors/error-codes/services) error (503), naming the delay. This includes the cache read that checks the request's authentication token: in 2.61.2-beta.1, that one still reached the client as `security.token.verification_error` or `services.cache.read_failed` (500).
+- **Fixed: a Redis key scan that fails no longer crashes Kuzzle.** Kuzzle scans Redis keys to list or expire authentication tokens and for statistics. If the scan failed midway (a timeout, a lost connection), the process crashed, or the operation never finished. It now fails with an error.
 
 ## 2.61.1
 

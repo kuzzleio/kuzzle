@@ -77,6 +77,7 @@ description: Error codes definitions
 | services.cache.read_failed<br/><pre>0x01030002</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | Cache read fail: %s | An attempt to read from the cache failed |
 | services.cache.not_connected<br/><pre>0x01030003</pre>  | [ServiceUnavailableError](/core/2/api/errors/types#serviceunavailableerror) <pre>(503)</pre> | Unable to connect to the cache server. | Unable to connect to the cache server |
 | services.cache.write_failed<br/><pre>0x01030004</pre>  | [InternalError](/core/2/api/errors/types#internalerror) <pre>(500)</pre> | Cache write fail: %s | An attempt to write to the cache failed |
+| services.cache.timeout<br/><pre>0x01030005</pre>  | [ServiceUnavailableError](/core/2/api/errors/types#serviceunavailableerror) <pre>(503)</pre> | The cache server did not answer within %sms. | The cache server did not answer within the ioredis commandTimeout |
 
 ---
 

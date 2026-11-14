@@ -1,3 +1,6 @@
+import { EventEmitter } from "node:events";
+import { createServer, type Socket } from "node:net";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Redis from "../../../lib/service/cache/redis";
@@ -334,6 +337,70 @@ describe("#service/cache/Redis", () => {
         "s9",
       ]);
     });
+
+    it("should reject when the scan fails, instead of crashing the process", async () => {
+      await redis.init();
+
+      clientOf(redis).scanStream = () => {
+        const stream = new EventEmitter();
+        setTimeout(() => stream.emit("error", new Error("Command timed out")));
+        return stream;
+      };
+
+      await expect(redis.searchKeys("s*")).rejects.toMatchObject({
+        id: "services.cache.timeout",
+        status: 503,
+      });
+    });
+
+    /**
+     * The documented way to stop requests from hanging on a redis that no
+     * longer answers: ioredis' `commandTimeout`, passed through `options`.
+     * A real client, against a server that accepts and never answers.
+     */
+    it("should reject once commandTimeout expires against a mute redis", async () => {
+      const { default: RealRedis } =
+        await vi.importActual<typeof import("ioredis")>("ioredis");
+      const sockets: Socket[] = [];
+      const server = createServer((socket) => sockets.push(socket));
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve),
+      );
+      const address = server.address();
+      const client = new RealRedis({
+        commandTimeout: 200,
+        enableReadyCheck: false,
+        host: "127.0.0.1",
+        port: typeof address === "object" && address ? address.port : 0,
+      });
+
+      redis = new Redis(
+        invalid({ ...config, options: { commandTimeout: 200 } }),
+        "internalCache",
+      );
+
+      try {
+        const internals = invalid<{
+          _searchNodeKeys: (
+            node: unknown,
+            pattern: string,
+          ) => Promise<string[]>;
+        }>(redis);
+
+        await expect(
+          internals._searchNodeKeys(client, "s*"),
+        ).rejects.toMatchObject({
+          id: "services.cache.timeout",
+          message: "The cache server did not answer within 200ms.",
+        });
+      } finally {
+        client.disconnect();
+        for (const socket of sockets) {
+          socket.destroy();
+        }
+        await new Promise((resolve) => server.close(resolve));
+      }
+    });
   });
 
   describe("#mExecute", () => {
@@ -360,6 +427,22 @@ describe("#service/cache/Redis", () => {
       await expect(redis.mExecute(commands)).resolves.toEqual(answers);
 
       expect(clientOf(redis).multi).toHaveBeenCalledWith(commands);
+    });
+
+    it("should answer a commandTimeout as the cache not answering", async () => {
+      await redis.init();
+
+      invalid<{ multi: ReturnType<typeof vi.fn> }>(redis.client).multi = vi
+        .fn()
+        .mockReturnValue({
+          exec: async () => {
+            throw new Error("Command timed out");
+          },
+        });
+
+      await expect(redis.mExecute([["get", "a"]])).rejects.toMatchObject({
+        id: "services.cache.timeout",
+      });
     });
 
     it("should do nothing when handed no command at all", async () => {
@@ -506,6 +589,30 @@ describe("#service/cache/Redis", () => {
       await expect(redis.exec("get", "foo")).resolves.toBeUndefined();
 
       expect(clientOf(redis).get).toHaveBeenCalledWith("foo");
+    });
+
+    /**
+     * ioredis' opt-in `commandTimeout` rejects with a plain error, which the
+     * API answered as a Kuzzle bug (`core.fatal.unexpected_error`, 500)
+     */
+    it("should answer a commandTimeout as the cache not answering (503)", async () => {
+      invalid<{ get: ReturnType<typeof vi.fn> }>(
+        redis.client,
+      ).get.mockRejectedValueOnce(new Error("Command timed out"));
+
+      await expect(redis.exec("get", "foo")).rejects.toMatchObject({
+        id: "services.cache.timeout",
+        status: 503,
+      });
+    });
+
+    it("should let any other command error through", async () => {
+      const error = new Error("WRONGTYPE");
+      invalid<{ get: ReturnType<typeof vi.fn> }>(
+        redis.client,
+      ).get.mockRejectedValueOnce(error);
+
+      await expect(redis.exec("get", "foo")).rejects.toBe(error);
     });
 
     it("should reject a command the client does not have", () => {

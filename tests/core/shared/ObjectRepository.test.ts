@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { cacheDbEnum } from "../../../lib/core/cache/cacheDbEnum";
 import { ObjectRepository } from "../../../lib/core/shared/ObjectRepository";
+import * as kerror from "../../../lib/kerror";
 import { InternalError } from "../../../lib/kerror/errors/internalError";
 import { NotFoundError } from "../../../lib/kerror/errors/notFoundError";
 import { invalid } from "../../helpers/invalid";
@@ -174,6 +175,19 @@ describe("#core/shared/ObjectRepository", () => {
       await expect(rejection).rejects.toBeInstanceOf(InternalError);
       await expect(rejection).rejects.toMatchObject({
         id: "services.cache.read_failed",
+      });
+    });
+
+    // services.cache.timeout is a 503 the client can retry: wrapping it into
+    // read_failed answered a 500
+    it("should let a cache timeout through unwrapped", async () => {
+      const timeout = kerror.get("services", "cache", "timeout", 500);
+      cache.get.mockRejectedValue(timeout);
+
+      await expect(repository.loadFromCache("timeout")).rejects.toBe(timeout);
+      await expect(repository.load("timeout")).rejects.toMatchObject({
+        id: "services.cache.timeout",
+        status: 503,
       });
     });
 
