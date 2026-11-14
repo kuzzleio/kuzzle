@@ -12,13 +12,13 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patch [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12. 2.61.2 is in beta since 2026-11-13.
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12 and [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14.
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
 ## 2.61.2
 
-**Status:** in beta since 2026-11-13 (2.61.2-beta.1, then 2.61.2-beta.2 for the token check below).
+**Released:** [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14, after two betas (2.61.2-beta.1 on 2026-11-13, then 2.61.2-beta.2 the same day for the token check below).
 
 Two fixes for a Redis that stops answering, and a new opt-in setting for it. Nothing changes until you set it.
 
