@@ -115,6 +115,57 @@ class ResourceMutex extends RedisMutex {
  */
 const lockContext = new AsyncLocalStorage<Set<string>>();
 
+/**
+ * The locks the async context of a `trackLockWaits` call is waiting for, each
+ * with the number of `withLock` calls waiting on it.
+ */
+const waitContext = new AsyncLocalStorage<Map<string, number>>();
+
+/**
+ * Runs `fn`, and lets the caller ask at any time which locks the work it
+ * started (`withLock` calls made by `fn`, or by anything it awaits) is still
+ * waiting to acquire.
+ *
+ * Used to say what a plugin's `init` was blocked on when it times out: a
+ * lock held by another node, or left behind by a node that died, is only
+ * released when its TTL expires (#3156).
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export function trackLockWaits<T>(fn: () => Promise<T>): {
+  promise: Promise<T>;
+  waitingFor: () => string[];
+} {
+  const waits = new Map<string, number>();
+
+  return {
+    promise: waitContext.run(waits, fn),
+    waitingFor: () => [...waits.keys()],
+  };
+}
+
+async function acquireTracked(mutex: ResourceMutex, key: string) {
+  const waits = waitContext.getStore();
+
+  if (!waits) {
+    return mutex.tryAcquire();
+  }
+
+  waits.set(key, (waits.get(key) ?? 0) + 1);
+
+  try {
+    return await mutex.tryAcquire();
+  } finally {
+    const count = (waits.get(key) ?? 1) - 1;
+
+    if (count === 0) {
+      waits.delete(key);
+    } else {
+      waits.set(key, count);
+    }
+  }
+}
+
 let clientPromise: Promise<RedisClient> | undefined;
 
 // Every lock this process holds, so that it can give them back before it
@@ -230,7 +281,7 @@ export async function withLock<T>(
     retryInterval: retryAttempts === 0 ? 0 : retryDelay,
   });
 
-  if (!(await mutex.tryAcquire())) {
+  if (!(await acquireTracked(mutex, key))) {
     throw new MutexAcquireError(key, retryAttempts + 1);
   }
 

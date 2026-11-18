@@ -1,6 +1,8 @@
 import type { JSONObject } from "kuzzle-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import RedisMock from "ioredis-mock";
+
 import { BaseController } from "../../../lib/api/controllers/baseController";
 import Plugin from "../../../lib/core/plugin/plugin";
 import PluginsManager from "../../../lib/core/plugin/pluginsManager";
@@ -13,6 +15,7 @@ import KuzzleEventEmitter from "../../../lib/kuzzle/event/KuzzleEventEmitter";
 import { invalid } from "../../helpers/invalid";
 import { settle } from "../../helpers/settle";
 import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+import { withLock } from "../../../lib/util/distributedLock";
 
 const PLUGIN_NAME = "test-plugin";
 const APPLICATION_NAME = "lambda-core";
@@ -402,6 +405,49 @@ describe("#core/plugin/pluginsManager", () => {
        */
       await expect(pluginsManager.init()).rejects.toThrow(
         /Initialization timed out after 10ms/,
+      );
+    });
+
+    /*
+     * #3156: when a node dies holding a lock that a plugin's `init` waits
+     * for, its peers time out until the lock expires. The message must name
+     * that lock rather than only suggest a longer timeout.
+     */
+    it("names the cluster-wide lock a timed out init was waiting for", async () => {
+      const redis = new RedisMock();
+      const otherNode = new RedisMock();
+      await redis.flushall();
+      await otherNode.set("Store.init(some-index)", "node-2", "PX", 10000);
+      vi.mocked(global.kuzzle.ask).mockResolvedValue(redis);
+
+      pluginsManager.config.common = { initTimeout: 50 };
+      pluginsManager.application = application;
+      application.instance.init = () =>
+        withLock("Store.init(some-index)", async () => undefined, {
+          retryAttempts: Number.POSITIVE_INFINITY,
+          retryDelay: 10,
+        });
+
+      try {
+        await expect(pluginsManager.init()).rejects.toThrow(
+          'Initialization timed out after 50ms. It was waiting for the cluster-wide lock "Store.init(some-index)", held by another node',
+        );
+      } finally {
+        // Lets the init still waiting in the background take the lock and end
+        await otherNode.del("Store.init(some-index)");
+        redis.disconnect();
+        otherNode.disconnect();
+      }
+    });
+
+    it("does not name any lock when the init was not waiting for one", async () => {
+      pluginsManager.config.common = { initTimeout: 10 };
+      pluginsManager.application = application;
+      application.instance.init = () =>
+        new Promise((resolve) => setTimeout(resolve, 50));
+
+      await expect(pluginsManager.init()).rejects.toThrow(
+        /timed out after 10ms\. Try to increase/,
       );
     });
   });
