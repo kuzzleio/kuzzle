@@ -1126,8 +1126,18 @@ class Kuzzle extends KuzzleEventEmitter {
     });
 
     process.removeAllListeners("uncaughtException");
-    process.on("uncaughtException", (err) => {
-      this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
+    // Anything can be thrown, `undefined` included: the development mode
+    // above rethrows whatever a promise was rejected with
+    process.on("uncaughtException", (err: unknown) => {
+      let description: string;
+
+      if (err instanceof Error) {
+        description = `${err.message}\n${err.stack}`;
+      } else {
+        description = typeof err === "string" ? err : inspect(err);
+      }
+
+      this.log.error(`ERROR: uncaughtException: ${description}`);
       void this.dumpAndExit("uncaught-exception");
     });
 
