@@ -738,6 +738,35 @@ describe("#kuzzle/Kuzzle", () => {
         await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
       },
     );
+
+    /* kuzzle-plugin-auth-openid#50: a rejection with `undefined`, rethrown in
+     * development mode, crashed the handler itself on `err.message`. */
+    it.each([
+      [undefined, "ERROR: uncaughtException: undefined"],
+      ["plain text", "ERROR: uncaughtException: plain text"],
+      [{ code: 42 }, "ERROR: uncaughtException: { code: 42 }"],
+    ])(
+      "logs a thrown %o that is not an Error, then exits",
+      async (thrown, logged) => {
+        const on = vi.spyOn(process, "on").mockReturnValue(process);
+        vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+        kuzzle.config.dump.enabled = false;
+
+        kuzzle.registerSignalHandlers();
+
+        const handler = on.mock.calls.find(
+          ([event]) => event === "uncaughtException",
+        );
+
+        present(handler, "the uncaughtException handler");
+        expect(() =>
+          (handler[1] as (error: unknown) => void)(thrown),
+        ).not.toThrow();
+
+        expect(kuzzle.log.error).toHaveBeenCalledWith(logged);
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
+      },
+    );
   });
 
   /* #3160: late work failing once the storage is closed must not turn a
