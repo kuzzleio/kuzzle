@@ -1629,14 +1629,14 @@ function initTimeoutMessage(
   initTimeout: number,
   locks: string[],
 ): string {
-  const waiting =
-    locks.length === 0
-      ? ""
-      : ` It was waiting for the cluster-wide lock${locks.length > 1 ? "s" : ""} ${locks
-          .map((key) => `"${key}"`)
-          .join(
-            ", ",
-          )}, held by another node; a lock left by a node that stopped abruptly is only released when it expires.`;
+  let waiting = "";
+
+  if (locks.length > 0) {
+    const plural = locks.length > 1 ? "s" : "";
+    const names = locks.map((key) => `"${key}"`).join(", ");
+
+    waiting = ` It was waiting for the cluster-wide lock${plural} ${names}, held by another node; a lock left by a node that stopped abruptly is only released when it expires.`;
+  }
 
   return `${logPrefix} Initialization timed out after ${initTimeout}ms.${waiting} Try to increase the configuration "plugins.common.initTimeout".`;
 }
