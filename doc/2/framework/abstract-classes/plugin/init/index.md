@@ -31,4 +31,6 @@ The `init` function can optionally return a promise. If it does, Kuzzle waits fo
 
 If a promise is returned, it must be resolved within the configured timeout (see `plugins.common.initTimeout` in Kuzzle's [configuration](/core/2/guides/advanced/configuration))
 
+In a cluster, that time includes waiting for cluster-wide locks taken during the `init`, for instance by [storage.bootstrap](/core/2/framework/classes/plugin-storage/bootstrap) (every node creates the plugin's collections in turn). If the node holding such a lock stops abruptly, the lock is only released when it expires: the timeout error then names the lock that was awaited.
+
 If a promise is returned and rejected, or if the `init` function throws an error, Kuzzle aborts its start sequence and shuts down.

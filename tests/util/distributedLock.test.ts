@@ -22,6 +22,7 @@ describe("#distributedLock", () => {
   let MutexAcquireError: typeof import("../../lib/util/distributedLock").MutexAcquireError;
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
   let releaseAllLocksBeforeExit: typeof import("../../lib/util/distributedLock").releaseAllLocksBeforeExit;
+  let trackLockWaits: typeof import("../../lib/util/distributedLock").trackLockWaits;
 
   beforeEach(async () => {
     client = new RedisMock();
@@ -39,6 +40,7 @@ describe("#distributedLock", () => {
       MutexAcquireError,
       MutexLockLostError,
       releaseAllLocksBeforeExit,
+      trackLockWaits,
     } = await import("../../lib/util/distributedLock"));
   });
 
@@ -309,6 +311,58 @@ describe("#distributedLock", () => {
       }
     });
   });
+  /*
+   * #3156: a plugin's `init` that times out says which lock it was waiting
+   * for, held by another node or left behind by one that died.
+   */
+  describe("#trackLockWaits", () => {
+    it("lists the locks the tracked work is waiting for, and only while it waits", async () => {
+      await other.set("foo", "node-2", "PX", 10000);
+
+      const tracked = trackLockWaits(async () => {
+        await withLock("free", async () => undefined);
+
+        return withLock("foo", async () => "done", { retryDelay: 10 });
+      });
+
+      await vi.waitFor(() => expect(tracked.waitingFor()).toEqual(["foo"]));
+
+      await other.del("foo");
+
+      await expect(tracked.promise).resolves.toBe("done");
+      expect(tracked.waitingFor()).toEqual([]);
+    });
+
+    it("forgets a lock that could not be acquired", async () => {
+      await other.set("foo", "node-2", "PX", 10000);
+
+      const tracked = trackLockWaits(() =>
+        withLock("foo", async () => "never", {
+          retryAttempts: 1,
+          retryDelay: 10,
+        }),
+      );
+
+      await expect(tracked.promise).rejects.toBeInstanceOf(MutexAcquireError);
+      expect(tracked.waitingFor()).toEqual([]);
+    });
+
+    it("does not see the locks other work waits for", async () => {
+      await other.set("foo", "node-2", "PX", 10000);
+      const tracked = trackLockWaits(() => new Promise<void>(() => undefined));
+
+      const untracked = withLock("foo", async () => "theirs", {
+        retryDelay: 10,
+      });
+      await sleep(50);
+
+      expect(tracked.waitingFor()).toEqual([]);
+
+      await other.del("foo");
+      await expect(untracked).resolves.toBe("theirs");
+    });
+  });
+
   /*
    * F-13: a node evicted while starting its plugins exited holding a lock,
    * and another node timed out waiting on it for the lock's TTL.

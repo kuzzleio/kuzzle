@@ -39,6 +39,7 @@ import didYouMean from "../../util/didYouMean";
 import { Inflector } from "../../util/Inflector";
 import { has, isPlainObject } from "../../util/safeObject";
 import { causeOf } from "../../util/thrown";
+import { trackLockWaits } from "../../util/distributedLock";
 import type { PluginInstance } from "../../types/PluginInstance";
 import Plugin from "./plugin";
 
@@ -389,19 +390,25 @@ class PluginsManager {
         throw assertionError.get("init_not_found", plugin.name);
       }
 
-      const promise = Bluebird.resolve(
-        (async () => {
-          try {
-            await init.call(plugin.instance, plugin.config, plugin.context);
-          } catch (error) {
-            throw runtimeError.get("failed_init", plugin.name, error);
-          }
-        })(),
-      )
-        .timeout(
-          initTimeout,
-          `${plugin.logPrefix} Initialization timed out after ${initTimeout}ms. Try to increase the configuration "plugins.common.initTimeout".`,
-        )
+      const initialization = trackLockWaits(async () => {
+        try {
+          await init.call(plugin.instance, plugin.config, plugin.context);
+        } catch (error) {
+          throw runtimeError.get("failed_init", plugin.name, error);
+        }
+      });
+
+      const promise = Bluebird.resolve(initialization.promise)
+        .timeout(initTimeout)
+        .catch(Bluebird.TimeoutError, () => {
+          throw new Bluebird.TimeoutError(
+            initTimeoutMessage(
+              plugin.logPrefix,
+              initTimeout,
+              initialization.waitingFor(),
+            ),
+          );
+        })
         .then(async () => {
           plugin.initCalled = true;
 
@@ -1610,3 +1617,26 @@ function getMethods(object: object): string[] {
 }
 
 export = PluginsManager;
+
+/**
+ * A plugin's `init` waiting for a cluster-wide lock is the usual way to run
+ * out of time while the cluster starts: the message names the lock, and says
+ * that one left behind by a node that died is only freed when it expires
+ * (#3156).
+ */
+function initTimeoutMessage(
+  logPrefix: string,
+  initTimeout: number,
+  locks: string[],
+): string {
+  let waiting = "";
+
+  if (locks.length > 0) {
+    const plural = locks.length > 1 ? "s" : "";
+    const names = locks.map((key) => `"${key}"`).join(", ");
+
+    waiting = ` It was waiting for the cluster-wide lock${plural} ${names}, held by another node; a lock left by a node that stopped abruptly is only released when it expires.`;
+  }
+
+  return `${logPrefix} Initialization timed out after ${initTimeout}ms.${waiting} Try to increase the configuration "plugins.common.initTimeout".`;
+}
