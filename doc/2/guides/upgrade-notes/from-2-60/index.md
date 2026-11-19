@@ -177,3 +177,9 @@ The timeout error now names the lock the `init` was waiting for, for instance `I
 When `app.start()` fails, Kuzzle logs `Cannot start Kuzzle` and stops. If the application does not catch the promise `app.start()` returns, the same error was then logged again as an `unhandledRejection`. It no longer is; other unhandled rejections are still logged.
 
 **Action:** if a log alert counts `unhandledRejection` lines to detect failed starts, use `Cannot start Kuzzle` instead.
+
+### Uncaught values that are not errors
+
+When code throws a value that is not an `Error` (a string, an object, `undefined`) and nothing catches it, Kuzzle now logs that value, then writes its dump and exits as for any uncaught exception. It used to log `undefined`, or, for `undefined`, fail in its own handler without a dump. In development mode, a promise rejected with no reason ends this way.
+
+**Action:** none.
