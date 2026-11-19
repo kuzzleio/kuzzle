@@ -1,3 +1,12 @@
+## [2.61.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.1...v2.61.2) (2026-11-14)
+
+### Bug Fixes
+
+* **cache:** answer a Redis commandTimeout as services.cache.timeout (503) ([63ace34](https://github.com/kuzzleio/kuzzle/commit/63ace347fdf6611ae10af5ca48b7b9331c0829c2))
+* **cache:** narrow commandTimeout before naming it in the error ([38e34e7](https://github.com/kuzzleio/kuzzle/commit/38e34e7a6a748d0445c0577bd3e04a7d7c4ed2d8))
+* **cache:** reject searchKeys when its SCAN fails ([f3f15d1](https://github.com/kuzzleio/kuzzle/commit/f3f15d1fd1a7d348cf65697322b8e5aa29eae219))
+* **security:** answer a cache timeout during token check as services.cache.timeout (503) ([44aa64b](https://github.com/kuzzleio/kuzzle/commit/44aa64be81316bbcda9b3f60b75a18a900df4f3a))
+
 ## [2.61.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.0...v2.61.1) (2026-11-12)
 
 ### Bug Fixes

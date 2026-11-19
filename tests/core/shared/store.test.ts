@@ -103,12 +103,18 @@ describe("#core/shared/Store", () => {
       foo: { mappings: { properties: { foo: { type: "keyword" } } }, settings },
     };
 
-    it("takes the index's lock with no retry limit and the default TTL", async () => {
+    /*
+     * #3156: plugins call `Store.init` from their `init`, bounded by
+     * `plugins.common.initTimeout` (10 s by default). A node that dies
+     * holding the lock leaves it until it expires: with the 30 s default TTL,
+     * every peer waiting on it ran out of time.
+     */
+    it("takes the index's lock with no retry limit, for 10 s at most if its holder dies", async () => {
       await store.init(collections);
 
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY },
+          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 10000 },
           held: false,
           released: true,
           resource: `Store.init(${INDEX})`,

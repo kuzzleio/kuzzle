@@ -12,9 +12,21 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12 and [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14.
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12 and [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14. 2.61.3 is in beta since 2026-11-19.
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
+
+## 2.61.3
+
+**Status:** in beta since 2026-11-19 (2.61.3-beta.1).
+
+Fixes for a cluster node stopped abruptly while the cluster starts, and for error logs. No new feature, no configuration change.
+
+- **What you need to do:** nothing.
+- **Fixed: a node stopped while the cluster starts blocks the others for less time.** Every node creates a plugin's collections in turn, under a cluster-wide lock. When the node holding it was stopped abruptly, the lock stayed for 30 seconds, longer than the 10 seconds a plugin `init` gets by default (`plugins.common.initTimeout`): the other nodes could fail to start, then started again once restarted. The lock now expires after 10 seconds ([#3156](https://github.com/kuzzleio/kuzzle/issues/3156)).
+- **Fixed: a plugin init that times out says what it was waiting for.** When it was waiting for a cluster-wide lock, the error now names that lock, instead of only suggesting a longer timeout.
+- **Fixed: a failed start is logged once.** When the application does not catch `app.start()`, as in the project templates, the error was logged a second time as an `unhandledRejection`.
+- **Fixed: a thrown value that is not an `Error` is logged before Kuzzle exits.** Kuzzle logged `undefined` instead of it, or, for `undefined` itself (in development mode, a promise rejected with no reason), failed in its own error handler, with no useful log and no dump.
 
 ## 2.61.2
 

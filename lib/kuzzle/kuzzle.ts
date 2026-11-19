@@ -144,6 +144,12 @@ class Kuzzle extends KuzzleEventEmitter {
   private shutdownExitCode = 0;
   /** Ends a failure's shutdown that does not finish in time */
   private shutdownWatchdog: NodeJS.Timeout | null = null;
+  /**
+   * The error a failed `start()` has already logged and handed to its
+   * caller: an application that does not catch it must not get it logged
+   * once more as an unhandled rejection (#3156)
+   */
+  private reportedStartFailure: unknown = undefined;
   /** Built by `start()`; its storage drivers are closed on shutdown */
   private storageEngine: StorageEngine | null = null;
   public log: Logger;
@@ -430,6 +436,8 @@ class Kuzzle extends KuzzleEventEmitter {
       // awaited, so the caller still gets the error before the process exits;
       // `shutdown` never rejects, and exits even when it fails.
       void this.shutdown(1);
+
+      this.reportedStartFailure = error;
 
       throw error;
     }
@@ -1088,6 +1096,11 @@ class Kuzzle extends KuzzleEventEmitter {
     });
 
     process.on("unhandledRejection", (reason, promise) => {
+      // Already logged by `start()`, which is shutting Kuzzle down
+      if (reason !== undefined && reason === this.reportedStartFailure) {
+        return;
+      }
+
       if (reason !== undefined) {
         if (reason instanceof Error) {
           this.log.error(
@@ -1126,8 +1139,18 @@ class Kuzzle extends KuzzleEventEmitter {
     });
 
     process.removeAllListeners("uncaughtException");
-    process.on("uncaughtException", (err) => {
-      this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
+    // Anything can be thrown, `undefined` included: the development mode
+    // above rethrows whatever a promise was rejected with
+    process.on("uncaughtException", (err: unknown) => {
+      let description: string;
+
+      if (err instanceof Error) {
+        description = `${err.message}\n${err.stack}`;
+      } else {
+        description = typeof err === "string" ? err : inspect(err);
+      }
+
+      this.log.error(`ERROR: uncaughtException: ${description}`);
       void this.dumpAndExit("uncaught-exception");
     });
 

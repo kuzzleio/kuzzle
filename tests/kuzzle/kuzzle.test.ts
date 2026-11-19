@@ -560,6 +560,42 @@ describe("#kuzzle/Kuzzle", () => {
         expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
       });
 
+      /*
+       * #3156: the templates call `app.start()` without catching it. The
+       * failure was logged a second time as an unhandled rejection, (before
+       * #3160) a third time as an uncaught exception.
+       */
+      it("does not log the failure again when the caller leaves it unhandled", async () => {
+        const on = vi.spyOn(process, "on").mockReturnValue(process);
+        vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+
+        const failure = await kuzzle
+          .start(application)
+          .catch((error: unknown) => error);
+        await vi.waitFor(() => expect(exit).toHaveBeenCalled());
+
+        const call = on.mock.calls.find(
+          ([event]) => event === "unhandledRejection",
+        );
+        present(call, "the unhandledRejection handler");
+        const handler = call[1] as (reason: unknown, promise: unknown) => void;
+
+        expect(() => handler(failure, Promise.resolve())).not.toThrow();
+        handler(new Error("something else"), Promise.resolve());
+
+        expect(kuzzle.log.error).toHaveBeenCalledTimes(2);
+        expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+          1,
+          expect.stringMatching(
+            /^\[X\] Cannot start Kuzzle .*: install failed$/,
+          ),
+        );
+        expect(kuzzle.log.error).toHaveBeenNthCalledWith(
+          2,
+          expect.stringContaining("ERROR: unhandledRejection: something else"),
+        );
+      });
+
       it("still exits when that shutdown fails", async () => {
         vi.mocked(kuzzle.pipe).mockImplementation(async (event: string) => {
           if (event === "kuzzle:shutdown") {
@@ -735,6 +771,35 @@ describe("#kuzzle/Kuzzle", () => {
         present(handler, `the ${event} handler`);
         (handler[1] as (error?: Error) => void)(new Error("boom"));
 
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
+      },
+    );
+
+    /* kuzzle-plugin-auth-openid#50: a rejection with `undefined`, rethrown in
+     * development mode, crashed the handler itself on `err.message`. */
+    it.each([
+      [undefined, "ERROR: uncaughtException: undefined"],
+      ["plain text", "ERROR: uncaughtException: plain text"],
+      [{ code: 42 }, "ERROR: uncaughtException: { code: 42 }"],
+    ])(
+      "logs a thrown %o that is not an Error, then exits",
+      async (thrown, logged) => {
+        const on = vi.spyOn(process, "on").mockReturnValue(process);
+        vi.spyOn(process, "removeAllListeners").mockReturnValue(process);
+        kuzzle.config.dump.enabled = false;
+
+        kuzzle.registerSignalHandlers();
+
+        const handler = on.mock.calls.find(
+          ([event]) => event === "uncaughtException",
+        );
+
+        present(handler, "the uncaughtException handler");
+        expect(() =>
+          (handler[1] as (error: unknown) => void)(thrown),
+        ).not.toThrow();
+
+        expect(kuzzle.log.error).toHaveBeenCalledWith(logged);
         await vi.waitFor(() => expect(exit).toHaveBeenCalledExactlyOnceWith(1));
       },
     );
