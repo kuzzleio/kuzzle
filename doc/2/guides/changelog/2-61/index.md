@@ -18,13 +18,13 @@ The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list eve
 
 ## 2.61.3
 
-**Status:** in beta since 2026-11-19 (2.61.3-beta.1).
+**Status:** in beta since 2026-11-19 (2.61.3-beta.1, then 2.61.3-beta.2 for every cluster-wide lock below).
 
 Fixes for a cluster node stopped abruptly while the cluster starts, and for error logs. No new feature, no configuration change.
 
 - **What you need to do:** nothing.
-- **Fixed: a node stopped while the cluster starts blocks the others for less time.** Every node creates a plugin's collections in turn, under a cluster-wide lock. When the node holding it was stopped abruptly, the lock stayed for 30 seconds, longer than the 10 seconds a plugin `init` gets by default (`plugins.common.initTimeout`): the other nodes could fail to start, then started again once restarted. The lock now expires after 10 seconds ([#3156](https://github.com/kuzzleio/kuzzle/issues/3156)).
-- **Fixed: a plugin init that times out says what it was waiting for.** When it was waiting for a cluster-wide lock, the error now names that lock, instead of only suggesting a longer timeout.
+- **Fixed: a node stopped while the cluster starts blocks the others for less time.** Every node creates a plugin's collections in turn, under a cluster-wide lock. When the node holding it was stopped abruptly, the lock stayed for 30 seconds, longer than the 10 seconds a plugin `init` gets by default (`plugins.common.initTimeout`): the other nodes could fail to start, then started again once restarted. The lock now expires after 10 seconds ([#3156](https://github.com/kuzzleio/kuzzle/issues/3156)). Since 2.61.3-beta.2, so does every other cluster-wide lock, including the ones the storage drivers take while creating collections and the startup imports' (60 seconds before), and plugins' [withLock](/core/2/framework/functions/with-lock) calls that set no `ttl` ([#3207](https://github.com/kuzzleio/kuzzle/issues/3207), [#3208](https://github.com/kuzzleio/kuzzle/issues/3208)). A node that is alive renews its locks every 3.3 seconds instead of 24, so it can stall as long as before without losing them.
+- **Fixed: a plugin init that times out says what it was waiting for.** When it was waiting for a cluster-wide lock, the error now names that lock, and whether this node or another one holds it, instead of only suggesting a longer timeout.
 - **Fixed: a failed start is logged once.** When the application does not catch `app.start()`, as in the project templates, the error was logged a second time as an `unhandledRejection`.
 - **Fixed: a thrown value that is not an `Error` is logged before Kuzzle exits.** Kuzzle logged `undefined` instead of it, or, for `undefined` itself (in development mode, a promise rejected with no reason), failed in its own error handler, with no useful log and no dump.
 

@@ -162,12 +162,12 @@ describe("#kuzzle/InternalIndexHandler", () => {
        */
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 10000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           released: true,
           resource: `Store.init(${INDEX})`,
         },
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           released: true,
           resource: "InternalIndexBootstrap",
         },

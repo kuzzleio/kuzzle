@@ -1513,7 +1513,7 @@ describe("#kuzzle/Kuzzle", () => {
         expect(locks.taken).toEqual(
           ["fixtures", "mappings", "permissions", "userMappings"].map(
             (type) => ({
-              config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+              config: { retryAttempts: Number.POSITIVE_INFINITY },
               resource: `backend:import:${type}`,
             }),
           ),
