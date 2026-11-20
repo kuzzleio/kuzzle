@@ -1,3 +1,10 @@
+## [2.61.3-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.3-beta.1...v2.61.3-beta.2) (2026-11-20)
+
+### Bug Fixes
+
+* **lock:** let every cluster-wide lock expire in 10 s, extended every third of it ([b5eda38](https://github.com/kuzzleio/kuzzle/commit/b5eda38f29ce051aae2e93a77cc350509073734a)), closes [#3207](https://github.com/kuzzleio/kuzzle/issues/3207) [#3208](https://github.com/kuzzleio/kuzzle/issues/3208)
+* **plugins:** say whether a lock a timed out init waited for is held by this node ([93e04d2](https://github.com/kuzzleio/kuzzle/commit/93e04d24cd1c3ff536234204cc75ae48e58227ca)), closes [#3156](https://github.com/kuzzleio/kuzzle/issues/3156)
+
 ## [2.61.3-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.2...v2.61.3-beta.1) (2026-11-19)
 
 ### Bug Fixes
