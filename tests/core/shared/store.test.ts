@@ -109,12 +109,12 @@ describe("#core/shared/Store", () => {
      * holding the lock leaves it until it expires: with the 30 s default TTL,
      * every peer waiting on it ran out of time.
      */
-    it("takes the index's lock with no retry limit, for 10 s at most if its holder dies", async () => {
+    it("takes the index's lock with no retry limit and the default TTL", async () => {
       await store.init(collections);
 
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 10000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           held: false,
           released: true,
           resource: `Store.init(${INDEX})`,

@@ -1041,7 +1041,6 @@ class Kuzzle extends KuzzleEventEmitter {
       // `MutexLockLostError` (the bookkeeping write stays idempotent, TD-69).
       await withLock(`backend:import:${type}`, importType, {
         retryAttempts: Number.POSITIVE_INFINITY,
-        ttl: 60000,
       });
     };
 

@@ -27,15 +27,6 @@ import { withLock } from "../../util/distributedLock";
 import type { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
- * TTL of the `Store.init` lock, refreshed every 8 s while its holder is alive.
- * Plugins call `Store.init` from their `init`, which must finish within
- * `plugins.common.initTimeout` (10 s by default): a node that dies holding the
- * lock leaves it to expire, and with the 30 s default every node waiting on it
- * ran out of time (#3156).
- */
-const STORE_INIT_LOCK_TTL = 10000;
-
-/**
  * The store methods that are nothing but an ask on a
  * `core:storage:<scope>:<suffix>` event taking the index as its first
  * argument, mapped to that suffix.
@@ -175,15 +166,14 @@ export class Store {
    * Initialize the index, and creates provided collections
    *
    * Every node creates the collections in turn, under the same lock, and
-   * waits for it with no limit. The lock (`STORE_INIT_LOCK_TTL`) is refreshed
-   * while the collections are created; if it is lost, this rejects with
-   * `MutexLockLostError`.
+   * waits for it with no limit. The lock is refreshed while the collections
+   * are created; if it is lost, this rejects with `MutexLockLostError`.
    */
   async init(collections: StoreCollectionsDefinition = {}): Promise<void> {
     await withLock(
       `Store.init(${this.index})`,
       () => this.createCollections(collections, { indexCacheOnly: false }),
-      { retryAttempts: Number.POSITIVE_INFINITY, ttl: STORE_INIT_LOCK_TTL },
+      { retryAttempts: Number.POSITIVE_INFINITY },
     );
   }
 

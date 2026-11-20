@@ -23,6 +23,7 @@ describe("#distributedLock", () => {
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
   let releaseAllLocksBeforeExit: typeof import("../../lib/util/distributedLock").releaseAllLocksBeforeExit;
   let trackLockWaits: typeof import("../../lib/util/distributedLock").trackLockWaits;
+  let isLockHeldHere: typeof import("../../lib/util/distributedLock").isLockHeldHere;
 
   beforeEach(async () => {
     client = new RedisMock();
@@ -41,6 +42,7 @@ describe("#distributedLock", () => {
       MutexLockLostError,
       releaseAllLocksBeforeExit,
       trackLockWaits,
+      isLockHeldHere,
     } = await import("../../lib/util/distributedLock"));
   });
 
@@ -73,7 +75,10 @@ describe("#distributedLock", () => {
       const result = await withLock("foo", async () => {
         // Same key as the deprecated Mutex class, no prefix
         expect(await other.get("foo")).toEqual(expect.any(String));
-        expect(await other.pttl("foo")).toBeGreaterThan(29000);
+        // Default TTL: a lock left by a node that died expires within 10 s
+        // (#3207)
+        expect(await other.pttl("foo")).toBeGreaterThan(9000);
+        expect(await other.pttl("foo")).toBeLessThanOrEqual(10000);
         expect(await other.set("foo", "node-2", "PX", 1000, "NX")).toBeNull();
 
         return "done";
@@ -246,6 +251,45 @@ describe("#distributedLock", () => {
 
       expect(result).toBe("done");
       expect(await other.exists("long")).toBe(0);
+    });
+  });
+
+  describe("#TTL extension interval", () => {
+    /*
+     * #3207: the TTL is extended every third of it, so that a holder whose
+     * event loop or Redis stalls keeps about 2/3 of the TTL before losing
+     * the lock (redis-semaphore's own default, 80 %, would leave 1/5).
+     */
+    it("extends the lock every third of its TTL", async () => {
+      const extensions = vi.spyOn(client, "evalsha");
+
+      await withLock(
+        "steady",
+        async () => {
+          await sleep(1000);
+        },
+        { ttl: 600 },
+      );
+
+      // ~200 ms apart: at least 4 in 1 s (80 % of the TTL would give 2)
+      const refreshes = extensions.mock.calls.filter((call) =>
+        call.includes("steady"),
+      ).length;
+      expect(refreshes).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  describe("#isLockHeldHere", () => {
+    it("tells whether this process holds a lock, and only while it does", async () => {
+      await other.set("remote", "node-2", "PX", 10000);
+      expect(isLockHeldHere("local")).toBe(false);
+
+      await withLock("local", async () => {
+        expect(isLockHeldHere("local")).toBe(true);
+        expect(isLockHeldHere("remote")).toBe(false);
+      });
+
+      expect(isLockHeldHere("local")).toBe(false);
     });
   });
 
