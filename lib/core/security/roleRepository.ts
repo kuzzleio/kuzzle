@@ -201,11 +201,24 @@ class RoleRepository extends ObjectRepository<Role> {
       let role = this.roles.get(id);
 
       if (!role) {
-        role = this.loadOneFromDatabase(id).then((r) => {
-          this.roles.set(id, r);
-          return r;
-        });
+        const pending: Promise<Role> = this.loadOneFromDatabase(id).then(
+          (r) => {
+            this.roles.set(id, r);
+            return r;
+          },
+          (error) => {
+            // Never keep a rejected load in the cache: it would make every
+            // later lookup of this role fail without querying the database
+            // again. Only evict our own entry, it may have been replaced
+            // (e.g. by an invalidation followed by a new load) meanwhile.
+            if (this.roles.get(id) === pending) {
+              this.roles.delete(id);
+            }
+            throw error;
+          },
+        );
 
+        role = pending;
         this.roles.set(id, role);
       }
 
