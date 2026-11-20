@@ -1688,7 +1688,7 @@ class ClientAdapter {
           await this._loadIndexMappings(index, collections, options); // NOSONAR (S9382)
         }
       },
-      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+      { retryAttempts: Number.POSITIVE_INFINITY },
     );
   }
 

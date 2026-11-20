@@ -45,10 +45,22 @@ export interface MutexConfig {
   retryDelay?: number;
 
   /**
-   * Lock TTL in milliseconds (default: 30000)
+   * Lock TTL in milliseconds (default: 10000). The lock is extended every
+   * third of it while the callback runs: the TTL only bounds how long a lock
+   * outlives a node that stopped extending it.
    */
   ttl?: number;
 }
+
+/**
+ * Default `withLock` TTL. A node that dies holding a lock leaves it until it
+ * expires, and every node waiting for it waits that long: at startup, inside
+ * a plugin `init` that must end within `plugins.common.initTimeout` (10 s by
+ * default). A live holder extends it every third of the TTL, so it can stall
+ * for about 6.6 s before losing it, as with the former 30 s TTL extended
+ * every 24 s (#3156, #3207, #3208).
+ */
+const DEFAULT_LOCK_TTL = 10000;
 
 /**
  * Thrown when a lock acquired by `withLock` is lost while its callback is
@@ -88,10 +100,12 @@ type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
  */
 class ResourceMutex extends RedisMutex {
   refreshError?: Error;
+  readonly resource: string;
 
   constructor(client: RedisClient, key: string, options: LockOptions) {
     super(client, key, options);
     this._key = key;
+    this.resource = key;
   }
 
   protected async _refresh(): Promise<boolean> {
@@ -114,6 +128,57 @@ class ResourceMutex extends RedisMutex {
  * outside a request scope, e.g. during boot or in background jobs).
  */
 const lockContext = new AsyncLocalStorage<Set<string>>();
+
+/**
+ * The locks the async context of a `trackLockWaits` call is waiting for, each
+ * with the number of `withLock` calls waiting on it.
+ */
+const waitContext = new AsyncLocalStorage<Map<string, number>>();
+
+/**
+ * Runs `fn`, and lets the caller ask at any time which locks the work it
+ * started (`withLock` calls made by `fn`, or by anything it awaits) is still
+ * waiting to acquire.
+ *
+ * Used to say what a plugin's `init` was blocked on when it times out: a
+ * lock held by another node, or left behind by a node that died, is only
+ * released when its TTL expires (#3156).
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export function trackLockWaits<T>(fn: () => Promise<T>): {
+  promise: Promise<T>;
+  waitingFor: () => string[];
+} {
+  const waits = new Map<string, number>();
+
+  return {
+    promise: waitContext.run(waits, fn),
+    waitingFor: () => [...waits.keys()],
+  };
+}
+
+async function acquireTracked(mutex: ResourceMutex, key: string) {
+  const waits = waitContext.getStore();
+
+  if (!waits) {
+    return mutex.tryAcquire();
+  }
+
+  waits.set(key, (waits.get(key) ?? 0) + 1);
+
+  try {
+    return await mutex.tryAcquire();
+  } finally {
+    const count = (waits.get(key) ?? 1) - 1;
+
+    if (count === 0) {
+      waits.delete(key);
+    } else {
+      waits.set(key, count);
+    }
+  }
+}
 
 let clientPromise: Promise<RedisClient> | undefined;
 
@@ -141,6 +206,22 @@ export async function releaseAllLocksBeforeExit(): Promise<void> {
 
   // Best effort: a lock that cannot be freed still expires with its TTL.
   await Promise.allSettled([...held].map((mutex) => mutex.release()));
+}
+
+/**
+ * Whether this process holds the lock on `key`, taken by `withLock`: a lock
+ * awaited by one task can be held by another task of the same node.
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export function isLockHeldHere(key: string): boolean {
+  for (const mutex of held) {
+    if (mutex.resource === key) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -206,7 +287,11 @@ export async function withLock<T>(
     return callback();
   }
 
-  const { retryAttempts = 10, retryDelay = 200, ttl = 30000 } = config;
+  const {
+    retryAttempts = 10,
+    retryDelay = 200,
+    ttl = DEFAULT_LOCK_TTL,
+  } = config;
   const client = await getClient();
 
   const loss = new AbortController();
@@ -222,6 +307,7 @@ export async function withLock<T>(
     acquireAttemptsLimit: retryAttempts + 1,
     acquireTimeout: Number.POSITIVE_INFINITY,
     lockTimeout: ttl,
+    refreshInterval: Math.round(ttl / 3),
     onLockLost: (error) => {
       loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
     },
@@ -230,7 +316,7 @@ export async function withLock<T>(
     retryInterval: retryAttempts === 0 ? 0 : retryDelay,
   });
 
-  if (!(await mutex.tryAcquire())) {
+  if (!(await acquireTracked(mutex, key))) {
     throw new MutexAcquireError(key, retryAttempts + 1);
   }
 

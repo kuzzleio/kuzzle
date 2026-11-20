@@ -12,7 +12,7 @@ meta:
 
 # Upgrading from 2.60
 
-This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. The [2.61.1](#_2-61-1) and [2.61.2](#_2-61-2) patches are at the end of this page. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
+This page covers Kuzzle **2.61**, starting with its first beta, 2.61.0-beta.1 (2.61.0-beta.2 adds the built-in drivers as packages, 2.61.0-beta.3 pins them to `1.0.0`, 2.61.0-beta.4 fixes the index and collection checks in a cluster, 2.61.0-beta.5 documents the OpenSearch 2 and 3 drivers, 2.61.0-beta.6 tells plugins which engine runs, closes the storage connections on shutdown and words storage messages for any engine, 2.61.0-beta.7 waits for plugin requests before closing the storage, 2.61.0-beta.8 moves to the drivers' stable releases, 2.61.0-beta.9 logs what an unhandled rejection contains). 2.61.0 is the content of 2.61.0-beta.9. The [2.61.1](#_2-61-1), [2.61.2](#_2-61-2) and [2.61.3](#_2-61-3) patches are at the end of this page. If you upgrade from an older version, read the [previous upgrade notes](/core/2/guides/upgrade-notes/from-2-59) too.
 
 The API, the configuration and the TypeScript declarations stay compatible with v2.60.1. An Elasticsearch 7 or 8 setup needs no change. Items that may need an action on your side are marked **Action**.
 
@@ -159,3 +159,29 @@ With 2.61.1, a node whose Redis stops answering leaves the cluster within second
 ### Failed Redis key scans
 
 Kuzzle scans Redis keys to list or expire authentication tokens and for statistics. If such a scan failed midway (a `commandTimeout`, a lost connection), the error was not handled. The process crashed, or the operation never finished. The scan now fails with an error, which the caller handles like any other Redis error.
+
+## 2.61.3
+
+Fixes only. Nothing to change in your configuration.
+
+### Cluster startup after a node stopped abruptly
+
+Each node of a cluster creates a plugin's collections in turn (`context.storage.bootstrap()`, plugins such as multi-tenancy), under a cluster-wide lock. When the node holding it was stopped abruptly (`SIGKILL`, or an orchestrator ending a stop that took too long), the lock was only released after 30 seconds. The other nodes waiting for it ran out of their plugin `init` time (`plugins.common.initTimeout`, 10 seconds by default) and stopped; their supervisor restarted them. That lock now expires after 10 seconds.
+
+Since 2.61.3-beta.2, every cluster-wide lock does, as the default of [withLock](/core/2/framework/functions/with-lock) goes from 30 to 10 seconds. This covers the locks the storage drivers take while creating collections (`hiddenCollection/<index>`), which kept a peer waiting up to 30 seconds after the `Store.init` lock had expired, and the startup imports' (`backend:import:<type>`, 60 seconds before: a node killed during the imports stalled the whole cluster for about a minute). A node that is alive renews its locks every third of their TTL (3.3 seconds instead of 24), so it can stall about as long as before (6.7 seconds instead of 6) before losing one.
+
+The timeout error now names the lock the `init` was waiting for, and who holds it, for instance `Initialization timed out after 10000ms. It was waiting for the cluster-wide lock "Store.init(mt-admin)" (held by another node). A lock left by a node that stopped abruptly is only released when it expires. …`. A lock can be `held by this node`, by another task of it. Without a lock wait, the message does not change.
+
+**Action:** none. If your nodes still hit this timeout at startup, raise `plugins.common.initTimeout`: the time an `init` waits for a cluster-wide lock counts in it. If a plugin calls `withLock` without `ttl` and relies on the 30-second default, set `ttl: 30000` to keep it.
+
+### A failed start is logged once
+
+When `app.start()` fails, Kuzzle logs `Cannot start Kuzzle` and stops. If the application does not catch the promise `app.start()` returns, the same error was then logged again as an `unhandledRejection`. It no longer is; other unhandled rejections are still logged.
+
+**Action:** if a log alert counts `unhandledRejection` lines to detect failed starts, use `Cannot start Kuzzle` instead.
+
+### Uncaught values that are not errors
+
+When code throws a value that is not an `Error` (a string, an object, `undefined`) and nothing catches it, Kuzzle now logs that value, then writes its dump and exits as for any uncaught exception. It used to log `undefined`, or, for `undefined`, fail in its own handler without a dump. In development mode, a promise rejected with no reason ends this way.
+
+**Action:** none.

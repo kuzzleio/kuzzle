@@ -103,6 +103,12 @@ describe("#core/shared/Store", () => {
       foo: { mappings: { properties: { foo: { type: "keyword" } } }, settings },
     };
 
+    /*
+     * #3156: plugins call `Store.init` from their `init`, bounded by
+     * `plugins.common.initTimeout` (10 s by default). A node that dies
+     * holding the lock leaves it until it expires: with the 30 s default TTL,
+     * every peer waiting on it ran out of time.
+     */
     it("takes the index's lock with no retry limit and the default TTL", async () => {
       await store.init(collections);
 

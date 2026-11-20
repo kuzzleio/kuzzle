@@ -668,7 +668,7 @@ describe("#core/plugin/pluginContext", () => {
       });
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           held: false,
           resource: "auth:strategies:add",
         },
@@ -738,7 +738,7 @@ describe("#core/plugin/pluginContext", () => {
       });
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           held: false,
           resource: "auth:strategies:remove",
         },
