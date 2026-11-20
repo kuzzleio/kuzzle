@@ -49,7 +49,7 @@ The lock is a key of Kuzzle's internal Redis cache, named `key`, taken with `SET
 
 ### While the lock is held
 
-The lock is taken with a time to live (`ttl`, 30 seconds by default), which is extended in the background for as long as `callback` runs: `callback` may run longer than `ttl`. The TTL only matters when the node stops extending the lock, for instance because it crashed: the lock then expires on its own, at most `ttl` milliseconds later.
+The lock is taken with a time to live (`ttl`, 10 seconds by default, 30 seconds before Kuzzle 2.61.3), which is extended in the background every third of it for as long as `callback` runs: `callback` may run longer than `ttl`. The TTL only matters when the node stops extending the lock, for instance because it crashed: the lock then expires on its own, at most `ttl` milliseconds later. A node whose event loop or connection to Redis stalls for more than about two thirds of `ttl` loses the lock, and `withLock` then rejects with `MutexLockLostError`.
 
 The lock is released as soon as `callback` settles, whether it resolves or rejects. A failed release is not reported: the key then expires with its TTL.
 

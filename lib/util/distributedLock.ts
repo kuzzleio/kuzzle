@@ -45,10 +45,22 @@ export interface MutexConfig {
   retryDelay?: number;
 
   /**
-   * Lock TTL in milliseconds (default: 30000)
+   * Lock TTL in milliseconds (default: 10000). The lock is extended every
+   * third of it while the callback runs: the TTL only bounds how long a lock
+   * outlives a node that stopped extending it.
    */
   ttl?: number;
 }
+
+/**
+ * Default `withLock` TTL. A node that dies holding a lock leaves it until it
+ * expires, and every node waiting for it waits that long: at startup, inside
+ * a plugin `init` that must end within `plugins.common.initTimeout` (10 s by
+ * default). A live holder extends it every third of the TTL, so it can stall
+ * for about 6.6 s before losing it, as with the former 30 s TTL extended
+ * every 24 s (#3156, #3207, #3208).
+ */
+const DEFAULT_LOCK_TTL = 10000;
 
 /**
  * Thrown when a lock acquired by `withLock` is lost while its callback is
@@ -88,10 +100,12 @@ type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
  */
 class ResourceMutex extends RedisMutex {
   refreshError?: Error;
+  readonly resource: string;
 
   constructor(client: RedisClient, key: string, options: LockOptions) {
     super(client, key, options);
     this._key = key;
+    this.resource = key;
   }
 
   protected async _refresh(): Promise<boolean> {
@@ -195,6 +209,22 @@ export async function releaseAllLocksBeforeExit(): Promise<void> {
 }
 
 /**
+ * Whether this process holds the lock on `key`, taken by `withLock`: a lock
+ * awaited by one task can be held by another task of the same node.
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export function isLockHeldHere(key: string): boolean {
+  for (const mutex of held) {
+    if (mutex.resource === key) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Lazily fetches and memoizes the internal cache's raw ioredis client.
  * Self-healing: if the very first call happens before the cache engine has
  * registered its ask handler (e.g. from an early plugin lifecycle hook), the
@@ -257,7 +287,11 @@ export async function withLock<T>(
     return callback();
   }
 
-  const { retryAttempts = 10, retryDelay = 200, ttl = 30000 } = config;
+  const {
+    retryAttempts = 10,
+    retryDelay = 200,
+    ttl = DEFAULT_LOCK_TTL,
+  } = config;
   const client = await getClient();
 
   const loss = new AbortController();
@@ -273,6 +307,7 @@ export async function withLock<T>(
     acquireAttemptsLimit: retryAttempts + 1,
     acquireTimeout: Number.POSITIVE_INFINITY,
     lockTimeout: ttl,
+    refreshInterval: Math.round(ttl / 3),
     onLockLost: (error) => {
       loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
     },

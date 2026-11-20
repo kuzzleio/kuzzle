@@ -693,12 +693,11 @@ function inheritInput(
 /**
  * Lock options of `auth:strategies:add` and `auth:strategies:remove`: wait
  * as long as it takes, as the deprecated `Mutex` did (no acquisition
- * timeout), with the same 30 s TTL — now refreshed while the strategy is
- * being added or removed.
+ * timeout). The lock is refreshed while the strategy is being added or
+ * removed.
  */
 const STRATEGY_LOCK = {
   retryAttempts: Number.POSITIVE_INFINITY,
-  ttl: 30000,
 };
 
 /**

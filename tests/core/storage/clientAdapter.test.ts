@@ -1841,7 +1841,7 @@ describe("#core/storage/ClientAdapter", () => {
       // Waits forever and keeps the 60 s TTL, as the `Mutex` it replaces did.
       expect(locks.taken).toEqual([
         {
-          config: { retryAttempts: Number.POSITIVE_INFINITY, ttl: 60000 },
+          config: { retryAttempts: Number.POSITIVE_INFINITY },
           held: false,
           resource: "loadMappings",
         },

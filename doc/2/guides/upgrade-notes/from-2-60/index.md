@@ -166,11 +166,13 @@ Fixes only. Nothing to change in your configuration.
 
 ### Cluster startup after a node stopped abruptly
 
-Each node of a cluster creates a plugin's collections in turn (`context.storage.bootstrap()`, plugins such as multi-tenancy), under a cluster-wide lock. When the node holding it was stopped abruptly (`SIGKILL`, or an orchestrator ending a stop that took too long), the lock was only released after 30 seconds. The other nodes waiting for it ran out of their plugin `init` time (`plugins.common.initTimeout`, 10 seconds by default) and stopped; their supervisor restarted them. That lock now expires after 10 seconds. It is still renewed while the node holding it is alive.
+Each node of a cluster creates a plugin's collections in turn (`context.storage.bootstrap()`, plugins such as multi-tenancy), under a cluster-wide lock. When the node holding it was stopped abruptly (`SIGKILL`, or an orchestrator ending a stop that took too long), the lock was only released after 30 seconds. The other nodes waiting for it ran out of their plugin `init` time (`plugins.common.initTimeout`, 10 seconds by default) and stopped; their supervisor restarted them. That lock now expires after 10 seconds.
 
-The timeout error now names the lock the `init` was waiting for, for instance `Initialization timed out after 10000ms. It was waiting for the cluster-wide lock "Store.init(mt-admin)", held by another node; …`. Without a lock wait, the message does not change.
+Since 2.61.3-beta.2, every cluster-wide lock does, as the default of [withLock](/core/2/framework/functions/with-lock) goes from 30 to 10 seconds. This covers the locks the storage drivers take while creating collections (`hiddenCollection/<index>`), which kept a peer waiting up to 30 seconds after the `Store.init` lock had expired, and the startup imports' (`backend:import:<type>`, 60 seconds before: a node killed during the imports stalled the whole cluster for about a minute). A node that is alive renews its locks every third of their TTL (3.3 seconds instead of 24), so it can stall about as long as before (6.7 seconds instead of 6) before losing one.
 
-**Action:** none. If your nodes still hit this timeout at startup, raise `plugins.common.initTimeout`: the time an `init` waits for a cluster-wide lock counts in it.
+The timeout error now names the lock the `init` was waiting for, and who holds it, for instance `Initialization timed out after 10000ms. It was waiting for the cluster-wide lock "Store.init(mt-admin)" (held by another node). A lock left by a node that stopped abruptly is only released when it expires. …`. A lock can be `held by this node`, by another task of it. Without a lock wait, the message does not change.
+
+**Action:** none. If your nodes still hit this timeout at startup, raise `plugins.common.initTimeout`: the time an `init` waits for a cluster-wide lock counts in it. If a plugin calls `withLock` without `ttl` and relies on the 30-second default, set `ttl: 30000` to keep it.
 
 ### A failed start is logged once
 

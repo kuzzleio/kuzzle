@@ -150,7 +150,7 @@ class InternalIndexHandler extends Store {
           throw error;
         }
       },
-      { retryAttempts: Number.POSITIVE_INFINITY, ttl: 30000 },
+      { retryAttempts: Number.POSITIVE_INFINITY },
     );
   }
 
