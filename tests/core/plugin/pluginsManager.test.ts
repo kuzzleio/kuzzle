@@ -430,13 +430,58 @@ describe("#core/plugin/pluginsManager", () => {
 
       try {
         await expect(pluginsManager.init()).rejects.toThrow(
-          'Initialization timed out after 50ms. It was waiting for the cluster-wide lock "Store.init(some-index)", held by another node',
+          'Initialization timed out after 50ms. It was waiting for the cluster-wide lock "Store.init(some-index)" (held by another node). A lock left by a node that stopped abruptly is only released when it expires.',
         );
       } finally {
         // Lets the init still waiting in the background take the lock and end
         await otherNode.del("Store.init(some-index)");
         redis.disconnect();
         otherNode.disconnect();
+      }
+    });
+
+    /*
+     * A lock awaited by the init can be held by another task of the same
+     * node (e.g. parallel collection creations): "another node" would send
+     * the operator looking for a node that does not exist.
+     */
+    it("says when the awaited lock is held by this node", async () => {
+      const redis = new RedisMock();
+      await redis.flushall();
+      vi.mocked(global.kuzzle.ask).mockResolvedValue(redis);
+
+      let releaseLocal: () => void = () => undefined;
+      const localTask = withLock(
+        "hiddenCollection/create/some-index",
+        () =>
+          new Promise<void>((resolve) => {
+            releaseLocal = resolve;
+          }),
+      );
+      await vi.waitFor(async () =>
+        expect(await redis.exists("hiddenCollection/create/some-index")).toBe(
+          1,
+        ),
+      );
+
+      pluginsManager.config.common = { initTimeout: 50 };
+      pluginsManager.application = application;
+      application.instance.init = () =>
+        withLock("hiddenCollection/create/some-index", async () => undefined, {
+          retryAttempts: Number.POSITIVE_INFINITY,
+          retryDelay: 10,
+        });
+
+      try {
+        const error = await pluginsManager.init().catch((e: unknown) => e);
+
+        expect((error as Error).message).toContain(
+          'It was waiting for the cluster-wide lock "hiddenCollection/create/some-index" (held by this node). Try to increase',
+        );
+      } finally {
+        releaseLocal();
+        await localTask;
+        redis.disconnect();
       }
     });
 

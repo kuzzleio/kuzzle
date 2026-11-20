@@ -39,7 +39,7 @@ import didYouMean from "../../util/didYouMean";
 import { Inflector } from "../../util/Inflector";
 import { has, isPlainObject } from "../../util/safeObject";
 import { causeOf } from "../../util/thrown";
-import { trackLockWaits } from "../../util/distributedLock";
+import { isLockHeldHere, trackLockWaits } from "../../util/distributedLock";
 import type { PluginInstance } from "../../types/PluginInstance";
 import Plugin from "./plugin";
 
@@ -1620,9 +1620,10 @@ export = PluginsManager;
 
 /**
  * A plugin's `init` waiting for a cluster-wide lock is the usual way to run
- * out of time while the cluster starts: the message names the lock, and says
- * that one left behind by a node that died is only freed when it expires
- * (#3156).
+ * out of time while the cluster starts: the message names the lock and who
+ * holds it, and says that one left behind by a node that died is only freed
+ * when it expires (#3156). A lock can also be held by another task of this
+ * node, e.g. parallel collection creations.
  */
 function initTimeoutMessage(
   logPrefix: string,
@@ -1633,9 +1634,20 @@ function initTimeoutMessage(
 
   if (locks.length > 0) {
     const plural = locks.length > 1 ? "s" : "";
-    const names = locks.map((key) => `"${key}"`).join(", ");
+    const remote = locks.filter((key) => !isLockHeldHere(key));
+    const names = locks
+      .map((key) => {
+        const holder = remote.includes(key) ? "another node" : "this node";
+        return `"${key}" (held by ${holder})`;
+      })
+      .join(", ");
 
-    waiting = ` It was waiting for the cluster-wide lock${plural} ${names}, held by another node; a lock left by a node that stopped abruptly is only released when it expires.`;
+    waiting = ` It was waiting for the cluster-wide lock${plural} ${names}.`;
+
+    if (remote.length > 0) {
+      waiting +=
+        " A lock left by a node that stopped abruptly is only released when it expires.";
+    }
   }
 
   return `${logPrefix} Initialization timed out after ${initTimeout}ms.${waiting} Try to increase the configuration "plugins.common.initTimeout".`;
