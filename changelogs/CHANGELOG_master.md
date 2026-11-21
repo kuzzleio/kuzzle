@@ -1,3 +1,14 @@
+## [2.61.3](https://github.com/kuzzleio/kuzzle/compare/v2.61.2...v2.61.3) (2026-11-20)
+
+### Bug Fixes
+
+* **lock:** let every cluster-wide lock expire in 10 s, extended every third of it ([b5eda38](https://github.com/kuzzleio/kuzzle/commit/b5eda38f29ce051aae2e93a77cc350509073734a)), closes [#3207](https://github.com/kuzzleio/kuzzle/issues/3207) [#3208](https://github.com/kuzzleio/kuzzle/issues/3208)
+* **plugins:** name the cluster-wide lock a timed out plugin init waited for ([fbfde37](https://github.com/kuzzleio/kuzzle/commit/fbfde37845e463a598234c826567a7e3dee00c22)), closes [#3156](https://github.com/kuzzleio/kuzzle/issues/3156)
+* **plugins:** say whether a lock a timed out init waited for is held by this node ([93e04d2](https://github.com/kuzzleio/kuzzle/commit/93e04d24cd1c3ff536234204cc75ae48e58227ca)), closes [#3156](https://github.com/kuzzleio/kuzzle/issues/3156)
+* **process:** log a thrown value that is not an Error before exiting ([1cdc477](https://github.com/kuzzleio/kuzzle/commit/1cdc4774fa0e294a122c30f62b7dbd791bca43e3)), closes [kuzzleio/kuzzle-plugin-auth-openid#50](https://github.com/kuzzleio/kuzzle-plugin-auth-openid/issues/50)
+* **start:** log a failed start once ([2c33be0](https://github.com/kuzzleio/kuzzle/commit/2c33be073e927f4056619bda60e9e86b535578d1)), closes [#3156](https://github.com/kuzzleio/kuzzle/issues/3156)
+* **store:** let the Store.init lock expire in 10 s ([d18a9a6](https://github.com/kuzzleio/kuzzle/commit/d18a9a662cea6f7c0284b01b4be9639fe5a27a80)), closes [#3156](https://github.com/kuzzleio/kuzzle/issues/3156)
+
 ## [2.61.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.1...v2.61.2) (2026-11-14)
 
 ### Bug Fixes
