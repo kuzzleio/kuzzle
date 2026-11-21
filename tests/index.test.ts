@@ -31,12 +31,9 @@ describe("index — the distributed lock", () => {
     },
   );
 
-  it.each(["releaseAllLocksBeforeExit", "releaseHeldLocks"])(
-    "does not export %s",
-    (name) => {
-      expect(kuzzle).not.toHaveProperty(name);
-    },
-  );
+  it("does not export releaseAllLocksBeforeExit", () => {
+    expect(kuzzle).not.toHaveProperty("releaseAllLocksBeforeExit");
+  });
 });
 
 /** #3087: armed on import, replaced by `Kuzzle.start()`; internal. */

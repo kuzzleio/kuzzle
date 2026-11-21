@@ -25,7 +25,6 @@ describe("#distributedLock", () => {
   let MutexAcquireError: typeof import("../../lib/util/distributedLock").MutexAcquireError;
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
   let releaseAllLocksBeforeExit: typeof import("../../lib/util/distributedLock").releaseAllLocksBeforeExit;
-  let releaseHeldLocks: typeof import("../../lib/util/distributedLock").releaseHeldLocks;
   let trackLockWaits: typeof import("../../lib/util/distributedLock").trackLockWaits;
   let isLockHeldHere: typeof import("../../lib/util/distributedLock").isLockHeldHere;
 
@@ -48,7 +47,6 @@ describe("#distributedLock", () => {
       MutexAcquireError,
       MutexLockLostError,
       releaseAllLocksBeforeExit,
-      releaseHeldLocks,
       trackLockWaits,
       isLockHeldHere,
     } = await import("../../lib/util/distributedLock"));
@@ -594,6 +592,29 @@ describe("#distributedLock", () => {
       // Its own release, on a lock already given back, must not reject
       finish();
       await expect(locking).resolves.toBe("done");
+      // ... nor report the lock as lost: it was given back on purpose
+      expect(kuzzle.log.warn).not.toHaveBeenCalled();
+    });
+
+    /* #3218: a lock given back while its callback still ran let another
+     * node run the same critical section (a startup import) in parallel. */
+    it("keeps a lock whose callback still runs until it is called", async () => {
+      let finish: () => void = () => undefined;
+      let started = false;
+
+      const locking = withLock("foo", async () => {
+        started = true;
+        await new Promise<void>((resolve) => {
+          finish = resolve;
+        });
+      });
+      await vi.waitFor(() => expect(started).toBe(true));
+
+      expect(await other.set("foo", "node-2", "PX", 10000, "NX")).toBeNull();
+
+      finish();
+      await locking;
+      expect(await other.exists("foo")).toBe(0);
     });
 
     it("never settles a lock asked for afterwards, and takes nothing", async () => {
@@ -632,108 +653,6 @@ describe("#distributedLock", () => {
 
       expect(await settled(locking)).toBe("pending");
       expect(callback).not.toHaveBeenCalled();
-    });
-  });
-
-  /*
-   * #3087: the first step of a graceful shutdown, so that the other nodes do
-   * not wait for the whole shutdown, or for the TTL if the node is killed
-   * before it ends.
-   */
-  describe("#releaseHeldLocks", () => {
-    it("frees every lock held right now, and only those", async () => {
-      await other.set("theirs", "node-2", "PX", 10000);
-      let started = 0;
-      const never = new Promise<void>(() => undefined);
-      const holders = ["foo", "bar"].map((key) =>
-        withLock(key, async () => {
-          started++;
-          await never;
-        }),
-      );
-      await vi.waitFor(() => expect(started).toBe(2));
-
-      await releaseHeldLocks();
-
-      expect(await other.exists("foo", "bar")).toBe(0);
-      expect(await other.get("theirs")).toBe("node-2");
-      expect(isLockHeldHere("foo")).toBe(false);
-
-      for (const holder of holders) {
-        await expect(holder).rejects.toBeInstanceOf(MutexLockLostError);
-      }
-    });
-
-    it("rejects the holder as for a lost lock, saying why", async () => {
-      let started = false;
-      const holder = withLock("foo", async () => {
-        started = true;
-        await new Promise<void>(() => undefined);
-      });
-      await vi.waitFor(() => expect(started).toBe(true));
-
-      await releaseHeldLocks();
-
-      const error = await holder.catch((e: unknown) => e);
-      expect(error).toBeInstanceOf(MutexLockLostError);
-      expect((error as Error).message).toBe('Lock lost for resource "foo"');
-      expect(((error as Error).cause as Error).message).toBe(
-        "Released: Kuzzle is shutting down",
-      );
-      // Given back on purpose, released once: not reported as a lost lock
-      expect(kuzzle.log.warn).not.toHaveBeenCalled();
-    });
-
-    it("lets another node take the lock at once", async () => {
-      let started = false;
-      void withLock("foo", async () => {
-        started = true;
-        await new Promise<void>(() => undefined);
-      }).catch(() => undefined);
-      await vi.waitFor(() => expect(started).toBe(true));
-
-      await releaseHeldLocks();
-
-      expect(await other.set("foo", "node-2", "PX", 10000, "NX")).toBe("OK");
-    });
-
-    it("still lets locks be taken afterwards, unlike releaseAllLocksBeforeExit", async () => {
-      await releaseHeldLocks();
-
-      await expect(withLock("foo", async () => "taken")).resolves.toBe("taken");
-      expect(await other.exists("foo")).toBe(0);
-    });
-
-    it("frees the other locks when one cannot be freed", async () => {
-      let started = 0;
-      const never = new Promise<void>(() => undefined);
-
-      const hold = (key: string) =>
-        withLock(key, async () => {
-          started++;
-          await never;
-        }).catch(() => undefined);
-
-      void hold("foo");
-      void hold("bar");
-      await vi.waitFor(() => expect(started).toBe(2));
-
-      const runScript = client.eval.bind(client);
-      vi.spyOn(client, "eval").mockImplementation(((
-        ...args: Parameters<typeof client.eval>
-      ) =>
-        args[2] === "foo"
-          ? Promise.reject(new Error("Redis is gone"))
-          : runScript(...args)) as typeof client.eval);
-
-      await expect(releaseHeldLocks()).resolves.toBeUndefined();
-      expect(await other.exists("bar")).toBe(0);
-    });
-
-    it("does nothing when no lock is held", async () => {
-      await withLock("done", async () => "released already");
-
-      await expect(releaseHeldLocks()).resolves.toBeUndefined();
     });
   });
 });
