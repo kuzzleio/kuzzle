@@ -1,3 +1,7 @@
+// First: exits on SIGTERM / SIGINT while the rest loads, until Kuzzle starts
+// (#3087)
+import "./lib/kuzzle/earlySignals";
+
 export * from "./lib/core/backend";
 
 export * from "./lib/types";
