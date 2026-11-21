@@ -144,16 +144,17 @@ Use a restart policy that restarts on failure (e.g. `restart: on-failure` or `re
 
 ## Stopping a node
 
-Stop a node with `SIGTERM` or `SIGINT` (`docker stop`, a Kubernetes pod deletion, `Ctrl+C`): it stops gracefully. It first gives back the [cluster-wide locks](#cluster-wide-locks) it holds, then stops accepting requests, removes its registration from Redis, tells the other nodes it leaves, ends the requests in progress, and exits with code `0`.
+Stop a node with `SIGTERM` or `SIGINT` (`docker stop`, a Kubernetes pod deletion, `Ctrl+C`): it stops gracefully. It stops accepting requests, removes its registration from Redis, tells the other nodes it leaves, ends the requests in progress, releases the [cluster-wide locks](#cluster-wide-locks) it holds, and exits with code `0`. A lock is kept until the code running under it ends, or until the node exits: giving it back earlier would let another node run the same code at the same time.
 
-A node killed without a graceful stop (`SIGKILL`, an out-of-memory kill, a crashed machine) cannot do any of this. The other nodes only find out when its state in Redis expires: its locks after their TTL (10 seconds), and its registration after `cluster.heartbeat` × 3 (6 seconds by default), and they converge more slowly:
+A node killed without a graceful stop (`SIGKILL`, an out-of-memory kill, a crashed machine) cannot do any of this. The other nodes only find out when its state in Redis expires: its registration after `cluster.heartbeat` × 2 (4 seconds by default), and its locks after their TTL (10 seconds). Measured on 3-node clusters with the default settings, each node restarted at once:
 
-| How the node stops | Time for the rest of the cluster to converge (measured on 3-node clusters) |
+| How the node stops | What the rest of the cluster sees |
 |---|---|
-| Graceful stop | 10 to 20 seconds |
-| Hard kill | 30 to 90 seconds |
+| Graceful stop | The other nodes see it leave at once. Restarted, it serves requests again in about 5 seconds |
+| Hard kill | The other nodes evict it after 5 to 7 seconds. Restarted on the same IP address, it first waits 6 seconds (`cluster.heartbeat` × 3) for its old registration to expire, and serves requests again in about 10 seconds |
+| Hard kill while it holds a startup lock | The nodes starting with it wait for the lock to expire: the whole cluster serves requests 13 to 16 seconds after the kill |
 
-While they converge, a node restarted on the same IP address waits for the old registration to expire, and the nodes starting at the same time wait for its locks.
+To shorten these delays, lower `cluster.heartbeat` (the registration expires sooner, but a shorter stall gets a node evicted), or pass a shorter `ttl` to your own [withLock](/core/2/framework/functions/with-lock) calls (the lock expires sooner, but a shorter stall makes its holder lose it).
 
 ### Run Kuzzle under an init process
 
