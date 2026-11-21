@@ -121,6 +121,7 @@ class ResourceMutex extends RedisMutex {
   // When this node last knew it held the lock: acquired, or extended
   private heldAt = 0;
   private lossReported = false;
+  private releasing?: Promise<void>;
 
   constructor(client: RedisClient, key: string, options: LockOptions) {
     super(client, key, options);
@@ -152,6 +153,16 @@ class ResourceMutex extends RedisMutex {
         error instanceof Error ? error : new Error(String(error));
       return false;
     }
+  }
+
+  /**
+   * Releases once, however many callers ask: a lock given back at shutdown
+   * (`releaseHeldLocks`) is released again by its `withLock` call, and the
+   * second release would find the key gone and report the lock as lost.
+   */
+  release(): Promise<void> {
+    this.releasing ??= super.release();
+    return this.releasing;
   }
 
   protected async _release(): Promise<void> {

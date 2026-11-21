@@ -680,6 +680,8 @@ describe("#distributedLock", () => {
       expect(((error as Error).cause as Error).message).toBe(
         "Released: Kuzzle is shutting down",
       );
+      // Given back on purpose, released once: not reported as a lost lock
+      expect(kuzzle.log.warn).not.toHaveBeenCalled();
     });
 
     it("lets another node take the lock at once", async () => {
@@ -716,13 +718,13 @@ describe("#distributedLock", () => {
       void hold("bar");
       await vi.waitFor(() => expect(started).toBe(2));
 
-      const evalsha = client.evalsha.bind(client);
-      vi.spyOn(client, "evalsha").mockImplementation(((
-        ...args: Parameters<typeof client.evalsha>
+      const runScript = client.eval.bind(client);
+      vi.spyOn(client, "eval").mockImplementation(((
+        ...args: Parameters<typeof client.eval>
       ) =>
         args[2] === "foo"
           ? Promise.reject(new Error("Redis is gone"))
-          : evalsha(...args)) as typeof client.evalsha);
+          : runScript(...args)) as typeof client.eval);
 
       await expect(releaseHeldLocks()).resolves.toBeUndefined();
       expect(await other.exists("bar")).toBe(0);
