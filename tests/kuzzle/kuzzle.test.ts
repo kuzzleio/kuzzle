@@ -21,6 +21,7 @@ import {
   moduleCloses,
   MutexStub,
   releaseAllLocksBeforeExit,
+  releaseHeldLocks,
 } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
@@ -77,6 +78,7 @@ vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
     ...original,
     releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
       .releaseAllLocksBeforeExit,
+    releaseHeldLocks: (await import("./kuzzleFixture")).releaseHeldLocks,
     withLock: vi.fn(
       async (
         resource: string,
@@ -1080,6 +1082,52 @@ describe("#kuzzle/Kuzzle", () => {
 
         expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
         expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      }
+    });
+
+    /* #3087: the other nodes waiting on a lock this one holds got it only
+     * once the requests had ended, or after its TTL if the node was killed
+     * before then. */
+    it("gives back the locks it holds before anything else", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+      vi.mocked(kuzzle.pipe).mockImplementation(async (event: string) => {
+        order.push(`pipe:${event}`);
+        expect(releaseHeldLocks).toHaveBeenCalledOnce();
+      });
+
+      await kuzzle.shutdown();
+
+      const [released] = releaseHeldLocks.mock.invocationCallOrder;
+      expect(released).toBeLessThan(
+        vi.mocked(kuzzle.entryPoint.dispatch).mock.invocationCallOrder[0],
+      );
+      // Those taken while the requests ended are still freed before exiting
+      expect(released).toBeLessThan(
+        releaseAllLocksBeforeExit.mock.invocationCallOrder[0],
+      );
+      expect(kuzzle.state).toBe(kuzzleStateEnum.SHUTTING_DOWN);
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("gives up on giving back its locks first after 2s, and goes on", async () => {
+      vi.useFakeTimers();
+
+      try {
+        funnelOf(kuzzle).remainingRequests = 0;
+        releaseHeldLocks.mockReturnValueOnce(new Promise(() => {}));
+
+        const shutdown = kuzzle.shutdown();
+        await vi.advanceTimersByTimeAsync(2000);
+        await shutdown;
+
+        expect(kuzzle.log.warn).toHaveBeenCalledWith(
+          "[shutdown] Locks still held after 2000ms: they expire with their TTL",
+        );
+        expect(kuzzle.entryPoint.dispatch).toHaveBeenCalledOnce();
+        expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
+        expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+      } finally {
+        vi.useRealTimers();
       }
     });
 

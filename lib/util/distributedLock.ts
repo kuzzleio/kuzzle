@@ -253,6 +253,37 @@ let clientPromise: Promise<RedisClient> | undefined;
 const held = new Set<ResourceMutex>();
 let exiting = false;
 
+// How to tell each `withLock` call holding one of them that it is given back
+// (see `releaseHeldLocks`)
+const surrenders = new WeakMap<ResourceMutex, () => void>();
+
+/**
+ * Gives back every lock taken by `withLock` that this process holds right
+ * now, without waiting for their callbacks to end: the first step of a
+ * graceful shutdown, so that the nodes waiting on them get them at once
+ * rather than when the shutdown ends, or after their TTL if the process is
+ * killed before then (#3087).
+ *
+ * Each `withLock` call holding one rejects with `MutexLockLostError`, as for
+ * a lost lock: its callback keeps running, and must not perform
+ * authoritative side effects once it is observed. Unlike
+ * `releaseAllLocksBeforeExit`, locks can still be taken afterwards, so that
+ * the requests still running can end.
+ *
+ * Internal to Kuzzle: not exported by the package.
+ */
+export async function releaseHeldLocks(): Promise<void> {
+  const mutexes = [...held];
+
+  for (const mutex of mutexes) {
+    held.delete(mutex);
+    surrenders.get(mutex)?.();
+  }
+
+  // Best effort: a lock that cannot be freed still expires with its TTL.
+  await Promise.allSettled(mutexes.map((mutex) => mutex.release()));
+}
+
 /**
  * Frees every lock taken by `withLock` that this process still holds, and
  * stops it from taking new ones. Only meant to be called right before
@@ -393,6 +424,14 @@ export async function withLock<T>(
   }
 
   held.add(mutex);
+  surrenders.set(mutex, () => {
+    loss.abort(
+      new MutexLockLostError(
+        key,
+        new Error("Released: Kuzzle is shutting down"),
+      ),
+    );
+  });
 
   // Acquired while `releaseAllLocksBeforeExit` was running: give it back at once
   if (exiting) {

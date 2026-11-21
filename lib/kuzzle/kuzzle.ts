@@ -54,7 +54,11 @@ import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import { withTimeout } from "../util/async";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
-import { releaseAllLocksBeforeExit, withLock } from "../util/distributedLock";
+import {
+  releaseAllLocksBeforeExit,
+  releaseHeldLocks,
+  withLock,
+} from "../util/distributedLock";
 import { Mutex } from "../util/mutex"; // NOSONAR: only to free locks taken through the deprecated API, see shutdown()
 import type {
   ImportConfig,
@@ -554,6 +558,13 @@ class Kuzzle extends KuzzleEventEmitter {
 
     this.log.info("Initiating shutdown...");
 
+    // First, before anything that may take time: the other nodes waiting on a
+    // lock this one holds get it now, not when the shutdown ends, or after
+    // its TTL if the node is killed before then. Their `withLock` calls
+    // reject with `MutexLockLostError`, as for a lost lock. Those taken from
+    // now on are freed below.
+    await this.releaseLocks(releaseHeldLocks());
+
     // Ask the network layer to stop accepting new request
     this.entryPoint.dispatch("shutdown", {});
 
@@ -587,23 +598,15 @@ class Kuzzle extends KuzzleEventEmitter {
       );
     }
 
-    // The other nodes may be waiting on a lock this one holds: a node leaving
-    // mid-startup is often in the middle of one (F-13). Bounded: a node often
-    // leaves because redis stopped answering, and a lock that cannot be freed
-    // still expires with its TTL (#3181)
-    try {
-      await withTimeout(
-        Promise.all([
-          releaseAllLocksBeforeExit(),
-          Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
-        ]),
-        LOCKS_RELEASE_SHUTDOWN_TIMEOUT,
-      );
-    } catch {
-      this.log.warn(
-        `[shutdown] Locks still held after ${LOCKS_RELEASE_SHUTDOWN_TIMEOUT}ms: they expire with their TTL`,
-      );
-    }
+    // The locks taken while the requests ended, and those of the deprecated
+    // API: a node leaving mid-startup is often in the middle of one (F-13).
+    // No lock can be taken anymore once this returns.
+    await this.releaseLocks(
+      Promise.all([
+        releaseAllLocksBeforeExit(),
+        Mutex.releaseAllBeforeExit(), // NOSONAR: frees locks taken through the deprecated API
+      ]),
+    );
 
     // Nothing reads or writes the storage anymore: its drivers may release
     // their connections (bounded, never rejects)
@@ -626,6 +629,20 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     process.exit(this.shutdownExitCode);
+  }
+
+  /**
+   * Bounded: a node often leaves because redis stopped answering, and a lock
+   * that cannot be freed still expires with its TTL (#3181)
+   */
+  private async releaseLocks(release: Promise<unknown>): Promise<void> {
+    try {
+      await withTimeout(release, LOCKS_RELEASE_SHUTDOWN_TIMEOUT);
+    } catch {
+      this.log.warn(
+        `[shutdown] Locks still held after ${LOCKS_RELEASE_SHUTDOWN_TIMEOUT}ms: they expire with their TTL`,
+      );
+    }
   }
 
   /**
