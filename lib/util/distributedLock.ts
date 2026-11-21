@@ -20,7 +20,6 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { createHash } from "node:crypto";
 
 import { Mutex as RedisMutex } from "redis-semaphore";
 import type { LockOptions } from "redis-semaphore";
@@ -100,9 +99,6 @@ const RELEASE_SCRIPT = `
 
   return 0
 `;
-const RELEASE_SCRIPT_SHA = createHash("sha1")
-  .update(RELEASE_SCRIPT)
-  .digest("hex");
 
 /**
  * redis-semaphore's mutex, adjusted to what `withLock` promises:
@@ -160,17 +156,9 @@ class ResourceMutex extends RedisMutex {
 
   protected async _release(): Promise<void> {
     const args = [1, this._key, this._identifier] as const;
-    let deleted: unknown;
-
-    try {
-      deleted = await this._client.evalsha(RELEASE_SCRIPT_SHA, ...args);
-    } catch (error) {
-      if (!String(error).includes("NOSCRIPT")) {
-        throw error;
-      }
-
-      deleted = await this._client.eval(RELEASE_SCRIPT, ...args);
-    }
+    // Plain EVAL: a release runs once per lock, and EVALSHA would need a
+    // local SHA-1 of the script, which code scanners flag as a weak hash
+    const deleted = await this._client.eval(RELEASE_SCRIPT, ...args);
 
     if (Number(deleted) !== 1) {
       this.reportLoss("it had expired, or another node held it, on release");

@@ -561,13 +561,13 @@ describe("#distributedLock", () => {
       });
       await vi.waitFor(() => expect(started).toBe(2));
 
-      const evalsha = client.evalsha.bind(client);
-      vi.spyOn(client, "evalsha").mockImplementation(((
-        ...args: Parameters<typeof client.evalsha>
+      const runScript = client.eval.bind(client);
+      vi.spyOn(client, "eval").mockImplementation(((
+        ...args: Parameters<typeof client.eval>
       ) =>
         args[2] === "foo"
           ? Promise.reject(new Error("Redis is gone"))
-          : evalsha(...args)) as typeof client.evalsha);
+          : runScript(...args)) as typeof client.eval);
 
       await expect(releaseAllLocksBeforeExit()).resolves.toBeUndefined();
       expect(await other.exists("bar")).toBe(0);
