@@ -7,6 +7,7 @@ import Kuzzle from "../../lib/kuzzle/kuzzle";
 import type { StartOptions } from "../../lib/types/Kuzzle";
 import Plugin from "../../lib/core/plugin/plugin";
 import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
+import { armEarlySignalHandlers } from "../../lib/kuzzle/earlySignals";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
@@ -20,6 +21,7 @@ import {
   moduleCloses,
   MutexStub,
   releaseAllLocksBeforeExit,
+  releaseHeldLocks,
 } from "./kuzzleFixture";
 import { present } from "../helpers/present";
 
@@ -76,6 +78,7 @@ vi.mock("../../lib/util/distributedLock", async (importOriginal) => {
     ...original,
     releaseAllLocksBeforeExit: (await import("./kuzzleFixture"))
       .releaseAllLocksBeforeExit,
+    releaseHeldLocks: (await import("./kuzzleFixture")).releaseHeldLocks,
     withLock: vi.fn(
       async (
         resource: string,
@@ -805,6 +808,83 @@ describe("#kuzzle/Kuzzle", () => {
     );
   });
 
+  /* #3087: until `start()`, a SIGTERM only ends the process through the
+   * handlers armed when the package is imported. */
+  describe("SIGINT / SIGTERM handlers", () => {
+    const events = [
+      "unhandledRejection",
+      "uncaughtException",
+      "SIGQUIT",
+      "SIGABRT",
+      "SIGTRAP",
+      "SIGINT",
+      "SIGTERM",
+    ] as const;
+    let saved: Map<string, ((...args: unknown[]) => void)[]>;
+
+    beforeEach(() => {
+      saved = new Map(
+        events.map((event) => [
+          event,
+          process.listeners(event) as ((...args: unknown[]) => void)[],
+        ]),
+      );
+
+      // Real listeners, but no `exit` one: it would end the test process
+      // with a shutdown, and there is no early one to replace
+      const on = process.on.bind(process);
+      vi.spyOn(process, "on").mockImplementation(((
+        event: string,
+        listener: (...args: unknown[]) => void,
+      ) => (event === "exit" ? process : on(event, listener))) as never);
+
+      armEarlySignalHandlers();
+    });
+
+    afterEach(() => {
+      vi.mocked(process.on).mockRestore();
+
+      for (const [event, listeners] of saved) {
+        process.removeAllListeners(event);
+
+        for (const listener of listeners) {
+          process.on(event, listener);
+        }
+      }
+    });
+
+    it.each(["SIGINT", "SIGTERM"] as const)(
+      "replaces the early %s handler with the graceful one, and only it",
+      (signal) => {
+        const exit = vi
+          .spyOn(process, "exit")
+          .mockImplementation((() => {}) as never);
+        const shutdown = vi
+          .spyOn(kuzzle, "shutdown")
+          .mockResolvedValue(undefined);
+        const early = process.listeners(signal);
+
+        kuzzle.registerSignalHandlers();
+
+        expect(process.listenerCount(signal)).toBe(1);
+        expect(early).not.toContain(process.listeners(signal)[0]);
+
+        process.emit(signal, signal);
+
+        expect(shutdown).toHaveBeenCalledExactlyOnceWith();
+        expect(exit).not.toHaveBeenCalled();
+      },
+    );
+
+    it("never adds a second handler when it runs twice", () => {
+      kuzzle.registerSignalHandlers();
+      kuzzle.registerSignalHandlers();
+
+      expect(process.listenerCount("SIGINT")).toBe(1);
+      expect(process.listenerCount("SIGTERM")).toBe(1);
+    });
+  });
+
   /* #3160: late work failing once the storage is closed must not turn a
    * requested shutdown into a failure. */
   describe("unhandledRejection handler", () => {
@@ -1002,6 +1082,52 @@ describe("#kuzzle/Kuzzle", () => {
 
         expect(release).toBeGreaterThan(delay.mock.invocationCallOrder[0]);
         expect(release).toBeLessThan(exit.mock.invocationCallOrder[0]);
+      }
+    });
+
+    /* #3087: the other nodes waiting on a lock this one holds got it only
+     * once the requests had ended, or after its TTL if the node was killed
+     * before then. */
+    it("gives back the locks it holds before anything else", async () => {
+      funnelOf(kuzzle).remainingRequests = 0;
+      vi.mocked(kuzzle.pipe).mockImplementation(async (event: string) => {
+        order.push(`pipe:${event}`);
+        expect(releaseHeldLocks).toHaveBeenCalledOnce();
+      });
+
+      await kuzzle.shutdown();
+
+      const [released] = releaseHeldLocks.mock.invocationCallOrder;
+      expect(released).toBeLessThan(
+        vi.mocked(kuzzle.entryPoint.dispatch).mock.invocationCallOrder[0],
+      );
+      // Those taken while the requests ended are still freed before exiting
+      expect(released).toBeLessThan(
+        releaseAllLocksBeforeExit.mock.invocationCallOrder[0],
+      );
+      expect(kuzzle.state).toBe(kuzzleStateEnum.SHUTTING_DOWN);
+      expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+    });
+
+    it("gives up on giving back its locks first after 2s, and goes on", async () => {
+      vi.useFakeTimers();
+
+      try {
+        funnelOf(kuzzle).remainingRequests = 0;
+        releaseHeldLocks.mockReturnValueOnce(new Promise(() => {}));
+
+        const shutdown = kuzzle.shutdown();
+        await vi.advanceTimersByTimeAsync(2000);
+        await shutdown;
+
+        expect(kuzzle.log.warn).toHaveBeenCalledWith(
+          "[shutdown] Locks still held after 2000ms: they expire with their TTL",
+        );
+        expect(kuzzle.entryPoint.dispatch).toHaveBeenCalledOnce();
+        expect(releaseAllLocksBeforeExit).toHaveBeenCalledOnce();
+        expect(exit).toHaveBeenCalledExactlyOnceWith(0);
+      } finally {
+        vi.useRealTimers();
       }
     });
 
