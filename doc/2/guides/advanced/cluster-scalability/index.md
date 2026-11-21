@@ -142,6 +142,30 @@ A running node also exits with code `1` when it leaves the cluster because of a 
 Use a restart policy that restarts on failure (e.g. `restart: on-failure` or `restart: always` with Docker Compose, or the default policy of a Kubernetes Deployment): a failed node is then restarted and joins the cluster again.
 :::
 
+## Stopping a node
+
+Stop a node with `SIGTERM` or `SIGINT` (`docker stop`, a Kubernetes pod deletion, `Ctrl+C`): it stops gracefully. It first gives back the [cluster-wide locks](#cluster-wide-locks) it holds, then stops accepting requests, removes its registration from Redis, tells the other nodes it leaves, ends the requests in progress, and exits with code `0`.
+
+A node killed without a graceful stop (`SIGKILL`, an out-of-memory kill, a crashed machine) cannot do any of this. The other nodes only find out when its state in Redis expires: its locks after their TTL (10 seconds), and its registration after `cluster.heartbeat` × 3 (6 seconds by default), and they converge more slowly:
+
+| How the node stops | Time for the rest of the cluster to converge (measured on 3-node clusters) |
+|---|---|
+| Graceful stop | 10 to 20 seconds |
+| Hard kill | 30 to 90 seconds |
+
+While they converge, a node restarted on the same IP address waits for the old registration to expire, and the nodes starting at the same time wait for its locks.
+
+### Run Kuzzle under an init process
+
+When `node` is a container's main process (PID 1), the kernel ignores the signals it does not handle, and Kuzzle only handles them once it has loaded. A `SIGTERM` sent while a large application loads its modules then used to be ignored, and the orchestrator killed the node after its grace period. Kuzzle now exits on such an early signal, but an init process is still recommended, to forward signals and reap child processes:
+
+- Docker Compose: `init: true` on the Kuzzle service,
+- Docker: `docker run --init`,
+- in an image: [tini](https://github.com/krallin/tini) as the `ENTRYPOINT`,
+- Kubernetes: an image with an init (tini), or `shareProcessNamespace: true` on the pod.
+
+Give the node a grace period long enough to end its requests (`stop_grace_period` with Docker Compose, `terminationGracePeriodSeconds` with Kubernetes).
+
 ## Write cluster-safe code
 
 Every node runs the same application code. Code that must run on one node only, or on one node at a time, needs to be coordinated.
