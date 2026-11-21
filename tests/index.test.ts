@@ -31,7 +31,20 @@ describe("index — the distributed lock", () => {
     },
   );
 
-  it("does not export releaseAllLocksBeforeExit", () => {
-    expect(kuzzle).not.toHaveProperty("releaseAllLocksBeforeExit");
-  });
+  it.each(["releaseAllLocksBeforeExit", "releaseHeldLocks"])(
+    "does not export %s",
+    (name) => {
+      expect(kuzzle).not.toHaveProperty(name);
+    },
+  );
+});
+
+/** #3087: armed on import, replaced by `Kuzzle.start()`; internal. */
+describe("index — the early signal handlers", () => {
+  it.each(["armEarlySignalHandlers", "disarmEarlySignalHandlers"])(
+    "does not export %s",
+    (name) => {
+      expect(kuzzle).not.toHaveProperty(name);
+    },
+  );
 });
