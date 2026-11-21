@@ -59,6 +59,8 @@ If the lock cannot be extended (a Redis error, or the key expired and was taken 
 
 `callback` cannot be cancelled: it keeps running in the background, while another node may now hold the lock. Do not perform authoritative side effects after the promise has rejected with this error.
 
+A node can also find out it lost the lock only once `callback` is over, for instance after its whole process was frozen for longer than `ttl`: `withLock` then settles with `callback`'s own outcome. Either way, Kuzzle logs a warning naming the lock and how long ago this node last extended it, so that two nodes running the same critical section at once show in the logs.
+
 ### Reentrancy
 
 The lock is reentrant within an async context: a `withLock` call on the same `key`, made from inside `callback` (directly, or from anything `callback` awaits), runs its own callback immediately, with no new Redis round-trip. Its `config` is ignored: the outer call's lock, TTL and retries apply.
