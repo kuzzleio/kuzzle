@@ -73,9 +73,7 @@ The deprecated [Mutex](/core/2/framework/classes/mutex) class takes the same Red
 
 ### Shutdown
 
-A node that shuts down gives back the locks it holds as the very first step of its shutdown, without waiting for their callbacks to end, so that the other nodes get them at once. Each `withLock` call holding one rejects with `MutexLockLostError`, as for a [lost lock](#lost-lock): its `cause` says Kuzzle is shutting down.
-
-The locks taken while the shutdown waits for the running requests to end are released before the node exits. From then on, a `withLock` call on that node never settles and never runs its callback.
+A node that shuts down releases the locks it holds before it exits, so that the other nodes do not wait for them to expire. From then on, a `withLock` call on that node never settles and never runs its callback.
 
 ::: info
 `withLock` uses Kuzzle's internal cache. Call it once Kuzzle is running: from a plugin's `init` method onward, or in an application once `app.start()` has resolved.

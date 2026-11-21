@@ -40,9 +40,6 @@ export const assertClusterStorageDriver = vi.fn(async () => undefined);
 /** Frees the locks taken through `withLock`; see `MutexStub` for the rest. */
 export const releaseAllLocksBeforeExit = vi.fn(async () => undefined);
 
-/** Gives back, first thing on shutdown, the locks held by `withLock`. */
-export const releaseHeldLocks = vi.fn(async () => undefined);
-
 /**
  * The real `Mutex` talks to the cache. `Kuzzle` no longer takes one itself:
  * all it still does is free, on shutdown, those taken through the deprecated
@@ -66,5 +63,4 @@ export function reset(): void {
   assertClusterStorageDriver.mockResolvedValue(undefined);
   MutexStub.releaseAllBeforeExit.mockClear();
   releaseAllLocksBeforeExit.mockClear();
-  releaseHeldLocks.mockClear();
 }
