@@ -17,7 +17,10 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 describe("#distributedLock", () => {
   let client: InstanceType<typeof RedisMock>;
   let other: InstanceType<typeof RedisMock>;
-  let kuzzle: { ask: ReturnType<typeof vi.fn> };
+  let kuzzle: {
+    ask: ReturnType<typeof vi.fn>;
+    log: { warn: ReturnType<typeof vi.fn> };
+  };
   let withLock: typeof import("../../lib/util/distributedLock").withLock;
   let MutexAcquireError: typeof import("../../lib/util/distributedLock").MutexAcquireError;
   let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
@@ -30,7 +33,10 @@ describe("#distributedLock", () => {
     other = new RedisMock();
     await client.flushall();
 
-    kuzzle = { ask: vi.fn().mockResolvedValue(client) };
+    kuzzle = {
+      ask: vi.fn().mockResolvedValue(client),
+      log: { warn: vi.fn() },
+    };
     (globalThis as { kuzzle?: unknown }).kuzzle = kuzzle;
 
     // Force lib/util/distributedLock.ts to re-evaluate so its module-level
@@ -328,6 +334,12 @@ describe("#distributedLock", () => {
       await callbackFinished;
       // The other node's lock was neither extended nor deleted by us
       expect(await other.get("lost")).toBe("node-2");
+      expect(kuzzle.log.warn).toHaveBeenCalledOnce();
+      expect(kuzzle.log.warn).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^Lock "lost" lost: it expired, or another node holds it\. This node last extended it \d+ ms ago \(TTL: 300 ms\)/,
+        ),
+      );
     });
 
     it("treats a failed TTL extension as a lost lock, reporting the Redis error as its cause", async () => {
@@ -347,6 +359,11 @@ describe("#distributedLock", () => {
 
         expect(error).toBeInstanceOf(MutexLockLostError);
         expect((error as Error).cause).toBe(redisError);
+        expect(kuzzle.log.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "it could not be extended (READONLY You can't write against a replica)",
+          ),
+        );
 
         await sleep(50);
         expect(unhandled).not.toHaveBeenCalled();
@@ -355,6 +372,91 @@ describe("#distributedLock", () => {
       }
     });
   });
+  /*
+   * #3212: a node frozen longer than the TTL (event-loop stall, `docker
+   * pause`) loses its lock to another node, then resumes and finishes its
+   * critical section. withLock may have settled already: the loss must still
+   * be logged, once.
+   */
+  describe("#lock lost during a stall", () => {
+    // Blocks the event loop, as a paused or stalled process does
+    const freeze = (ms: number) =>
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+    it("logs a warning naming the lock and how long ago it was last extended", async () => {
+      const result = await withLock(
+        "stalled",
+        async () => {
+          await sleep(10);
+          freeze(500);
+          // The lock expired while frozen: another node takes it
+          await other.set("stalled", "node-2", "PX", 10000, "NX");
+          return "done anyway";
+        },
+        { ttl: 300 },
+      );
+
+      // Not a lock semantics change: the callback's outcome stands
+      expect(result).toBe("done anyway");
+
+      await vi.waitFor(() => expect(kuzzle.log.warn).toHaveBeenCalled());
+      await sleep(50);
+
+      expect(kuzzle.log.warn).toHaveBeenCalledOnce();
+      const [message] = kuzzle.log.warn.mock.calls[0] as [string];
+      expect(message).toMatch(/^Lock "stalled" lost: /);
+      expect(message).toContain("(TTL: 300 ms)");
+      const [, elapsed] = /last extended it (\d+) ms ago/.exec(message) ?? [];
+      expect(Number(elapsed)).toBeGreaterThanOrEqual(500);
+
+      // The other node's lock is left alone
+      expect(await other.get("stalled")).toBe("node-2");
+    });
+
+    it("logs a warning when the release finds the lock owned by another node", async () => {
+      await withLock(
+        "taken",
+        async () => {
+          // e.g. expired and taken over between two extensions
+          await other.set("taken", "node-2");
+        },
+        { ttl: 10000 },
+      );
+
+      expect(kuzzle.log.warn).toHaveBeenCalledOnce();
+      expect(kuzzle.log.warn).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^Lock "taken" lost: it had expired, or another node held it, on release\. This node last extended it \d+ ms ago \(TTL: 10000 ms\)/,
+        ),
+      );
+      expect(await other.get("taken")).toBe("node-2");
+    });
+
+    it("logs a warning when the release finds the lock expired", async () => {
+      await withLock(
+        "expired",
+        async () => {
+          await other.del("expired");
+        },
+        { ttl: 10000 },
+      );
+
+      expect(kuzzle.log.warn).toHaveBeenCalledOnce();
+      expect(kuzzle.log.warn).toHaveBeenCalledWith(
+        expect.stringMatching(/^Lock "expired" lost: /),
+      );
+    });
+
+    it("logs nothing when the lock is released normally", async () => {
+      await withLock("foo", async () => "a");
+      await withLock("bar", async () => sleep(400), { ttl: 300 });
+
+      expect(kuzzle.log.warn).not.toHaveBeenCalled();
+      expect(await other.exists("foo")).toBe(0);
+      expect(await other.exists("bar")).toBe(0);
+    });
+  });
+
   /*
    * #3156: a plugin's `init` that times out says which lock it was waiting
    * for, held by another node or left behind by one that died.

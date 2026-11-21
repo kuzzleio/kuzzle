@@ -20,6 +20,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
+import { createHash } from "node:crypto";
 
 import { Mutex as RedisMutex } from "redis-semaphore";
 import type { LockOptions } from "redis-semaphore";
@@ -88,6 +89,22 @@ export class MutexAcquireError extends Error {
 type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
 
 /**
+ * Deletes the lock only if it still holds our token, as redis-semaphore's own
+ * release script does, but answers whether it did: redis-semaphore drops that
+ * answer, and with it the only sign that the lock was lost (#3212).
+ */
+const RELEASE_SCRIPT = `
+  if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+  end
+
+  return 0
+`;
+const RELEASE_SCRIPT_SHA = createHash("sha1")
+  .update(RELEASE_SCRIPT)
+  .digest("hex");
+
+/**
  * redis-semaphore's mutex, adjusted to what `withLock` promises:
  *
  * - the lock lives under the resource key itself, as with the deprecated
@@ -96,11 +113,18 @@ type RedisClient = ConstructorParameters<typeof RedisMutex>[0];
  * - a TTL extension that fails with a Redis error counts as a lost lock
  *   (redis-semaphore would let the error escape its refresh timer as an
  *   unhandled rejection, without knowing whether the lock is still held).
- *   The error is kept, to be reported as the loss's cause.
+ *   The error is kept, to be reported as the loss's cause;
+ * - a lost lock is logged, even when nobody waits for `withLock` any more,
+ *   and so is a release that finds the lock expired or owned by another
+ *   node, which redis-semaphore silently ignores (#3212).
  */
 class ResourceMutex extends RedisMutex {
   refreshError?: Error;
   readonly resource: string;
+
+  // When this node last knew it held the lock: acquired, or extended
+  private heldAt = 0;
+  private lossReported = false;
 
   constructor(client: RedisClient, key: string, options: LockOptions) {
     super(client, key, options);
@@ -108,14 +132,68 @@ class ResourceMutex extends RedisMutex {
     this.resource = key;
   }
 
+  protected async _acquire(abortSignal?: AbortSignal): Promise<boolean> {
+    const acquired = await super._acquire(abortSignal);
+
+    if (acquired) {
+      this.heldAt = Date.now();
+    }
+
+    return acquired;
+  }
+
   protected async _refresh(): Promise<boolean> {
     try {
-      return await super._refresh();
+      const refreshed = await super._refresh();
+
+      if (refreshed) {
+        this.heldAt = Date.now();
+      }
+
+      return refreshed;
     } catch (error) {
       this.refreshError =
         error instanceof Error ? error : new Error(String(error));
       return false;
     }
+  }
+
+  protected async _release(): Promise<void> {
+    const args = [1, this._key, this._identifier] as const;
+    let deleted: unknown;
+
+    try {
+      deleted = await this._client.evalsha(RELEASE_SCRIPT_SHA, ...args);
+    } catch (error) {
+      if (!String(error).includes("NOSCRIPT")) {
+        throw error;
+      }
+
+      deleted = await this._client.eval(RELEASE_SCRIPT, ...args);
+    }
+
+    if (Number(deleted) !== 1) {
+      this.reportLoss("it had expired, or another node held it, on release");
+    }
+  }
+
+  /**
+   * Logs, once, that this node lost the lock while it thought it held it:
+   * it went longer than the TTL without extending it (event-loop stall,
+   * paused process, unreachable Redis), so another node may have run the
+   * same critical section at the same time. A TTL lock cannot be taken back
+   * from a frozen process: it can only be told afterwards.
+   */
+  reportLoss(reason: string): void {
+    if (this.lossReported) {
+      return;
+    }
+
+    this.lossReported = true;
+
+    global.kuzzle.log.warn(
+      `Lock "${this.resource}" lost: ${reason}. This node last extended it ${Date.now() - this.heldAt} ms ago (TTL: ${this._acquireOptions.lockTimeout} ms): it may have been unresponsive, and another node may have held the lock while its own critical section was still running.`,
+    );
   }
 }
 
@@ -309,6 +387,12 @@ export async function withLock<T>(
     lockTimeout: ttl,
     refreshInterval: Math.round(ttl / 3),
     onLockLost: (error) => {
+      // Also when withLock has already settled: then nothing else reports it
+      mutex.reportLoss(
+        mutex.refreshError
+          ? `it could not be extended (${mutex.refreshError.message})`
+          : "it expired, or another node holds it",
+      );
       loss.abort(new MutexLockLostError(key, mutex.refreshError ?? error));
     },
     // redis-semaphore waits `retryInterval` after every failed attempt, the
