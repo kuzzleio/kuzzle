@@ -78,6 +78,7 @@ services:
       context: ../
       dockerfile: deployment/kuzzle.dockerfile
     command: node /var/app/app.js
+    init: true
     restart: always
     container_name: kuzzle
     ports:
@@ -115,7 +116,7 @@ volumes:
     driver: local
 ```
 
-This configuration allows to run a Kuzzle application with Node.js alongside Elasticsearch and Redis.
+This configuration allows to run a Kuzzle application with Node.js alongside Elasticsearch and Redis. `init: true` runs the application under an init process, which forwards `docker stop` to Kuzzle so that it can stop gracefully (see [Stopping a node](/core/2/guides/advanced/cluster-scalability#stopping-a-node)).
 
 We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the application and then use the [node:24](https://hub.docker.com/_/node) image (Kuzzle needs Node.js 22.12 or later) to run the application.
 

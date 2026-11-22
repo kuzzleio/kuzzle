@@ -63,6 +63,7 @@ import type {
   SupportConfig,
 } from "./../types/Kuzzle";
 import DumpGenerator from "./dumpGenerator";
+import { disarmEarlySignalHandlers } from "./earlySignals";
 import KuzzleEventEmitter from "./event/KuzzleEventEmitter";
 import InternalIndexHandler from "./internalIndexHandler";
 import kuzzleStateEnum from "./kuzzleStateEnum";
@@ -1175,7 +1176,10 @@ class Kuzzle extends KuzzleEventEmitter {
       });
     });
 
-    // gracefully exits on normal termination
+    // gracefully exits on normal termination, in place of the handlers that
+    // exited at once while Kuzzle was loading (#3087)
+    disarmEarlySignalHandlers();
+
     for (const signal of ["SIGINT", "SIGTERM"]) {
       process.removeAllListeners(signal);
       process.on(signal, () => {

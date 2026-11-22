@@ -7,6 +7,7 @@ import Kuzzle from "../../lib/kuzzle/kuzzle";
 import type { StartOptions } from "../../lib/types/Kuzzle";
 import Plugin from "../../lib/core/plugin/plugin";
 import kuzzleStateEnum from "../../lib/kuzzle/kuzzleStateEnum";
+import { armEarlySignalHandlers } from "../../lib/kuzzle/earlySignals";
 import { loadConfig } from "../../lib/config";
 import { sha256 } from "../../lib/util/crypto";
 import { invalid } from "../helpers/invalid";
@@ -805,6 +806,83 @@ describe("#kuzzle/Kuzzle", () => {
     );
   });
 
+  /* #3087: until `start()`, a SIGTERM only ends the process through the
+   * handlers armed when the package is imported. */
+  describe("SIGINT / SIGTERM handlers", () => {
+    const events = [
+      "unhandledRejection",
+      "uncaughtException",
+      "SIGQUIT",
+      "SIGABRT",
+      "SIGTRAP",
+      "SIGINT",
+      "SIGTERM",
+    ] as const;
+    let saved: Map<string, ((...args: unknown[]) => void)[]>;
+
+    beforeEach(() => {
+      saved = new Map(
+        events.map((event) => [
+          event,
+          process.listeners(event) as ((...args: unknown[]) => void)[],
+        ]),
+      );
+
+      // Real listeners, but no `exit` one: it would end the test process
+      // with a shutdown, and there is no early one to replace
+      const on = process.on.bind(process);
+      vi.spyOn(process, "on").mockImplementation(((
+        event: string,
+        listener: (...args: unknown[]) => void,
+      ) => (event === "exit" ? process : on(event, listener))) as never);
+
+      armEarlySignalHandlers();
+    });
+
+    afterEach(() => {
+      vi.mocked(process.on).mockRestore();
+
+      for (const [event, listeners] of saved) {
+        process.removeAllListeners(event);
+
+        for (const listener of listeners) {
+          process.on(event, listener);
+        }
+      }
+    });
+
+    it.each(["SIGINT", "SIGTERM"] as const)(
+      "replaces the early %s handler with the graceful one, and only it",
+      (signal) => {
+        const exit = vi
+          .spyOn(process, "exit")
+          .mockImplementation((() => {}) as never);
+        const shutdown = vi
+          .spyOn(kuzzle, "shutdown")
+          .mockResolvedValue(undefined);
+        const early = process.listeners(signal);
+
+        kuzzle.registerSignalHandlers();
+
+        expect(process.listenerCount(signal)).toBe(1);
+        expect(early).not.toContain(process.listeners(signal)[0]);
+
+        process.emit(signal, signal);
+
+        expect(shutdown).toHaveBeenCalledExactlyOnceWith();
+        expect(exit).not.toHaveBeenCalled();
+      },
+    );
+
+    it("never adds a second handler when it runs twice", () => {
+      kuzzle.registerSignalHandlers();
+      kuzzle.registerSignalHandlers();
+
+      expect(process.listenerCount("SIGINT")).toBe(1);
+      expect(process.listenerCount("SIGTERM")).toBe(1);
+    });
+  });
+
   /* #3160: late work failing once the storage is closed must not turn a
    * requested shutdown into a failure. */
   describe("unhandledRejection handler", () => {
@@ -983,9 +1061,14 @@ describe("#kuzzle/Kuzzle", () => {
       expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     });
 
-    /* F-13: a lock taken by a node that exits blocks the others for its ttl. */
+    /* F-13: a lock taken by a node that exits blocks the others for its ttl.
+     * #3218: not before the requests end either. Giving a lock back while its
+     * callback still runs (an import, a request) let another node run the
+     * same critical section at the same time. */
     it("frees its locks once the funnel is empty, and before exiting", async () => {
       const delay = vi.spyOn(Bluebird, "delay").mockImplementation(() => {
+        expect(releaseAllLocksBeforeExit).not.toHaveBeenCalled();
+        expect(MutexStub.releaseAllBeforeExit).not.toHaveBeenCalled();
         funnelOf(kuzzle).remainingRequests = 0;
 
         return Bluebird.resolve() as unknown as Bluebird<void>;

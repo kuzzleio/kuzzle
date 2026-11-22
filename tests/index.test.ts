@@ -35,3 +35,13 @@ describe("index — the distributed lock", () => {
     expect(kuzzle).not.toHaveProperty("releaseAllLocksBeforeExit");
   });
 });
+
+/** #3087: armed on import, replaced by `Kuzzle.start()`; internal. */
+describe("index — the early signal handlers", () => {
+  it.each(["armEarlySignalHandlers", "disarmEarlySignalHandlers"])(
+    "does not export %s",
+    (name) => {
+      expect(kuzzle).not.toHaveProperty(name);
+    },
+  );
+});
