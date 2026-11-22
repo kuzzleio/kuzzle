@@ -415,19 +415,23 @@ describe("#kuzzle/Kuzzle", () => {
 
       /* Each signal is cleared of whatever held it before Kuzzle takes it —
        * the Mocha spec asserted the two lists interleaved, call by call,
-       * which said the same thing at ten times the length. */
+       * which said the same thing at ten times the length. SIGINT and
+       * SIGTERM keep a listener throughout: see "SIGINT / SIGTERM handlers". */
       const signals = [
         "unhandledRejection",
         "uncaughtException",
         "SIGQUIT",
         "SIGABRT",
         "SIGTRAP",
-        "SIGINT",
-        "SIGTERM",
       ];
 
       for (const signal of signals) {
         expect(removeAllListeners).toHaveBeenCalledWith(signal);
+        expect(on).toHaveBeenCalledWith(signal, expect.any(Function));
+      }
+
+      for (const signal of ["SIGINT", "SIGTERM"]) {
+        expect(removeAllListeners).not.toHaveBeenCalledWith(signal);
         expect(on).toHaveBeenCalledWith(signal, expect.any(Function));
       }
 
@@ -873,6 +877,29 @@ describe("#kuzzle/Kuzzle", () => {
         expect(exit).not.toHaveBeenCalled();
       },
     );
+
+    /* 2.61.4-beta.1: removing the early handler before adding the graceful
+     * one left the signal without a listener for an instant, and Node.js
+     * discarded a signal received while the event loop was blocked (an
+     * application loading its modules synchronously). */
+    it("gives a signal received while the event loop was blocked to the graceful handler", async () => {
+      const exit = vi
+        .spyOn(process, "exit")
+        .mockImplementation((() => {}) as never);
+      const shutdown = vi
+        .spyOn(kuzzle, "shutdown")
+        .mockResolvedValue(undefined);
+
+      // Sent and queued, not handled: the event loop does not turn before
+      // the handlers are replaced, as in `app.start()` after a synchronous load
+      process.kill(process.pid, "SIGTERM");
+      kuzzle.registerSignalHandlers();
+
+      await vi.waitFor(() => {
+        expect(shutdown).toHaveBeenCalledExactlyOnceWith();
+      });
+      expect(exit).not.toHaveBeenCalled();
+    });
 
     it("never adds a second handler when it runs twice", () => {
       kuzzle.registerSignalHandlers();
