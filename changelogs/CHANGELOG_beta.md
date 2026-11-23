@@ -1,3 +1,9 @@
+## [2.61.4-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.1...v2.61.4-beta.2) (2026-11-23)
+
+### Bug Fixes
+
+* **core:** keep a signal received while the application loads ([#3223](https://github.com/kuzzleio/kuzzle/issues/3223)) ([baa6c4c](https://github.com/kuzzleio/kuzzle/commit/baa6c4c5d7086758d7c21bc3bd8abc791010f784))
+
 ## [2.61.4-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.3...v2.61.4-beta.1) (2026-11-22)
 
 ### Bug Fixes
