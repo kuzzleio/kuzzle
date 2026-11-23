@@ -409,6 +409,18 @@ export interface StorageUpdateByQuery {
   ): Promise<{ updated?: number }>;
 }
 
+/** What `updateCollection` may tell Kuzzle about the update it made. */
+export type StorageCollectionUpdateResult = {
+  /**
+   * The engine's id of the background task reindexing the collection's
+   * documents, when the update started one (`reindexCollection`, or a change
+   * the engine can only apply to existing documents by reindexing them, such
+   * as `dynamic`). Kuzzle announces it with the
+   * `core:storage:collection:reindex:start` event.
+   */
+  reindexTaskId?: string;
+};
+
 /** Capability `mappingUpdates` */
 export interface StorageMappingUpdates {
   updateMapping(
@@ -416,11 +428,21 @@ export interface StorageMappingUpdates {
     collection: string,
     mappings?: JSONObject,
   ): Promise<JSONObject>;
+  /**
+   * Updates the mappings and settings of an existing collection.
+   *
+   * When the update starts a background reindex of the collection's
+   * documents, the driver may resolve with `{ reindexTaskId }`, the engine's
+   * id of that task: Kuzzle then emits `core:storage:collection:reindex:start`
+   * so that plugins can follow the task. Resolving with `null` or nothing, as
+   * drivers did before, stays valid: Kuzzle emits no event then. The
+   * `collection:update` API action answers `null` either way.
+   */
   updateCollection(
     index: string,
     collection: string,
     options?: StorageCollectionOptions & { reindexCollection?: boolean },
-  ): Promise<unknown>;
+  ): Promise<StorageCollectionUpdateResult | null | void>;
 }
 
 /** Capability `stats` */

@@ -53,6 +53,32 @@ async function eventually(
   return poll();
 }
 
+/**
+ * `updateCollection` may resolve with `{ reindexTaskId }` when it started a
+ * background reindex, or with `null` / nothing: telling the task is optional,
+ * but a task id it tells must be usable.
+ */
+function assertCollectionUpdateResult(result: unknown): void {
+  if (result === null || result === undefined) {
+    return;
+  }
+
+  assert.ok(
+    typeof result === "object",
+    "updateCollection resolves with null, nothing, or { reindexTaskId }",
+  );
+
+  const reindexTaskId =
+    "reindexTaskId" in result ? result.reindexTaskId : undefined;
+
+  if (reindexTaskId !== undefined) {
+    assert.ok(
+      typeof reindexTaskId === "string" && reindexTaskId.length > 0,
+      "the reindexTaskId updateCollection tells is a non-empty string",
+    );
+  }
+}
+
 const IMPLEMENTED =
   "a driver declaring a capability implements its methods (Kuzzle checks it when it loads the driver)";
 
@@ -97,9 +123,11 @@ const CASES: Record<
       await driver.updateMapping(context.index, collection, {
         properties: { country: { type: "keyword" } },
       });
-      await driver.updateCollection(context.index, collection, {
-        mappings: { properties: { zip: { type: "keyword" } } },
-      });
+      assertCollectionUpdateResult(
+        await driver.updateCollection(context.index, collection, {
+          mappings: { properties: { zip: { type: "keyword" } } },
+        }),
+      );
 
       const mapping = await context.driver.getMapping(
         context.index,
@@ -149,10 +177,13 @@ const CASES: Record<
         const byZip = { query: { term: { zip: "34000" } } };
         assert.equal(await driver.count(context.index, collection, byZip), 0);
 
-        await driver.updateCollection(context.index, collection, {
-          mappings: { properties: { zip: { type: "keyword" } } },
-          reindexCollection: true,
-        });
+        // Telling the reindex task's id is optional
+        assertCollectionUpdateResult(
+          await driver.updateCollection(context.index, collection, {
+            mappings: { properties: { zip: { type: "keyword" } } },
+            reindexCollection: true,
+          }),
+        );
 
         // The engine may reindex in the background
         await eventually(

@@ -265,7 +265,12 @@ class ClientAdapter {
     if (!indexCacheOnly) {
       // Creating an existing collection updates its mappings and settings
       this.cache.assertCollectionWritable(index, collection);
-      await this.driver.createCollection(index, collection, opts);
+      const result = await this.driver.createCollection(
+        index,
+        collection,
+        opts,
+      );
+      this.announceReindex(index, collection, result);
     }
 
     this.cache.addCollection(index, collection);
@@ -529,6 +534,28 @@ class ClientAdapter {
   }
 
   /**
+   * Announces the background reindex a mapping update started, when the
+   * driver tells its task id (drivers may not: then nothing is emitted).
+   *
+   * A hook, not a pipe: listeners learn the task id on this node before the
+   * request that started it is answered, and cannot delay or alter it.
+   */
+  private announceReindex(index: string, collection: string, result: unknown) {
+    const taskId = isPlainObject(result) ? result.reindexTaskId : undefined;
+
+    if (typeof taskId !== "string" || taskId.length === 0) {
+      return;
+    }
+
+    global.kuzzle.emit("core:storage:collection:reindex:start", {
+      collection,
+      index,
+      scope: this.scope,
+      taskId,
+    });
+  }
+
+  /**
    * Releases a collection write lock.
    *
    * @returns false if the collection was not locked
@@ -735,7 +762,16 @@ class ClientAdapter {
         await this.assertCollectionExists(index, collection);
         this.cache.assertCollectionWritable(index, collection);
         assertCapability(this.capabilities, this.driver, "updateCollection");
-        return this.driver.updateCollection(index, collection, changes);
+
+        const result = await this.driver.updateCollection(
+          index,
+          collection,
+          changes,
+        );
+
+        this.announceReindex(index, collection, result);
+
+        return result;
       },
     );
   }
