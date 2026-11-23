@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.62
 
-**Status:** in beta since 2026-11-23 (2.62.0-beta.1).
+**Released:** [2.62.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.62.0) on 2026-11-23, after one beta (2.62.0-beta.1 on 2026-11-23).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.61](/core/2/guides/upgrade-notes/from-2-61).
 
@@ -43,4 +43,4 @@ Nothing. If you run your application in a container yourself, run it under an in
 
 ### Under the hood
 
-- `kuzzle-storage-es-7` and `kuzzle-storage-es-8` 1.2.0-beta.1: they tell the id of the background reindex task.
+- `kuzzle-storage-es-7` and `kuzzle-storage-es-8` 1.2.0: they tell the id of the background reindex task.
