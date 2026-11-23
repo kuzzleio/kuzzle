@@ -7,10 +7,12 @@
 import type {
   JSONObject,
   StorageCapability,
+  StorageCollectionUpdateResult,
   StorageDriver,
   StorageDriverClass,
   StorageDriverManifest,
   StorageInfo,
+  StorageMappingUpdates,
   StorageSearchResult,
   StorageStats,
 } from "kuzzle";
@@ -126,3 +128,29 @@ export class MemoryDriver implements StorageDriver {
 
 // What the package exports, as Kuzzle loads it.
 export const Driver: StorageDriverClass<NativeClient> = MemoryDriver;
+
+// `mappingUpdates`: telling the id of the reindex task an update started is
+// optional, a driver resolving with anything else stays conformant.
+export const mappingUpdates: StorageMappingUpdates[] = [
+  {
+    updateCollection: async () => null,
+    updateMapping: async () => ({}),
+  },
+  {
+    updateCollection: async () => {},
+    updateMapping: async () => ({}),
+  },
+  {
+    updateCollection: async (): Promise<JSONObject> => ({ acknowledged: true }),
+    updateMapping: async () => ({}),
+  },
+  {
+    updateCollection: async (
+      index,
+      collection,
+      { reindexCollection } = {},
+    ): Promise<StorageCollectionUpdateResult | null> =>
+      reindexCollection ? { reindexTaskId: `${index}/${collection}` } : null,
+    updateMapping: async () => ({}),
+  },
+];

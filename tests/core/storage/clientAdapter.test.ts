@@ -1405,6 +1405,88 @@ describe("#core/storage/ClientAdapter", () => {
     });
   });
 
+  // ------------------------------------------------ background reindex
+  //
+  // A driver may tell the id of the background reindex a mapping update
+  // started; older drivers resolve with null or nothing.
+  describe("background reindex announcement", () => {
+    const REINDEX = "core:storage:collection:reindex:start";
+    const announced = () => emitted.filter(({ event }) => event === REINDEX);
+
+    beforeEach(() => {
+      cache.hasIndex.mockReturnValue(true);
+      cache.hasCollection.mockReturnValue(true);
+    });
+
+    it("collection:update announces the reindex task, then resolves with the driver's result", async () => {
+      const result = { reindexTaskId: "node:42" };
+      let answered = false;
+      let answeredWhenAnnounced: boolean | undefined;
+
+      client.updateCollection.mockResolvedValue(result);
+      vi.mocked(global.kuzzle.emit).mockImplementation(
+        (event: string, payload: unknown) => {
+          emitted.push({ event, payload });
+          answeredWhenAnnounced = answered;
+          return true;
+        },
+      );
+
+      const answer = Promise.resolve(
+        ask("collection:update", "i", "c", {
+          mappings: { dynamic: "false" },
+          reindexCollection: true,
+        }),
+      ).then((value) => {
+        answered = true;
+        return value;
+      });
+
+      await expect(answer).resolves.toBe(result);
+      // The plugin following the task learns its id before the API answers
+      expect(answeredWhenAnnounced).toBe(false);
+      expect(announced()).toEqual([
+        {
+          event: REINDEX,
+          payload: {
+            collection: "c",
+            index: "i",
+            scope: storeScopeEnum.PRIVATE,
+            taskId: "node:42",
+          },
+        },
+      ]);
+    });
+
+    it.each([
+      ["null", null],
+      ["undefined", undefined],
+      ["an object without a task id", { acknowledged: true }],
+      ["a non-string task id", { reindexTaskId: 42 }],
+      ["an empty task id", { reindexTaskId: "" }],
+      ["a non-object", "node:42"],
+    ])(
+      "collection:update announces nothing when the driver resolves with %s",
+      async (_, result) => {
+        client.updateCollection.mockResolvedValue(result);
+
+        await expect(ask("collection:update", "i", "c", {})).resolves.toBe(
+          result,
+        );
+        expect(announced()).toHaveLength(0);
+      },
+    );
+
+    it("collection:update announces nothing when the update fails", async () => {
+      client.updateCollection.mockRejectedValue(new Error("boom"));
+
+      await expect(ask("collection:update", "i", "c", {})).rejects.toThrow(
+        "boom",
+      );
+      expect(announced()).toHaveLength(0);
+    });
+  });
+
   describe("#deleteIndex", () => {
     it("asserts, deletes, un-caches and announces", async () => {
       await adapter.deleteIndex("i");

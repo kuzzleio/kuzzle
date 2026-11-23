@@ -213,6 +213,43 @@ describe("#core/security/RoleRepository", () => {
       expect(fromDatabase).not.toHaveBeenCalledWith("role3");
       expect(fromDatabase).toHaveBeenCalledWith("role4");
     });
+
+    it("should not cache a failed load", async () => {
+      const role1 = roleNamed("role1");
+      const error = new Error("ES timeout");
+
+      const fromDatabase = vi
+        .spyOn(repository, "loadOneFromDatabase")
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce(role1);
+
+      await expect(repository.loadRoles(["role1"])).rejects.toBe(error);
+      expect(repository.roles.has("role1")).toBe(false);
+
+      await expect(repository.loadRoles(["role1"])).resolves.toEqual([role1]);
+      expect(fromDatabase).toHaveBeenCalledTimes(2);
+      expect(repository.roles.get("role1")).toBe(role1);
+    });
+
+    it("should not evict an entry replaced while a failed load was pending", async () => {
+      const role1 = roleNamed("role1");
+      const error = new Error("ES timeout");
+      let rejectLoad: (err: Error) => void = () => {};
+
+      vi.spyOn(repository, "loadOneFromDatabase").mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectLoad = reject;
+          }),
+      );
+
+      const pending = repository.loadRoles(["role1"]);
+      repository.roles.set("role1", role1);
+      rejectLoad(error);
+
+      await expect(pending).rejects.toBe(error);
+      expect(repository.roles.get("role1")).toBe(role1);
+    });
   });
 
   describe("#get", () => {

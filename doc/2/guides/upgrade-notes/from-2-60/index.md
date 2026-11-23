@@ -185,3 +185,7 @@ When `app.start()` fails, Kuzzle logs `Cannot start Kuzzle` and stops. If the ap
 When code throws a value that is not an `Error` (a string, an object, `undefined`) and nothing catches it, Kuzzle now logs that value, then writes its dump and exits as for any uncaught exception. It used to log `undefined`, or, for `undefined`, fail in its own handler without a dump. In development mode, a promise rejected with no reason ends this way.
 
 **Action:** none.
+
+## 2.61.4
+
+Not released as stable: its changes ship in 2.62.0. Read [Upgrading from 2.61](/core/2/guides/upgrade-notes/from-2-61).

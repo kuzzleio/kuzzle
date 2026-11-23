@@ -142,6 +142,33 @@ A running node also exits with code `1` when it leaves the cluster because of a 
 Use a restart policy that restarts on failure (e.g. `restart: on-failure` or `restart: always` with Docker Compose, or the default policy of a Kubernetes Deployment): a failed node is then restarted and joins the cluster again.
 :::
 
+## Stopping a node
+
+Stop a node with `SIGTERM` or `SIGINT` (`docker stop`, a Kubernetes pod deletion, `Ctrl+C`): it stops gracefully. It stops accepting requests, removes its registration from Redis, tells the other nodes it leaves, ends the requests in progress, releases the [cluster-wide locks](#cluster-wide-locks) it holds, and exits with code `0`. A lock is kept until the code running under it ends, or until the node exits: giving it back earlier would let another node run the same code at the same time.
+
+A node killed without a graceful stop (`SIGKILL`, an out-of-memory kill, a crashed machine) cannot do any of this. The other nodes only find out when its state in Redis expires: its registration after `cluster.heartbeat` × 2 (4 seconds by default), and its locks after their TTL (10 seconds). Measured on 3-node clusters with the default settings, each node restarted at once:
+
+| How the node stops | What the rest of the cluster sees |
+|---|---|
+| Graceful stop | The other nodes see it leave at once. Restarted, it serves requests again in about 5 seconds |
+| Hard kill | The other nodes evict it after 5 to 7 seconds. Restarted on the same IP address, it first waits 6 seconds (`cluster.heartbeat` × 3) for its old registration to expire, and serves requests again in about 10 seconds |
+| Hard kill while it holds a startup lock | The nodes starting with it wait for the lock to expire: the whole cluster serves requests 13 to 16 seconds after the kill |
+
+To shorten these delays, lower `cluster.heartbeat` (the registration expires sooner, but a shorter stall gets a node evicted), or pass a shorter `ttl` to your own [withLock](/core/2/framework/functions/with-lock) calls (the lock expires sooner, but a shorter stall makes its holder lose it).
+
+### Run Kuzzle under an init process
+
+When `node` is a container's main process (PID 1), the kernel ignores the signals it does not handle, and Kuzzle only handles them once it has loaded. A `SIGTERM` sent while a large application loads its modules then used to be ignored, and the orchestrator killed the node after its grace period. Kuzzle now handles it from the moment the application imports `kuzzle`: it exits at once if the application is still loading when it gets the signal, or stops gracefully as soon as `app.start()` is called if the application loads its modules without giving the event loop a turn. A signal received before `kuzzle` is imported is still ignored without an init. An init process is therefore still recommended, to forward signals and reap child processes:
+
+- Docker Compose: `init: true` on the Kuzzle service,
+- Docker: `docker run --init`,
+- in an image: [tini](https://github.com/krallin/tini) as the `ENTRYPOINT`,
+- Kubernetes: an image with an init (tini), or `shareProcessNamespace: true` on the pod.
+
+Since 2.62.0, the official `kuzzleio/kuzzle` image runs Kuzzle under tini.
+
+Give the node a grace period long enough to end its requests (`stop_grace_period` with Docker Compose, `terminationGracePeriodSeconds` with Kubernetes).
+
 ## Write cluster-safe code
 
 Every node runs the same application code. Code that must run on one node only, or on one node at a time, needs to be coordinated.

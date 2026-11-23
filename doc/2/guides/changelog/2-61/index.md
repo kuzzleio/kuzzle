@@ -12,9 +12,13 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12, [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14 and [2.61.3](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.3) on 2026-11-20.
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12, [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14 and [2.61.3](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.3) on 2026-11-20. 2.61.4 had two betas but no stable release: its changes ship in [2.62.0](/core/2/guides/changelog/2-62).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
+
+## 2.61.4
+
+Not released as stable. 2.61.4-beta.1 (2026-11-22) and 2.61.4-beta.2 (2026-11-23) were published, then their changes moved to [2.62.0](/core/2/guides/changelog/2-62) with the next features.
 
 ## 2.61.3
 
