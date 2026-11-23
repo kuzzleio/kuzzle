@@ -1485,34 +1485,6 @@ describe("#core/storage/ClientAdapter", () => {
       );
       expect(announced()).toHaveLength(0);
     });
-
-    /* Creating an existing collection updates its mappings, which may also
-     * start a reindex. */
-    it("createCollection announces the reindex task the driver tells", async () => {
-      client.createCollection.mockResolvedValue({ reindexTaskId: "node:7" });
-
-      await adapter.createCollection("i", "c", { mappings: {} });
-
-      expect(announced()).toEqual([
-        {
-          event: REINDEX,
-          payload: {
-            collection: "c",
-            index: "i",
-            scope: storeScopeEnum.PRIVATE,
-            taskId: "node:7",
-          },
-        },
-      ]);
-    });
-
-    it("createCollection announces nothing for a driver telling no task", async () => {
-      client.createCollection.mockResolvedValue(null);
-
-      await adapter.createCollection("i", "c", { mappings: {} });
-
-      expect(announced()).toHaveLength(0);
-    });
   });
 
   describe("#deleteIndex", () => {

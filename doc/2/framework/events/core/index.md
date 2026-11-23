@@ -105,7 +105,7 @@ Pipes cannot listen to that event, only hooks can.
 | --------- | ----------------- | ---------------------------------------------- |
 | `payload` | <pre>object</pre> | The collection and the reindex task it started |
 
-Triggered when a mapping update starts a background reindex of a collection's documents, with the storage engine's id of that task: a [collection:update](/core/2/api/controllers/collection/update) with `reindexCollection`, or a change the engine can only apply to existing documents by reindexing them, such as `dynamic`. It is also triggered when [collection:create](/core/2/api/controllers/collection/create) on an existing collection starts one.
+Triggered when a mapping update starts a background reindex of a collection's documents, with the storage engine's id of that task: a [collection:update](/core/2/api/controllers/collection/update) with `reindexCollection`, or a change the engine can only apply to existing documents by reindexing them, such as `dynamic`.
 
 The event is emitted on the node that ran the update, before the API request that started it is answered. The reindex itself is still running: follow it with the storage engine's task API.
 

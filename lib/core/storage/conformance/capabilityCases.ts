@@ -55,28 +55,23 @@ async function eventually(
 
 /**
  * `updateCollection` may resolve with `{ reindexTaskId }` when it started a
- * background reindex, or with `null` / nothing: telling the task is optional,
+ * background reindex, or with anything else: telling the task is optional,
  * but a task id it tells must be usable.
  */
 function assertCollectionUpdateResult(result: unknown): void {
-  if (result === null || result === undefined) {
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("reindexTaskId" in result) ||
+    result.reindexTaskId === undefined
+  ) {
     return;
   }
 
   assert.ok(
-    typeof result === "object",
-    "updateCollection resolves with null, nothing, or { reindexTaskId }",
+    typeof result.reindexTaskId === "string" && result.reindexTaskId.length > 0,
+    "the reindexTaskId updateCollection tells is a non-empty string",
   );
-
-  const reindexTaskId =
-    "reindexTaskId" in result ? result.reindexTaskId : undefined;
-
-  if (reindexTaskId !== undefined) {
-    assert.ok(
-      typeof reindexTaskId === "string" && reindexTaskId.length > 0,
-      "the reindexTaskId updateCollection tells is a non-empty string",
-    );
-  }
 }
 
 const IMPLEMENTED =

@@ -265,12 +265,7 @@ class ClientAdapter {
     if (!indexCacheOnly) {
       // Creating an existing collection updates its mappings and settings
       this.cache.assertCollectionWritable(index, collection);
-      const result = await this.driver.createCollection(
-        index,
-        collection,
-        opts,
-      );
-      this.announceReindex(index, collection, result);
+      await this.driver.createCollection(index, collection, opts);
     }
 
     this.cache.addCollection(index, collection);
@@ -534,7 +529,7 @@ class ClientAdapter {
   }
 
   /**
-   * Announces the background reindex a mapping update started, when the
+   * Announces the background reindex a `collection:update` started, when the
    * driver tells its task id (drivers may not: then nothing is emitted).
    *
    * A hook, not a pipe: listeners learn the task id on this node before the

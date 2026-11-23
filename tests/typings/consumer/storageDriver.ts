@@ -130,7 +130,7 @@ export class MemoryDriver implements StorageDriver {
 export const Driver: StorageDriverClass<NativeClient> = MemoryDriver;
 
 // `mappingUpdates`: telling the id of the reindex task an update started is
-// optional, a driver answering null or nothing stays conformant.
+// optional, a driver resolving with anything else stays conformant.
 export const mappingUpdates: StorageMappingUpdates[] = [
   {
     updateCollection: async () => null,
@@ -138,6 +138,10 @@ export const mappingUpdates: StorageMappingUpdates[] = [
   },
   {
     updateCollection: async () => {},
+    updateMapping: async () => ({}),
+  },
+  {
+    updateCollection: async (): Promise<JSONObject> => ({ acknowledged: true }),
     updateMapping: async () => ({}),
   },
   {
