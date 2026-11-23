@@ -12,21 +12,13 @@ meta:
 
 # Kuzzle 2.61
 
-**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12, [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14 and [2.61.3](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.3) on 2026-11-20. 2.61.4 is in beta since 2026-11-22.
+**Released:** [2.61.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.0) on 2026-11-04, after nine betas (2.61.0-beta.1 on 2026-10-30 to 2.61.0-beta.9). Patches [2.61.1](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.1) released on 2026-11-12, [2.61.2](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.2) on 2026-11-14 and [2.61.3](https://github.com/kuzzleio/kuzzle/releases/tag/v2.61.3) on 2026-11-20. 2.61.4 had two betas but no stable release: its changes ship in [2.62.0](/core/2/guides/changelog/2-62).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.60](/core/2/guides/upgrade-notes/from-2-60).
 
 ## 2.61.4
 
-**Status:** in beta since 2026-11-22 (2.61.4-beta.1).
-
-Fixes for stopping a node, and a new warning for cluster-wide locks. No new feature, no configuration change.
-
-- **What you need to do:** nothing. If you run your application in a container yourself, run it under an init process, for instance `init: true` with Docker Compose (see [Stopping a node](/core/2/guides/advanced/cluster-scalability#stopping-a-node)).
-- **Fixed: a node stopped while it loads no longer waits for its grace period.** When `node` is the container's main process, a `SIGTERM` received while a large application was still loading its modules was ignored, and the orchestrator killed the node only at the end of its grace period. Kuzzle now handles a `SIGTERM` or `SIGINT` received once the application has imported `kuzzle`: it exits at once, or stops gracefully as soon as `app.start()` is called ([#3087](https://github.com/kuzzleio/kuzzle/issues/3087)). In 2.61.4-beta.1, an application loading its modules without giving the event loop a turn, as the project templates do, lost that signal, even under an init process.
-- **Changed: the official `kuzzleio/kuzzle` image runs Kuzzle under [tini](https://github.com/krallin/tini).** tini forwards signals to Kuzzle and reaps the child processes Kuzzle starts. The image's start command (`CMD`) does not change.
-- **New: a lost cluster-wide lock is logged.** A node that stalls for longer than a lock's TTL (a frozen process, an unreachable Redis) loses that lock, and another node may then run the same code at the same time. Kuzzle now logs a warning naming the lock whenever a node finds out it lost one, even after the code that held it has ended ([#3212](https://github.com/kuzzleio/kuzzle/issues/3212)).
-- **New in the docs:** [Stopping a node](/core/2/guides/advanced/cluster-scalability#stopping-a-node): what a graceful stop does, how long the rest of the cluster takes to notice a node killed without one, measured on 3-node clusters, and how to run Kuzzle under an init process.
+Not released as stable. 2.61.4-beta.1 (2026-11-22) and 2.61.4-beta.2 (2026-11-23) were published, then their changes moved to [2.62.0](/core/2/guides/changelog/2-62) with the next features.
 
 ## 2.61.3
 

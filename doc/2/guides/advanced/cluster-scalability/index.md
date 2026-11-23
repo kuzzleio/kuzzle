@@ -165,7 +165,7 @@ When `node` is a container's main process (PID 1), the kernel ignores the signal
 - in an image: [tini](https://github.com/krallin/tini) as the `ENTRYPOINT`,
 - Kubernetes: an image with an init (tini), or `shareProcessNamespace: true` on the pod.
 
-Since 2.61.4, the official `kuzzleio/kuzzle` image runs Kuzzle under tini.
+Since 2.62.0, the official `kuzzleio/kuzzle` image runs Kuzzle under tini.
 
 Give the node a grace period long enough to end its requests (`stop_grace_period` with Docker Compose, `terminationGracePeriodSeconds` with Kubernetes).
 
