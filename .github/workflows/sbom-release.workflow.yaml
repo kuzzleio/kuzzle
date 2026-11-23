@@ -39,8 +39,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - run: npm install
+      # Pinned: an unpinned npx picked up 7.x, whose XML output needs the
+      # optional xmlbuilder2 package and failed every release since 2.61.1.
+      # JSON needs no optional dependency; spec 1.6 is what 6.x produced.
       - name: Create SBOM with CycloneDX
-        run: npx @cyclonedx/cyclonedx-npm -o bom.xml --of=XML
+        run: npx --yes @cyclonedx/cyclonedx-npm@7.0.1 --spec-version 1.6 --output-format JSON --output-file bom.json
 
       - name: Get the current project version from package.json
         id: get-version
@@ -54,5 +57,5 @@ jobs:
           apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
           projectname: "Kuzzle Backend"
           projectversion: "${{ steps.get-version.outputs.version }}"
-          bomfilename: "./bom.xml"
+          bomfilename: "./bom.json"
           autocreate: true
