@@ -1,3 +1,9 @@
+## [2.62.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.62.0-beta.1...v2.62.0-beta.2) (2026-11-23)
+
+### Bug Fixes
+
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.2.0 ([a9e24b2](https://github.com/kuzzleio/kuzzle/commit/a9e24b2ac4f6e594cfe4d7ae211d3651250a8941))
+
 ## [2.62.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.2...v2.62.0-beta.1) (2026-11-23)
 
 ### Features
