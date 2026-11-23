@@ -1,3 +1,37 @@
+## [2.62.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.62.0-beta.1...v2.62.0-beta.2) (2026-11-23)
+
+### Bug Fixes
+
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.2.0 ([a9e24b2](https://github.com/kuzzleio/kuzzle/commit/a9e24b2ac4f6e594cfe4d7ae211d3651250a8941))
+
+## [2.62.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.2...v2.62.0-beta.1) (2026-11-23)
+
+### Features
+
+* **storage:** announce the background reindex a mapping update starts ([e02ba23](https://github.com/kuzzleio/kuzzle/commit/e02ba23ceceef28389d7c4022a939ed89ec76624))
+
+### Bug Fixes
+
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.2.0-beta.1 ([ca1fd88](https://github.com/kuzzleio/kuzzle/commit/ca1fd88327a600958b9b2b025e69502ef554986d)), closes [#3226](https://github.com/kuzzleio/kuzzle/issues/3226)
+* **roles:** do not store unloaded role to the cache ([ebeb698](https://github.com/kuzzleio/kuzzle/commit/ebeb698ebd0f5a5fa5c7ba1e08e7d20ee70282f9))
+
+## [2.61.4-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.1...v2.61.4-beta.2) (2026-11-23)
+
+### Bug Fixes
+
+* **core:** keep a signal received while the application loads ([#3223](https://github.com/kuzzleio/kuzzle/issues/3223)) ([baa6c4c](https://github.com/kuzzleio/kuzzle/commit/baa6c4c5d7086758d7c21bc3bd8abc791010f784))
+
+## [2.61.4-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.3...v2.61.4-beta.1) (2026-11-22)
+
+### Bug Fixes
+
+* **core:** exit on SIGTERM / SIGINT received while Kuzzle loads ([#3087](https://github.com/kuzzleio/kuzzle/issues/3087)) ([ec7c0b3](https://github.com/kuzzleio/kuzzle/commit/ec7c0b390a16b65d0a00b6374da14537cd2d3bab))
+* **core:** give back the cluster-wide locks first on a graceful shutdown ([b58ef28](https://github.com/kuzzleio/kuzzle/commit/b58ef281b0be82817501aeddb9a49f93d3a0f11f))
+* **core:** keep a lock until its code ends on a graceful stop ([#3218](https://github.com/kuzzleio/kuzzle/issues/3218)) ([7eaa1d2](https://github.com/kuzzleio/kuzzle/commit/7eaa1d233a09c1c55d6311b0fdad4cd1f4099321)), closes [#3217](https://github.com/kuzzleio/kuzzle/issues/3217) [#3217](https://github.com/kuzzleio/kuzzle/issues/3217)
+* **core:** release a lock given back at shutdown only once ([368d57e](https://github.com/kuzzleio/kuzzle/commit/368d57e053da5d4c4852686d8d7bfc8d49ab5bb3)), closes [#3212](https://github.com/kuzzleio/kuzzle/issues/3212)
+* **core:** release a lock with a plain EVAL, without a local SHA-1 ([9d3babe](https://github.com/kuzzleio/kuzzle/commit/9d3babed441d7916814ea935246d43b953db3898))
+* **withLock:** log a warning when a holder finds out it lost its lock ([#3212](https://github.com/kuzzleio/kuzzle/issues/3212)) ([66bfe74](https://github.com/kuzzleio/kuzzle/commit/66bfe74642fa350565ddde6c811e341041a1ea73))
+
 ## [2.61.3-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.3-beta.1...v2.61.3-beta.2) (2026-11-20)
 
 ### Bug Fixes
