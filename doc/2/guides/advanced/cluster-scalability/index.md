@@ -158,7 +158,7 @@ To shorten these delays, lower `cluster.heartbeat` (the registration expires soo
 
 ### Run Kuzzle under an init process
 
-When `node` is a container's main process (PID 1), the kernel ignores the signals it does not handle, and Kuzzle only handles them once it has loaded. A `SIGTERM` sent while a large application loads its modules then used to be ignored, and the orchestrator killed the node after its grace period. Kuzzle now exits on such an early signal, but an init process is still recommended, to forward signals and reap child processes:
+When `node` is a container's main process (PID 1), the kernel ignores the signals it does not handle, and Kuzzle only handles them once it has loaded. A `SIGTERM` sent while a large application loads its modules then used to be ignored, and the orchestrator killed the node after its grace period. Kuzzle now handles it from the moment the application imports `kuzzle`: it exits at once if the application is still loading when it gets the signal, or stops gracefully as soon as `app.start()` is called if the application loads its modules without giving the event loop a turn. A signal received before `kuzzle` is imported is still ignored without an init. An init process is therefore still recommended, to forward signals and reap child processes:
 
 - Docker Compose: `init: true` on the Kuzzle service,
 - Docker: `docker run --init`,

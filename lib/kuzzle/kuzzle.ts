@@ -1177,16 +1177,25 @@ class Kuzzle extends KuzzleEventEmitter {
     });
 
     // gracefully exits on normal termination, in place of the handlers that
-    // exited at once while Kuzzle was loading (#3087)
-    disarmEarlySignalHandlers();
-
+    // exited at once while Kuzzle was loading (#3087).
+    // The graceful handler is added BEFORE the others are removed: a signal
+    // received while the application loaded its modules synchronously waits
+    // for the event loop to turn, and Node.js discards it if the signal has
+    // no listener left in between, even for an instant.
     for (const signal of ["SIGINT", "SIGTERM"]) {
-      process.removeAllListeners(signal);
+      const previous = process.listeners(signal);
+
       process.on(signal, () => {
         this.log.info(`Caught signal ${signal} => gracefully exit`);
         void this.shutdown();
       });
+
+      for (const listener of previous) {
+        process.removeListener(signal, listener);
+      }
     }
+
+    disarmEarlySignalHandlers();
   }
 
   async dumpAndExit(suffix: string) {

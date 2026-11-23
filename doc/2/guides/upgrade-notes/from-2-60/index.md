@@ -192,7 +192,12 @@ Fixes only. Nothing to change in your configuration.
 
 ### Signals received while Kuzzle loads
 
-A `SIGTERM` or `SIGINT` received before `app.start()` is called (while the application loads its modules) now makes it exit at once, with code `143` (`SIGTERM`) or `130` (`SIGINT`), after writing `Caught signal SIGTERM before Kuzzle started: exiting now` to the standard error. When `node` ran as a container's main process without an init, such a signal was ignored and the orchestrator killed the node after its grace period. From `app.start()` on, a signal stops Kuzzle gracefully, as before.
+When `node` ran as a container's main process without an init, a `SIGTERM` or `SIGINT` received while the application loaded its modules was ignored, and the orchestrator killed the node after its grace period. Kuzzle now handles such a signal from the moment the application imports `kuzzle`:
+
+- if the event loop turns before `app.start()` is called, Kuzzle exits at once, with code `143` (`SIGTERM`) or `130` (`SIGINT`), after writing `Caught signal SIGTERM before Kuzzle started: exiting now` to the standard error;
+- if the application loads its modules synchronously and calls `app.start()` right after, as the project templates do, the signal waits for `app.start()`, which then stops Kuzzle gracefully, as a signal received during the startup always did.
+
+A signal received before `kuzzle` is imported is still ignored without an init. From `app.start()` on, a signal stops Kuzzle gracefully, as before.
 
 **Action:** none. To forward signals and reap child processes, run your application under an init process: `init: true` with Docker Compose, `docker run --init`, or tini as your image's `ENTRYPOINT` (see [Run Kuzzle under an init process](/core/2/guides/advanced/cluster-scalability#run-kuzzle-under-an-init-process)).
 
