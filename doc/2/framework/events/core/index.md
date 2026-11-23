@@ -97,6 +97,42 @@ Triggered when a request is rejected because the requests buffer is full (see [c
 Pipes cannot listen to that event, only hooks can.
 :::
 
+## core:storage:collection:reindex:start
+
+<SinceBadge version="2.62.0" />
+
+| Arguments | Type              | Description                                    |
+| --------- | ----------------- | ---------------------------------------------- |
+| `payload` | <pre>object</pre> | The collection and the reindex task it started |
+
+Triggered when a mapping update starts a background reindex of a collection's documents, with the storage engine's id of that task: a [collection:update](/core/2/api/controllers/collection/update) with `reindexCollection`, or a change the engine can only apply to existing documents by reindexing them, such as `dynamic`.
+
+The event is emitted on the node that ran the update, before the API request that started it is answered. The reindex itself is still running: follow it with the storage engine's task API.
+
+Only storage drivers telling the task's id trigger it: with a driver that does not, the reindex still runs, but the event is not emitted. The API response does not change.
+
+### payload
+
+| Properties   | Type              | Description                                                         |
+| ------------ | ----------------- | ------------------------------------------------------------------- |
+| `scope`      | <pre>string</pre> | `public` for the API's indexes, `private` for Kuzzle's internal ones |
+| `index`      | <pre>string</pre> | Index name                                                          |
+| `collection` | <pre>string</pre> | Collection name                                                     |
+| `taskId`     | <pre>string</pre> | The storage engine's id of the reindex task (e.g. `nodeId:1234`)    |
+
+```js
+app.hook.register(
+  "core:storage:collection:reindex:start",
+  ({ scope, index, collection, taskId }) => {
+    // e.g. GET _tasks/<taskId> to follow it
+  },
+);
+```
+
+:::info
+Pipes cannot listen to that event, only hooks can.
+:::
+
 ## core:shutdown
 
 <DeprecatedBadge version="2.2.0" />
