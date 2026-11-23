@@ -25,7 +25,7 @@
 
 import assert from "node:assert/strict";
 
-import { field } from "./conformanceContext";
+import { assertCollectionUpdateResult, field } from "./conformanceContext";
 import type { ConformanceContext } from "./conformanceContext";
 import type { ConformanceTestApi } from "./storageDriverConformance";
 import { STORAGE_CAPABILITIES } from "../../../types/storage/StorageDriver";
@@ -51,27 +51,6 @@ async function eventually(
   };
 
   return poll();
-}
-
-/**
- * `updateCollection` may resolve with `{ reindexTaskId }` when it started a
- * background reindex, or with anything else: telling the task is optional,
- * but a task id it tells must be usable.
- */
-function assertCollectionUpdateResult(result: unknown): void {
-  if (
-    typeof result !== "object" ||
-    result === null ||
-    !("reindexTaskId" in result) ||
-    result.reindexTaskId === undefined
-  ) {
-    return;
-  }
-
-  assert.ok(
-    typeof result.reindexTaskId === "string" && result.reindexTaskId.length > 0,
-    "the reindexTaskId updateCollection tells is a non-empty string",
-  );
 }
 
 const IMPLEMENTED =

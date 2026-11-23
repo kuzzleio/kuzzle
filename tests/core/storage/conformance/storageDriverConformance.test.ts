@@ -5,6 +5,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  assertCollectionUpdateResult,
   field,
   hasField,
   rejectsWith,
@@ -392,6 +393,25 @@ describe("#core/storage/conformance", () => {
     it("reads fields by their path", () => {
       expect(field({ a: { b: 1 } }, "a.b")).toBe(1);
       expect(hasField({ a: { b: 1 } }, "a.c")).toBe(false);
+    });
+
+    it("accepts any updateCollection result, but a reindex task id must be a non-empty string", () => {
+      for (const result of [
+        null,
+        undefined,
+        {},
+        "acknowledged",
+        { reindexTaskId: undefined },
+        { reindexTaskId: "node:42" },
+      ]) {
+        expect(() => assertCollectionUpdateResult(result)).not.toThrow();
+      }
+
+      for (const reindexTaskId of ["", 42, null]) {
+        expect(() => assertCollectionUpdateResult({ reindexTaskId })).toThrow(
+          "the reindexTaskId updateCollection tells is a non-empty string",
+        );
+      }
     });
   });
 });
