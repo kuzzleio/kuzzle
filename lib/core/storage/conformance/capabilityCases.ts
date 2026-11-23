@@ -25,7 +25,7 @@
 
 import assert from "node:assert/strict";
 
-import { field } from "./conformanceContext";
+import { assertCollectionUpdateResult, field } from "./conformanceContext";
 import type { ConformanceContext } from "./conformanceContext";
 import type { ConformanceTestApi } from "./storageDriverConformance";
 import { STORAGE_CAPABILITIES } from "../../../types/storage/StorageDriver";
@@ -97,9 +97,11 @@ const CASES: Record<
       await driver.updateMapping(context.index, collection, {
         properties: { country: { type: "keyword" } },
       });
-      await driver.updateCollection(context.index, collection, {
-        mappings: { properties: { zip: { type: "keyword" } } },
-      });
+      assertCollectionUpdateResult(
+        await driver.updateCollection(context.index, collection, {
+          mappings: { properties: { zip: { type: "keyword" } } },
+        }),
+      );
 
       const mapping = await context.driver.getMapping(
         context.index,
@@ -149,10 +151,13 @@ const CASES: Record<
         const byZip = { query: { term: { zip: "34000" } } };
         assert.equal(await driver.count(context.index, collection, byZip), 0);
 
-        await driver.updateCollection(context.index, collection, {
-          mappings: { properties: { zip: { type: "keyword" } } },
-          reindexCollection: true,
-        });
+        // Telling the reindex task's id is optional
+        assertCollectionUpdateResult(
+          await driver.updateCollection(context.index, collection, {
+            mappings: { properties: { zip: { type: "keyword" } } },
+            reindexCollection: true,
+          }),
+        );
 
         // The engine may reindex in the background
         await eventually(

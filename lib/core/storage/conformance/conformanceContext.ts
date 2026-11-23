@@ -119,3 +119,24 @@ export function field(object: unknown, path: string): unknown {
 export function hasField(object: unknown, path: string): boolean {
   return has(object, path);
 }
+
+/**
+ * `updateCollection` may resolve with `{ reindexTaskId }` when it started a
+ * background reindex, or with anything else: telling the task is optional,
+ * but a task id it tells must be usable.
+ */
+export function assertCollectionUpdateResult(result: unknown): void {
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("reindexTaskId" in result) ||
+    result.reindexTaskId === undefined
+  ) {
+    return;
+  }
+
+  assert.ok(
+    typeof result.reindexTaskId === "string" && result.reindexTaskId.length > 0,
+    "the reindexTaskId updateCollection tells is a non-empty string",
+  );
+}

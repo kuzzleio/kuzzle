@@ -85,6 +85,11 @@ A few rules hold across them:
   `deleted` count (`bulk:deleteByQuery` asks for both).
 - **`createCollection` on an existing collection** keeps it and its documents (and applies the new mappings, with
   `mappingUpdates`); `deleteIndexes` skips the indexes that do not exist and answers the ones it deleted.
+- **`updateCollection`** may answer, when the update started a background reindex of the collection's documents,
+  `{ reindexTaskId }`, the engine's id of that task (type `StorageCollectionUpdateResult`). Telling it is optional:
+  Kuzzle then emits
+  [core:storage:collection:reindex:start](/core/2/framework/events/core#core-storage-collection-reindex-start) for
+  plugins to follow the task. Any other answer (`null`, nothing...) is valid and triggers no event.
 
 ## Capabilities
 
