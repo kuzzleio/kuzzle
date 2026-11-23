@@ -1,3 +1,14 @@
+## [2.62.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.2...v2.62.0-beta.1) (2026-11-23)
+
+### Features
+
+* **storage:** announce the background reindex a mapping update starts ([e02ba23](https://github.com/kuzzleio/kuzzle/commit/e02ba23ceceef28389d7c4022a939ed89ec76624))
+
+### Bug Fixes
+
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.2.0-beta.1 ([ca1fd88](https://github.com/kuzzleio/kuzzle/commit/ca1fd88327a600958b9b2b025e69502ef554986d)), closes [#3226](https://github.com/kuzzleio/kuzzle/issues/3226)
+* **roles:** do not store unloaded role to the cache ([ebeb698](https://github.com/kuzzleio/kuzzle/commit/ebeb698ebd0f5a5fa5c7ba1e08e7d20ee70282f9))
+
 ## [2.61.4-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.61.4-beta.1...v2.61.4-beta.2) (2026-11-23)
 
 ### Bug Fixes
