@@ -7,7 +7,7 @@ on:
       - beta
 
 # Read-only by default: npm-deploy declares what semantic-release needs, and
-# doc-deploy triggers the documentation workflow with its own token.
+# doc-deploy triggers the documentation workflow with a kuzzlebot token.
 permissions:
   contents: read
 
@@ -27,12 +27,26 @@ jobs:
           echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> "$GITHUB_OUTPUT"
           echo "repo=$(echo "$GITHUB_REPOSITORY" | cut -d/ -f 2)" >> "$GITHUB_OUTPUT"
 
+      # A kuzzlebot installation token instead of the ACCESS_TOKEN_CI personal
+      # token: it expires within the hour, is scoped to kuzzleio/documentation
+      # and to `actions: write` (dispatching a workflow and following its run),
+      # and is tied to no one's account. Needs the kuzzlebot App to hold the
+      # Actions (read and write) permission.
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        id: app-token
+        with:
+          client-id: ${{ vars.KUZZLE_BOT_APP_ID }}
+          private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
+          owner: kuzzleio
+          repositories: documentation
+          permission-actions: write
+
       - name: Trigger documentation workflow
         uses: convictional/trigger-workflow-and-wait@a382075b8ce6e15d85477232d501eb047e21f7aa # v1.6.3
         with:
           owner: kuzzleio
           repo: documentation
-          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+          github_token: ${{ steps.app-token.outputs.token }}
           workflow_file_name: child_repo.workflow.yml
           ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
           client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.major-version }}"}'
