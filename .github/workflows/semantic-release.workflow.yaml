@@ -6,23 +6,29 @@ on:
       - master
       - beta
 
+# Read-only by default: npm-deploy declares what semantic-release needs, and
+# doc-deploy triggers the documentation workflow with its own token.
+permissions:
+  contents: read
+
 jobs:
   doc-deploy:
     name: Documentation - Deploy
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Extract references from context
         shell: bash
         id: extract-refs
         run: |
-          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> $GITHUB_OUTPUT
-          echo "repo=$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)" >> $GITHUB_OUTPUT
+          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> "$GITHUB_OUTPUT"
+          echo "repo=$(echo "$GITHUB_REPOSITORY" | cut -d/ -f 2)" >> "$GITHUB_OUTPUT"
 
       - name: Trigger documentation workflow
-        uses: convictional/trigger-workflow-and-wait@v1.6.3
+        uses: convictional/trigger-workflow-and-wait@a382075b8ce6e15d85477232d501eb047e21f7aa # v1.6.3
         with:
           owner: kuzzleio
           repo: documentation
@@ -34,6 +40,7 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: write
       issues: write
@@ -47,15 +54,19 @@ jobs:
       # gate required" ruleset does not let bypass: the 2.61.0 release was
       # refused (GH013) on 2026-11-04.
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
+          # No dependency cache in a publishing job: a poisoned cache entry
+          # would end up in what is published. setup-node v5+ turns it on by
+          # itself because package.json declares `packageManager`.
+          package-manager-cache: false
 
       - name: Install dependencies
         run: ./.ci/scripts/with-retry.sh npm ci
@@ -74,7 +85,7 @@ jobs:
       # client-id replaces the deprecated app-id: the action passes the value as-is
       # as the JWT iss, which GitHub accepts as a Client ID or a numeric App ID,
       # hence the unchanged KUZZLE_BOT_APP_ID variable.
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app-token
         with:
           client-id: ${{ vars.KUZZLE_BOT_APP_ID }}

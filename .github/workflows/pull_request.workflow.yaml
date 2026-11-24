@@ -31,27 +31,45 @@ jobs:
   adr-state:
     name: ADR state schema
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Schema and consistency of docs/adr-state.json
         run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/adr-state.ts --check
 
+  # Fails on a dependency this PR adds or bumps to a version with a known
+  # high or critical advisory. Only the PR's own changes: the advisories the
+  # base branch already carries do not block it (npm audit is for those).
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Review the dependency changes
+        uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: high
+
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -70,16 +88,17 @@ jobs:
   doc-budgets:
     name: Documentation budgets
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           # The base branch's history is what tells a write-once archive that
           # grew in this PR apart from one that was already that size.
           fetch-depth: 0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -91,16 +110,17 @@ jobs:
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     # No Node matrix: ESLint's and Prettier's verdict on a fixed source tree
     # with a fixed config does not depend on the Node major running them, and
     # this job gates three others — the slowest of three identical runs used to
     # sit on the critical path for nothing (TD-47).
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -123,12 +143,13 @@ jobs:
   migration-ratchets:
     name: TS migration - ratchets & test type-check
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: "npm"
@@ -169,12 +190,13 @@ jobs:
   build:
     name: Build and payload gate
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -219,16 +241,17 @@ jobs:
 
   sonarqube:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     if: github.event.pull_request.head.repo.fork == false
     needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -289,14 +312,14 @@ jobs:
       # client-id replaces the deprecated app-id: the action passes the value as-is
       # as the JWT iss, which GitHub accepts as a Client ID or a numeric App ID,
       # hence the unchanged KUZZLE_BOT_APP_ID variable.
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app-token
         with:
           client-id: ${{ vars.KUZZLE_BOT_APP_ID }}
           private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }} # Required for PR decoration
@@ -311,12 +334,13 @@ jobs:
         # closed — vitest is the unit runner.
         node-version: [22, 24]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -337,9 +361,10 @@ jobs:
       matrix:
         es-version: [7, 8]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Conformance kit against the built-in Elasticsearch ${{ matrix.es-version }} driver
         run: ./.ci/scripts/docker-test.sh conformance
@@ -351,13 +376,14 @@ jobs:
     needs: [lint]
     name: Build and Run
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     strategy:
       matrix:
         kuzzle-image: ["kuzzle"]
         es-version: [7, 8]
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
@@ -390,12 +416,13 @@ jobs:
         node-version: [22, 24]
         es-version: [7, 8]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -426,12 +453,13 @@ jobs:
             "legacy:websocket",
           ]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -464,12 +492,13 @@ jobs:
             "legacy:websocket",
           ]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -495,12 +524,13 @@ jobs:
       matrix:
         test-set: ["http", "websocket"]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -526,12 +556,13 @@ jobs:
       matrix:
         cache-engine: ["redis-6", "valkey-9"]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -548,6 +579,7 @@ jobs:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       # Same reason as the functional matrix above, and it was left off this one
       # when TD-33 added it there: the monkey suite is randomised, so one
@@ -558,16 +590,20 @@ jobs:
         es-version: [7, 8]
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Cloning Monkey Tester
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository: kuzzleio/kuzzle-monkey-tests
+          # A commit, not the default branch: what runs here (and its
+          # `npm ci`) changes only through a PR on this repository.
+          ref: fe37ed0c6fd48f22dfac40cf422445bef942d21b
           path: "kuzzle-monkey-tests"
+          persist-credentials: false
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
