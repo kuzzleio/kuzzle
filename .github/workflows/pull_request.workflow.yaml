@@ -597,8 +597,11 @@ jobs:
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           # A commit, not the default branch: what runs here (and its
-          # `npm ci`) changes only through a PR on this repository.
-          ref: fe37ed0c6fd48f22dfac40cf422445bef942d21b
+          # `npm ci`) changes only through a PR on this repository. This one
+          # exits non-zero on a missed notification or response or an init
+          # failure, and checks the last expectations before exiting
+          # (kuzzleio/kuzzle-monkey-tests#1): until then those passed green.
+          ref: 32b9c503015995b38eca64e2b6f74a94a244a271
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
