@@ -1,6 +1,13 @@
 name: Tests
 
-on: [pull_request]
+on:
+  pull_request:
+  # The full test matrix after every merge, and on demand ("Run workflow" on
+  # any branch); pull requests to 2-dev run a reduced one. See
+  # .ci/scripts/ci-plan.sh.
+  push:
+    branches: [2-dev]
+  workflow_dispatch:
 
 env:
   # Referenced by every job that does not deliberately run a Node matrix.
@@ -47,8 +54,40 @@ jobs:
   # Fails on a dependency this PR adds or bumps to a version with a known
   # high or critical advisory. Only the PR's own changes: the advisories the
   # base branch already carries do not block it (npm audit is for those).
+  # What the test jobs run: nothing for a documentation-only change,
+  # and the full or the reduced test matrix. See .ci/scripts/ci-plan.sh.
+  # None of the jobs it skips or trims is a required check (SonarCloud is).
+  changes:
+    name: Test plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.plan.outputs.code }}
+      full: ${{ steps.plan.outputs.full }}
+      functional: ${{ steps.plan.outputs.functional }}
+      drivers: ${{ steps.plan.outputs.drivers }}
+      core-only: ${{ steps.plan.outputs.core-only }}
+      monkey: ${{ steps.plan.outputs.monkey }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Changed files and test matrix
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          # A pull request against its base, a push against what it replaced.
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: ./.ci/scripts/ci-plan.sh
+        shell: bash
+
   dependency-review:
     name: Dependency review
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -87,6 +126,8 @@ jobs:
   # docs/doc-budgets.json.
   doc-budgets:
     name: Documentation budgets
+    # Measured against the PR's base branch.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -242,7 +283,8 @@ jobs:
   sonarqube:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    if: github.event.pull_request.head.repo.fork == false
+    # Pull requests only: sonar-branches.workflow.yaml analyses the pushes.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     needs: [lint]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -326,7 +368,8 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         # One runner, so no suite dimension: `mocha` left this matrix with the last
@@ -355,7 +398,8 @@ jobs:
   # repositories run against their own engine. Docker only, like the local path.
   storage-conformance:
     name: Storage driver conformance
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -373,7 +417,8 @@ jobs:
           ES_VERSION: ${{ matrix.es-version }}
 
   build-and-run-kuzzle:
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     name: Build and Run
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -399,22 +444,15 @@ jobs:
     # Not `needs: [unit-tests]` either: the unit tests sat on the critical path
     # (~2.5 min) for a gate the functional jobs do not use. A unit failure now
     # no longer spares the 30 functional jobs, which is the price of the time.
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
-      # One flaky variant must not cancel the 29 others: a re-run is otherwise
+      # One flaky variant must not cancel the others: a re-run is otherwise
       # the only way to learn whether anything else was broken.
       fail-fast: false
-      matrix:
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
-        node-version: [22, 24]
-        es-version: [7, 8]
+      # Every test set × Node.js 22/24 × Elasticsearch 7/8, or the reduced
+      # matrix on a pull request to 2-dev (.ci/scripts/ci-plan.sh).
+      matrix: ${{ fromJSON(needs.changes.outputs.functional) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -434,63 +472,19 @@ jobs:
           node-version: ${{ matrix.node-version }}
           es-version: ${{ matrix.es-version }}
 
-  # Elasticsearch 9 through the external driver kuzzle-storage-es-9 (ADR-0003
-  # step 05), installed from npm as an application would, at the version
-  # .ci/scripts/stage-storage-driver.sh pins. One Node.js version: the driver
-  # does not depend on it, the matrix above covers both.
-  functional-tests-es9-driver:
-    name: Functional tests on the ES9 driver
-    needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-
-      - name: Node version 24
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: 24
-          cache: "npm"
-
-      - name: Test suit ${{ matrix.test-set }}
-        uses: ./.github/actions/functional-tests
-        with:
-          test-set: test:functional:${{ matrix.test-set }}
-          node-version: 24
-          es-version: 8
-          storage-driver: es9
-
-  # OpenSearch 2 and 3 through the external drivers kuzzle-storage-opensearch-2
-  # and -3 (ADR-0003 step 07), installed from npm as an application would, at
-  # the versions .ci/scripts/stage-storage-driver.sh pins. Same single Node.js
-  # version as above.
-  functional-tests-opensearch-drivers:
+  # Elasticsearch 9 and OpenSearch 2 / 3 through the external drivers
+  # kuzzle-storage-es-9 (ADR-0003 step 05) and kuzzle-storage-opensearch-2 /
+  # -3 (step 07), installed from npm as an application would, at the versions
+  # .ci/scripts/stage-storage-driver.sh pins. One Node.js version: the drivers
+  # do not depend on it, the matrix above covers both. Every driver × test
+  # set, or each driver once on a pull request to 2-dev.
+  functional-tests-external-drivers:
     name: Functional tests on the ${{ matrix.driver }} driver (${{ matrix.test-set }})
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        driver: ["opensearch2", "opensearch3"]
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
+      matrix: ${{ fromJSON(needs.changes.outputs.drivers) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -518,11 +512,12 @@ jobs:
   # combinations exercise nothing this profile changes.
   functional-tests-core-only-driver:
     name: Functional tests on the core-only driver (${{ matrix.test-set }})
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        test-set: ["http", "websocket"]
+      # Both current protocols, or websocket only on a pull request to 2-dev.
+      matrix: ${{ fromJSON(needs.changes.outputs.core-only) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -550,7 +545,8 @@ jobs:
   # protocol, the storage engine or Node.js.
   functional-tests-cache-engines:
     name: Functional tests on ${{ matrix.cache-engine }}
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -577,17 +573,21 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests, build-and-run-kuzzle]
+    # Only the build: the monkey suite consumes nothing the functional jobs
+    # produce, and waiting for the slowest of them put ~2.5 min on the
+    # critical path of every PR.
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       # Same reason as the functional matrix above, and it was left off this one
       # when TD-33 added it there: the monkey suite is randomised, so one
-      # variant failing is exactly when the other five results matter most.
+      # variant failing is exactly when the other results matter most.
       fail-fast: false
-      matrix:
-        node-version: [22, 24]
-        es-version: [7, 8]
+      # Node.js 22/24 × Elasticsearch 7/8, or (22, 7) and (24, 8) on a pull
+      # request to 2-dev.
+      matrix: ${{ fromJSON(needs.changes.outputs.monkey) }}
     steps:
       - name: Checkout project
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
