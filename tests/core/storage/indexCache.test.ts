@@ -268,6 +268,29 @@ describe("#core/storage/IndexCache", () => {
       expect(cached()).toEqual({ added: [] });
     });
 
+    it("lets a concurrent reload's newer read win when it ends last", () => {
+      indexCache.addIndex("i");
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      // The older read saw a collection a peer created then deleted, both
+      // broadcasts unheard here; the newer read saw it deleted.
+      indexCache.replaceIndexes({ i: ["c"] }, older);
+      indexCache.replaceIndexes({ i: [] }, newer);
+
+      expect(cached()).toEqual({ i: [] });
+    });
+
+    it("lets a concurrent reload's newer read drop an index when it ends last", () => {
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      indexCache.replaceIndexes({ gone: ["c"] }, older);
+      indexCache.replaceIndexes({}, newer);
+
+      expect(cached()).toEqual({});
+    });
+
     it("forgets what changed once no snapshot is open", () => {
       indexCache.addCollection("i", "c");
       const failed = indexCache.snapshotIndexes();
