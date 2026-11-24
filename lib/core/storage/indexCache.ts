@@ -37,31 +37,20 @@ export interface CollectionLock {
 }
 
 /**
- * One index's collections after a reload: the stored ones, except those whose
- * cached state changed between the snapshot (`was`) and now (`is`), which keep
- * their current state.
+ * What `snapshotIndexes` returns, to pass to `replaceIndexes` once storage has
+ * been read
  */
-function reconcileCollections(
-  stored: Set<string>,
-  was: Set<string> | undefined,
-  is: Set<string> | undefined,
-): Set<string> {
-  const collections = new Set<string>();
+export interface IndexSnapshot {
+  /** The change counter when the snapshot was taken */
+  readonly stamp: number;
+}
 
-  for (const collection of new Set([
-    ...stored,
-    ...(was ?? []),
-    ...(is ?? []),
-  ])) {
-    const wasCached = was?.has(collection) ?? false;
-    const isCached = is?.has(collection) ?? false;
-
-    if (wasCached === isCached ? stored.has(collection) : isCached) {
-      collections.add(collection);
-    }
-  }
-
-  return collections;
+/**
+ * The `changedAt` key of an index, or of one of its collections. Storage names
+ * never hold a NUL character.
+ */
+function entryKey(index: string, collection?: string): string {
+  return collection === undefined ? index : `${index}\u0000${collection}`;
 }
 
 export class IndexCache {
@@ -86,6 +75,20 @@ export class IndexCache {
   private changeCount = 0;
 
   /**
+   * Index or collection (`entryKey`) -> the change counter right after it last
+   * entered or left the cache. `replaceIndexes` keeps the cached state of
+   * every entry changed since its snapshot: comparing states instead missed an
+   * entry changed twice during the read (removed then re-created), which
+   * looks unchanged (kuzzle#3126).
+   *
+   * Only needed while a snapshot is open: emptied when the last one closes.
+   */
+  private readonly changedAt = new Map<string, number>();
+
+  /** Snapshots taken and not passed to `replaceIndexes` nor released yet */
+  private readonly openSnapshots = new Set<IndexSnapshot>();
+
+  /**
    * Collection write locks, a local copy of the cluster-wide state (see
    * `ClientAdapter`): checking a lock on every write must not cost a round
    * trip to Redis.
@@ -105,7 +108,7 @@ export class IndexCache {
     }
 
     this.indexes.set(index, new Set());
-    this.changeCount++;
+    this.recordChange(index);
 
     return true;
   }
@@ -120,7 +123,7 @@ export class IndexCache {
 
     if (!collections.has(collection)) {
       collections.add(collection);
-      this.changeCount++;
+      this.recordChange(index, collection);
     }
   }
 
@@ -166,7 +169,7 @@ export class IndexCache {
   removeIndex(index: string): void {
     this.indexes.delete(index);
     this.removalCount++;
-    this.changeCount++;
+    this.recordChange(index);
   }
 
   /**
@@ -180,7 +183,7 @@ export class IndexCache {
     }
 
     this.removalCount++;
-    this.changeCount++;
+    this.recordChange(index, collection);
   }
 
   /**
@@ -223,64 +226,94 @@ export class IndexCache {
   }
 
   /**
-   * Return a copy of the cached indexes and collections, to pass to
-   * `replaceIndexes` once storage has been read
+   * Mark the cache's state before storage is read: pass the snapshot to
+   * `replaceIndexes` once storage has been read, or to `releaseSnapshot` if
+   * the read failed
    */
-  snapshotIndexes(): Map<string, Set<string>> {
-    return new Map(
-      Array.from(this.indexes, ([index, collections]) => [
-        index,
-        new Set(collections),
-      ]),
-    );
+  snapshotIndexes(): IndexSnapshot {
+    const snapshot = { stamp: this.changeCount };
+
+    this.openSnapshots.add(snapshot);
+
+    return snapshot;
+  }
+
+  /**
+   * Close a snapshot `replaceIndexes` will not get. Releasing it twice is
+   * harmless.
+   */
+  releaseSnapshot(snapshot: IndexSnapshot): void {
+    this.openSnapshots.delete(snapshot);
+
+    if (this.openSnapshots.size === 0) {
+      this.changedAt.clear();
+    }
   }
 
   /**
    * Replace the cached indexes and collections with the stored ones, except
    * those that changed since `snapshot` was taken: such a change landed while
-   * storage was read, and is newer than the read (kuzzle#3040).
+   * storage was read, and is newer than the read (kuzzle#3040), even when the
+   * entry changed back since (kuzzle#3126). Closes the snapshot.
    *
    * @param stored - Index name -> its collection names, as storage holds them
    * @param snapshot - Taken by `snapshotIndexes` before storage was read
    */
   replaceIndexes(
     stored: Record<string, string[]>,
-    snapshot: Map<string, Set<string>>,
+    snapshot: IndexSnapshot,
   ): void {
-    const current = this.snapshotIndexes();
-    const indexes = new Set([
-      ...Object.keys(stored),
-      ...snapshot.keys(),
-      ...current.keys(),
-    ]);
+    const current = this.copyIndexes();
+    const changed = (index: string, collection?: string) =>
+      (this.changedAt.get(entryKey(index, collection)) ?? -1) > snapshot.stamp;
+    const next = new Map<string, Set<string>>();
+
+    for (const index of new Set([...Object.keys(stored), ...current.keys()])) {
+      const cached = current.get(index);
+
+      // Created or deleted during the read: so were its collections.
+      if (changed(index)) {
+        if (cached !== undefined) {
+          next.set(index, new Set(cached));
+        }
+
+        continue;
+      }
+
+      const storedCollections = new Set(
+        Object.hasOwn(stored, index) ? stored[index] : [],
+      );
+      const collections = new Set<string>();
+
+      for (const collection of new Set([
+        ...storedCollections,
+        ...(cached ?? []),
+      ])) {
+        if (
+          changed(index, collection)
+            ? (cached?.has(collection) ?? false)
+            : storedCollections.has(collection)
+        ) {
+          collections.add(collection);
+        }
+      }
+
+      if (Object.hasOwn(stored, index) || collections.size > 0) {
+        next.set(index, collections);
+      }
+    }
 
     this.indexes.clear();
     this.removalCount++;
     this.changeCount++;
 
-    for (const index of indexes) {
-      const storedCollections = new Set(
-        Object.hasOwn(stored, index) ? stored[index] : [],
-      );
-      const was = snapshot.get(index);
-      const is = current.get(index);
-      const indexChanged = (was === undefined) !== (is === undefined);
-
-      // Deleted during the read: its collections went with it.
-      if (indexChanged && is === undefined) {
-        continue;
-      }
-
-      const collections = reconcileCollections(storedCollections, was, is);
-
-      if (
-        indexChanged ||
-        Object.hasOwn(stored, index) ||
-        collections.size > 0
-      ) {
-        this.indexes.set(index, collections);
-      }
+    for (const [index, collections] of next) {
+      this.indexes.set(index, collections);
     }
+
+    // What this reload changed is newer than the read of a concurrent one.
+    this.recordReplacement(current, next, snapshot);
+    this.releaseSnapshot(snapshot);
   }
 
   /**
@@ -290,6 +323,59 @@ export class IndexCache {
    */
   assertIndexExists(index: string) {
     this.getCollections(index);
+  }
+
+  private copyIndexes(): Map<string, Set<string>> {
+    return new Map(
+      Array.from(this.indexes, ([index, collections]) => [
+        index,
+        new Set(collections),
+      ]),
+    );
+  }
+
+  /**
+   * Count a change, and remember when it touched this entry while a snapshot
+   * is open
+   */
+  private recordChange(index: string, collection?: string): void {
+    this.changeCount++;
+
+    if (this.openSnapshots.size > 0) {
+      this.changedAt.set(entryKey(index, collection), this.changeCount);
+    }
+  }
+
+  /**
+   * Record, as changes, the entries `replaceIndexes` added or removed
+   */
+  private recordReplacement(
+    before: Map<string, Set<string>>,
+    after: Map<string, Set<string>>,
+    closing: IndexSnapshot,
+  ): void {
+    // No other snapshot open: nothing will read these.
+    if (![...this.openSnapshots].some((snapshot) => snapshot !== closing)) {
+      return;
+    }
+
+    for (const index of new Set([...before.keys(), ...after.keys()])) {
+      const was = before.get(index);
+      const is = after.get(index);
+
+      if ((was === undefined) !== (is === undefined)) {
+        this.recordChange(index);
+        continue;
+      }
+
+      for (const collection of new Set([...(was ?? []), ...(is ?? [])])) {
+        if (
+          (was?.has(collection) ?? false) !== (is?.has(collection) ?? false)
+        ) {
+          this.recordChange(index, collection);
+        }
+      }
+    }
   }
 
   /**

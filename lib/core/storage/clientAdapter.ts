@@ -359,7 +359,14 @@ class ClientAdapter {
     const snapshot = this.cache.snapshotIndexes();
     // `client` is untyped (see the field's comment), so the schema shape is
     // stated here: index name -> its collection names.
-    const schema: Record<string, string[]> = await this.driver.getSchema();
+    let schema: Record<string, string[]>;
+
+    try {
+      schema = await this.driver.getSchema();
+    } catch (error) {
+      this.cache.releaseSnapshot(snapshot);
+      throw error;
+    }
 
     this.cache.replaceIndexes(schema, snapshot);
 
