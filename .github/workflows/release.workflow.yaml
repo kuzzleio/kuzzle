@@ -25,7 +25,10 @@ jobs:
     timeout-minutes: 45
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        # Node.js 18 and 20 are end-of-life (April 2025 and April 2026): their
+        # images are no longer rebuilt. The tags already pushed stay on Docker
+        # Hub, frozen at their last build.
+        node-version: [22]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
@@ -58,7 +61,8 @@ jobs:
     timeout-minutes: 45
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        # Node.js 20 is end-of-life: see publish-runner-bookworm.
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
