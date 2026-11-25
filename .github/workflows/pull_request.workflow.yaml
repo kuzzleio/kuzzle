@@ -284,8 +284,18 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # Pull requests only: sonar-branches.workflow.yaml analyses the pushes.
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-    needs: [lint]
+    # Reuses the unit-test coverage of the `unit-tests` leg on env.NODE_VERSION
+    # instead of building and running the suite a second time; the build
+    # payload is the `build` job's. `unit-tests` is skipped on docs-only
+    # changes: the analysis still runs then, without unit coverage (no new
+    # code under lib/ to measure).
+    if: >-
+      always()
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.fork == false
+      && needs.lint.result == 'success'
+      && (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    needs: [lint, unit-tests]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -302,25 +312,16 @@ jobs:
         run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
-      - name: Build
-        run: npm run build
-        shell: bash
-
-      # `tsc` succeeding does not mean the build is complete: the .proto files and
-      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
-      # used to assert ran. A published package missing its .proto files only fails
-      # when a cluster node boots.
-      - name: Check the build payload
-        run: ./.ci/scripts/check-build-payload.sh
-        shell: bash
-
       # One runner feeds the scanner since step 13 closed axis 2. Before ADR-0001
       # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
       # every JS->TS conversion silently left the coverage gate (TD-24) — that is
       # the debt the two-runner pairing paid off, and it is paid.
-      - name: Vitest coverage
-        run: npm run test:unit:vitest
-        shell: bash
+      - name: Vitest coverage, from the unit-tests job
+        if: needs.unit-tests.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: vitest-coverage
+          path: coverage/vitest
 
       # The storage driver conformance kit's cases only run against a real
       # engine (ADR-0003 step 04): their coverage comes from this run, against
@@ -350,6 +351,7 @@ jobs:
       # arbiter. Step 13's L7b removed both with the second runner; see that
       # step's `What L7b found` for the measurement that justified it.
       - name: Coverage gate — every new lib/ file is executed by a spec
+        if: needs.unit-tests.result == 'success'
         run: npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
         shell: bash
         env:
@@ -396,6 +398,16 @@ jobs:
         uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
+
+      # Fed to the `sonarqube` job, which no longer runs the suite itself.
+      - name: Keep the coverage report for SonarCloud
+        if: matrix.node-version == env.NODE_VERSION && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vitest-coverage
+          path: coverage/vitest/lcov.info
+          retention-days: 1
+          if-no-files-found: error
 
   # The storage driver conformance kit (ADR-0003 step 04) against the built-in
   # driver of each Elasticsearch major: what proves the kit that driver
