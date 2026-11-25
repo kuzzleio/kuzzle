@@ -17,11 +17,13 @@ services:
   kuzzle_node_prod: *opensearch2-driver
 
   # The service keeps its name, which the Kuzzle nodes reach it by. Its
-  # environment adds to the base file's (indices.id_field_data.enabled).
+  # environment replaces the base file's (`!override`): OpenSearch refuses
+  # the Elasticsearch-only settings there (xpack, GeoIP downloader).
   elasticsearch:
     image: docker.io/opensearchproject/opensearch:2.19.7
-    environment:
+    environment: !override
       - discovery.type=single-node
+      - indices.id_field_data.enabled=true
       - DISABLE_SECURITY_PLUGIN=true
       - DISABLE_INSTALL_DEMO_CONFIG=true
       - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
