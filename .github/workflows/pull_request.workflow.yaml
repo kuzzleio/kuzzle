@@ -627,7 +627,7 @@ jobs:
           # (kuzzleio/kuzzle-monkey-tests#1): until then those passed green.
           # No NaN delay between shots any more (kuzzleio/kuzzle-monkey-tests#2).
           # Sends at the configured rate (kuzzleio/kuzzle-monkey-tests#3).
-          ref: c773e21dc946b2a4b9bd3e1299464410d7c84989
+          ref: b14ca217a1ae130e0fed01f0ee5289b3e6416934
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
