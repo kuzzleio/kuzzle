@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout project
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Extract references from context
         shell: bash
@@ -42,7 +42,7 @@ jobs:
           permission-actions: write
 
       - name: Trigger documentation workflow
-        uses: convictional/trigger-workflow-and-wait@a382075b8ce6e15d85477232d501eb047e21f7aa # v1.6.3
+        uses: convictional/trigger-workflow-and-wait@f69fa9eedd3c62a599220f4d5745230e237904be # v1.6.5
         with:
           owner: kuzzleio
           repo: documentation
@@ -68,12 +68,12 @@ jobs:
       # gate required" ruleset does not let bypass: the 2.61.0 release was
       # refused (GH013) on 2026-11-04.
       - name: Checkout project
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Node version 24
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"

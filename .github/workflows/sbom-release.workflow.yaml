@@ -35,10 +35,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout project
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           # No dependency cache in a publishing job: a poisoned cache entry
@@ -64,7 +64,7 @@ jobs:
           echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Publish SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@48feab3080ff9e8f51f4d21861d9fc914eb744f5 # v3.1.0
+        uses: DependencyTrack/gh-upload-sbom@331f980a6eba119842052f447c54b09e4888b4c6 # v4.3.0
         with:
           serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
           apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
