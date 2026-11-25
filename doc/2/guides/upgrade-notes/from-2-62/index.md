@@ -20,7 +20,7 @@ The changelog is generated from the commits and says what was done. This page sa
 
 ### `min_score` and `track_scores` in a search body
 
-A [document:search](/core/2/api/controllers/document/search) body may now use `min_score` and `track_scores`. They used to be refused with `services.storage.invalid_search_query`. With `lang: "koncorde"`, the query is a filter with no relevance score: any `min_score` above 0 answers no document. [document:count](/core/2/api/controllers/document/count) does not take them: depending on the storage engine, the count request is refused.
+A [document:search](/core/2/api/controllers/document/search) body may now use `min_score` and `track_scores`. They used to be refused with `services.storage.invalid_search_query`. With `lang: "koncorde"`, the score comes from the Elasticsearch query the filters are translated to: an `and`, for instance, gives every document a score of 0, so any `min_score` above 0 leaves them all out. [document:count](/core/2/api/controllers/document/count) does not take them: depending on the storage engine, the count request is refused.
 
 **Action:** none. With a storage driver older than `kuzzle-storage-es-7` / `-es-8` / `-es-9` 1.3.0 or `kuzzle-storage-opensearch-2` / `-3` 1.1.0 (set with `services.storageEngine.driver`), both keys are still refused: upgrade the driver to use them.
 
