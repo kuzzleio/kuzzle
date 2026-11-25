@@ -382,6 +382,22 @@ export type StorageEngineElasticsearch = {
    */
   generateMissingAliases: boolean;
 
+  search?: {
+    /**
+     * Root keys a search body may use, on top of the ones the storage driver
+     * allows by default. Inline scripts stay refused under any key, and the
+     * driver refuses to start on a key Kuzzle sets itself on every search
+     * request (`index`, `pit`, `profile`, `rest_total_hits_as_int`,
+     * `routing`, `scroll`, `track_total_hits`).
+     *
+     * Read by `kuzzle-storage-es-7` / `-es-8` / `-es-9` 1.3.0 and
+     * `kuzzle-storage-opensearch-2` / `-opensearch-3` 1.1.0 and later.
+     *
+     * @default []
+     */
+    additionalBodyKeys?: string[];
+  };
+
   /**
    * Minimum delay, in milliseconds, between two storage reads a node makes
    * when a request names an index or a collection its cache does not hold.
