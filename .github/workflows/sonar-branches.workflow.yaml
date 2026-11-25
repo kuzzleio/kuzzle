@@ -54,7 +54,11 @@ jobs:
 
       - name: Conformance kit coverage
         run: |
-          docker run -d -p 9200:9200 -e indices.id_field_data.enabled=true docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+          docker run -d -p 9200:9200 \
+            -e discovery.type=single-node -e xpack.security.enabled=false \
+            -e ingest.geoip.downloader.enabled=false -e indices.id_field_data.enabled=true \
+            -e ES_JAVA_OPTS="-Xms1g -Xmx1g" \
+            docker.elastic.co/elasticsearch/elasticsearch:8.19.26
           npm run test:conformance -- --coverage
         shell: bash
         env:
