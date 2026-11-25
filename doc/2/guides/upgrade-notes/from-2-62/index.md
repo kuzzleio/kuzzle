@@ -48,6 +48,8 @@ A node reloads its index cache when it joins the cluster, when it goes live and 
 
 ### Dependencies
 
-`koncorde` 4.8.1, `kuzzle-espresso-logic-minimizer` 2.3.1, `re2` 1.27.2 and `kuzzle-sdk` 7.19.1, with a refreshed lockfile: `npm audit --omit=dev` reports no advisory. `koncorde` 4.8.1 needs Node.js 22 or later: Kuzzle already does (`engines`: `>=22.12.0`).
+`koncorde` 4.8.1, `kuzzle-espresso-logic-minimizer` 2.3.1, `re2` 1.27.2 and `kuzzle-sdk` 7.19.1, with a refreshed lockfile: `npm audit --omit=dev` reports no advisory. Kuzzle now requires `kuzzle-sdk` `>=7.19.1 <8.0.0`: an application that installs `kuzzle` can no longer resolve an older SDK, whose `ws` has known advisories. `koncorde` 4.8.1 needs Node.js 22 or later: Kuzzle already does (`engines`: `>=22.12.0`).
+
+On Node.js 22.12 to 22.22.1, npm prints an `EBADENGINE` warning for `re2`: it is harmless, the prebuilt binary works. Upgrading Node.js 22 silences it.
 
 **Action:** none.
