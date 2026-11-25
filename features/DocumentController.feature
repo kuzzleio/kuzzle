@@ -91,6 +91,38 @@ Feature: Document Controller
       | "document-3" |
 
   @mappings
+  Scenario: Search with min_score and track_scores
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id          | body                             |
+      | "document-1" | { "city": "Antibes", "age": 30 } |
+      | "document-2" | { "city": "Antibes", "age": 40 } |
+      | "document-3" | { "city": "Grasse", "age": 50 }  |
+      | "document-4" | { "city": "Cannes", "age": 60 }  |
+    And I refresh the collection
+    When I search documents with the following search body:
+      """
+      {
+        "min_score": 1.5,
+        "query": {
+          "bool": {
+            "should": [
+              { "constant_score": { "boost": 2, "filter": { "term": { "city": "Antibes" } } } },
+              { "constant_score": { "filter": { "range": { "age": { "lte": 50 } } } } }
+            ]
+          }
+        },
+        "sort": [{ "age": "desc" }],
+        "track_scores": true
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching in order:
+      | _id          | _score |
+      | "document-2" | 3      |
+      | "document-1" | 3      |
+
+  @mappings
   Scenario: Search with scroll
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:
