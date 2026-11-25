@@ -10,8 +10,6 @@ on:
     # Scheduled workflows run from the default branch: the job checks out 2-dev.
     - cron: "17 2 * * *"
   workflow_dispatch:
-  # TEMPORARY: validation run on the draft PR, removed before review
-  pull_request:
 
 permissions:
   contents: read
@@ -41,7 +39,7 @@ jobs:
           repository: kuzzleio/kuzzle-monkey-tests
           # Same pinning rule as the Tests workflow; this one restarts a node
           # (kuzzleio/kuzzle-monkey-tests#4).
-          ref: c85b652a5d805dae3faa3e9c25c233c3d500fe04
+          ref: 81e3d46b7c57449a80ba2ef49aeee1d43d74ec33
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
