@@ -1,9 +1,12 @@
+import * as fs from "node:fs";
 import Module, { createRequire } from "node:module";
+import * as os from "node:os";
 import * as path from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { builtInStorageDriver } from "../../../lib/service/storage/builtInDrivers";
+import { provideRunningKuzzle } from "../../../lib/service/storage/driverPackage";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 
 const root = path.resolve(__dirname, "../../..");
@@ -121,6 +124,39 @@ describe("built-in storage drivers", () => {
 
       expect(peer).not.toBe(entry);
       expect(nodeRequire.cache[peer]).toBe(running);
+    });
+
+    it("is the running Kuzzle, when npm installed no copy", () => {
+      // A driver package from which no `kuzzle` resolves (outside the repo)
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kuzzleless-driver-"));
+      const driver = path.join(dir, "dist", "index.js");
+      fs.mkdirSync(path.dirname(driver));
+      fs.writeFileSync(path.join(dir, "package.json"), "{}");
+      fs.writeFileSync(driver, 'module.exports = require("kuzzle");');
+
+      const running = {
+        exports: { running: true },
+        filename: entry,
+        loaded: true,
+      } as unknown as NodeJS.Module;
+      nodeRequire.cache[entry] = running;
+
+      try {
+        expect(() => nodeRequire.resolve("kuzzle", { paths: [dir] })).toThrow(
+          expect.objectContaining({ code: "MODULE_NOT_FOUND" }),
+        );
+
+        provideRunningKuzzle(driver);
+
+        expect(nodeRequire(driver)).toBe(running.exports);
+        // Only from that package
+        expect(() => nodeRequire.resolve("kuzzle", { paths: [dir] })).toThrow(
+          expect.objectContaining({ code: "MODULE_NOT_FOUND" }),
+        );
+      } finally {
+        delete nodeRequire.cache[driver];
+        fs.rmSync(dir, { force: true, recursive: true });
+      }
     });
 
     it("is left alone when already loaded", () => {
