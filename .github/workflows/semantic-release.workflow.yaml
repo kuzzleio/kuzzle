@@ -49,7 +49,7 @@ jobs:
           github_token: ${{ steps.app-token.outputs.token }}
           workflow_file_name: child_repo.workflow.yml
           ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
-          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.major-version }}"}'
+          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.ref_name }}","version":"${{ steps.extract-refs.outputs.major-version }}"}'
 
   npm-deploy:
     name: Build and deploy release on NPM.js
