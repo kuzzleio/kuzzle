@@ -390,7 +390,8 @@ export type StorageEngineElasticsearch = {
      * request (`index`, `pit`, `profile`, `rest_total_hits_as_int`,
      * `routing`, `scroll`, `track_total_hits`).
      *
-     * Read by the storage drivers 1.3.0 and later.
+     * Read by `kuzzle-storage-es-7` / `-es-8` / `-es-9` 1.3.0 and
+     * `kuzzle-storage-opensearch-2` / `-opensearch-3` 1.1.0 and later.
      *
      * @default []
      */
