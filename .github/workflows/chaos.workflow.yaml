@@ -41,7 +41,7 @@ jobs:
           repository: kuzzleio/kuzzle-monkey-tests
           # Same pinning rule as the Tests workflow; this one restarts a node
           # (kuzzleio/kuzzle-monkey-tests#4).
-          ref: f403fcae0ead5eb7afb3b90281c001983e5d9970
+          ref: c85b652a5d805dae3faa3e9c25c233c3d500fe04
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
