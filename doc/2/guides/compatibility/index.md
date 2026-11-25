@@ -46,7 +46,7 @@ Kuzzle stores its data through a [storage driver](/core/2/guides/main-concepts/d
 | Engine | Driver | Supported versions | Tested by the CI | Kuzzle |
 |---|---|---|---|---|
 | Elasticsearch 7 | built in (`kuzzle-storage-es-7`) | 7.x | 7.17 | all 2.x |
-| Elasticsearch 8 | built in (`kuzzle-storage-es-8`) | 8.x | 8.17 | 2.30 or later |
+| Elasticsearch 8 | built in (`kuzzle-storage-es-8`) | 8.x | 8.19 | 2.30 or later |
 | Elasticsearch 9 | [`kuzzle-storage-es-9`](/drivers/storage-es-9/1/getting-started) | 9.x | 9.5 | 2.61 or later |
 | OpenSearch 2 | [`kuzzle-storage-opensearch-2`](/drivers/storage-opensearch-2/1/getting-started) | 2.19 or a later 2.x | 2.19 | 2.61 or later |
 | OpenSearch 3 | [`kuzzle-storage-opensearch-3`](/drivers/storage-opensearch-3/1/getting-started) | 3.x | 3.9 | 2.61 or later |
