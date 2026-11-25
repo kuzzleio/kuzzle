@@ -192,6 +192,120 @@ describe("#core/storage/IndexCache", () => {
     });
   });
 
+  /* kuzzle#3126: an entry changed twice during the read looks unchanged, yet
+   * the read may have seen it in between. */
+  describe("#replaceIndexes, an entry changed twice during the read", () => {
+    const cached = () =>
+      Object.fromEntries(
+        indexCache
+          .listIndexes()
+          .map((index) => [index, indexCache.listCollections(index).sort()]),
+      );
+
+    it("keeps a collection removed then re-created", () => {
+      indexCache.addCollection("i", "c");
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.removeCollection("i", "c");
+      indexCache.addCollection("i", "c");
+      indexCache.replaceIndexes({ i: [] }, snapshot);
+
+      expect(cached()).toEqual({ i: ["c"] });
+    });
+
+    it("drops a collection created then removed", () => {
+      indexCache.addIndex("i");
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.addCollection("i", "c");
+      indexCache.removeCollection("i", "c");
+      indexCache.replaceIndexes({ i: ["c"] }, snapshot);
+
+      expect(cached()).toEqual({ i: [] });
+    });
+
+    it("keeps an index removed then re-created", () => {
+      indexCache.addIndex("i");
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.removeIndex("i");
+      indexCache.addIndex("i");
+      indexCache.replaceIndexes({}, snapshot);
+
+      expect(cached()).toEqual({ i: [] });
+    });
+
+    it("drops an index created then removed", () => {
+      const snapshot = indexCache.snapshotIndexes();
+
+      indexCache.addCollection("i", "c");
+      indexCache.removeIndex("i");
+      indexCache.replaceIndexes({ i: ["c"] }, snapshot);
+
+      expect(cached()).toEqual({});
+    });
+
+    it("lets a concurrent reload's older read lose to a newer one", () => {
+      indexCache.addCollection("i", "c");
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      // The newer read saw the collection removed, the older one did not.
+      indexCache.replaceIndexes({ i: [] }, newer);
+      indexCache.replaceIndexes({ i: ["c"] }, older);
+
+      expect(cached()).toEqual({ i: [] });
+    });
+
+    it("lets a concurrent reload's older read lose an index too", () => {
+      indexCache.addCollection("gone", "c");
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      indexCache.replaceIndexes({ added: [] }, newer);
+      indexCache.replaceIndexes({ gone: ["c"] }, older);
+
+      expect(cached()).toEqual({ added: [] });
+    });
+
+    it("lets a concurrent reload's newer read win when it ends last", () => {
+      indexCache.addIndex("i");
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      // The older read saw a collection a peer created then deleted, both
+      // broadcasts unheard here; the newer read saw it deleted.
+      indexCache.replaceIndexes({ i: ["c"] }, older);
+      indexCache.replaceIndexes({ i: [] }, newer);
+
+      expect(cached()).toEqual({ i: [] });
+    });
+
+    it("lets a concurrent reload's newer read drop an index when it ends last", () => {
+      const older = indexCache.snapshotIndexes();
+      const newer = indexCache.snapshotIndexes();
+
+      indexCache.replaceIndexes({ gone: ["c"] }, older);
+      indexCache.replaceIndexes({}, newer);
+
+      expect(cached()).toEqual({});
+    });
+
+    it("forgets what changed once no snapshot is open", () => {
+      indexCache.addCollection("i", "c");
+      const failed = indexCache.snapshotIndexes();
+
+      indexCache.removeCollection("i", "c");
+      indexCache.releaseSnapshot(failed);
+      indexCache.releaseSnapshot(failed);
+
+      // A change made before this snapshot is older than its read.
+      indexCache.replaceIndexes({ i: ["c"] }, indexCache.snapshotIndexes());
+
+      expect(cached()).toEqual({ i: ["c"] });
+    });
+  });
+
   /* kuzzle#3121: catching up with a peer's creation before its broadcast. */
   describe("#learn", () => {
     it("adds the stored indexes and collections it misses", () => {

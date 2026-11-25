@@ -1,3 +1,10 @@
+#!/bin/bash
+
+# Fail on any error: without it, a tester that crashed at startup (e.g. its
+# `npm ci` failing) still left the job green, since the script's last command
+# is the `trap` reset below.
+set -eo pipefail
+
 # Absolute, because the monkey-tester install below runs from another directory.
 WITH_RETRY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/with-retry.sh"
 
@@ -31,6 +38,14 @@ fi
 "$WITH_RETRY" \
   docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" kuzzle_node_1 npm ci --prefer-offline
 
+# The container runs as root, so the files it added to the shared cache are
+# root-owned, and the tester's own `npm ci` below, run as the runner user,
+# failed on them with EACCES. Hand the cache back to the runner user.
+if [ -n "${NPM_CACHE_DIR:-}" ]; then
+  docker compose -f $YML_FILE run --rm --no-deps "${NPM_CACHE_MOUNT[@]}" \
+    --entrypoint chown kuzzle_node_1 -R "$(id -u):$(id -g)" /var/npm
+fi
+
 if [ "$REBUILD" == "true" ]; then
     docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm rebuild
 fi
@@ -53,14 +68,23 @@ KUZZLE_PORT=17512 "${WAIT_KUZZLE[@]}"
 
 echo "Installing Kuzzle Monkey Tester..."
 
-cd kuzzle-monkey-tests
-"$WITH_RETRY" npm ci
+# MONKEY_CHAOS=true (.github/workflows/chaos.workflow.yaml): the tester restarts
+# a node mid-run (its `chaos` settings, read from ktests_* variables by `rc`),
+# on a longer run so that the node comes back and the cluster settles.
+if [ "${MONKEY_CHAOS:-}" == "true" ]; then
+  export ktests_chaos__command="docker compose -f $PWD/$YML_FILE restart kuzzle_node_2"
+  export ktests_scheduler__duration="${MONKEY_DURATION:-150}"
+fi
+
+# In a subshell: dump_cluster_logs (the err trap) reads $YML_FILE, relative to
+# the repository root.
+(cd kuzzle-monkey-tests && "$WITH_RETRY" npm ci)
 
 # The trap stays on for the run, for the same reason as run-test-cluster.sh: the
 # monkey failures in TD-33 (#2715) — `core.realtime.room_not_found`, seeds
 # d6432db20ca96eff and c884b3318030acc7 — are exactly the case where the nodes'
 # own view is the evidence, and clearing the trap here is why neither produced
 # any.
-node index.js
+(cd kuzzle-monkey-tests && node index.js)
 
 trap - err

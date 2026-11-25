@@ -63,6 +63,7 @@ const CACHE_METHODS = [
   "listIndexes",
   "removeCollection",
   "removeIndex",
+  "releaseSnapshot",
   "removeLock",
   "replaceIndexes",
   "replaceLocks",
@@ -136,6 +137,7 @@ const { serviceInstances, cacheInstances, StorageServiceMock, IndexCacheMock } =
       "listIndexes",
       "removeCollection",
       "removeIndex",
+      "releaseSnapshot",
       "removeLock",
       "replaceIndexes",
       "replaceLocks",
@@ -1571,6 +1573,21 @@ describe("#core/storage/ClientAdapter", () => {
         "locked",
       );
       expect(client.deleteCollection).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("#reloadCache", () => {
+    it("releases its snapshot when storage cannot be read", async () => {
+      const snapshot = { stamp: 0 };
+      const failure = new Error("storage unreachable");
+      cache.snapshotIndexes.mockReturnValue(snapshot);
+      client.getSchema.mockRejectedValue(failure);
+      cache.replaceIndexes.mockClear();
+
+      await expect(adapter.reloadCache()).rejects.toBe(failure);
+
+      expect(cache.releaseSnapshot).toHaveBeenCalledExactlyOnceWith(snapshot);
+      expect(cache.replaceIndexes).not.toHaveBeenCalled();
     });
   });
 

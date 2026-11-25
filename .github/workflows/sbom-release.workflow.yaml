@@ -13,7 +13,7 @@ on:
     inputs:
       node_lts_current_version:
         description: "Current Node LTS Version"
-        required: true
+        required: false
         default: "22"
         type: string
 
@@ -25,34 +25,50 @@ on:
         default: "22"
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   publish-sbom-to-dtrack:
     name: Publish SBOM to Dependency-Track
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout project
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          # No dependency cache in a publishing job: a poisoned cache entry
+          # would end up in what is published. setup-node v5+ turns it on by
+          # itself because package.json declares `packageManager`.
+          package-manager-cache: false
 
-      - run: npm install
+      # `npm ci`, not `npm install`: the SBOM must describe the dependency tree
+      # the lockfile pins — the one that was released — not whatever the
+      # registry resolves on the day the workflow runs.
+      - name: Install dependencies
+        run: ./.ci/scripts/with-retry.sh npm ci
+
+      # Pinned: an unpinned npx picked up 7.x, whose XML output needs the
+      # optional xmlbuilder2 package and failed every release since 2.61.1.
+      # JSON needs no optional dependency; spec 1.6 is what 6.x produced.
       - name: Create SBOM with CycloneDX
-        run: npx @cyclonedx/cyclonedx-npm -o bom.xml --of=XML
+        run: npx --yes @cyclonedx/cyclonedx-npm@7.0.1 --spec-version 1.6 --output-format JSON --output-file bom.json
 
       - name: Get the current project version from package.json
         id: get-version
         run: |
-          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+          echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Publish SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v3
+        uses: DependencyTrack/gh-upload-sbom@48feab3080ff9e8f51f4d21861d9fc914eb744f5 # v3.1.0
         with:
           serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
           apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
           projectname: "Kuzzle Backend"
           projectversion: "${{ steps.get-version.outputs.version }}"
-          bomfilename: "./bom.xml"
+          bomfilename: "./bom.json"
           autocreate: true
