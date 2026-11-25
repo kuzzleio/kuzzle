@@ -1,3 +1,20 @@
+## [2.63.0](https://github.com/kuzzleio/kuzzle/compare/v2.62.0...v2.63.0) (2026-11-25)
+
+### Features
+
+* **storage:** document min_score, track_scores and search.additionalBodyKeys ([b706eae](https://github.com/kuzzleio/kuzzle/commit/b706eaea781d8b3b207b0beb40c6ec3e8f595c17))
+
+### Bug Fixes
+
+* **deps:** koncorde and the ES 7/8 drivers betas without advisories or a kuzzle copy ([73f74d1](https://github.com/kuzzleio/kuzzle/commit/73f74d10845258f01d8dee3e4d77279bd5a40754)), closes [#3252](https://github.com/kuzzleio/kuzzle/issues/3252)
+* **deps:** kuzzle-storage-es-7 and kuzzle-storage-es-8 1.3.0-beta.1 ([b63278e](https://github.com/kuzzleio/kuzzle/commit/b63278ec8251c34efb798f53d98cced083e9ef55)), closes [#3256](https://github.com/kuzzleio/kuzzle/issues/3256)
+* **deps:** refresh the lockfile against production advisories ([53b803c](https://github.com/kuzzleio/kuzzle/commit/53b803c8874d17a5c52b066b0e313c5fbfb0d170))
+* **deps:** stable koncorde 4.8.1 and kuzzle-sdk 7.19.1 (security advisories) ([64eb168](https://github.com/kuzzleio/kuzzle/commit/64eb16814b32c9e42c71da0a593fff255dadd32f))
+* **deps:** storage drivers stable (es 1.3.0, opensearch 1.1.0) ([57539ae](https://github.com/kuzzleio/kuzzle/commit/57539ae667647acfe0787c02ce6b8a0918bd5422))
+* **storage:** give the built-in drivers the running Kuzzle without a copy ([7756e2e](https://github.com/kuzzleio/kuzzle/commit/7756e2ed7e01ced5abb01fa3d5cec7cf48e680f4))
+* **storage:** keep an index or collection changed twice during a cache reload ([355901a](https://github.com/kuzzleio/kuzzle/commit/355901adf92cffceb9d0ec43f3bcc961496bebb1)), closes [#3126](https://github.com/kuzzleio/kuzzle/issues/3126)
+* **storage:** let the newer read win when concurrent reloads end in order ([ab2ebc8](https://github.com/kuzzleio/kuzzle/commit/ab2ebc8f1fb6e4ff2222cc72ca772ce761a62469)), closes [kuzzle#3126](https://github.com/kuzzleio/kuzzle/issues/3126)
+
 ## [2.62.0](https://github.com/kuzzleio/kuzzle/compare/v2.61.3...v2.62.0) (2026-11-23)
 
 ### Features
