@@ -3,7 +3,7 @@ name: Release workflow
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
   DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
-  ELASTICSEARCH_VERSION: "7.17.26"
+  ELASTICSEARCH_VERSION: "7.17.29"
   NODE_VERSION: "24"
 
 on:
@@ -11,31 +11,50 @@ on:
     types:
       - released
 
+# The images are pushed with the Docker Hub credentials: the workflow token
+# only needs to read the repository (jobs add `id-token: write` to sign, and
+# the core image `security-events: write` for its scan report). Without this
+# block it got the repository default, which is read-write.
+permissions:
+  contents: read
+
 jobs:
   # For retro compat we use bookworm here
   publish-runner-bookworm:
     name: Kuzzle runner Docker image
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    # id-token: keyless cosign signature (see `Sign the image`).
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        # Node.js 18 and 20 are end-of-life (April 2025 and April 2026): their
+        # images are no longer rebuilt. The tags already pushed stay on Docker
+        # Hub, frozen at their last build.
+        node-version: [22]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
       - name: Build and push
-        uses: docker/build-push-action@v6
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./docker/images/kuzzle-runner/bookworm
           file: ./docker/images/kuzzle-runner/bookworm/Dockerfile
@@ -43,31 +62,55 @@ jobs:
           build-args: |
             NODE_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
+          # Build provenance and an SBOM, attached to the image in the registry
+          # (`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`).
+          provenance: mode=max
+          sbom: true
           tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }},kuzzleio/kuzzle-runner:${{ matrix.node-version }}-bookworm-slim
+
+      # Keyless: the signature binds the digest to this workflow run through
+      # GitHub's OIDC token, no key to store. Check with
+      # `cosign verify docker.io/kuzzleio/kuzzle-runner:<tag> --certificate-identity-regexp
+      # '^https://github.com/kuzzleio/kuzzle/' --certificate-oidc-issuer
+      # https://token.actions.githubusercontent.com`.
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "docker.io/kuzzleio/kuzzle-runner@$DIGEST"
 
   publish-runner-trixie:
     name: Kuzzle runner Docker image
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    # id-token: keyless cosign signature (see `Sign the image`).
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        # Node.js 20 is end-of-life: see publish-runner-bookworm.
+        node-version: [22, 24]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
       - name: Build and push
-        uses: docker/build-push-action@v6
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./docker/images/kuzzle-runner/trixie
           file: ./docker/images/kuzzle-runner/trixie/Dockerfile
@@ -75,23 +118,43 @@ jobs:
           build-args: |
             NODE_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
+          # Build provenance and an SBOM, attached to the image in the registry
+          # (`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`).
+          provenance: mode=max
+          sbom: true
           tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}-trixie-slim
+
+      # Keyless: the signature binds the digest to this workflow run through
+      # GitHub's OIDC token, no key to store. Check with
+      # `cosign verify docker.io/kuzzleio/kuzzle-runner:<tag> --certificate-identity-regexp
+      # '^https://github.com/kuzzleio/kuzzle/' --certificate-oidc-issuer
+      # https://token.actions.githubusercontent.com`.
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "docker.io/kuzzleio/kuzzle-runner@$DIGEST"
 
   publish-kuzzle-core:
     name: Kuzzle core Docker image
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    # id-token: keyless cosign signature; security-events: the scan report.
+    permissions:
+      contents: read
+      id-token: write
+      security-events: write
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -100,44 +163,128 @@ jobs:
         shell: bash
         id: get-version
         run: |
-          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
-          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> $GITHUB_OUTPUT
+          echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> "$GITHUB_OUTPUT"
+
+      # Scanned before anything is pushed: the amd64 image, built and loaded
+      # locally (the multi-platform build below reuses its layers).
+      - name: Build the image to scan
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./docker/images/kuzzle/Dockerfile
+          load: true
+          build-args: NODE_VERSION=${{ env.NODE_VERSION }}
+          platforms: linux/amd64
+          tags: kuzzle-release-scan:${{ steps.get-version.outputs.version }}
+
+      # Every finding, OS packages and npm dependencies, to the repository's
+      # code scanning alerts. Informational: npm advisories are handled in the
+      # dependency bumps, and the Dependency review job gates new ones.
+      - name: Scan the image (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: kuzzle-release-scan:${{ steps.get-version.outputs.version }}
+          version: v0.70.0
+          format: sarif
+          output: trivy-kuzzle.sarif
+          exit-code: "0"
+
+      - name: Upload the scan report
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          sarif_file: trivy-kuzzle.sarif
+          category: trivy-kuzzle-image
+
+      # The gate: a critical vulnerability in an OS package that has a fix
+      # means the base image must be rebuilt or bumped before publishing.
+      - name: Scan the image (gate)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: kuzzle-release-scan:${{ steps.get-version.outputs.version }}
+          version: v0.70.0
+          vuln-type: os
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: ./docker/images/kuzzle/Dockerfile
           push: true
           build-args: NODE_VERSION=${{ env.NODE_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
+          # Build provenance and an SBOM, attached to the image in the registry
+          # (`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`).
+          provenance: mode=max
+          sbom: true
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
+
+      # Keyless: the signature binds the digest to this workflow run through
+      # GitHub's OIDC token, no key to store. Check with
+      # `cosign verify docker.io/kuzzleio/kuzzle:<tag> --certificate-identity-regexp
+      # '^https://github.com/kuzzleio/kuzzle/' --certificate-oidc-issuer
+      # https://token.actions.githubusercontent.com`.
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "docker.io/kuzzleio/kuzzle@$DIGEST"
 
   publish-elasticsearch:
     name: Elasticsearch Docker image
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # id-token: keyless cosign signature (see `Sign the image`).
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
       - name: Build and push
-        uses: docker/build-push-action@v6
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./docker/images/elasticsearch
           file: ./docker/images/elasticsearch/Dockerfile
           push: true
           build-args: ELASTICSEARCH_VERSION=${{ env.ELASTICSEARCH_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS_ELASTICSEARCH }}
+          # Build provenance and an SBOM, attached to the image in the registry
+          # (`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`).
+          provenance: mode=max
+          sbom: true
           tags: kuzzleio/elasticsearch:${{ env.ELASTICSEARCH_VERSION }},kuzzleio/elasticsearch:7, kuzzleio/elasticsearch:latest
+
+      # Keyless: the signature binds the digest to this workflow run through
+      # GitHub's OIDC token, no key to store. Check with
+      # `cosign verify docker.io/kuzzleio/elasticsearch:<tag> --certificate-identity-regexp
+      # '^https://github.com/kuzzleio/kuzzle/' --certificate-oidc-issuer
+      # https://token.actions.githubusercontent.com`.
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "docker.io/kuzzleio/elasticsearch@$DIGEST"

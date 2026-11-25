@@ -25,12 +25,15 @@ Elasticsearch supports many keywords in a search query root level. For security 
   - `fields`
   - `from`
   - `highlight`
+  - `min_score` <SinceBadge version="2.63.0" />
+  - `post_filter`
   - `query`
   - `search_after`
   - `search_timeout`
   - `size`
   - `sort`
   - `suggest`
+  - `track_scores` <SinceBadge version="2.63.0" />
   - `_name`
   - `_source`
   - `_source_excludes`
@@ -39,6 +42,8 @@ Elasticsearch supports many keywords in a search query root level. For security 
 ::: info
 If any other keyword is present in a search query, Kuzzle will abort the request and return an error to the client.
 :::
+
+An administrator can allow more keywords with the `services.storageEngine.search.additionalBodyKeys` [configuration](/core/2/guides/advanced/configuration) option. Inline scripts stay refused under any keyword. See the configuration page of your [storage driver](https://docs.kuzzle.io/drivers/storage-es-8/1/configuration/#search-body-keys).
 
 ## Near Realtime
 

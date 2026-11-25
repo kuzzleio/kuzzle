@@ -1,0 +1,23 @@
+# GitHub Actions only. The workflows reference every action by commit SHA
+# (with the version in a trailing comment), and a SHA never moves on its own:
+# this is what keeps those pins up to date.
+#
+# npm dependencies are not handled here: they are bumped by hand, in batches
+# validated against the functional matrix (see the deps PRs on 2-dev).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: 2-dev
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      # `ci(deps)`, not Dependabot's default `chore(deps)`: the shared
+      # semantic-release config releases a minor on `chore(deps)`, and a
+      # workflow change ships nothing to users.
+      prefix: ci
+      include: scope

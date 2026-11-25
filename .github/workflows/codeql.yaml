@@ -3,15 +3,21 @@ name: "CodeQL"
 on:
   push:
     branches: [ "master", "1-dev", "1-stable", "2-dev", "beta" ]
+  # 2-dev is where pull requests land: leaving it out meant a vulnerability
+  # was first reported on the push that merged it, never on the PR.
   pull_request:
-    branches: [ "master", "beta" ]
+    branches: [ "master", "beta", "2-dev" ]
   schedule:
     - cron: "32 6 * * 1"
+
+permissions:
+  contents: read
 
 jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -20,22 +26,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # `javascript` covers TypeScript too (alias of javascript-typescript),
+        # and keeps the job name and the alert category unchanged. Nothing to
+        # compile, hence `build-mode: none` instead of autobuild.
         language: [ javascript ]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: ${{ matrix.language }}
+          build-mode: none
           queries: +security-and-quality
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: "/language:${{ matrix.language }}"

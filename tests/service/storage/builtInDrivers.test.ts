@@ -1,20 +1,16 @@
+import * as fs from "node:fs";
 import Module, { createRequire } from "node:module";
+import * as os from "node:os";
 import * as path from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { builtInStorageDriver } from "../../../lib/service/storage/builtInDrivers";
+import { provideRunningKuzzle } from "../../../lib/service/storage/driverPackage";
 import type { StorageEngineElasticsearch } from "../../../lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration";
 
 const root = path.resolve(__dirname, "../../..");
 const nodeRequire = createRequire(path.join(root, "package.json"));
-
-/** The `kuzzle` a driver package gets from `require("kuzzle")` */
-function peerOf(packageName: string): string {
-  return nodeRequire.resolve("kuzzle", {
-    paths: [path.dirname(nodeRequire.resolve(packageName))],
-  });
-}
 
 describe("built-in storage drivers", () => {
   describe.each([
@@ -91,47 +87,98 @@ describe("built-in storage drivers", () => {
 
   describe("the kuzzle a driver package requires", () => {
     const entry = path.join(root, "index.ts");
-    const peer = peerOf("kuzzle-storage-es-7");
-    const saved = {
-      entry: nodeRequire.cache[entry],
-      peer: nodeRequire.cache[peer],
-    };
+    const savedEntry = nodeRequire.cache[entry];
+    const dirs: string[] = [];
+
+    /**
+     * A driver package outside the repository, with its own copy of `kuzzle`
+     * (what npm installs for a required peer dependency when Kuzzle is the
+     * root package), or none.
+     */
+    function driverPackage(withCopy: boolean) {
+      const dir = fs.realpathSync(
+        fs.mkdtempSync(path.join(os.tmpdir(), "kuzzle-driver-")),
+      );
+      const driver = path.join(dir, "dist", "index.js");
+      const copy = path.join(dir, "node_modules", "kuzzle", "index.js");
+
+      dirs.push(dir);
+      fs.mkdirSync(path.dirname(driver));
+      fs.writeFileSync(path.join(dir, "package.json"), "{}");
+      fs.writeFileSync(driver, 'module.exports = require("kuzzle");');
+
+      if (withCopy) {
+        fs.mkdirSync(path.dirname(copy), { recursive: true });
+        fs.writeFileSync(copy, "module.exports = { copy: true };");
+      }
+
+      return { copy, dir, driver };
+    }
 
     afterEach(() => {
-      for (const [file, module] of [
-        [entry, saved.entry],
-        [peer, saved.peer],
-      ] as const) {
-        if (module) {
-          nodeRequire.cache[file] = module;
-        } else {
-          delete nodeRequire.cache[file];
+      if (savedEntry) {
+        nodeRequire.cache[entry] = savedEntry;
+      } else {
+        delete nodeRequire.cache[entry];
+      }
+
+      for (const dir of dirs.splice(0)) {
+        for (const file of Object.keys(nodeRequire.cache)) {
+          if (file.startsWith(dir)) {
+            delete nodeRequire.cache[file];
+          }
         }
+        fs.rmSync(dir, { force: true, recursive: true });
       }
     });
 
     it("is the running Kuzzle, when npm installed another copy", () => {
+      const { copy, driver } = driverPackage(true);
       // What Node's cache holds once Kuzzle runs from its sources
       const running = { exports: {} } as NodeJS.Module;
 
       nodeRequire.cache[entry] = running;
-      delete nodeRequire.cache[peer];
 
-      builtInStorageDriver("7");
+      provideRunningKuzzle(driver);
 
-      expect(peer).not.toBe(entry);
-      expect(nodeRequire.cache[peer]).toBe(running);
+      expect(nodeRequire.cache[copy]).toBe(running);
+      expect(nodeRequire(driver)).toBe(running.exports);
+    });
+
+    it("is the running Kuzzle, when npm installed no copy", () => {
+      // No `kuzzle` resolves from it (outside the repo)
+      const { dir, driver } = driverPackage(false);
+
+      const running = {
+        exports: { running: true },
+        filename: entry,
+        loaded: true,
+      } as unknown as NodeJS.Module;
+      nodeRequire.cache[entry] = running;
+
+      expect(() => nodeRequire.resolve("kuzzle", { paths: [dir] })).toThrow(
+        expect.objectContaining({ code: "MODULE_NOT_FOUND" }),
+      );
+
+      provideRunningKuzzle(driver);
+
+      expect(nodeRequire(driver)).toBe(running.exports);
+      // Only from that package
+      expect(() => nodeRequire.resolve("kuzzle", { paths: [dir] })).toThrow(
+        expect.objectContaining({ code: "MODULE_NOT_FOUND" }),
+      );
     });
 
     it("is left alone when already loaded", () => {
+      const { copy, driver } = driverPackage(true);
       const loaded = { exports: {} } as NodeJS.Module;
 
       nodeRequire.cache[entry] = { exports: {} } as NodeJS.Module;
-      nodeRequire.cache[peer] = loaded;
+      nodeRequire.cache[copy] = loaded;
 
-      builtInStorageDriver("7");
+      provideRunningKuzzle(driver);
 
-      expect(nodeRequire.cache[peer]).toBe(loaded);
+      expect(nodeRequire.cache[copy]).toBe(loaded);
     });
   });
 });

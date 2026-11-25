@@ -441,6 +441,9 @@ const defaultConfig: PackagedKuzzleConfiguration = {
         scrollTTL: "15s",
       },
       generateMissingAliases: true,
+      search: {
+        additionalBodyKeys: [],
+      },
       cacheMissReadInterval: 100,
     },
   },

@@ -813,6 +813,42 @@ export function coreCases(
       );
     });
 
+    // Full-text search: `min_score` drops the hits that are not relevant
+    // enough, `track_scores` keeps the score of hits sorted on another field.
+    // Constant scores, so that no shard layout changes them.
+    test.it("searches with min_score and track_scores", async () => {
+      const { hits } = await context.driver.search({
+        collection,
+        index: context.index,
+        searchBody: {
+          min_score: 1.5,
+          query: {
+            bool: {
+              should: [
+                {
+                  constant_score: {
+                    boost: 2,
+                    filter: { term: { city: "Montpellier" } },
+                  },
+                },
+                { constant_score: { filter: { range: { age: { lte: 50 } } } } },
+              ],
+            },
+          },
+          sort: [{ age: "desc" }],
+          track_scores: true,
+        },
+      });
+
+      assert.deepEqual(
+        hits.map(({ _id, _score }) => [_id, _score]),
+        [
+          ["s2", 3],
+          ["s1", 3],
+        ],
+      );
+    });
+
     test.it("searches with translated Koncorde filters", async () => {
       const query = context.driver.translateKoncordeFilters({
         equals: { city: "Lyon" },

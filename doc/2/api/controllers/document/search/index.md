@@ -174,11 +174,14 @@ or
 - `query`: the search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
 - `aggregations`: control how the search result should be [aggregated](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html)
 - `sort`: contains a list of fields, used to [sort search results](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-sort.html), in order of importance
+- `min_score` <SinceBadge version="2.63.0" />: leaves out the documents whose [relevance score](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/search-search.html#search-search-api-request-body) is lower. With `lang: "koncorde"`, the score comes from the Elasticsearch query the filters are translated to: an `and`, for instance, gives every document a score of 0, so any `min_score` above 0 leaves them all out.
+- `track_scores` <SinceBadge version="2.63.0" />: computes the relevance score of each document even when the results are sorted on another field
 
 An empty body matches all documents in the queried collection.
 
 ::: info
-Only the following fields are available in the top level of the search body: `aggregations`, `aggs`, `collapse`, `explain`, `fields`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`
+Only the following fields are available in the top level of the search body: `aggregations`, `aggs`, `collapse`, `explain`, `fields`, `from`, `highlight`, `min_score`, `post_filter`, `query`, `search_after`, `search_timeout`, `size`, `sort`, `suggest`, `track_scores`, `_name`, `_source`, `_source_excludes`, `_source_includes`.
+An administrator can allow more with the `services.storageEngine.search.additionalBodyKeys` configuration option.
 :::
 
 ---

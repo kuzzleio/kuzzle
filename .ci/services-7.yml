@@ -24,6 +24,8 @@ services:
     image: redis:8
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    # Built from the tree, not pulled: the CI tests the kuzzleio/elasticsearch
+    # image the next release publishes (release.workflow.yaml), not the last one.
+    build: ../docker/images/elasticsearch
     ulimits:
       nofile: 65536

@@ -4,9 +4,12 @@ services:
       - kuzzle_services__storageEngine__majorVersion=8
 
   elasticsearch:
-    image: docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.26
     container_name: kuzzle_elasticsearch
     environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ingest.geoip.downloader.enabled=false
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
     ports:
       - "9200:9200"

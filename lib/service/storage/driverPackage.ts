@@ -22,6 +22,8 @@
 // What loading a storage driver package takes, built-in or external alike
 // (ADR-0003 steps 03 and 06).
 
+import * as fs from "node:fs";
+import Module from "node:module";
 import * as path from "node:path";
 
 /**
@@ -33,8 +35,12 @@ import * as path from "node:path";
  * Kuzzle checks against. The running Kuzzle is put in that copy's place,
  * before the driver loads.
  *
- * Nothing to do when the driver resolves no `kuzzle` (it fails on its own
- * then), or one already loaded: the running Kuzzle itself, in an application.
+ * When the driver resolves no `kuzzle` at all (Kuzzle is the application and
+ * npm installed no copy: the peer dependency is optional), its
+ * `require("kuzzle")` is made to resolve to the running Kuzzle.
+ *
+ * Nothing to do when the driver resolves a `kuzzle` already loaded: the
+ * running Kuzzle itself, in an application.
  *
  * @param driverEntry - The driver package's resolved entry point
  */
@@ -49,6 +55,9 @@ export function provideRunningKuzzle(driverEntry: string): void {
       paths: [path.dirname(driverEntry)],
     });
   } catch {
+    if (running) {
+      resolveKuzzleFrom(packageRoot(driverEntry), running.filename);
+    }
     return;
   }
 
@@ -56,6 +65,82 @@ export function provideRunningKuzzle(driverEntry: string): void {
   if (running && require.cache[peer] === undefined) {
     require.cache[peer] = running;
   }
+}
+
+type ResolveFilename = (
+  request: string,
+  parent: NodeJS.Module | undefined,
+  ...rest: unknown[]
+) => string;
+
+const kuzzleless: string[] = [];
+let runningKuzzle: string | undefined;
+
+/**
+ * Makes `require("kuzzle")`, from the files of a package that cannot resolve
+ * it, resolve to the running Kuzzle's entry point, which Node's cache holds.
+ */
+function resolveKuzzleFrom(root: string, running: string): void {
+  runningKuzzle = running;
+
+  if (kuzzleless.includes(root)) {
+    return;
+  }
+
+  kuzzleless.push(root);
+
+  if (kuzzleless.length > 1) {
+    return;
+  }
+
+  // Node's internal resolver, the hook point of module aliasing
+  const resolve: ResolveFilename = Reflect.get(Module, "_resolveFilename");
+
+  function resolveRunningKuzzle(
+    this: unknown,
+    request: string,
+    parent: NodeJS.Module | undefined,
+    ...rest: unknown[]
+  ): string {
+    const from = parent?.filename;
+
+    if (
+      request === "kuzzle" &&
+      runningKuzzle &&
+      from &&
+      kuzzleless.some((dir) => from.startsWith(dir))
+    ) {
+      try {
+        return resolve.call(this, request, parent, ...rest);
+      } catch {
+        return runningKuzzle;
+      }
+    }
+
+    return resolve.call(this, request, parent, ...rest);
+  }
+
+  Reflect.set(Module, "_resolveFilename", resolveRunningKuzzle);
+}
+
+/**
+ * The directory of the package a file belongs to, with a trailing separator
+ */
+function packageRoot(file: string): string {
+  // Real path: the one Node gives the requiring module
+  let dir = path.dirname(fs.realpathSync(file));
+
+  while (!fs.existsSync(path.join(dir, "package.json"))) {
+    const parent = path.dirname(dir);
+
+    if (parent === dir) {
+      return path.dirname(fs.realpathSync(file)) + path.sep;
+    }
+
+    dir = parent;
+  }
+
+  return dir + path.sep;
 }
 
 /**

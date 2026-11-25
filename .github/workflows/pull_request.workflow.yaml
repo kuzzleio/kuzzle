@@ -1,6 +1,13 @@
 name: Tests
 
-on: [pull_request]
+on:
+  pull_request:
+  # The full test matrix after every merge, and on demand ("Run workflow" on
+  # any branch); pull requests to 2-dev run a reduced one. See
+  # .ci/scripts/ci-plan.sh.
+  push:
+    branches: [2-dev]
+  workflow_dispatch:
 
 env:
   # Referenced by every job that does not deliberately run a Node matrix.
@@ -31,27 +38,77 @@ jobs:
   adr-state:
     name: ADR state schema
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Schema and consistency of docs/adr-state.json
         run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .ci/scripts/adr-state.ts --check
 
+  # Fails on a dependency this PR adds or bumps to a version with a known
+  # high or critical advisory. Only the PR's own changes: the advisories the
+  # base branch already carries do not block it (npm audit is for those).
+  # What the test jobs run: nothing for a documentation-only change,
+  # and the full or the reduced test matrix. See .ci/scripts/ci-plan.sh.
+  # None of the jobs it skips or trims is a required check (SonarCloud is).
+  changes:
+    name: Test plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.plan.outputs.code }}
+      full: ${{ steps.plan.outputs.full }}
+      functional: ${{ steps.plan.outputs.functional }}
+      drivers: ${{ steps.plan.outputs.drivers }}
+      core-only: ${{ steps.plan.outputs.core-only }}
+      monkey: ${{ steps.plan.outputs.monkey }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Changed files and test matrix
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          # A pull request against its base, a push against what it replaced.
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: ./.ci/scripts/ci-plan.sh
+        shell: bash
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Review the dependency changes
+        uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: high
+
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -69,17 +126,20 @@ jobs:
   # docs/doc-budgets.json.
   doc-budgets:
     name: Documentation budgets
+    # Measured against the PR's base branch.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           # The base branch's history is what tells a write-once archive that
           # grew in this PR apart from one that was already that size.
           fetch-depth: 0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -91,16 +151,17 @@ jobs:
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     # No Node matrix: ESLint's and Prettier's verdict on a fixed source tree
     # with a fixed config does not depend on the Node major running them, and
     # this job gates three others — the slowest of three identical runs used to
     # sit on the critical path for nothing (TD-47).
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -123,12 +184,13 @@ jobs:
   migration-ratchets:
     name: TS migration - ratchets & test type-check
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: "npm"
@@ -169,12 +231,13 @@ jobs:
   build:
     name: Build and payload gate
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -219,16 +282,28 @@ jobs:
 
   sonarqube:
     runs-on: ubuntu-24.04
-    if: github.event.pull_request.head.repo.fork == false
-    needs: [lint]
+    timeout-minutes: 30
+    # Pull requests only: sonar-branches.workflow.yaml analyses the pushes.
+    # Reuses the unit-test coverage of the `unit-tests` leg on env.NODE_VERSION
+    # instead of building and running the suite a second time; the build
+    # payload is the `build` job's. `unit-tests` is skipped on docs-only
+    # changes: the analysis still runs then, without unit coverage (no new
+    # code under lib/ to measure).
+    if: >-
+      always()
+      && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.fork == false
+      && needs.lint.result == 'success'
+      && (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped')
+    needs: [lint, unit-tests]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -237,25 +312,16 @@ jobs:
         run: ./.ci/scripts/with-retry.sh npm ci
         shell: bash
 
-      - name: Build
-        run: npm run build
-        shell: bash
-
-      # `tsc` succeeding does not mean the build is complete: the .proto files and
-      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
-      # used to assert ran. A published package missing its .proto files only fails
-      # when a cluster node boots.
-      - name: Check the build payload
-        run: ./.ci/scripts/check-build-payload.sh
-        shell: bash
-
       # One runner feeds the scanner since step 13 closed axis 2. Before ADR-0001
       # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
       # every JS->TS conversion silently left the coverage gate (TD-24) — that is
       # the debt the two-runner pairing paid off, and it is paid.
-      - name: Vitest coverage
-        run: npm run test:unit:vitest
-        shell: bash
+      - name: Vitest coverage, from the unit-tests job
+        if: needs.unit-tests.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: vitest-coverage
+          path: coverage/vitest
 
       # The storage driver conformance kit's cases only run against a real
       # engine (ADR-0003 step 04): their coverage comes from this run, against
@@ -263,7 +329,11 @@ jobs:
       # them against both majors.
       - name: Conformance kit coverage
         run: |
-          docker run -d -p 9200:9200 -e indices.id_field_data.enabled=true docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+          docker run -d -p 9200:9200 \
+            -e discovery.type=single-node -e xpack.security.enabled=false \
+            -e ingest.geoip.downloader.enabled=false -e indices.id_field_data.enabled=true \
+            -e ES_JAVA_OPTS="-Xms1g -Xmx1g" \
+            docker.elastic.co/elasticsearch/elasticsearch:8.19.26
           npm run test:conformance -- --coverage
         shell: bash
         env:
@@ -281,6 +351,7 @@ jobs:
       # arbiter. Step 13's L7b removed both with the second runner; see that
       # step's `What L7b found` for the measurement that justified it.
       - name: Coverage gate — every new lib/ file is executed by a spec
+        if: needs.unit-tests.result == 'success'
         run: npx tsx .ci/scripts/coverage-gate.ts coverage/vitest/lcov.info
         shell: bash
         env:
@@ -289,21 +360,22 @@ jobs:
       # client-id replaces the deprecated app-id: the action passes the value as-is
       # as the JWT iss, which GitHub accepts as a Client ID or a numeric App ID,
       # hence the unchanged KUZZLE_BOT_APP_ID variable.
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app-token
         with:
           client-id: ${{ vars.KUZZLE_BOT_APP_ID }}
           private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }} # Required for PR decoration
 
   unit-tests:
     name: Unit Tests
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         # One runner, so no suite dimension: `mocha` left this matrix with the last
@@ -311,12 +383,13 @@ jobs:
         # closed — vitest is the unit runner.
         node-version: [22, 24]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -326,20 +399,32 @@ jobs:
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 
+      # Fed to the `sonarqube` job, which no longer runs the suite itself.
+      - name: Keep the coverage report for SonarCloud
+        if: matrix.node-version == env.NODE_VERSION && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vitest-coverage
+          path: coverage/vitest/lcov.info
+          retention-days: 1
+          if-no-files-found: error
+
   # The storage driver conformance kit (ADR-0003 step 04) against the built-in
   # driver of each Elasticsearch major: what proves the kit that driver
   # repositories run against their own engine. Docker only, like the local path.
   storage-conformance:
     name: Storage driver conformance
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
         es-version: [7, 8]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Conformance kit against the built-in Elasticsearch ${{ matrix.es-version }} driver
         run: ./.ci/scripts/docker-test.sh conformance
@@ -348,16 +433,26 @@ jobs:
           ES_VERSION: ${{ matrix.es-version }}
 
   build-and-run-kuzzle:
-    needs: [lint]
+    needs: [lint, changes]
+    if: needs.changes.outputs.code == 'true'
     name: Build and Run
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     strategy:
       matrix:
         kuzzle-image: ["kuzzle"]
         es-version: [7, 8]
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      # Only for the host-side readiness check (ts-node + kuzzle-sdk): the
+      # image under test installs and builds its own tree.
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
@@ -373,29 +468,23 @@ jobs:
     # Not `needs: [unit-tests]` either: the unit tests sat on the critical path
     # (~2.5 min) for a gate the functional jobs do not use. A unit failure now
     # no longer spares the 30 functional jobs, which is the price of the time.
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
-      # One flaky variant must not cancel the 29 others: a re-run is otherwise
+      # One flaky variant must not cancel the others: a re-run is otherwise
       # the only way to learn whether anything else was broken.
       fail-fast: false
-      matrix:
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
-        node-version: [22, 24]
-        es-version: [7, 8]
+      # Every test set × Node.js 22/24 × Elasticsearch 7/8, or the reduced
+      # matrix on a pull request to 2-dev (.ci/scripts/ci-plan.sh).
+      matrix: ${{ fromJSON(needs.changes.outputs.functional) }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -407,69 +496,27 @@ jobs:
           node-version: ${{ matrix.node-version }}
           es-version: ${{ matrix.es-version }}
 
-  # Elasticsearch 9 through the external driver kuzzle-storage-es-9 (ADR-0003
-  # step 05), installed from npm as an application would, at the version
-  # .ci/scripts/stage-storage-driver.sh pins. One Node.js version: the driver
-  # does not depend on it, the matrix above covers both.
-  functional-tests-es9-driver:
-    name: Functional tests on the ES9 driver
-    needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
-
-      - name: Node version 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: "npm"
-
-      - name: Test suit ${{ matrix.test-set }}
-        uses: ./.github/actions/functional-tests
-        with:
-          test-set: test:functional:${{ matrix.test-set }}
-          node-version: 24
-          es-version: 8
-          storage-driver: es9
-
-  # OpenSearch 2 and 3 through the external drivers kuzzle-storage-opensearch-2
-  # and -3 (ADR-0003 step 07), installed from npm as an application would, at
-  # the versions .ci/scripts/stage-storage-driver.sh pins. Same single Node.js
-  # version as above.
-  functional-tests-opensearch-drivers:
+  # Elasticsearch 9 and OpenSearch 2 / 3 through the external drivers
+  # kuzzle-storage-es-9 (ADR-0003 step 05) and kuzzle-storage-opensearch-2 /
+  # -3 (step 07), installed from npm as an application would, at the versions
+  # .ci/scripts/stage-storage-driver.sh pins. One Node.js version: the drivers
+  # do not depend on it, the matrix above covers both. Every driver × test
+  # set, or each driver once on a pull request to 2-dev.
+  functional-tests-external-drivers:
     name: Functional tests on the ${{ matrix.driver }} driver (${{ matrix.test-set }})
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        driver: ["opensearch2", "opensearch3"]
-        test-set:
-          [
-            "http",
-            "websocket",
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
+      matrix: ${{ fromJSON(needs.changes.outputs.drivers) }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -489,18 +536,20 @@ jobs:
   # combinations exercise nothing this profile changes.
   functional-tests-core-only-driver:
     name: Functional tests on the core-only driver (${{ matrix.test-set }})
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        test-set: ["http", "websocket"]
+      # Both current protocols, or websocket only on a pull request to 2-dev.
+      matrix: ${{ fromJSON(needs.changes.outputs.core-only) }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -520,18 +569,20 @@ jobs:
   # protocol, the storage engine or Node.js.
   functional-tests-cache-engines:
     name: Functional tests on ${{ matrix.cache-engine }}
-    needs: [build]
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
         cache-engine: ["redis-6", "valkey-9"]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Node version 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: "npm"
@@ -546,28 +597,43 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests, build-and-run-kuzzle]
+    # Only the build: the monkey suite consumes nothing the functional jobs
+    # produce, and waiting for the slowest of them put ~2.5 min on the
+    # critical path of every PR.
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       # Same reason as the functional matrix above, and it was left off this one
       # when TD-33 added it there: the monkey suite is randomised, so one
-      # variant failing is exactly when the other five results matter most.
+      # variant failing is exactly when the other results matter most.
       fail-fast: false
-      matrix:
-        node-version: [22, 24]
-        es-version: [7, 8]
+      # Node.js 22/24 × Elasticsearch 7/8, or (22, 7) and (24, 8) on a pull
+      # request to 2-dev.
+      matrix: ${{ fromJSON(needs.changes.outputs.monkey) }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Cloning Monkey Tester
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           repository: kuzzleio/kuzzle-monkey-tests
+          # A commit, not the default branch: what runs here (and its
+          # `npm ci`) changes only through a PR on this repository. This one
+          # exits non-zero on a missed notification or response or an init
+          # failure, and checks the last expectations before exiting
+          # (kuzzleio/kuzzle-monkey-tests#1): until then those passed green.
+          # No NaN delay between shots any more (kuzzleio/kuzzle-monkey-tests#2).
+          # Sends at the configured rate (kuzzleio/kuzzle-monkey-tests#3), so
+          # a join may find its room emptied meanwhile (#5).
+          ref: 89d2f68eedf0678160655dbd888613507152bc14
           path: "kuzzle-monkey-tests"
+          persist-credentials: false
 
       - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"

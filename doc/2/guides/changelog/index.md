@@ -10,4 +10,4 @@ meta:
     content: Kuzzle, Documentation, changelog, release notes, what's new
 ---
 
-<Redirect to="2-62" />
+<Redirect to="2-63" />

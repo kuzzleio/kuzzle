@@ -26,13 +26,14 @@ jobs:
   sonarqube:
     name: SonarCloud branch analysis
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
 
       - name: Node version ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -53,7 +54,11 @@ jobs:
 
       - name: Conformance kit coverage
         run: |
-          docker run -d -p 9200:9200 -e indices.id_field_data.enabled=true docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+          docker run -d -p 9200:9200 \
+            -e discovery.type=single-node -e xpack.security.enabled=false \
+            -e ingest.geoip.downloader.enabled=false -e indices.id_field_data.enabled=true \
+            -e ES_JAVA_OPTS="-Xms1g -Xmx1g" \
+            docker.elastic.co/elasticsearch/elasticsearch:8.19.26
           npm run test:conformance -- --coverage
         shell: bash
         env:
@@ -69,7 +74,7 @@ jobs:
         shell: bash
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         with:
           args: -Dsonar.projectVersion=${{ steps.version.outputs.version }}
         env:

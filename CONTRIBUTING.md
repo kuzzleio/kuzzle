@@ -290,3 +290,7 @@ npm run test:unit:vitest
 ```bash
 KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" ES_VERSION=8 ./.ci/scripts/run-test-cluster.sh
 ```
+
+On a pull request to `2-dev`, CI runs a reduced functional matrix; the full one
+runs after the merge, on release PRs, or with "Run workflow" on your branch
+(`.ci/scripts/ci-plan.sh`).
