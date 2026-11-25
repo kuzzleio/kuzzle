@@ -625,7 +625,8 @@ jobs:
           # exits non-zero on a missed notification or response or an init
           # failure, and checks the last expectations before exiting
           # (kuzzleio/kuzzle-monkey-tests#1): until then those passed green.
-          ref: 32b9c503015995b38eca64e2b6f74a94a244a271
+          # No NaN delay between shots any more (kuzzleio/kuzzle-monkey-tests#2).
+          ref: 4a72d302f84198d189902f440b612764ef1544f2
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
