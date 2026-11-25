@@ -12,7 +12,7 @@ meta:
 
 # Kuzzle 2.63
 
-**Status:** in beta since 2026-11-25 (2.63.0-beta.1).
+**Released:** [2.63.0](https://github.com/kuzzleio/kuzzle/releases/tag/v2.63.0) on 2026-11-25, after one beta (2.63.0-beta.1 on 2026-11-25).
 
 The [GitHub release notes](https://github.com/kuzzleio/kuzzle/releases) list every commit. This page tells you what changes for you. For what to check before you upgrade, read [Upgrading from 2.62](/core/2/guides/upgrade-notes/from-2-62).
 
