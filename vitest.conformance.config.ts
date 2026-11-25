@@ -13,6 +13,7 @@ export default defineConfig({
     environment: "node",
     hookTimeout: 60000,
     include: ["tests/conformance/**/*.conformance.ts"],
+    setupFiles: ["tests/helpers/driverPackagesRunningKuzzle.ts"],
     testTimeout: 20000,
   },
 });
