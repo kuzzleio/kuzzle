@@ -68,6 +68,14 @@ KUZZLE_PORT=17512 "${WAIT_KUZZLE[@]}"
 
 echo "Installing Kuzzle Monkey Tester..."
 
+# MONKEY_CHAOS=true (.github/workflows/chaos.workflow.yaml): the tester restarts
+# a node mid-run (its `chaos` settings, read from ktests_* variables by `rc`),
+# on a longer run so that the node comes back and the cluster settles.
+if [ "${MONKEY_CHAOS:-}" == "true" ]; then
+  export ktests_chaos__command="docker compose -f $PWD/$YML_FILE restart kuzzle_node_2"
+  export ktests_scheduler__duration="${MONKEY_DURATION:-150}"
+fi
+
 # In a subshell: dump_cluster_logs (the err trap) reads $YML_FILE, relative to
 # the repository root.
 (cd kuzzle-monkey-tests && "$WITH_RETRY" npm ci)

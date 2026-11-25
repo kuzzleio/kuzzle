@@ -1,0 +1,59 @@
+name: Chaos
+
+# The monkey suite with a Kuzzle node restarted mid-run
+# (kuzzleio/kuzzle-monkey-tests, `chaos` settings): the clients of the other
+# nodes must miss nothing, those of the restarted one must reconnect and
+# subscribe again. Nightly on 2-dev and on demand, not on pull requests,
+# until it has proven stable.
+on:
+  schedule:
+    # Scheduled workflows run from the default branch: the job checks out 2-dev.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+  # TEMPORARY: validation run on the draft PR, removed before review
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  chaos-monkey-tests:
+    name: Chaos Monkey Tests (${{ matrix.node-version }}, ${{ matrix.es-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24]
+        es-version: [8]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.event_name == 'schedule' && '2-dev' || '' }}
+
+      - name: Cloning Monkey Tester
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: kuzzleio/kuzzle-monkey-tests
+          # Same pinning rule as the Tests workflow; this one restarts a node
+          # (kuzzleio/kuzzle-monkey-tests#4).
+          ref: 88c2ec065e66354bbe925c9a7193be0c83166e8c
+          path: "kuzzle-monkey-tests"
+          persist-credentials: false
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Monkey testing, one node restarted
+        run: NPM_CACHE_DIR="$HOME/.npm" ./.ci/scripts/run-monkey-tests.sh
+        env:
+          NODE_VERSION: ${{ matrix.node-version }}
+          ES_VERSION: ${{ matrix.es-version }}
+          MONKEY_CHAOS: "true"
