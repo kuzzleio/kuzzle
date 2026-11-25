@@ -28,7 +28,7 @@ Nothing.
 
 ### What's new
 
-- **Relevance in searches.** A [document:search](/core/2/api/controllers/document/search) body accepts `min_score`, which leaves out the documents whose relevance score is lower, and `track_scores`, which keeps the score of each document when the results are sorted on another field. A [Koncorde query](/core/2/api/koncorde-filters-syntax) has no score: with `lang: "koncorde"`, any `min_score` above 0 answers no document.
+- **Relevance in searches.** A [document:search](/core/2/api/controllers/document/search) body accepts `min_score`, which leaves out the documents whose relevance score is lower, and `track_scores`, which keeps the score of each document when the results are sorted on another field. With `lang: "koncorde"`, the score comes from the Elasticsearch query the filters are translated to: an `and`, for instance, gives every document a score of 0, so any `min_score` above 0 leaves them all out.
 - **More root keys in a search body, on demand.** The new `services.storageEngine.search.additionalBodyKeys` option lists root keys a search body may use on top of the default ones (see [Querying](/core/2/guides/main-concepts/querying)). Inline scripts stay refused under any key, and Kuzzle refuses to start on a key it sets itself on every search (`index`, `pit`, `profile`, `rest_total_hits_as_int`, `routing`, `scroll`, `track_total_hits`). It is read by the storage drivers `kuzzle-storage-es-7`, `-es-8` and `-es-9` from 1.3.0, and `kuzzle-storage-opensearch-2` and `-3` from 1.1.0.
 - **For driver authors:** the conformance kit checks that a driver answers `min_score` and `track_scores`.
 
