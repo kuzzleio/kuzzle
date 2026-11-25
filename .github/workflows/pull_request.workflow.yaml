@@ -626,7 +626,8 @@ jobs:
           # failure, and checks the last expectations before exiting
           # (kuzzleio/kuzzle-monkey-tests#1): until then those passed green.
           # No NaN delay between shots any more (kuzzleio/kuzzle-monkey-tests#2).
-          ref: 4a72d302f84198d189902f440b612764ef1544f2
+          # Sends at the configured rate (kuzzleio/kuzzle-monkey-tests#3).
+          ref: c773e21dc946b2a4b9bd3e1299464410d7c84989
           path: "kuzzle-monkey-tests"
           persist-credentials: false
 
